@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#FAF5EA;color:#3B281B;font-family:'Public Sans',sans-serif;-webkit-font-smoothing:antialiased}a{color:#A03D2C}a:hover{color:#3B281B}button{font-family:'Public Sans',sans-serif}input,select,textarea{font-family:'Public Sans',sans-serif}</style>
+<script src="./image-slot.js"></script>
+</helmet>
+<div data-screen-label="Snabbeställning">
+
+  <div style="background:#3B281B;color:#FAF5EA;text-align:center;padding:9px 16px;font-size:13.5px">Betalning mot faktura · Lokal leverans i Tyresö, Nacka, Haninge och Huddinge</div>
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:16px 40px;border-bottom:1px solid #E7DABE;background:#FAF5EA">
+    <a href="Startsida.dc.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#3B281B">
+      <svg width="34" height="34" viewBox="0 0 180 180"><circle cx="90" cy="90" r="82" fill="none" stroke="#3B281B" stroke-width="9"></circle><text x="90" y="122" text-anchor="middle" style="font-family:'Libre Caslon Text',serif;font-size:96px;font-weight:700;fill:#3B281B">S</text></svg>
+      <span style="font-family:'Libre Caslon Text',serif;font-size:18px;font-weight:700">SOCKERBAGAREN</span>
+    </a>
+    <div style="font-size:13.5px;color:#7A614D">Snabbeställning för företag</div>
+  </header>
+
+  <div style="max-width:760px;margin:0 auto;padding:40px 24px 100px">
+
+    <div style="display:flex;gap:8px;margin-bottom:36px">
+      <sc-for list="{{ stepper }}" as="st" hint-placeholder-count="4">
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+          <div style="height:4px;border-radius:2px;background:{{ st.bar }}"></div>
+          <div style="font-size:12px;font-weight:700;letter-spacing:0.5px;color:{{ st.color }}">{{ st.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- STEG 1: KAKOR -->
+    <sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ true }}">
+      <h1 style="font-family:'Libre Caslon Text',serif;font-size:32px;font-weight:700;margin:0 0 6px">Välj kakor</h1>
+      <p style="font-size:15px;color:#7A614D;margin:0 0 28px">Alla sorter säljs per kilo. Blanda fritt.</p>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ products }}" as="p" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:18px;background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:16px 20px">
+            <div style="width:72px;height:72px;border-radius:6px;overflow:hidden;flex-shrink:0"><image-slot id="{{ p.imgId }}" shape="rect" placeholder="{{ p.name }}"></image-slot></div>
+            <div style="flex:1">
+              <div style="font-family:'Libre Caslon Text',serif;font-size:19px;font-weight:700">{{ p.name }}</div>
+              <div style="font-size:13.5px;color:#7A614D;margin-top:2px">{{ p.desc }}</div>
+              <div style="font-size:12px;color:#7A614D;margin-top:4px">[pris] kr/kg · {{ p.allergens }}</div>
+            </div>
+            <div style="display:flex;align-items:center;border:1.5px solid #D9C9A6;border-radius:6px;overflow:hidden;flex-shrink:0">
+              <button onClick="{{ p.dec }}" style="width:46px;height:46px;border:none;background:#F4ECDC;font-size:20px;cursor:pointer;color:#3B281B" style-hover="background:#EBDFC6">−</button>
+              <div style="width:64px;text-align:center;font-weight:700;font-size:15px">{{ p.kg }} kg</div>
+              <button onClick="{{ p.inc }}" style="width:46px;height:46px;border:none;background:#F4ECDC;font-size:20px;cursor:pointer;color:#3B281B" style-hover="background:#EBDFC6">+</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:28px;background:#F7EFDD;border-radius:8px;padding:18px 22px">
+        <div><div style="font-size:13px;color:#7A614D">Totalt</div><div style="font-family:'Libre Caslon Text',serif;font-size:24px;font-weight:700">{{ totalKg }} kg</div></div>
+        <button onClick="{{ next }}" disabled="{{ step1Disabled }}" style="background:#3B281B;color:#FAF5EA;border:none;border-radius:6px;padding:16px 30px;font-size:15.5px;font-weight:700;cursor:pointer;opacity:{{ step1Opacity }}" style-hover="background:#57402C">Fortsätt till leverans</button>
+      </div>
+    </sc-if>
+
+    <!-- STEG 2: LEVERANS -->
+    <sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ false }}">
+      <h1 style="font-family:'Libre Caslon Text',serif;font-size:32px;font-weight:700;margin:0 0 6px">Leverans</h1>
+      <p style="font-size:15px;color:#7A614D;margin:0 0 28px">Vi kör själva, på fasta leveransdagar per område.</p>
+      <div style="font-weight:700;font-size:15px;margin-bottom:12px">Vilket område?</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px">
+        <sc-for list="{{ areaOpts }}" as="a" hint-placeholder-count="4">
+          <button onClick="{{ a.pick }}" style="border:1.5px solid {{ a.border }};background:{{ a.bg }};border-radius:6px;padding:14px;font-weight:700;font-size:14.5px;cursor:pointer;color:#3B281B" style-hover="border-color:#3B281B">{{ a.name }}</button>
+        </sc-for>
+      </div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:12px">När vill ni ha leveransen?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <sc-for list="{{ dayOpts }}" as="d" hint-placeholder-count="2">
+          <button onClick="{{ d.pick }}" style="border:1.5px solid {{ d.border }};background:{{ d.bg }};border-radius:6px;padding:16px;text-align:left;cursor:pointer;color:#3B281B">
+            <div style="font-weight:700;font-size:15px">{{ d.label }}</div>
+            <div style="font-size:13px;color:#7A614D;margin-top:2px">{{ d.date }}</div>
+          </button>
+        </sc-for>
+      </div>
+      <div style="background:#F7E3AC;border-radius:6px;padding:14px 16px;font-size:14px;line-height:1.6;margin-bottom:28px">Vi levererar under dagen till bemannade företagsadresser. Se därför till att någon kan ta emot leveransen.</div>
+      <div style="display:flex;justify-content:space-between">
+        <button onClick="{{ back }}" style="background:none;border:1.5px solid #3B281B;color:#3B281B;border-radius:6px;padding:14px 24px;font-size:14.5px;font-weight:600;cursor:pointer">Tillbaka</button>
+        <button onClick="{{ next }}" disabled="{{ step2Disabled }}" style="background:#3B281B;color:#FAF5EA;border:none;border-radius:6px;padding:16px 30px;font-size:15.5px;font-weight:700;cursor:pointer;opacity:{{ step2Opacity }}">Fortsätt till företagsuppgifter</button>
+      </div>
+    </sc-if>
+
+    <!-- STEG 3: FÖRETAGSUPPGIFTER -->
+    <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}">
+      <h1 style="font-family:'Libre Caslon Text',serif;font-size:32px;font-weight:700;margin:0 0 6px">Företagsuppgifter</h1>
+      <p style="font-size:15px;color:#7A614D;margin:0 0 28px">Vi behöver bara det som krävs för leverans och faktura.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <sc-for list="{{ fields }}" as="f" hint-placeholder-count="8">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;grid-column:{{ f.span }}">{{ f.label }}
+            <input value="{{ f.value }}" onChange="{{ f.set }}" placeholder="{{ f.ph }}" style="border:1.5px solid #D9C9A6;border-radius:6px;padding:13px 14px;font-size:15px;background:#FFFDF7;color:#3B281B" style-focus="border-color:#3B281B;outline:none">
+          </label>
+        </sc-for>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;grid-column:1 / -1">Kommentar till leveransen (frivilligt)
+          <textarea rows="2" placeholder="T.ex. portkod, lastkaj, våning" style="border:1.5px solid #D9C9A6;border-radius:6px;padding:13px 14px;font-size:15px;background:#FFFDF7;color:#3B281B;resize:vertical" style-focus="border-color:#3B281B;outline:none"></textarea>
+        </label>
+      </div>
+      <div style="background:#F7EFDD;border-radius:6px;padding:14px 16px;font-size:14px;margin:20px 0 28px"><strong>Betalning sker mot faktura.</strong> Ingen kortbetalning behövs — fakturan skickas till er faktura-e-post efter leverans.</div>
+      <div style="display:flex;justify-content:space-between">
+        <button onClick="{{ back }}" style="background:none;border:1.5px solid #3B281B;color:#3B281B;border-radius:6px;padding:14px 24px;font-size:14.5px;font-weight:600;cursor:pointer">Tillbaka</button>
+        <button onClick="{{ next }}" style="background:#3B281B;color:#FAF5EA;border:none;border-radius:6px;padding:16px 30px;font-size:15.5px;font-weight:700;cursor:pointer" style-hover="background:#57402C">Kontrollera order</button>
+      </div>
+    </sc-if>
+
+    <!-- STEG 4: KONTROLLERA -->
+    <sc-if value="{{ isStep4 }}" hint-placeholder-val="{{ false }}">
+      <h1 style="font-family:'Libre Caslon Text',serif;font-size:32px;font-weight:700;margin:0 0 28px">Kontrollera er order</h1>
+      <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:24px 26px;display:flex;flex-direction:column;gap:14px;margin-bottom:20px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;color:#7A614D">KAKOR</div>
+        <sc-for list="{{ orderLines }}" as="l" hint-placeholder-count="2">
+          <div style="display:flex;justify-content:space-between;font-size:15px;border-bottom:1px solid #F1E8D4;padding-bottom:10px"><span style="font-weight:600">{{ l.name }}</span><span>{{ l.kg }} kg · [pris]</span></div>
+        </sc-for>
+        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px"><span>Totalt</span><span>{{ totalKg }} kg · [summa]</span></div>
+      </div>
+      <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:24px 26px;display:flex;flex-direction:column;gap:8px;margin-bottom:20px;font-size:14.5px;line-height:1.6">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;color:#7A614D">LEVERANS</div>
+        <div>{{ chosenArea }} · {{ chosenDay }}</div>
+        <div style="color:#7A614D">Leverans under dagen till bemannad företagsadress.</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;color:#7A614D;margin-top:10px">FÖRETAG</div>
+        <div>{{ companySummary }}</div>
+      </div>
+      <div style="background:#F7E3AC;border-radius:6px;padding:14px 16px;font-size:14px;margin-bottom:28px">Betalning sker mot faktura efter leverans.</div>
+      <div style="display:flex;justify-content:space-between">
+        <button onClick="{{ back }}" style="background:none;border:1.5px solid #3B281B;color:#3B281B;border-radius:6px;padding:14px 24px;font-size:14.5px;font-weight:600;cursor:pointer">Tillbaka</button>
+        <button onClick="{{ send }}" style="background:#A03D2C;color:#FAF5EA;border:none;border-radius:6px;padding:16px 34px;font-size:16px;font-weight:700;cursor:pointer" style-hover="background:#8A3325">Skicka beställning</button>
+      </div>
+    </sc-if>
+
+    <!-- STEG 5: TACK -->
+    <sc-if value="{{ isStep5 }}" hint-placeholder-val="{{ false }}">
+      <div style="text-align:center;padding:24px 0 8px">
+        <svg width="72" height="72" viewBox="0 0 180 180" style="margin-bottom:16px"><circle cx="90" cy="90" r="82" fill="#EFBE4C"></circle><text x="90" y="122" text-anchor="middle" style="font-family:'Libre Caslon Text',serif;font-size:96px;font-weight:700;fill:#3B281B">S</text></svg>
+        <h1 style="font-family:'Libre Caslon Text',serif;font-size:34px;font-weight:700;margin:0 0 10px">Tack! Vi har tagit emot er beställning.</h1>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:1px;color:#7A614D;margin-bottom:28px">ORDER {{ orderNo }}</div>
+      </div>
+      <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:24px 26px;display:flex;flex-direction:column;gap:12px;margin-bottom:20px;font-size:14.5px">
+        <sc-for list="{{ orderLines }}" as="l" hint-placeholder-count="2">
+          <div style="display:flex;justify-content:space-between"><span style="font-weight:600">{{ l.name }}</span><span>{{ l.kg }} kg</span></div>
+        </sc-for>
+        <div style="display:flex;justify-content:space-between;border-top:1px solid #F1E8D4;padding-top:10px;font-weight:700"><span>Totalt</span><span>{{ totalKg }} kg</span></div>
+        <div style="color:#7A614D">{{ chosenArea }} · {{ chosenDay }} · leverans under dagen</div>
+      </div>
+      <div style="background:#F7EFDD;border-radius:8px;padding:22px 24px;font-size:14.5px;line-height:1.8">
+        <strong>Vad händer nu?</strong><br>
+        1. Ni får en orderbekräftelse till er e-post.<br>
+        2. Vi bakar och levererar på vald leveransdag.<br>
+        3. Fakturan skickas till er faktura-e-post efter leverans.
+      </div>
+      <div style="text-align:center;margin-top:28px"><a href="Startsida.dc.html" style="font-weight:700;font-size:15px">← Till startsidan</a></div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;1100px&quot;}}">
+class Component extends DCLogic {
+  state = {
+    step: 1,
+    qty: {Mandelkubb: 0, Kolasnittar: 0, Chokladsnittar: 0},
+    area: null, day: null,
+    form: {foretag:"", orgnr:"", kontakt:"", epost:"", telefon:"", adress:"", postnr:"", ort:"", fakturaepost:"", referens:""}
+  };
+  renderVals() {
+    const s = this.state;
+    const meta = [
+      {name:"Mandelkubb", desc:"Mör, mandeldoftande och rejäl.", allergens:"vete, mandel, ägg, mjölk", imgId:"bo-mandel"},
+      {name:"Kolasnittar", desc:"Spröda, smöriga och precis lagom sega.", allergens:"vete, mjölk", imgId:"bo-kola"},
+      {name:"Chokladsnittar", desc:"Ordentlig chokladkaraktär.", allergens:"vete, mjölk", imgId:"bo-chok"}
+    ];
+    const totalKg = Object.values(s.qty).reduce((a,b)=>a+b,0);
+    const labels = ["Kakor","Leverans","Uppgifter","Kontrollera"];
+    const setQty = (n,d) => this.setState(st=>({qty:{...st.qty,[n]:Math.max(0, st.qty[n]+d)}}));
+    const areas = ["Tyresö","Nacka","Haninge","Huddinge"];
+    const days = [{label:"Leveransdag A", date:"[datum visas vid beställning]"},{label:"Leveransdag B", date:"[datum visas vid beställning]"}];
+    const fieldDefs = [
+      {k:"foretag", label:"Företagsnamn", ph:"Landvex AB", span:"auto"},
+      {k:"orgnr", label:"Organisationsnummer", ph:"559141-7042", span:"auto"},
+      {k:"kontakt", label:"Kontaktperson", ph:"För- och efternamn", span:"auto"},
+      {k:"telefon", label:"Telefon", ph:"07X-XXX XX XX", span:"auto"},
+      {k:"epost", label:"E-post", ph:"namn@foretaget.se", span:"auto"},
+      {k:"fakturaepost", label:"Faktura-e-post", ph:"faktura@foretaget.se", span:"auto"},
+      {k:"adress", label:"Leveransadress", ph:"Antennvägen 2", span:"1 / -1"},
+      {k:"postnr", label:"Postnummer", ph:"135 48", span:"auto"},
+      {k:"ort", label:"Ort", ph:"Tyresö", span:"auto"},
+      {k:"referens", label:"Referens / märkning (frivilligt)", ph:"T.ex. kostnadsställe", span:"1 / -1"}
+    ];
+    const step1Disabled = totalKg === 0;
+    const step2Disabled = !s.area || !s.day;
+    return {
+      isStep1: s.step===1, isStep2: s.step===2, isStep3: s.step===3, isStep4: s.step===4, isStep5: s.step===5,
+      stepper: labels.map((l,i)=>({label:l, bar: s.step>i ? "#3B281B" : "#E7DABE", color: s.step>i ? "#3B281B" : "#B9A88C"})),
+      products: meta.map(m=>({...m, kg: s.qty[m.name], inc:()=>setQty(m.name,1), dec:()=>setQty(m.name,-1)})),
+      totalKg,
+      step1Disabled, step1Opacity: step1Disabled?0.4:1,
+      step2Disabled, step2Opacity: step2Disabled?0.4:1,
+      next: ()=>this.setState(st=>({step: st.step+1})),
+      back: ()=>this.setState(st=>({step: st.step-1})),
+      send: ()=>this.setState({step:5}),
+      areaOpts: areas.map(a=>({name:a, pick:()=>this.setState({area:a}), border: s.area===a?"#3B281B":"#D9C9A6", bg: s.area===a?"#F7E3AC":"#FFFDF7"})),
+      dayOpts: days.map(d=>({...d, pick:()=>this.setState({day:d.label}), border: s.day===d.label?"#3B281B":"#D9C9A6", bg: s.day===d.label?"#F7E3AC":"#FFFDF7"})),
+      fields: fieldDefs.map(f=>({...f, value: s.form[f.k], set:(e)=>this.setState(st=>({form:{...st.form,[f.k]:e.target.value}}))})),
+      orderLines: meta.filter(m=>s.qty[m.name]>0).map(m=>({name:m.name, kg:s.qty[m.name]})),
+      chosenArea: s.area || "—", chosenDay: s.day || "—",
+      companySummary: [s.form.foretag||"[Företagsnamn]", s.form.orgnr||"[Org.nr]", s.form.adress ? s.form.adress+", "+s.form.postnr+" "+s.form.ort : "[Leveransadress]"].join(" · "),
+      orderNo: "SB-" + String(100000 + (totalKg*37+7)%899999)
+    };
+  }
+}
+</script>
+</body>
+</html>

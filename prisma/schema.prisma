@@ -1,0 +1,255 @@
+// Sockerbagaren — datamodell.
+// SQLite: enums stöds inte av Prisma här, så statusfält är String
+// med tillåtna värden definierade i src/lib/status.ts.
+// Alla belopp lagras i öre (Int) för att undvika flyttalsfel.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  // Pris per kilo i öre. Historiska ordrar/fakturor påverkas ALDRIG av ändringar här
+  // (snapshot sparas på orderrad och faktura).
+  pricePerKgOre Int
+  // Moms i baspunkter (livsmedel = 1200 = 12 %).
+  vatRateBp   Int      @default(1200)
+  // JSON-array med viktalternativ i kg, t.ex. [1,2,3].
+  weightOptionsJson String @default("[1,2,3]")
+  ingredients String   @default("")
+  allergens   String   @default("")
+  imageRef    String   @default("")
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderItems        OrderItem[]
+  subscriptionItems SubscriptionItem[]
+}
+
+model DeliveryArea {
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  name     String
+  // JSON-array med ISO-veckodagar (1 = måndag ... 7 = söndag) då vi levererar hit.
+  weekdaysJson String @default("[2,4]")
+  // Antal hela dagar framförhållning som krävs (beställ senast N dagar före leverans).
+  leadTimeDays Int    @default(2)
+  // JSON-array med postnummerprefix (t.ex. ["135","136"]). Tom = ingen postnummerspärr.
+  postalCodePrefixesJson String @default("[]")
+  active   Boolean @default(true)
+  sortOrder Int    @default(0)
+
+  orders        Order[]
+  subscriptions Subscription[]
+}
+
+// Nummerserier (order- och fakturanummer). Uppräkning sker i transaktion.
+model Counter {
+  name  String @id
+  value Int
+}
+
+model Order {
+  id          String @id @default(cuid())
+  orderNumber String @unique // t.ex. SB-100001
+
+  // Skydd mot dubbelbeställning: klienten genererar en nyckel per beställningsförsök.
+  // Samma nyckel två gånger (dubbelklick/retry) returnerar samma order.
+  idempotencyKey String? @unique
+
+  // Kund/företag
+  companyName String
+  orgNumber   String
+  contactName String
+  email       String
+  phone       String
+
+  // Leverans
+  deliveryAddress     String
+  deliveryPostalCode  String
+  deliveryCity        String
+  deliveryInstruction String  @default("")
+  deliveryDate        DateTime
+  deliveryAreaId      String?
+  deliveryArea        DeliveryArea? @relation(fields: [deliveryAreaId], references: [id])
+
+  // Fakturering
+  invoiceEmail   String
+  reference      String @default("")
+  billingAddress String @default("") // tom = samma som leveransadress
+
+  // Belopp (öre) — snapshot vid ordertillfället
+  subtotalOre Int
+  vatOre      Int
+  totalOre    Int
+  currency    String @default("SEK")
+
+  // Separata statusar — se src/lib/status.ts
+  status         String @default("NEW")      // NEW | CONFIRMED | CANCELLED
+  paymentStatus  String @default("UNPAID")   // UNPAID | PAID
+  deliveryStatus String @default("PENDING")  // PENDING | DELIVERED
+
+  deliveredAt  DateTime?
+  deliveryNote String    @default("")
+  internalNote String    @default("")
+
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  // Idempotensnyckel för prenumerationsgenererade ordrar:
+  // subscriptionId + periodens leveransdatum (ISO-datumsträng) får bara finnas en gång.
+  subscriptionPeriod String?
+
+  items   OrderItem[]
+  invoice Invoice?
+  events  OrderEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([subscriptionId, subscriptionPeriod])
+  @@index([deliveryDate])
+  @@index([status])
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  // Snapshot — får inte ändras när produkten senare ändras.
+  productName      String
+  weightKg         Int // antal kilo av sorten
+  unitPricePerKgOre Int
+  vatRateBp        Int
+  lineTotalOre     Int // weightKg * unitPricePerKgOre
+}
+
+model Invoice {
+  id            String @id @default(cuid())
+  invoiceNumber String @unique // löpnummer i serie, t.ex. 10001
+  orderId       String @unique
+  order         Order  @relation(fields: [orderId], references: [id])
+
+  invoiceDate DateTime @default(now())
+  dueDate     DateTime
+
+  // Ekonomisk + juridisk snapshot vid utfärdandet. Fakturan är ett historiskt
+  // dokument: PDF och vyer renderas från denna JSON, aldrig från aktuell produkt-/kunddata.
+  snapshotJson String
+
+  subtotalOre Int
+  vatOre      Int
+  totalOre    Int
+  currency    String @default("SEK")
+
+  status String    @default("UNPAID") // UNPAID | PAID (OVERDUE beräknas från dueDate)
+  paidAt DateTime?
+
+  // Slumpad token för säker nedladdningslänk utan inloggning.
+  downloadToken String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([dueDate])
+}
+
+model Subscription {
+  id     String @id @default(cuid())
+  number String @unique // t.ex. PREN-1001
+
+  companyName String
+  orgNumber   String
+  contactName String
+  email       String
+  phone       String @default("")
+
+  deliveryAddress     String
+  deliveryPostalCode  String
+  deliveryCity        String
+  deliveryInstruction String @default("")
+  deliveryAreaId      String?
+  deliveryArea        DeliveryArea? @relation(fields: [deliveryAreaId], references: [id])
+
+  invoiceEmail String
+  reference    String @default("")
+
+  frequency String // WEEKLY | BIWEEKLY | MONTHLY
+  // Nästa planerade leveransdatum. Flyttas fram när order genererats.
+  nextDeliveryDate DateTime
+
+  status String @default("ACTIVE") // ACTIVE | PAUSED | CANCELLED
+
+  items  SubscriptionItem[]
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, nextDeliveryDate])
+}
+
+model SubscriptionItem {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product      @relation(fields: [productId], references: [id])
+  weightKg       Int
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String    @default("")
+  passwordHash String // scrypt: salt:hash (hex)
+  createdAt    DateTime  @default(now())
+  sessions     AdminSession[]
+}
+
+model AdminSession {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique // sha256 av sessionstoken — själva token lagras aldrig
+  userId    String
+  user      AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([expiresAt])
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  type      String // ORDER_CONFIRMATION | INVOICE | ...
+  provider  String
+  status    String // SENT | FAILED | SKIPPED
+  error     String   @default("")
+  orderId   String?
+  createdAt DateTime @default(now())
+}
+
+model OrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type      String // CREATED | CONFIRMED | PAID | DELIVERED | CANCELLED | NOTE | EMAIL
+  message   String
+  actor     String   @default("system") // "system" | admin-e-post
+  createdAt DateTime @default(now())
+}

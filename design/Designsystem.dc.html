@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#EFE7D6;color:#3B281B;font-family:'Public Sans',sans-serif;-webkit-font-smoothing:antialiased}a{color:#A03D2C}a:hover{color:#3B281B}</style>
+<script src="./image-slot.js"></script>
+</helmet>
+<div style="max-width:1240px;margin:0 auto;padding:56px 40px 120px;display:flex;flex-direction:column;gap:56px">
+
+  <header style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #3B281B;padding-bottom:24px">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:2px;color:#7A614D">DESIGNSYSTEM · V1</div>
+      <h1 style="font-family:'Libre Caslon Text',serif;font-size:44px;margin:8px 0 0;font-weight:700">Sockerbagaren</h1>
+      <p style="margin:8px 0 0;font-size:15px;color:#7A614D;max-width:52ch">Riktigt fika till jobbet. Klassiska småkakor, riktiga råvaror, lokal leverans i södra Stockholm.</p>
+    </div>
+    <nav style="display:flex;gap:16px;font-size:14px;font-weight:600">
+      <a href="Startsida.dc.html">Startsida</a>
+      <a href="Bestallning.dc.html">Beställning</a>
+      <a href="Fikaprenumeration.dc.html">Prenumeration</a>
+      <a href="Tyreso.dc.html">Tyresö</a>
+    </nav>
+  </header>
+
+  <!-- LOGOTYP -->
+  <section style="display:flex;flex-direction:column;gap:20px">
+    <h2 style="font-family:'Libre Caslon Text',serif;font-size:26px;margin:0">1. Logotyp</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+      <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:32px;display:flex;flex-direction:column;align-items:center;gap:16px">
+        <svg width="180" height="180" viewBox="0 0 180 180">
+          <circle cx="90" cy="90" r="85" fill="#FFFDF7" stroke="#3B281B" stroke-width="3"></circle>
+          <circle cx="90" cy="90" r="78" fill="none" stroke="#3B281B" stroke-width="1"></circle>
+          <circle cx="90" cy="90" r="50" fill="none" stroke="#3B281B" stroke-width="1.5"></circle>
+          <path id="arcTop" d="M 31 90 A 59 59 0 0 1 149 90" fill="none"></path>
+          <path id="arcBot" d="M 23 90 A 67 67 0 0 0 157 90" fill="none"></path>
+          <text style="font-family:'Public Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:3.5px;fill:#3B281B"><textPath href="#arcTop" startOffset="50%" text-anchor="middle">SOCKERBAGAREN</textPath></text>
+          <text style="font-family:'Public Sans',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:3px;fill:#3B281B"><textPath href="#arcBot" startOffset="50%" text-anchor="middle">I GENERATIONER</textPath></text>
+          <text x="90" y="99" text-anchor="middle" style="font-family:'Libre Caslon Text',serif;font-size:46px;font-weight:700;fill:#3B281B">S</text>
+          <text x="90" y="113" text-anchor="middle" style="font-family:'Public Sans',sans-serif;font-size:8.5px;font-weight:700;letter-spacing:2px;fill:#A03D2C">ANNO 1957</text>
+          <rect x="23" y="86.5" width="7" height="7" transform="rotate(45 26.5 90)" fill="#A03D2C"></rect>
+          <rect x="150" y="86.5" width="7" height="7" transform="rotate(45 153.5 90)" fill="#A03D2C"></rect>
+        </svg>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#7A614D">SIGILL · PRIMÄR SYMBOL</div>
+      </div>
+      <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:32px;display:flex;flex-direction:column;justify-content:center;gap:24px">
+        <div>
+          <div style="font-family:'Libre Caslon Text',serif;font-size:30px;font-weight:700;letter-spacing:0.5px">SOCKERBAGAREN</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:3px;color:#A03D2C;margin-top:4px">I GENERATIONER · ANNO 1957</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <svg width="44" height="44" viewBox="0 0 180 180"><circle cx="90" cy="90" r="82" fill="none" stroke="#3B281B" stroke-width="8"></circle><text x="90" y="122" text-anchor="middle" style="font-family:'Libre Caslon Text',serif;font-size:96px;font-weight:700;fill:#3B281B">S</text></svg>
+          <div style="font-family:'Libre Caslon Text',serif;font-size:20px;font-weight:700">Sockerbagaren</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#7A614D">WORDMARK · KOMPAKT</div>
+      </div>
+      <div style="background:#3B281B;border-radius:8px;padding:32px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px">
+        <div style="font-family:'Libre Caslon Text',serif;font-size:26px;font-weight:700;color:#FAF5EA;letter-spacing:0.5px">SOCKERBAGAREN</div>
+        <div style="display:flex;gap:16px;align-items:center">
+          <svg width="48" height="48" viewBox="0 0 180 180"><circle cx="90" cy="90" r="82" fill="#FAF5EA"></circle><text x="90" y="122" text-anchor="middle" style="font-family:'Libre Caslon Text',serif;font-size:96px;font-weight:700;fill:#3B281B">S</text></svg>
+          <svg width="48" height="48" viewBox="0 0 180 180"><rect width="180" height="180" rx="40" fill="#EFBE4C"></rect><text x="90" y="124" text-anchor="middle" style="font-family:'Libre Caslon Text',serif;font-size:100px;font-weight:700;fill:#3B281B">S</text></svg>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#B99F86">MONOKROM · FAVICON / APP-IKON</div>
+      </div>
+    </div>
+    <p style="margin:0;font-size:13px;color:#7A614D;max-width:80ch">Sigillet bär "Anno 1957 · I generationer" enligt uppgift från er. Det ska fungera i tryck på kartong, etikett, klistermärke och bildekor — en färg räcker.</p>
+  </section>
+
+  <!-- FÄRGER -->
+  <section style="display:flex;flex-direction:column;gap:20px">
+    <h2 style="font-family:'Libre Caslon Text',serif;font-size:26px;margin:0">2. Färger</h2>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+      <sc-for list="{{ colors }}" as="c" hint-placeholder-count="8">
+        <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;overflow:hidden">
+          <div style="height:88px;background:{{ c.hex }}"></div>
+          <div style="padding:12px 14px">
+            <div style="font-weight:700;font-size:14px">{{ c.name }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A614D;margin-top:2px">{{ c.hex }} · {{ c.token }}</div>
+            <div style="font-size:12px;color:#7A614D;margin-top:6px">{{ c.role }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- TYPOGRAFI -->
+  <section style="display:flex;flex-direction:column;gap:20px">
+    <h2 style="font-family:'Libre Caslon Text',serif;font-size:26px;margin:0">3. Typografi</h2>
+    <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:32px 36px;display:flex;flex-direction:column;gap:22px">
+      <sc-for list="{{ typeScale }}" as="t" hint-placeholder-count="6">
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:baseline;border-bottom:1px solid #F1E8D4;padding-bottom:18px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#7A614D;line-height:1.6">{{ t.label }}<br>{{ t.spec }}</div>
+          <div style="{{ t.style }}">{{ t.sample }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin:0;font-size:13px;color:#7A614D">Libre Caslon Text för rubriker och priser — klassisk livsmedelskänsla utan konditorinostalgik. Public Sans för all funktionell text. IBM Plex Mono endast för metadata/ordernummer.</p>
+  </section>
+
+  <!-- KOMPONENTER -->
+  <section style="display:flex;flex-direction:column;gap:20px">
+    <h2 style="font-family:'Libre Caslon Text',serif;font-size:26px;margin:0">4. Komponenter</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+      <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:28px;display:flex;flex-direction:column;gap:18px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#7A614D">KNAPPAR</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <button style="background:#3B281B;color:#FAF5EA;border:none;border-radius:6px;padding:14px 26px;font-family:'Public Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:#57402C">Beställ kakor</button>
+          <button style="background:#EFBE4C;color:#3B281B;border:none;border-radius:6px;padding:14px 26px;font-family:'Public Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:#E4B03A">Starta fikaprenumeration</button>
+          <button style="background:transparent;color:#3B281B;border:1.5px solid #3B281B;border-radius:6px;padding:12px 22px;font-family:'Public Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#F4ECDC">Läs mer</button>
+          <a href="#" style="font-size:14px;font-weight:600">Textlänk</a>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#7A614D;margin-top:6px">FORMULÄR</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;letter-spacing:0.3px">Företagsnamn
+            <input placeholder="Landvex AB" style="border:1.5px solid #D9C9A6;border-radius:6px;padding:12px 14px;font-family:'Public Sans',sans-serif;font-size:15px;background:#FFFDF7;color:#3B281B" style-focus="border-color:#3B281B;outline:none">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;letter-spacing:0.3px">Leveransområde
+            <select style="border:1.5px solid #D9C9A6;border-radius:6px;padding:12px 14px;font-family:'Public Sans',sans-serif;font-size:15px;background:#FFFDF7;color:#3B281B">
+              <option>Tyresö</option><option>Nacka</option><option>Haninge</option><option>Huddinge</option>
+            </select>
+          </label>
+        </div>
+        <div style="display:flex;gap:20px;font-size:14px">
+          <label style="display:flex;align-items:center;gap:8px"><input type="radio" name="d" checked style="accent-color:#3B281B;width:17px;height:17px"> Leveransdag A</label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="radio" name="d" style="accent-color:#3B281B;width:17px;height:17px"> Leveransdag B</label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" checked style="accent-color:#3B281B;width:17px;height:17px"> Spara uppgifter</label>
+        </div>
+      </div>
+
+      <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:28px;display:flex;flex-direction:column;gap:18px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#7A614D">VIKTVAL + KVANTITET</div>
+        <div style="display:flex;gap:10px">
+          <button style="border:1.5px solid #3B281B;background:#3B281B;color:#FAF5EA;border-radius:6px;padding:10px 20px;font-weight:700;font-size:14px;font-family:'Public Sans',sans-serif;cursor:pointer">1 kg</button>
+          <button style="border:1.5px solid #D9C9A6;background:#FFFDF7;color:#3B281B;border-radius:6px;padding:10px 20px;font-weight:600;font-size:14px;font-family:'Public Sans',sans-serif;cursor:pointer" style-hover="border-color:#3B281B">2 kg</button>
+          <button style="border:1.5px solid #D9C9A6;background:#FFFDF7;color:#3B281B;border-radius:6px;padding:10px 20px;font-weight:600;font-size:14px;font-family:'Public Sans',sans-serif;cursor:pointer" style-hover="border-color:#3B281B">3 kg</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;border:1.5px solid #D9C9A6;border-radius:6px;width:max-content;overflow:hidden">
+          <button style="width:44px;height:44px;border:none;background:#F4ECDC;font-size:20px;cursor:pointer;color:#3B281B;font-family:'Public Sans',sans-serif">−</button>
+          <div style="width:64px;text-align:center;font-weight:700;font-size:15px">2 kg</div>
+          <button style="width:44px;height:44px;border:none;background:#F4ECDC;font-size:20px;cursor:pointer;color:#3B281B;font-family:'Public Sans',sans-serif">+</button>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#7A614D;margin-top:6px">ALLERGENER + INGREDIENSER</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="border:1px solid #D9C9A6;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;background:#F9F3E4">Vete</span>
+          <span style="border:1px solid #D9C9A6;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;background:#F9F3E4">Smör (mjölk)</span>
+          <span style="border:1px solid #D9C9A6;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;background:#F9F3E4">Mandel</span>
+          <span style="border:1px solid #D9C9A6;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;background:#F9F3E4">Ägg</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="background:#EFBE4C;border-radius:4px;padding:5px 10px;font-size:12px;font-weight:700;letter-spacing:0.5px">RIKTIGT SMÖR</span>
+          <span style="background:#EFBE4C;border-radius:4px;padding:5px 10px;font-size:12px;font-weight:700;letter-spacing:0.5px">STRÖSOCKER</span>
+          <span style="background:#EFBE4C;border-radius:4px;padding:5px 10px;font-size:12px;font-weight:700;letter-spacing:0.5px">VETEMJÖL</span>
+        </div>
+      </div>
+
+      <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:28px;display:flex;flex-direction:column;gap:16px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#7A614D">PRODUKTKORT</div>
+        <div style="border:1px solid #E7DABE;border-radius:8px;overflow:hidden;max-width:320px;background:#FFFDF7">
+          <div style="height:200px"><image-slot id="ds-kort" shape="rect" placeholder="Kolasnittar — närbild, smulor, bakplåtspapper"></image-slot></div>
+          <div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <div style="font-family:'Libre Caslon Text',serif;font-size:20px;font-weight:700">Kolasnittar</div>
+              <div style="font-family:'Libre Caslon Text',serif;font-size:15px;color:#7A614D">[pris]/kg</div>
+            </div>
+            <div style="font-size:14px;color:#7A614D;line-height:1.5">Spröda, smöriga och precis lagom sega.</div>
+            <div style="display:flex;gap:8px">
+              <button style="border:1.5px solid #3B281B;background:#3B281B;color:#FAF5EA;border-radius:6px;padding:8px 16px;font-weight:700;font-size:13px;font-family:'Public Sans',sans-serif;cursor:pointer">1 kg</button>
+              <button style="border:1.5px solid #D9C9A6;background:#FFFDF7;border-radius:6px;padding:8px 16px;font-weight:600;font-size:13px;font-family:'Public Sans',sans-serif;cursor:pointer;color:#3B281B">2 kg</button>
+              <button style="border:1.5px solid #D9C9A6;background:#FFFDF7;border-radius:6px;padding:8px 16px;font-weight:600;font-size:13px;font-family:'Public Sans',sans-serif;cursor:pointer;color:#3B281B">3 kg</button>
+            </div>
+            <button style="background:#3B281B;color:#FAF5EA;border:none;border-radius:6px;padding:13px;font-weight:700;font-size:14px;font-family:'Public Sans',sans-serif;cursor:pointer;margin-top:4px" style-hover="background:#57402C">Lägg i korgen</button>
+            <div style="font-size:11.5px;color:#7A614D">Innehåller vete, smör (mjölk). <a href="#" style="color:#A03D2C">Alla ingredienser</a></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:28px;display:flex;flex-direction:column;gap:14px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#7A614D">LEVERANSVÄLJARE</div>
+          <div style="font-weight:700;font-size:15px">När vill ni ha leveransen?</div>
+          <div style="display:flex;gap:10px">
+            <button style="flex:1;border:1.5px solid #3B281B;background:#F9F3E4;border-radius:6px;padding:14px;text-align:left;cursor:pointer;font-family:'Public Sans',sans-serif;color:#3B281B"><div style="font-weight:700;font-size:14px">Leveransdag A</div><div style="font-size:12.5px;color:#7A614D;margin-top:2px">[datum]</div></button>
+            <button style="flex:1;border:1.5px solid #D9C9A6;background:#FFFDF7;border-radius:6px;padding:14px;text-align:left;cursor:pointer;font-family:'Public Sans',sans-serif;color:#3B281B" style-hover="border-color:#3B281B"><div style="font-weight:700;font-size:14px">Leveransdag B</div><div style="font-size:12.5px;color:#7A614D;margin-top:2px">[datum]</div></button>
+          </div>
+          <div style="background:#F4ECDC;border-radius:6px;padding:12px 14px;font-size:13px;line-height:1.55">Vi levererar under dagen till bemannade företagsadresser. Se till att någon kan ta emot leveransen.</div>
+        </div>
+        <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:28px;display:flex;flex-direction:column;gap:12px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#7A614D">VARUKORGSRAD + TOAST</div>
+          <div style="display:flex;align-items:center;gap:14px;border:1px solid #E7DABE;border-radius:6px;padding:12px 14px">
+            <div style="width:52px;height:52px;border-radius:4px;overflow:hidden;flex-shrink:0"><image-slot id="ds-cart" shape="rect" placeholder="kaka"></image-slot></div>
+            <div style="flex:1"><div style="font-weight:700;font-size:14px">Mandelkubb</div><div style="font-size:12.5px;color:#7A614D">2 kg · [pris]</div></div>
+            <div style="display:flex;align-items:center;border:1px solid #D9C9A6;border-radius:6px;overflow:hidden"><button style="width:32px;height:32px;border:none;background:#F4ECDC;cursor:pointer;color:#3B281B">−</button><div style="width:40px;text-align:center;font-size:13px;font-weight:700">2 kg</div><button style="width:32px;height:32px;border:none;background:#F4ECDC;cursor:pointer;color:#3B281B">+</button></div>
+          </div>
+          <div style="background:#3B281B;color:#FAF5EA;border-radius:6px;padding:12px 16px;font-size:13.5px;display:flex;align-items:center;gap:10px;width:max-content"><span style="background:#EFBE4C;color:#3B281B;border-radius:999px;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">✓</span> Kolasnittar 2 kg lades i korgen</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOTOGRAFI -->
+  <section style="display:flex;flex-direction:column;gap:20px">
+    <h2 style="font-family:'Libre Caslon Text',serif;font-size:26px;margin:0">5. Fotografi — regler + shot list</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:28px;font-size:14px;line-height:1.7">
+        <strong>Regler.</strong> Naturligt dagsljus, riktiga kakor, smulor får synas. Bakplåtspapper, kartong och kaffe som rekvisita. Svenska arbetsplatsmiljöer — fikarum, verkstadsbänk, reception. Inga studioarrangemang, ingen fine dining-styling, inga AI-perfekta kakor.
+      </div>
+      <div style="background:#FFFDF7;border:1px solid #E7DABE;border-radius:8px;padding:28px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#7A614D;margin-bottom:12px">SHOT LIST</div>
+        <ol style="margin:0;padding-left:20px;font-size:14px;line-height:2">
+          <li>Hero: bricka med alla tre sorter, fikarum, dagsljus</li>
+          <li>Närbild per sort (×3): textur, brott, smulor</li>
+          <li>Kartong öppnas på kontorsbord</li>
+          <li>Leverans: kartonger bärs in genom entré</li>
+          <li>Fika på verkstad/bygge — händer, kaffe, kakor</li>
+          <li>Råvaror: smör, socker, mandel, mjöl på bakbord</li>
+          <li>Bakning: plåt ur ugn, snittning</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <footer style="border-top:1px solid #D9C9A6;padding-top:20px;font-size:12.5px;color:#7A614D;display:flex;justify-content:space-between">
+    <div>Landvex AB · Org.nr 559141-7042 · Antennvägen 2, 135 48 Tyresö</div>
+    <div>Radius 6–8 px · Skuggor: inga eller 0 2px 8px rgba(59,40,27,.08) · Ikoner: 1.5 px linje, hörniga</div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      colors: [
+        {name:"Gräddvit", hex:"#FAF5EA", token:"--bg", role:"Sidbakgrund, ljusa ytor"},
+        {name:"Papper", hex:"#FFFDF7", token:"--surface", role:"Kort, formulär, paneler"},
+        {name:"Vete", hex:"#E7DABE", token:"--border", role:"Kantlinjer, avdelare"},
+        {name:"Ljust smör", hex:"#F7E3AC", token:"--butter-soft", role:"Mjuka accentytor"},
+        {name:"Smörgul", hex:"#EFBE4C", token:"--butter", role:"Sekundär CTA, badges, detaljer"},
+        {name:"Falurött", hex:"#A03D2C", token:"--red", role:"Länkar, små accenter, sigilldetalj"},
+        {name:"Mellanbrun", hex:"#7A614D", token:"--text-2", role:"Sekundär text, metadata"},
+        {name:"Kakao", hex:"#3B281B", token:"--text", role:"Text, primär CTA, logotyp"}
+      ],
+      typeScale: [
+        {label:"DISPLAY", spec:"Libre Caslon Text 700 · 56/1.1 · −0.5px", style:{fontFamily:"'Libre Caslon Text',serif",fontSize:"56px",fontWeight:700,lineHeight:1.1,letterSpacing:"-0.5px"}, sample:"Riktigt fika till jobbet."},
+        {label:"H1", spec:"Libre Caslon Text 700 · 40/1.15", style:{fontFamily:"'Libre Caslon Text',serif",fontSize:"40px",fontWeight:700,lineHeight:1.15}, sample:"Våra kakor"},
+        {label:"H2", spec:"Libre Caslon Text 700 · 28/1.2", style:{fontFamily:"'Libre Caslon Text',serif",fontSize:"28px",fontWeight:700,lineHeight:1.2}, sample:"Smör ska smaka smör."},
+        {label:"H3", spec:"Libre Caslon Text 700 · 20/1.3", style:{fontFamily:"'Libre Caslon Text',serif",fontSize:"20px",fontWeight:700,lineHeight:1.3}, sample:"Kolasnittar"},
+        {label:"H4 / LABEL", spec:"Public Sans 700 · 13/1.4 · +2px versaler", style:{fontFamily:"'Public Sans',sans-serif",fontSize:"13px",fontWeight:700,letterSpacing:"2px"}, sample:"LOKAL LEVERANS"},
+        {label:"BODY LARGE", spec:"Public Sans 400 · 18/1.6", style:{fontFamily:"'Public Sans',sans-serif",fontSize:"18px",lineHeight:1.6}, sample:"Klassiska småkakor bakade på riktiga råvaror, levererade direkt till er arbetsplats."},
+        {label:"BODY", spec:"Public Sans 400 · 15/1.6", style:{fontFamily:"'Public Sans',sans-serif",fontSize:"15px",lineHeight:1.6}, sample:"Vi levererar under dagen till bemannade företagsadresser i Tyresö, Nacka, Haninge och Huddinge."},
+        {label:"SMALL", spec:"Public Sans 400 · 13/1.5", style:{fontFamily:"'Public Sans',sans-serif",fontSize:"13px",lineHeight:1.5}, sample:"Innehåller vete, smör (mjölk), mandel."},
+        {label:"BUTTON", spec:"Public Sans 700 · 15", style:{fontFamily:"'Public Sans',sans-serif",fontSize:"15px",fontWeight:700}, sample:"Skicka beställning"},
+        {label:"PRICE", spec:"Libre Caslon Text 700 · 22", style:{fontFamily:"'Libre Caslon Text',serif",fontSize:"22px",fontWeight:700}, sample:"[pris] kr/kg"},
+        {label:"METADATA", spec:"IBM Plex Mono 400 · 12 · +1px", style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"12px",letterSpacing:"1px"}, sample:"ORDER SB-000123 · FAKTURA 30 DAGAR"}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

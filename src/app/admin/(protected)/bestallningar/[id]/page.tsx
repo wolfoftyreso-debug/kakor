@@ -1,0 +1,156 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { formatOre } from "@/lib/money";
+import { formatDate, formatDeliveryDate } from "@/lib/dates";
+import {
+  DeliveryStatusPill,
+  OrderStatusPill,
+  PaymentStatusPill,
+} from "@/components/admin/StatusPills";
+import { OrderActions } from "./OrderActions";
+
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Admin — orderdetalj", robots: { index: false } };
+
+export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const order = await prisma.order.findUnique({
+    where: { id },
+    include: {
+      items: true,
+      invoice: true,
+      deliveryArea: true,
+      subscription: true,
+      events: { orderBy: { createdAt: "desc" } },
+    },
+  });
+  if (!order) notFound();
+
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 12, marginBottom: 6 }}>
+        <h1 style={{ fontSize: 26 }}>
+          Order <span className="mono">{order.orderNumber}</span>
+        </h1>
+        <Link href="/admin/bestallningar" style={{ fontSize: 14, fontWeight: 600 }}>
+          ← Alla beställningar
+        </Link>
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
+        <OrderStatusPill status={order.status} />
+        <PaymentStatusPill
+          status={order.paymentStatus}
+          overdue={!!order.invoice && order.invoice.status === "UNPAID" && order.invoice.dueDate < new Date()}
+        />
+        <DeliveryStatusPill status={order.deliveryStatus} />
+        {order.subscription && (
+          <span className="pill pill-outline">
+            Prenumeration {order.subscription.number}
+          </span>
+        )}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, marginBottom: 24 }}>
+        <section className="card" style={{ padding: "20px 24px" }}>
+          <div className="section-label" style={{ marginBottom: 12 }}>KAKOR</div>
+          {order.items.map((i) => (
+            <div key={i.id} className="divider-row" style={{ display: "flex", justifyContent: "space-between", fontSize: 14.5, padding: "8px 0" }}>
+              <span style={{ fontWeight: 600 }}>{i.productName}</span>
+              <span>
+                {i.weightKg} kg à {formatOre(i.unitPricePerKgOre)}/kg = {formatOre(i.lineTotalOre)}
+              </span>
+            </div>
+          ))}
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "var(--text-2)", paddingTop: 10 }}>
+            <span>Netto</span>
+            <span>{formatOre(order.subtotalOre)}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "var(--text-2)" }}>
+            <span>Moms</span>
+            <span>{formatOre(order.vatOre)}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 16, marginTop: 6 }}>
+            <span>Totalt</span>
+            <span>{formatOre(order.totalOre)}</span>
+          </div>
+        </section>
+
+        <section className="card" style={{ padding: "20px 24px", fontSize: 14.5, lineHeight: 1.7 }}>
+          <div className="section-label" style={{ marginBottom: 10 }}>KUND</div>
+          <strong>{order.companyName}</strong> · {order.orgNumber}
+          <br />
+          {order.contactName} · <a href={`mailto:${order.email}`}>{order.email}</a> ·{" "}
+          <a href={`tel:${order.phone}`}>{order.phone}</a>
+          <div className="section-label" style={{ margin: "14px 0 6px" }}>LEVERANS</div>
+          {order.deliveryAddress}, {order.deliveryPostalCode} {order.deliveryCity}
+          {order.deliveryArea ? ` (${order.deliveryArea.name})` : ""}
+          <br />
+          <span style={{ textTransform: "capitalize" }}>{formatDeliveryDate(order.deliveryDate)}</span> ·
+          leverans under dagen
+          {order.deliveryInstruction && (
+            <div style={{ background: "var(--butter-soft)", borderRadius: 6, padding: "8px 12px", marginTop: 8, fontSize: 13.5 }}>
+              {order.deliveryInstruction}
+            </div>
+          )}
+          {order.deliveredAt && (
+            <div style={{ marginTop: 8, fontSize: 13.5 }}>
+              Levererad {formatDate(order.deliveredAt)}
+              {order.deliveryNote ? ` — ${order.deliveryNote}` : ""}
+            </div>
+          )}
+          <div className="section-label" style={{ margin: "14px 0 6px" }}>FAKTURERING</div>
+          Faktura-e-post: <a href={`mailto:${order.invoiceEmail}`}>{order.invoiceEmail}</a>
+          {order.reference && (
+            <>
+              <br />
+              Referens: {order.reference}
+            </>
+          )}
+          {order.billingAddress && (
+            <>
+              <br />
+              Fakturaadress: {order.billingAddress}
+            </>
+          )}
+          {order.invoice && (
+            <div style={{ marginTop: 8 }}>
+              Faktura <span className="mono">{order.invoice.invoiceNumber}</span> ·{" "}
+              {formatDate(order.invoice.invoiceDate)} · förfaller {formatDate(order.invoice.dueDate)} ·{" "}
+              <a href={`/faktura/${order.invoice.downloadToken}`} target="_blank" rel="noopener">
+                Öppna PDF
+              </a>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <OrderActions
+        orderId={order.id}
+        status={order.status}
+        paymentStatus={order.paymentStatus}
+        deliveryStatus={order.deliveryStatus}
+      />
+
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 19, marginBottom: 12 }}>Historik</h2>
+        <div className="card" style={{ padding: "8px 20px" }}>
+          {order.events.map((e) => (
+            <div key={e.id} className="divider-row" style={{ padding: "10px 0", fontSize: 13.5, display: "flex", gap: 14, flexWrap: "wrap" }}>
+              <span className="mono" style={{ fontSize: 12, color: "var(--text-2)", whiteSpace: "nowrap" }}>
+                {new Intl.DateTimeFormat("sv-SE", {
+                  timeZone: "Europe/Stockholm",
+                  dateStyle: "short",
+                  timeStyle: "short",
+                }).format(e.createdAt)}
+              </span>
+              <span style={{ flex: 1 }}>{e.message}</span>
+              <span style={{ color: "var(--text-2)", fontSize: 12 }}>{e.actor}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
