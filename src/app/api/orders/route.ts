@@ -44,9 +44,15 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    console.error("Orderfel:", e);
+    // Felreferens: gör produktionsfel sökbara i Vercel-loggarna utan att
+    // exponera stack traces för kunden. Ordern har INTE skapats här.
+    const ref = Math.random().toString(36).slice(2, 10).toUpperCase();
+    console.error(`Orderfel [ref ${ref}]:`, e);
     return NextResponse.json(
-      { ok: false, error: "Något gick fel — försök igen eller kontakta oss" },
+      {
+        ok: false,
+        error: `Beställningen kunde inte genomföras — ingen order har skapats. Försök igen eller kontakta oss. Referens: ${ref}`,
+      },
       { status: 500 }
     );
   }

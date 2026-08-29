@@ -64,9 +64,13 @@ Sockerbagaren`,
         { status: 400 }
       );
     }
-    console.error("Prenumerationsfel:", e);
+    const ref = Math.random().toString(36).slice(2, 10).toUpperCase();
+    console.error(`Prenumerationsfel [ref ${ref}]:`, e);
     return NextResponse.json(
-      { ok: false, error: "Något gick fel — försök igen eller kontakta oss" },
+      {
+        ok: false,
+        error: `Prenumerationen kunde inte startas — ingenting har sparats. Försök igen eller kontakta oss. Referens: ${ref}`,
+      },
       { status: 500 }
     );
   }

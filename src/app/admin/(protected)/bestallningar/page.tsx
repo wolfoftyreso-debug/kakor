@@ -24,12 +24,15 @@ const FILTERS: { key: string; label: string }[] = [
   { key: "avbrutna", label: "Avbrutna" },
 ];
 
+const PAGE_SIZE = 50;
+
 export default async function OrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; q?: string }>;
+  searchParams: Promise<{ filter?: string; q?: string; sida?: string }>;
 }) {
-  const { filter = "alla", q = "" } = await searchParams;
+  const { filter = "alla", q = "", sida = "1" } = await searchParams;
+  const page = Math.max(1, parseInt(sida, 10) || 1);
 
   const where: Prisma.OrderWhereInput = {};
   switch (filter) {
@@ -67,12 +70,19 @@ export default async function OrdersPage({
     ];
   }
 
-  const orders = await prisma.order.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 200,
-    include: { deliveryArea: true, invoice: true },
-  });
+  const [orders, totalCount] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: PAGE_SIZE,
+      skip: (page - 1) * PAGE_SIZE,
+      include: { deliveryArea: true, invoice: true },
+    }),
+    prisma.order.count({ where }),
+  ]);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const pageUrl = (p: number) =>
+    `/admin/bestallningar?filter=${filter}${q ? `&q=${encodeURIComponent(q)}` : ""}&sida=${p}`;
 
   return (
     <>
@@ -158,6 +168,24 @@ export default async function OrdersPage({
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 16, fontSize: 14 }}>
+          {page > 1 && (
+            <Link href={pageUrl(page - 1)} className="btn btn-outline" style={{ padding: "8px 14px", fontSize: 13 }}>
+              ← Föregående
+            </Link>
+          )}
+          <span style={{ color: "var(--text-2)" }}>
+            Sida {page} av {totalPages} ({totalCount} beställningar)
+          </span>
+          {page < totalPages && (
+            <Link href={pageUrl(page + 1)} className="btn btn-outline" style={{ padding: "8px 14px", fontSize: 13 }}>
+              Nästa →
+            </Link>
+          )}
         </div>
       )}
     </>

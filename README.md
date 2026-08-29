@@ -4,27 +4,32 @@ Företagsfika i södra Stockholm: klassiska småkakor (mandelkubb, kolasnittar,
 chokladsnittar) sålda per kilo till företag i Tyresö, Nacka, Haninge och
 Huddinge. **Betalning sker alltid mot faktura** — ingen betalprocessor.
 
-En modulär monolit: Next.js (App Router) + TypeScript + Prisma + SQLite.
+En modulär monolit: Next.js (App Router) + TypeScript + Prisma +
+PostgreSQL. Target-miljö: **GitHub → Vercel → Neon PostgreSQL** —
+driftmanualen finns i [DEPLOYMENT.md](DEPLOYMENT.md).
 Designpaketet i [`design/`](design/) är source of truth för UI/UX.
 
 ## Komma igång
 
 ```bash
 npm install
-cp .env.example .env          # fyll i värden (se nedan)
-npx prisma migrate deploy     # skapar databasen från migrations
-npm run db:seed               # produkter, leveransområden + första admin
+cp .env.example .env          # lokala defaultvärden pekar på dev-databasen
+npm run dev:db                # lokal PostgreSQL + migrations + seed (egen terminal)
 npm run dev                   # http://localhost:3000
 ```
 
 Fungerar från helt tom databas — migrations + seed är hela uppsättningen.
+(Alternativ: peka `DATABASE_URL`/`DIRECT_DATABASE_URL` mot en egen
+Neon-utvecklingsdatabas.)
 
 ## Skript
 
 | Kommando | Gör |
 |---|---|
 | `npm run dev` / `build` / `start` | utveckling / produktion |
-| `npm test` | Vitest: enhets- + integrationstester (egen testdatabas, migreras från tom DB) |
+| `npm run dev:db` | lokal PostgreSQL (inbäddad) med migrations + seed |
+| `npm test` | Vitest mot inbäddad PostgreSQL, migrerad från tom databas |
+| `npm run check` | typecheck + lint + tester (samma som CI) |
 | `npm run typecheck` / `lint` | TypeScript / ESLint |
 | `npm run db:migrate` | kör migrations (`prisma migrate deploy`) |
 | `npm run db:seed` | seed (idempotent — rör aldrig befintlig data) |
@@ -44,7 +49,7 @@ src/app/(site)/     publika sidor (startsida, /bestall, /prenumeration, områden
 src/app/admin/      admin (server-side skyddat) + server actions
 src/app/api/        POST /api/orders, /api/subscriptions, cron-endpoint
 prisma/             schema, migrations, seed
-tests/              Vitest (körs mot egen SQLite-testdatabas)
+tests/              Vitest (körs mot inbäddad PostgreSQL, tom DB per körning)
 ```
 
 Viktiga principer:
@@ -103,9 +108,9 @@ först — e-postfel förlorar aldrig en order.
 Prenumeration = instruktion som genererar **vanliga ordrar** (med vanliga
 fakturor) via samma ordermotor. Generering:
 
-- Automatiskt: `POST /api/cron/generate-subscription-orders` med header
-  `Authorization: Bearer $CRON_SECRET` (koppla till valfri scheduler, t.ex.
-  daglig cron). Idempotent — samma period kan aldrig ge två ordrar
+- Automatiskt: Vercel Cron (schema i `vercel.json`) anropar
+  `GET /api/cron/generate-subscription-orders` dagligen med
+  `Authorization: Bearer $CRON_SECRET`. Idempotent — samma period kan aldrig ge två ordrar
   (unikhetsvillkor på subscription + period).
 - Manuellt: knappen "Generera kommande prenumerationsleveranser" i admin,
   eller `npm run subscriptions:generate`.
@@ -116,43 +121,23 @@ Se [`.env.example`](.env.example). Sammanfattning:
 
 | Variabel | Beskrivning |
 |---|---|
-| `DATABASE_URL` | SQLite-fil, t.ex. `file:./dev.db` |
+| `DATABASE_URL` | Neon poolad anslutningssträng (runtime) |
+| `DIRECT_DATABASE_URL` | Neon direkt anslutningssträng (endast migrations) |
 | `SITE_URL` | publik bas-URL (länkar i mejl, sitemap, canonical) |
-| `SESSION_SECRET` | slumpad sträng ≥ 32 tecken |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | bootstrap av första admin (seed/CLI) |
 | `EMAIL_PROVIDER` / `RESEND_API_KEY` / `EMAIL_FROM` | e-post |
 | `INVOICE_*` | juridiska fakturauppgifter (se nedan) |
 | `CRON_SECRET` | skyddar cron-endpointen |
 
-## Testdeploy (Vercel-demo)
+## Deployment (GitHub → Vercel → Neon)
 
-Repot innehåller en självförsörjande testkonfiguration: `vercel.json` kör
-`npm run build:demo`, som bygger en migrerad + seedad demodatabas
-(inkl. exempelordrar via den riktiga ordermotorn) och aktiverar Preferred
-Sources-CTA:n. Vid kallstart kopieras databasen till `/tmp`
-(`src/instrumentation.ts`).
-
-- Demo-admins lösenord genereras slumpmässigt per build och står ENDAST i
-  Vercels bygglogg (inga lösenord i repot).
-- **Begränsning:** demodatan är flyktig — den nollställs vid kallstart och
-  delas inte mellan serverless-instanser. Fullt tillräckligt för att testa
-  alla flöden, inte för drift.
-- **Riktig produktion:** sätt env-variablerna (DATABASE_URL till persistent
-  databas, admin, e-post m.m.), byt `buildCommand` i `vercel.json` till
-  `npm run build` (eller ta bort filen) och kör `prisma migrate deploy` vid
-  deploy.
-
-## Deployment
-
-- `npm run build` → `npm start`. Node 20+.
-- SQLite kräver **persistent disk** (VPS, Fly.io/Railway med volym e.d.).
-  Kör `npx prisma migrate deploy` vid deploy, före start.
-- PDF-generering (pdfkit) är ren Node — ingen headless browser behövs.
-- Rate limiting är in-memory och förutsätter en instans (rimligt för denna
-  skala). Vid flera instanser: byt till delad lagring.
-- På serverless utan disk (t.ex. Vercel) behöver `datasource` bytas till en
-  hostad databas (Postgres/Turso) — Prisma-schemat är förberett för bytet
-  (inga SQLite-specifika typer används).
+Deployment sköts av Vercels Git-integration: push till produktionsbranchen
+= production deploy, övriga branches/PRs = Preview Deployments (noindexade,
+med e-postspärr och egen preview-databas). Migrations körs separat med
+`prisma migrate deploy` mot `DIRECT_DATABASE_URL` — aldrig från runtime.
+PDF-generering (pdfkit) är ren Node och verifierad i Vercels serverless-
+runtime. Fullständig driftmanual — Neon-anslutningar, miljöer, cron,
+rollback, smoke tests: **[DEPLOYMENT.md](DEPLOYMENT.md)**.
 
 ## Sök & synlighet (SEO/GEO)
 

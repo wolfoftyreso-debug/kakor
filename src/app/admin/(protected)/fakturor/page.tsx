@@ -18,12 +18,15 @@ const FILTERS = [
   { key: "betalda", label: "Betalda" },
 ];
 
+const PAGE_SIZE = 50;
+
 export default async function InvoicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string }>;
+  searchParams: Promise<{ filter?: string; sida?: string }>;
 }) {
-  const { filter = "alla" } = await searchParams;
+  const { filter = "alla", sida = "1" } = await searchParams;
+  const page = Math.max(1, parseInt(sida, 10) || 1);
   const today = todayInStockholm();
 
   const where: Prisma.InvoiceWhereInput = {};
@@ -43,12 +46,17 @@ export default async function InvoicesPage({
       break;
   }
 
-  const invoices = await prisma.invoice.findMany({
-    where,
-    orderBy: { invoiceDate: "desc" },
-    take: 200,
-    include: { order: true },
-  });
+  const [invoices, totalCount] = await Promise.all([
+    prisma.invoice.findMany({
+      where,
+      orderBy: { invoiceDate: "desc" },
+      take: PAGE_SIZE,
+      skip: (page - 1) * PAGE_SIZE,
+      include: { order: true },
+    }),
+    prisma.invoice.count({ where }),
+  ]);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const unpaidSum = invoices
     .filter((i) => i.status === "UNPAID" && i.order.status !== "CANCELLED")
@@ -139,6 +147,24 @@ export default async function InvoicesPage({
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 16, fontSize: 14 }}>
+          {page > 1 && (
+            <Link href={`/admin/fakturor?filter=${filter}&sida=${page - 1}`} className="btn btn-outline" style={{ padding: "8px 14px", fontSize: 13 }}>
+              ← Föregående
+            </Link>
+          )}
+          <span style={{ color: "var(--text-2)" }}>
+            Sida {page} av {totalPages} ({totalCount} fakturor)
+          </span>
+          {page < totalPages && (
+            <Link href={`/admin/fakturor?filter=${filter}&sida=${page + 1}`} className="btn btn-outline" style={{ padding: "8px 14px", fontSize: 13 }}>
+              Nästa →
+            </Link>
+          )}
         </div>
       )}
     </>

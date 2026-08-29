@@ -25,6 +25,10 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+// Preview-deployer på Vercel ska aldrig indexeras som dubbletter av
+// produktionssajten. Endast VERCEL_ENV=production får indexeras.
+const isIndexable = !process.env.VERCEL || process.env.VERCEL_ENV === "production";
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
@@ -32,6 +36,7 @@ export const metadata: Metadata = {
     template: "%s — Sockerbagaren",
   },
   description: siteConfig.description,
+  robots: isIndexable ? undefined : { index: false, follow: false },
   // Delnings-defaults för alla sidor; sidor med egna openGraph-fält
   // (t.ex. startsida och områdessidor) skriver över titel/beskrivning/url.
   openGraph: {

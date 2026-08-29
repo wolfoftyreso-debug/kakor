@@ -1,18 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 
-// Cron-endpoint för prenumerationsgenerering. Idempotent — dubbla körningar
-// kan aldrig skapa dubbla ordrar (unikhetsvillkor i databasen).
-// Skyddas med CRON_SECRET (Authorization: Bearer <secret>).
-export async function POST(req: NextRequest) {
+// Prenumerations-cron. Körs av Vercel Cron (GET, schema i vercel.json) —
+// Vercel skickar automatiskt "Authorization: Bearer <CRON_SECRET>" när
+// CRON_SECRET finns som env-variabel i projektet. POST behålls för manuell
+// körning/CLI. Motorn är idempotent: unikhetsvillkoret
+// (subscriptionId, subscriptionPeriod) i Postgres gör dubbla/överlappande
+// körningar ofarliga.
+
+async function runCron(req: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
-    return NextResponse.json({ ok: false, error: "CRON_SECRET är inte konfigurerad" }, { status: 503 });
+    return NextResponse.json(
+      { ok: false, error: "CRON_SECRET är inte konfigurerad" },
+      { status: 503 }
+    );
   }
   const auth = req.headers.get("authorization");
   if (auth !== `Bearer ${secret}`) {
     return NextResponse.json({ ok: false, error: "Obehörig" }, { status: 401 });
   }
-  const result = await generateDueSubscriptionOrders();
-  return NextResponse.json({ ok: true, ...result });
+  try {
+    const result = await generateDueSubscriptionOrders();
+    console.log(
+      `[cron] prenumerationsgenerering: ${result.generated.length} genererade, ${result.skipped.length} överhoppade`
+    );
+    return NextResponse.json({ ok: true, ...result });
+  } catch (e) {
+    console.error("[cron] prenumerationsgenerering misslyckades:", e);
+    return NextResponse.json({ ok: false, error: "Cron-körningen misslyckades" }, { status: 500 });
+  }
+}
+
+export async function GET(req: NextRequest) {
+  return runCron(req);
+}
+
+export async function POST(req: NextRequest) {
+  return runCron(req);
 }

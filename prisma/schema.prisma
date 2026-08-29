@@ -1,15 +1,23 @@
-// Sockerbagaren — datamodell.
-// SQLite: enums stöds inte av Prisma här, så statusfält är String
-// med tillåtna värden definierade i src/lib/status.ts.
+// Sockerbagaren — datamodell för Neon PostgreSQL.
+// Statusfält är String med tillåtna värden i src/lib/status.ts (en enkel
+// nivå av flexibilitet; värdena valideras alltid i applikationslagret).
 // Alla belopp lagras i öre (Int) för att undvika flyttalsfel.
+//
+// Anslutningsstrategi (Vercel serverless + Neon):
+//  - DATABASE_URL        = Neons POOLADE anslutningssträng (-pooler-värden)
+//                          med ?pgbouncer=true&connect_timeout=15 — används
+//                          av applikationen i runtime.
+//  - DIRECT_DATABASE_URL = Neons direkta (opoolade) anslutningssträng —
+//                          används ENDAST av migrations (prisma migrate).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 model Product {
@@ -119,6 +127,9 @@ model Order {
   @@unique([subscriptionId, subscriptionPeriod])
   @@index([deliveryDate])
   @@index([status])
+  @@index([paymentStatus])
+  @@index([deliveryStatus])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -135,6 +146,9 @@ model OrderItem {
   unitPricePerKgOre Int
   vatRateBp        Int
   lineTotalOre     Int // weightKg * unitPricePerKgOre
+
+  // Postgres indexerar inte FK-kolumner automatiskt.
+  @@index([orderId])
 }
 
 model Invoice {
@@ -210,6 +224,8 @@ model SubscriptionItem {
   productId      String
   product        Product      @relation(fields: [productId], references: [id])
   weightKg       Int
+
+  @@index([subscriptionId])
 }
 
 model AdminUser {
@@ -242,6 +258,8 @@ model EmailLog {
   error     String   @default("")
   orderId   String?
   createdAt DateTime @default(now())
+
+  @@index([orderId])
 }
 
 model OrderEvent {
@@ -252,4 +270,6 @@ model OrderEvent {
   message   String
   actor     String   @default("system") // "system" | admin-e-post
   createdAt DateTime @default(now())
+
+  @@index([orderId])
 }

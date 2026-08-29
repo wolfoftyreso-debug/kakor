@@ -1,3 +1,9 @@
 {
-  "buildCommand": "npm run build:demo"
+  "regions": ["fra1"],
+  "crons": [
+    {
+      "path": "/api/cron/generate-subscription-orders",
+      "schedule": "0 5 * * *"
+    }
+  ]
 }

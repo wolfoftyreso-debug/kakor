@@ -59,6 +59,13 @@ class ResendProvider implements EmailProvider {
 }
 
 function getProvider(): EmailProvider {
+  // Miljöspärr: riktiga utskick sker ENDAST i Vercel production (eller
+  // lokal körning utanför Vercel). Preview-deployer kan aldrig råka mejla
+  // riktiga kunder — logiken och loggningen testas ändå via log-providern.
+  const onVercel = !!process.env.VERCEL;
+  const isProduction = process.env.VERCEL_ENV === "production";
+  if (onVercel && !isProduction) return new LogProvider();
+
   if (emailConfig.provider === "resend" && emailConfig.resendApiKey) return new ResendProvider();
   return new LogProvider();
 }
