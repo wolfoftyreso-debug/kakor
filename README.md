@@ -124,6 +124,24 @@ Se [`.env.example`](.env.example). Sammanfattning:
 | `INVOICE_*` | juridiska fakturauppgifter (se nedan) |
 | `CRON_SECRET` | skyddar cron-endpointen |
 
+## Testdeploy (Vercel-demo)
+
+Repot innehåller en självförsörjande testkonfiguration: `vercel.json` kör
+`npm run build:demo`, som bygger en migrerad + seedad demodatabas
+(inkl. exempelordrar via den riktiga ordermotorn) och aktiverar Preferred
+Sources-CTA:n. Vid kallstart kopieras databasen till `/tmp`
+(`src/instrumentation.ts`).
+
+- Demo-admins lösenord genereras slumpmässigt per build och står ENDAST i
+  Vercels bygglogg (inga lösenord i repot).
+- **Begränsning:** demodatan är flyktig — den nollställs vid kallstart och
+  delas inte mellan serverless-instanser. Fullt tillräckligt för att testa
+  alla flöden, inte för drift.
+- **Riktig produktion:** sätt env-variablerna (DATABASE_URL till persistent
+  databas, admin, e-post m.m.), byt `buildCommand` i `vercel.json` till
+  `npm run build` (eller ta bort filen) och kör `prisma migrate deploy` vid
+  deploy.
+
 ## Deployment
 
 - `npm run build` → `npm start`. Node 20+.
