@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { SubscriptionFlow } from "./SubscriptionFlow";
+import { JsonLd } from "@/components/JsonLd";
+import { graph, webPageNode } from "@/lib/seo/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,15 @@ export default async function PrenumerationPage() {
   const [products, areas] = await Promise.all([getActiveProducts(), getAreasWithDates(4)]);
   return (
     <>
+      <JsonLd
+        data={graph(
+          webPageNode({
+            path: "/prenumeration",
+            title: "Fikaprenumeration",
+            description: String(metadata.description),
+          })
+        )}
+      />
       <section style={{ background: "var(--section-tint)", padding: "56px 24px", textAlign: "center" }}>
         <div className="eyebrow" style={{ marginBottom: 12 }}>
           Fikaprenumeration

@@ -13,6 +13,7 @@ import { ImageSlot } from "@/components/ImageSlot";
 import { formatOre, calculateTotals } from "@/lib/money";
 import { formatDeliveryDate, fromISODate } from "@/lib/dates";
 import { LogoMark } from "@/components/Logo";
+import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 
 interface FormState {
   companyName: string;
@@ -557,6 +558,7 @@ export function CheckoutFlow({
               Ladda ner faktura (PDF)
             </a>
           </div>
+          <PreferredSourceCTA placement="result_success" />
           <div style={{ textAlign: "center", marginTop: 28 }}>
             <Link href="/" style={{ fontWeight: 700, fontSize: 15 }}>
               ← Till startsidan

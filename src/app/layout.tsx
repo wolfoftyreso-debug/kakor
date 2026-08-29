@@ -32,6 +32,27 @@ export const metadata: Metadata = {
     template: "%s — Sockerbagaren",
   },
   description: siteConfig.description,
+  // Delnings-defaults för alla sidor; sidor med egna openGraph-fält
+  // (t.ex. startsida och områdessidor) skriver över titel/beskrivning/url.
+  openGraph: {
+    siteName: "Sockerbagaren",
+    locale: "sv_SE",
+    type: "website",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Sockerbagaren — riktigt fika till jobbet",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sockerbagaren — Riktigt fika till jobbet",
+    description: siteConfig.description,
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

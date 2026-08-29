@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
+import { InfoPageSeo } from "@/components/InfoPageSeo";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,14 @@ export default async function IngredienserPage() {
   });
 
   return (
-    <div className="container-narrow" style={{ padding: "48px 24px 80px" }}>
+    <>
+    <InfoPageSeo
+      path="/ingredienser"
+      name="Ingredienser & allergener"
+      title="Ingredienser & allergener"
+      description={String(metadata.description)}
+    />
+    <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
       <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 12 }}>
         Ingredienser &amp; allergener
       </h1>
@@ -66,5 +74,6 @@ export default async function IngredienserPage() {
         Kontakta oss så hjälper vi er.
       </p>
     </div>
+    </>
   );
 }

@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getAreasWithDates } from "@/lib/products";
 import { formatDeliveryDate, fromISODate, weekdayName } from "@/lib/dates";
+import { JsonLd } from "@/components/JsonLd";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { breadcrumbNode, graph, webPageNode } from "@/lib/seo/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +15,28 @@ export const metadata: Metadata = {
   alternates: { canonical: "/leverans" },
 };
 
+const CRUMBS = [
+  { name: "Sockerbagaren", path: "/" },
+  { name: "Leverans", path: "/leverans" },
+];
+
 export default async function LeveransPage() {
   const areas = await getAreasWithDates(2);
   return (
-    <div className="container-narrow" style={{ padding: "48px 24px 80px" }}>
+    <>
+    <JsonLd
+      data={graph(
+        webPageNode({
+          path: "/leverans",
+          title: "Leverans",
+          description: metadata.description ?? undefined,
+          breadcrumbs: CRUMBS,
+        }),
+        breadcrumbNode("/leverans", CRUMBS)
+      )}
+    />
+    <Breadcrumbs crumbs={CRUMBS} container="container-narrow" />
+    <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
       <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 12 }}>Leverans</h1>
       <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
         Vi kör själva, på fasta leveransdagar per område. Leveransen kommer under dagen — vi kan
@@ -63,5 +84,6 @@ export default async function LeveransPage() {
         </Link>
       </div>
     </div>
+    </>
   );
 }

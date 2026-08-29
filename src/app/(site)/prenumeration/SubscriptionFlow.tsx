@@ -11,6 +11,7 @@ import type { AreaWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
 import { calculateTotals, formatOre } from "@/lib/money";
 import { formatDeliveryDate, fromISODate } from "@/lib/dates";
+import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 
 const INTERVALS = [
   { value: "WEEKLY", label: "Varje vecka", sub: "För arbetsplatser som fikar ofta" },
@@ -158,6 +159,7 @@ export function SubscriptionFlow({
           3. Inför varje leverans skapas en order med faktura — pausa eller avsluta när ni vill
           genom att kontakta oss.
         </div>
+        <PreferredSourceCTA placement="subscription_success" />
         <div style={{ marginTop: 28 }}>
           <Link href="/" style={{ fontWeight: 700 }}>
             ← Till startsidan

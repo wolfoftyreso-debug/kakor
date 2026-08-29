@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { invoiceConfig } from "@/lib/config";
+import { InfoPageSeo } from "@/components/InfoPageSeo";
 
 export const metadata: Metadata = {
   title: "Integritetspolicy",
@@ -7,10 +8,24 @@ export const metadata: Metadata = {
   alternates: { canonical: "/integritet" },
 };
 
+// Senast innehållsändrad — uppdateras manuellt vid verklig policyändring.
+const CONTENT_UPDATED = "2026-08-29";
+
 export default function IntegritetPage() {
   return (
-    <div className="container-narrow" style={{ padding: "48px 24px 80px" }}>
+    <>
+    <InfoPageSeo
+      path="/integritet"
+      name="Integritetspolicy"
+      title="Integritetspolicy"
+      description={String(metadata.description)}
+      dateModified={CONTENT_UPDATED}
+    />
+    <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
       <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 20 }}>Integritetspolicy</h1>
+      <p style={{ fontSize: 13, color: "var(--text-2)", margin: "0 0 20px" }}>
+        Uppdaterad {CONTENT_UPDATED}
+      </p>
       <div style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch", display: "flex", flexDirection: "column", gap: 18 }}>
         <section>
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Vilka uppgifter vi samlar in</h2>
@@ -46,5 +61,6 @@ export default function IntegritetPage() {
         </section>
       </div>
     </div>
+    </>
   );
 }

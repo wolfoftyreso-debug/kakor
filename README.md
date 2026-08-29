@@ -136,6 +136,47 @@ Se [`.env.example`](.env.example). Sammanfattning:
   hostad databas (Postgres/Turso) — Prisma-schemat är förberett för bytet
   (inga SQLite-specifika typer används).
 
+## Sök & synlighet (SEO/GEO)
+
+- **Schema-motor** (`src/lib/seo/schema.ts`): all JSON-LD genereras centralt
+  från riktig applikationsdata med stabil `@id`-strategi
+  (`/#organization`, `/#website`, `{url}#webpage`, `{url}#breadcrumbs`,
+  `/#product-{slug}`) och kopplas till EN graf — inga lösa snippets i
+  komponenter. Regel: inga påhittade egenskaper (ratings, öppettider,
+  telefon osv. läggs till först när verksamheten verifierat dem).
+- **Brödsmulor**: synlig rad och `BreadcrumbList` byggs från samma datalista
+  (`InfoPageSeo`/`Breadcrumbs`) så att de aldrig divergerar.
+- **Metadata**: canonical på alla indexerbara sidor, OG/Twitter-defaults med
+  varumärkes-OG-bild (`public/og.png` — genererad brand-grafik, inget
+  fejkfoto). Admin och fakturor är noindexade; `/faktura` blockeras i robots.
+- **dateModified** sätts endast vid verklig innehållsändring (manuell
+  konstant på villkor/integritet) — aldrig per deploy.
+- **Google Preferred Sources**
+  (`src/components/preferred-source/PreferredSourceCTA.tsx`): Googles
+  officiella knapp (`news.google.com/swg/js/v1/publisher.js` +
+  `[google-add-preferred-source-btn]`, `data-lang="sv"`) plus officiell
+  deeplink `google.com/preferences/source?q=<domän>` som script-fri reserv.
+  Visas efter levererat värde (order-/prenumerationsbekräftelse), laddas
+  lazy (ingen LCP-påverkan), sajten fungerar oavsett om Googles script
+  laddar. Env-gated via `NEXT_PUBLIC_PREFERRED_SOURCES` — ska vara `true`
+  ENDAST i produktion (ingen staging-läcka). Klick ≠ bekräftelse: endast
+  `preferred_source_impression`/`preferred_source_click` mäts, ingen
+  "confirmed"-händelse fejkas. Vid ev. framtida CSP: tillåt script från
+  `news.google.com`.
+- **Analytics**: GA4 laddas endast om `NEXT_PUBLIC_GA4_ID` är satt
+  (anonymize_ip, inga annonssignaler). `track()` i `src/lib/analytics.ts`
+  är no-op utan GA — mätning kan aldrig fälla sajten. Ingen PII i event.
+- **Checklista vid lansering**: verifiera domänen i Google Search Console
+  och skicka in `/sitemap.xml`; kontrollera att sajten dyker upp i Googles
+  källinställningsverktyg (krav för Preferred Sources-knappen); validera
+  JSON-LD i Rich Results Test.
+- Anteckning: `developers.google.com` var inte nåbar från byggmiljön —
+  Preferred Sources-implementationen följer den officiella dokumentationens
+  mönster verifierat via flera oberoende källor (aug 2026) och bör
+  stämmas av mot
+  `developers.google.com/search/docs/appearance/preferred-sources`
+  vid lansering.
+
 ## KVARVARANDE VERKSAMHETSDATA
 
 Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat

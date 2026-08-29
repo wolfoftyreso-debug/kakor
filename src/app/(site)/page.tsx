@@ -5,6 +5,8 @@ import { ProductCard } from "@/components/ProductCard";
 import { ImageSlot } from "@/components/ImageSlot";
 import { fromISODate, weekdayName, isoWeekday } from "@/lib/dates";
 import { siteConfig } from "@/lib/config";
+import { JsonLd } from "@/components/JsonLd";
+import { graph, productListNode, productNode, webPageNode } from "@/lib/seo/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,7 @@ export const metadata: Metadata = {
     siteName: "Sockerbagaren",
     locale: "sv_SE",
     type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Sockerbagaren" }],
   },
 };
 
@@ -58,48 +61,22 @@ const FAQS = [
 export default async function HomePage() {
   const [products, areas] = await Promise.all([getActiveProducts(), getAreasWithDates(1)]);
 
-  // Structured data — endast verifierade fakta (namn, adress, sortiment,
-  // aktuella priser ur databasen). Inga påhittade ratings eller öppettider.
-  const localBusinessLd = {
-    "@context": "https://schema.org",
-    "@type": "Bakery",
-    name: "Sockerbagaren",
-    legalName: "Landvex AB",
-    url: siteConfig.url,
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Antennvägen 2",
-      postalCode: "135 48",
-      addressLocality: "Tyresö",
-      addressCountry: "SE",
-    },
-    areaServed: ["Tyresö", "Nacka", "Haninge", "Huddinge"],
-    servesCuisine: "Svenska småkakor",
-  };
-  const productsLd = products.map((p) => ({
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: p.name,
-    description: p.description,
-    url: `${siteConfig.url}/#kakor`,
-    offers: {
-      "@type": "Offer",
-      priceCurrency: "SEK",
-      price: (p.pricePerKgOre / 100).toFixed(2),
-      availability: "https://schema.org/InStock",
-    },
-  }));
+  // Sidgraf från schema-motorn: WebPage + produktlista + produktentiteter
+  // (Organization/WebSite ligger i layouten och refereras via @id).
+  const pageGraph = graph(
+    webPageNode({
+      path: "/",
+      title: "Sockerbagaren — Riktigt fika till jobbet",
+      description: siteConfig.description,
+      mainEntityId: `${siteConfig.url.replace(/\/$/, "")}/#products`,
+    }),
+    productListNode("/", products),
+    ...products.map(productNode)
+  );
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productsLd) }}
-      />
+      <JsonLd data={pageGraph} />
       {/* HERO */}
       <section
         style={{ background: "var(--section-tint)" }}

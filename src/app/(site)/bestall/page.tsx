@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { CheckoutFlow } from "./CheckoutFlow";
+import { JsonLd } from "@/components/JsonLd";
+import { graph, webPageNode } from "@/lib/seo/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -13,5 +15,18 @@ export const metadata: Metadata = {
 
 export default async function BestallPage() {
   const [products, areas] = await Promise.all([getActiveProducts(), getAreasWithDates(4)]);
-  return <CheckoutFlow products={products} areas={areas} />;
+  return (
+    <>
+      <JsonLd
+        data={graph(
+          webPageNode({
+            path: "/bestall",
+            title: "Beställ kakor",
+            description: String(metadata.description),
+          })
+        )}
+      />
+      <CheckoutFlow products={products} areas={areas} />
+    </>
+  );
 }

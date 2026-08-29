@@ -5,7 +5,10 @@ import { AREA_CONTENT } from "@/lib/area-content";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
 import { fromISODate, weekdayName, formatDeliveryDate } from "@/lib/dates";
-import { siteConfig, invoiceConfig } from "@/lib/config";
+import { invoiceConfig } from "@/lib/config";
+import { JsonLd } from "@/components/JsonLd";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { breadcrumbNode, graph, webPageNode } from "@/lib/seo/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +28,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${content.title} — Sockerbagaren`,
       description: content.metaDescription,
       url: `/${content.slug}`,
+      siteName: "Sockerbagaren",
       locale: "sv_SE",
       type: "website",
+      images: [{ url: "/og.png", width: 1200, height: 630, alt: "Sockerbagaren" }],
     },
   };
 }
@@ -43,28 +48,21 @@ export default async function AreaPage({ params }: Props) {
     ? [...new Set(area.weekdays)].map(weekdayName).join(" och ")
     : null;
 
-  const breadcrumbLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Sockerbagaren", item: siteConfig.url },
-      { "@type": "ListItem", position: 2, name: content.name, item: `${siteConfig.url}/${content.slug}` },
-    ],
-  };
+  const path = `/${content.slug}`;
+  const crumbs = [
+    { name: "Sockerbagaren", path: "/" },
+    { name: content.name, path },
+  ];
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      <JsonLd
+        data={graph(
+          webPageNode({ path, title: content.title, description: content.metaDescription, breadcrumbs: crumbs }),
+          breadcrumbNode(path, crumbs)
+        )}
       />
-      <nav
-        aria-label="Brödsmulor"
-        className="container-medium"
-        style={{ padding: "16px 24px 0", fontSize: 13, color: "var(--text-2)" }}
-      >
-        <Link href="/">Sockerbagaren</Link> / <strong style={{ color: "var(--text)" }}>{content.name}</strong>
-      </nav>
+      <Breadcrumbs crumbs={crumbs} />
 
       <section
         className="container-medium two-col"
