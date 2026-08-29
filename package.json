@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
+    "build:demo": "prisma generate && tsx scripts/build-demo-db.ts && NEXT_PUBLIC_PREFERRED_SOURCES=true next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

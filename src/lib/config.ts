@@ -6,9 +6,17 @@ function env(name: string, fallback: string): string {
   return v !== undefined && v !== "" ? v : fallback;
 }
 
+// Publik bas-URL: SITE_URL styr alltid; på Vercel utan SITE_URL (testdeploy)
+// härleds den från deployment-URL:en.
+function resolveSiteUrl(): string {
+  if (process.env.SITE_URL) return process.env.SITE_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
+
 export const siteConfig = {
   name: "Sockerbagaren",
-  url: env("SITE_URL", "http://localhost:3000"),
+  url: resolveSiteUrl(),
   description:
     "Klassiska småkakor bakade på riktiga råvaror — levererade direkt till företag i Tyresö, Nacka, Haninge och Huddinge. Betalning mot faktura.",
 };

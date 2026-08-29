@@ -1,0 +1,4 @@
+{
+  "//": "TESTDEPLOY-konfiguration: bygger med demodatabas i /tmp (flyktig) och Preferred Sources-CTA synlig. För riktig produktion: sätt DATABASE_URL m.fl. env-variabler i Vercel och byt buildCommand till 'npm run build'. Se README.",
+  "buildCommand": "npm run build:demo"
+}
