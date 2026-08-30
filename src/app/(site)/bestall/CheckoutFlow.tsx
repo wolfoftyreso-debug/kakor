@@ -263,7 +263,7 @@ export function CheckoutFlow({
                   <div style={{ fontFamily: "var(--font-serif)", fontSize: 19, fontWeight: 700 }}>{p.name}</div>
                   <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 2 }}>{p.description}</div>
                   <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
-                    {formatOre(p.pricePerKgOre)}/kg exkl. moms · {p.allergens.replace("Innehåller ", "").replace(".", "")}
+                    {formatOre(p.pricePerKgOre)}/kg exkl. moms · {p.allergens}
                   </div>
                 </div>
                 <div className="stepper">
