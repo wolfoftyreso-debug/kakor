@@ -170,4 +170,25 @@ describe("order + faktura (golden path)", () => {
     expect(logs.every((l) => l.status === "SENT")).toBe(true);
     expect(logs.map((l) => l.type).sort()).toEqual(["INVOICE", "ORDER_CONFIRMATION"]);
   });
+
+  it("styckvara (prova-på-paket): antal × paketpris, enheten följer med till snapshot", async () => {
+    const paket = await prisma.product.findUniqueOrThrow({ where: { slug: "prova-pa-paket" } });
+    expect(paket.unit).toBe("paket");
+
+    const { order, invoice } = await createOrder(
+      checkoutInput({ items: [{ productId: paket.id, weightKg: 2 }] }),
+      { skipEmails: true }
+    );
+    // 2 paket × paketpriset — samma heltalsmatematik som lösvikt.
+    expect(order.subtotalOre).toBe(2 * paket.pricePerKgOre);
+    const item = order.items[0];
+    expect(item.unit).toBe("paket");
+    expect(item.lineTotalOre).toBe(2 * paket.pricePerKgOre);
+
+    const snapshot = parseSnapshot(invoice.snapshotJson);
+    expect(snapshot.lines[0].unit).toBe("paket");
+    // Fakturan renderas med enheten utan att krascha.
+    const pdf = await renderInvoicePdf(snapshot, invoice.invoiceNumber);
+    expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+  });
 });

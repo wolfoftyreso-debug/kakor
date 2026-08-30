@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
 import { formatDate, formatDeliveryDate } from "@/lib/dates";
+import { priceSuffix, qtyLabel } from "@/lib/units";
 import { isOrderOverdue } from "@/lib/status";
 import {
   DeliveryStatusPill,
@@ -62,7 +63,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <div key={i.id} className="divider-row" style={{ display: "flex", justifyContent: "space-between", fontSize: 14.5, padding: "8px 0" }}>
               <span style={{ fontWeight: 600 }}>{i.productName}</span>
               <span>
-                {i.weightKg} kg à {formatOre(i.unitPricePerKgOre)}/kg = {formatOre(i.lineTotalOre)}
+                {qtyLabel(i.weightKg, i.unit)} à {formatOre(i.unitPricePerKgOre)}
+                {priceSuffix(i.unit)} = {formatOre(i.lineTotalOre)}
               </span>
             </div>
           ))}

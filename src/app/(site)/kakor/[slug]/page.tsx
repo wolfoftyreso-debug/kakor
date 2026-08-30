@@ -14,6 +14,7 @@ import { breadcrumbNode, graph, ids, productNode, webPageNode } from "@/lib/seo/
 import { PRODUCT_KNOWLEDGE } from "@/lib/product-content";
 import { allergenChips } from "@/lib/allergens";
 import { formatOre } from "@/lib/money";
+import { priceSuffix } from "@/lib/units";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +26,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await prisma.product.findUnique({ where: { slug } });
   if (!product || !product.active) return {};
-  const title = `${product.name} — beställ per kilo till företag`;
+  const title =
+    product.unit === "paket"
+      ? `${product.name} — beställ till företag`
+      : `${product.name} — beställ per kilo till företag`;
   const aka = PRODUCT_KNOWLEDGE[product.slug]?.aka;
-  const description = `${product.description}${aka ? ` (${aka})` : ""} ${formatOre(product.pricePerKgOre)}/kg exkl. moms. Levereras till arbetsplatser i Tyresö, Nacka, Haninge och Huddinge — betalning mot faktura.`;
+  const description = `${product.description}${aka ? ` (${aka})` : ""} ${formatOre(product.pricePerKgOre)}${priceSuffix(product.unit)} exkl. moms. Levereras till arbetsplatser i Tyresö, Nacka, Haninge och Huddinge — betalning mot faktura.`;
   return {
     title,
     description,
@@ -188,7 +192,8 @@ export default async function ProductPage({ params }: Props) {
                   <div style={{ padding: "14px 16px" }}>
                     <div style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 700 }}>{p.name}</div>
                     <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 4 }}>
-                      {formatOre(p.pricePerKgOre)}/kg exkl. moms · blanda fritt i samma order
+                      {formatOre(p.pricePerKgOre)}
+                      {priceSuffix(p.unit)} exkl. moms · blanda fritt i samma order
                     </div>
                   </div>
                 </Link>

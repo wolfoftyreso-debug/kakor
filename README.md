@@ -57,7 +57,12 @@ Viktiga principer:
 - **Belopp i öre (heltal), moms i baspunkter** (livsmedel 12 % = 1200). All
   beräkning i `src/lib/money.ts` — ingen ekonomi i React-komponenter.
 - **Servern räknar alltid om priset** från databasen; klienten skickar bara
-  produkt-id + vikt. Okända fält avvisas av zod-scheman.
+  produkt-id + antal. Okända fält avvisas av zod-scheman.
+- **Två försäljningsenheter** (`Product.unit`): `kg` (lösvikt per helt kilo)
+  och `paket` (styckvara, t.ex. prova-på-paketet på 1,5 kg — pris per paket).
+  Beloppsmatematiken är identisk (antal × á-pris i öre); enheten följer med
+  orderrad, faktura-snapshot, PDF och mejl. `packageWeightGrams` ger sanna
+  viktsummor i kassa och leveransvy.
 - **Order + faktura skapas i samma transaktion.** E-post skickas efter commit
   och kan aldrig fälla ordern; resultatet loggas i `EmailLog`.
 - **Fakturan är ett historiskt dokument**: hela dess innehåll ligger som

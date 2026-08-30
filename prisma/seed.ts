@@ -38,6 +38,23 @@ const products = [
     imageRef: "/images/chokladsnittar.jpg",
     sortOrder: 3,
   },
+  {
+    // Styckvara: säljs per paket (pricePerKgOre = pris per paket).
+    // Startpris = 1,5 kg × startpriset 295 kr/kg — bekräftas/ändras i admin.
+    slug: "prova-pa-paket",
+    name: "Prova-på-paket",
+    description:
+      "1,5 kg blandade småkakor — mandelkubb, kolasnittar och chokladsnittar i samma paket. Ett enkelt sätt att låta arbetsplatsen provsmaka alla sorterna.",
+    pricePerKgOre: 44250,
+    unit: "paket",
+    packageWeightGrams: 1500,
+    weightOptionsJson: "[1,2]",
+    ingredients:
+      "Innehåller alla tre kaksorterna — se respektive sort ovan för fullständig ingrediensförteckning.",
+    allergens: "Innehåller vete, mandel, ägg, smör (mjölk).",
+    imageRef: "/images/fika.jpg",
+    sortOrder: 4,
+  },
 ];
 
 // Leveransdagar per område: tisdag (2) och torsdag (4) som start —
@@ -53,7 +70,7 @@ async function main() {
   for (const p of products) {
     await prisma.product.upsert({
       where: { slug: p.slug },
-      create: { ...p, weightOptionsJson: "[1,2,3]", vatRateBp: 1200 },
+      create: { weightOptionsJson: "[1,2,3]", vatRateBp: 1200, ...p },
       update: {}, // rör aldrig befintlig produktdata vid om-seed
     });
   }

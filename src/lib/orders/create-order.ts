@@ -87,6 +87,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
       productId: product.id,
       productName: product.name,
       weightKg: item.weightKg,
+      unit: product.unit,
       unitPricePerKgOre: product.pricePerKgOre,
       vatRateBp: product.vatRateBp,
       lineTotalOre: item.weightKg * product.pricePerKgOre,

@@ -16,6 +16,8 @@ export default async function NewProductPage() {
           slug: "",
           description: "",
           priceKr: "",
+          unit: "kg",
+          packageWeightGrams: 0,
           weightOptions: "1,2,3",
           ingredients: "",
           allergens: "",

@@ -24,7 +24,7 @@ const phoneSchema = z
 // för att tyst strippas — API-kontraktet är exakt.
 export const orderItemInputSchema = z.strictObject({
   productId: z.string().min(1),
-  weightKg: z.number().int("Vikt anges i hela kilo").min(1).max(100),
+  weightKg: z.number().int("Antal anges i hela enheter (kilo eller paket)").min(1).max(100),
 });
 
 // Tak + dubblettspärr: utan dem kan ett enda anrop skapa en gigantisk

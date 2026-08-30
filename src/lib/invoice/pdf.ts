@@ -1,6 +1,7 @@
 import PDFDocument from "pdfkit";
 import type { InvoiceSnapshot } from "@/lib/invoice/snapshot";
 import { formatOre } from "@/lib/money";
+import { qtyLabel } from "@/lib/units";
 
 // PDF-faktura — renderas enbart från fakturans snapshot (historiskt dokument).
 // Diskret varumärkesfärg, standardtypsnitt (Helvetica) för stabil server-side-rendering.
@@ -84,8 +85,8 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
     doc.font("Helvetica-Bold").fontSize(8.5).fillColor(BROWN);
     const headY = y + 7;
     doc.text("PRODUKT", cols.name + 8, headY);
-    doc.text("VIKT", cols.kg, headY, { width: 70, align: "right" });
-    doc.text("PRIS/KG", cols.price, headY, { width: 75, align: "right" });
+    doc.text("ANTAL", cols.kg, headY, { width: 70, align: "right" });
+    doc.text("Á-PRIS", cols.price, headY, { width: 75, align: "right" });
     doc.text("MOMS", cols.vat, headY, { width: 40, align: "right" });
     doc.text("BELOPP", cols.total, headY, { width: W - M - cols.total - 8, align: "right" });
     y += 22;
@@ -95,7 +96,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
       const rowY = y + 8;
       doc.font("Helvetica-Bold").text(line.productName, cols.name + 8, rowY, { width: 200 });
       doc.font("Helvetica");
-      doc.text(`${line.weightKg} kg`, cols.kg, rowY, { width: 70, align: "right" });
+      doc.text(qtyLabel(line.weightKg, line.unit ?? "kg"), cols.kg, rowY, { width: 70, align: "right" });
       doc.text(formatOre(line.unitPricePerKgOre), cols.price, rowY, { width: 75, align: "right" });
       doc.text(`${String(line.vatRateBp / 100).replace(".", ",")} %`, cols.vat, rowY, { width: 40, align: "right" });
       doc.text(formatOre(line.lineTotalOre), cols.total, rowY, {

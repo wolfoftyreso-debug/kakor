@@ -3,6 +3,7 @@ import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatDeliveryDate } from "@/lib/dates";
+import { qtyLabel } from "@/lib/units";
 import { FREQUENCY_LABELS, type SubscriptionFrequency } from "@/lib/status";
 import { SubscriptionActions, GenerateOrdersButton } from "./SubscriptionActions";
 
@@ -48,7 +49,7 @@ export default async function SubscriptionsPage() {
                   <div style={{ fontSize: 14, marginTop: 8 }}>
                     {s.items.map((i) => (
                       <span key={i.id} className="chip" style={{ marginRight: 6 }}>
-                        {i.weightKg} kg {i.product.name}
+                        {qtyLabel(i.weightKg, i.product.unit)} {i.product.name}
                       </span>
                     ))}
                   </div>

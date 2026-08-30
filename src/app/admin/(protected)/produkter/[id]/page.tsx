@@ -31,6 +31,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           slug: product.slug,
           description: product.description,
           priceKr: (product.pricePerKgOre / 100).toString(),
+          unit: product.unit,
+          packageWeightGrams: product.packageWeightGrams,
           weightOptions,
           ingredients: product.ingredients,
           allergens: product.allergens,

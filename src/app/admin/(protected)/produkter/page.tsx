@@ -3,6 +3,7 @@ import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
+import { priceSuffix } from "@/lib/units";
 import { ProductActiveToggle } from "./ProductActiveToggle";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export default async function ProductsPage() {
           <thead>
             <tr>
               <th>Produkt</th>
-              <th>Pris/kg</th>
+              <th>Pris</th>
               <th>Vikter</th>
               <th>Allergener</th>
               <th>Ordning</th>
@@ -47,7 +48,10 @@ export default async function ProductsPage() {
                   </Link>
                   <div style={{ fontSize: 12, color: "var(--text-2)" }}>/{p.slug}</div>
                 </td>
-                <td style={{ fontWeight: 700 }}>{formatOre(p.pricePerKgOre)}</td>
+                <td style={{ fontWeight: 700 }}>
+                  {formatOre(p.pricePerKgOre)}
+                  {priceSuffix(p.unit)}
+                </td>
                 <td className="mono" style={{ fontSize: 12 }}>{p.weightOptionsJson}</td>
                 <td style={{ fontSize: 12.5, maxWidth: 240 }}>{p.allergens}</td>
                 <td>{p.sortOrder}</td>

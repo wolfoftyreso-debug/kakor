@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { siteConfig } from "@/lib/config";
 import { formatOre } from "@/lib/money";
+import { priceSuffix, qtyLabel } from "@/lib/units";
 import { formatDeliveryDate } from "@/lib/dates";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
@@ -18,7 +19,10 @@ export async function sendOrderEmails(orderId: string): Promise<void> {
   if (!order || !order.invoice) return;
 
   const lines = order.items
-    .map((i) => `  ${i.productName}: ${i.weightKg} kg à ${formatOre(i.unitPricePerKgOre)}/kg`)
+    .map(
+      (i) =>
+        `  ${i.productName}: ${qtyLabel(i.weightKg, i.unit)} à ${formatOre(i.unitPricePerKgOre)}${priceSuffix(i.unit)}`
+    )
     .join("\n");
   const deliveryDay = formatDeliveryDate(order.deliveryDate);
   const invoiceUrl = `${siteConfig.url}/faktura/${order.invoice.downloadToken}`;
