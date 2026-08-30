@@ -29,7 +29,10 @@ export default function OmPage() {
         Stockholm.
       </p>
       <div style={{ minHeight: 280, borderRadius: 8, overflow: "hidden", margin: "28px 0" }}>
-        <ImageSlot label="Bakning: plåt med kakor tas ur ugnen" />
+        <ImageSlot
+          label="Chokladsnittar med pärlsocker på ett kakfat"
+          src="/images/prenumeration.jpg"
+        />
       </div>
       <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
         Vi säljer till företag: kontor, verkstäder, byggföretag, kliniker och butiker. Betalningen

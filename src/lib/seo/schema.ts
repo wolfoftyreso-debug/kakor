@@ -129,6 +129,7 @@ export function productNode(product: ProductCardData): JsonLdNode {
     name: product.name,
     description: product.description,
     url: `${SITE()}/kakor/${product.slug}`,
+    ...(product.imageRef ? { image: `${SITE()}${product.imageRef}` } : {}),
     brand: { "@id": ids.organization() },
     offers: {
       "@type": "Offer",

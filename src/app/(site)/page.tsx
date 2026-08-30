@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     siteName: "Sockerbagaren",
     locale: "sv_SE",
     type: "website",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Sockerbagaren" }],
+    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Sockerbagaren" }],
   },
 };
 
@@ -32,7 +32,12 @@ const STEPS = [
   { n: "4", title: "Ni får faktura", desc: "Ingen kortbetalning — fakturan kommer efteråt." },
 ];
 
-const INGREDIENTS = ["Riktigt smör", "Strösocker", "Vetemjöl", "Mandel"];
+const INGREDIENTS: { name: string; src?: string }[] = [
+  { name: "Riktigt smör" },
+  { name: "Strösocker" },
+  { name: "Vetemjöl" },
+  { name: "Mandel", src: "/images/mandel.jpg" },
+];
 
 const FAQS = [
   {
@@ -104,7 +109,7 @@ export default async function HomePage() {
           </div>
         </div>
         <div style={{ minHeight: 320 }}>
-          <ImageSlot label="Bricka med mandelkubb, kolasnittar och chokladsnittar i ett fikarum" />
+          <ImageSlot label="Skål med nybakade mandelkubb bredvid en kopp kaffe" src="/images/hero.jpg" />
         </div>
       </section>
 
@@ -165,7 +170,7 @@ export default async function HomePage() {
               gap: 14,
             }}
           >
-            {INGREDIENTS.map((name) => (
+            {INGREDIENTS.map(({ name, src }) => (
               <div
                 key={name}
                 style={{
@@ -180,7 +185,7 @@ export default async function HomePage() {
                 }}
               >
                 <div style={{ width: 64, height: 64, borderRadius: "50%", overflow: "hidden" }}>
-                  <ImageSlot label={name} circle />
+                  <ImageSlot label={name} src={src} circle />
                 </div>
                 <div style={{ fontWeight: 700, fontSize: "13.5px" }}>{name}</div>
               </div>
@@ -227,7 +232,10 @@ export default async function HomePage() {
           style={{ padding: "72px 48px", display: "grid", gap: 48, alignItems: "center" }}
         >
           <div style={{ minHeight: 300, borderRadius: 8, overflow: "hidden" }}>
-            <ImageSlot label="Kartong med kakor öppnas på ett kontorsbord" />
+            <ImageSlot
+              label="Chokladsnittar med pärlsocker på ett kakfat"
+              src="/images/prenumeration.jpg"
+            />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div style={{ fontSize: "12.5px", fontWeight: 700, letterSpacing: "2.5px", color: "var(--butter)" }}>
@@ -268,7 +276,7 @@ export default async function HomePage() {
           </ul>
         </div>
         <div style={{ minHeight: 280, borderRadius: 8, overflow: "hidden" }}>
-          <ImageSlot label="Arbetsplatsfika: händer, kaffe och kakor på en verkstadsbänk" />
+          <ImageSlot label="Kolasnittar på ett fat bredvid en kopp kaffe" src="/images/fika.jpg" />
         </div>
       </section>
 

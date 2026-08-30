@@ -191,8 +191,10 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
   eller ändras i admin → Produkter (historiska ordrar påverkas inte)
 - Exakta leveransdagar per område (seedade tis+tors; ändras i admin →
   Inställningar)
-- Riktiga produktfoton enligt shot list i `design/Designsystem.dc.html`
-  (läggs i `public/` och kopplas via produkternas bildreferens; tills dess
-  visas en neutral platshållare)
+- Produktfoton finns nu i `public/images/` (mandelkubb, kolasnittar,
+  chokladsnittar + hero/OG-beskärningar). Kvarvarande foton enligt shot
+  list i `design/Designsystem.dc.html`: miljöbilder (leverans genom entré,
+  bakning, arbetsplatsfika, råvaror smör/socker/mjöl) — tills dess
+  återanvänds produktfotona respektive neutral platshållare
 - Google-recensioner: sektionen renderas inte förrän verifierade omdömen
   kopplas in (inga fejkade recensioner, även enligt designpaketet)

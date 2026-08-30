@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og.png",
+        url: "/og.jpg",
         width: 1200,
         height: 630,
         alt: "Sockerbagaren — riktigt fika till jobbet",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Sockerbagaren — Riktigt fika till jobbet",
     description: siteConfig.description,
-    images: ["/og.png"],
+    images: ["/og.jpg"],
   },
 };
 

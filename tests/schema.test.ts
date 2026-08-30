@@ -21,7 +21,7 @@ const product: ProductCardData = {
   pricePerKgOre: 29500,
   weightOptions: [1, 2, 3],
   allergens: "Innehåller vete, smör (mjölk).",
-  imageRef: "",
+  imageRef: "/images/kolasnittar.jpg",
 };
 
 describe("schema-motorn", () => {
@@ -81,6 +81,9 @@ describe("schema-motorn", () => {
     expect(node["@id"]).toBe(ids.product("kolasnittar"));
     // Kanonisk entitets-URL = produktens egen sida.
     expect(node.url).toMatch(/\/kakor\/kolasnittar$/);
+    // Produktfoto med absolut URL; utelämnas helt när referens saknas.
+    expect(node.image).toMatch(/\/images\/kolasnittar\.jpg$/);
+    expect(productNode({ ...product, imageRef: "" })).not.toHaveProperty("image");
     const offer = node.offers as Record<string, unknown>;
     expect(offer.price).toBe("295.00");
     expect(offer.priceCurrency).toBe("SEK");

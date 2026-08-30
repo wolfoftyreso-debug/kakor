@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Sockerbagaren",
       locale: "sv_SE",
       type: "website",
-      images: [{ url: "/og.png", width: 1200, height: 630, alt: "Sockerbagaren" }],
+      images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Sockerbagaren" }],
     },
   };
 }
@@ -86,7 +86,7 @@ export default async function AreaPage({ params }: Props) {
           </div>
         </div>
         <div style={{ minHeight: 280, borderRadius: 8, overflow: "hidden" }}>
-          <ImageSlot label={`Leverans i ${content.name}: kartonger bärs in genom en företagsentré`} />
+          <ImageSlot label="Skål med nybakade mandelkubb bredvid en kopp kaffe" src="/images/hero.jpg" />
         </div>
       </section>
 
@@ -179,7 +179,7 @@ export default async function AreaPage({ params }: Props) {
             <p style={{ fontSize: 15, lineHeight: 1.65, margin: 0, color: "var(--brown-2)" }}>{content.midText}</p>
           </div>
           <div style={{ minHeight: 220, borderRadius: 8, overflow: "hidden" }}>
-            <ImageSlot label={`Fikapaus på en arbetsplats i ${content.name}`} />
+            <ImageSlot label="Kolasnittar på ett fat bredvid en kopp kaffe" src="/images/fika.jpg" />
           </div>
         </div>
       </section>

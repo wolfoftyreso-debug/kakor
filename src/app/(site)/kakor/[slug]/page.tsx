@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -33,9 +35,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Sockerbagaren",
       locale: "sv_SE",
       type: "website",
-      images: [{ url: "/og.png", width: 1200, height: 630, alt: "Sockerbagaren" }],
+      images: [{ url: productOgImage(product.imageRef), width: 1200, height: 630, alt: product.name }],
     },
   };
+}
+
+// Delningsbild: 1200x630-beskärningen av produktfotot om den finns,
+// annars själva produktbilden, annars varumärkesbilden.
+function productOgImage(imageRef: string): string {
+  if (!imageRef) return "/og.jpg";
+  const ogVariant = imageRef.replace(/\.(jpe?g|png|webp)$/i, "-og.jpg");
+  try {
+    if (ogVariant !== imageRef && existsSync(join(process.cwd(), "public", ogVariant))) {
+      return ogVariant;
+    }
+  } catch {
+    // fall igenom till produktbilden
+  }
+  return imageRef;
 }
 
 export default async function ProductPage({ params }: Props) {
