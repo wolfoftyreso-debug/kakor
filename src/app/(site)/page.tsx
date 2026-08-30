@@ -37,6 +37,7 @@ const INGREDIENTS: { name: string; src?: string }[] = [
   { name: "Strösocker", src: "/images/socker.jpg" },
   { name: "Vetemjöl", src: "/images/vetemjol.jpg" },
   { name: "Mandel", src: "/images/mandel.jpg" },
+  { name: "Choklad", src: "/images/choklad.jpg" },
 ];
 
 const FAQS = [
@@ -170,7 +171,7 @@ export default async function HomePage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))",
               gap: 14,
             }}
           >
