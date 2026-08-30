@@ -110,7 +110,7 @@ export default async function HomePage() {
         </div>
         <div style={{ minHeight: 320 }}>
           <ImageSlot
-            label="Skål med mandelkubb bredvid en kopp kaffe"
+            label="Fat med chokladsnittar, mandelkubb och kolasnittar bredvid en kopp kaffe"
             src="/images/hero.jpg"
             priority
           />
