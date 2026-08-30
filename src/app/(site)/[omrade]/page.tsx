@@ -181,8 +181,11 @@ export default async function AreaPage({ params }: Props) {
             <h2 style={{ fontSize: "clamp(22px, 3vw, 28px)", marginBottom: 10 }}>{content.midHeading}</h2>
             <p style={{ fontSize: 15, lineHeight: 1.65, margin: 0, color: "var(--brown-2)" }}>{content.midText}</p>
           </div>
-          <div style={{ minHeight: 220, borderRadius: 8, overflow: "hidden" }}>
-            <ImageSlot label="Kolasnittar på ett fat bredvid en kopp kaffe" src="/images/fika.jpg" />
+          <div style={{ minHeight: 220, maxHeight: 380, borderRadius: 8, overflow: "hidden" }}>
+            <ImageSlot
+              label="Sockerbagarens bud bär en kartong med kakor till leveransbilen"
+              src="/images/leverans.jpg"
+            />
           </div>
         </div>
       </section>
