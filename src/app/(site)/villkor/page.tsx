@@ -75,7 +75,7 @@ export default function VillkorPage() {
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Avbokning &amp; ändringar</h2>
           <p style={{ margin: 0 }}>
             Kontakta oss så snart som möjligt om ni behöver ändra eller avboka en beställning, så
-            löser vi det tillsammans. Eftersom kakorna bakas färskt inför varje leverans kan
+            löser vi det tillsammans. Eftersom leveranserna packas och planeras per leveransdag kan
             ändringar nära inpå leveransdagen vara svåra att tillgodose.
           </p>
         </section>

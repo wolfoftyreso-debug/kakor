@@ -20,10 +20,10 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     name: "Tyresö",
     title: "Kakor till företag i Tyresö",
     metaDescription:
-      "Företagsfika i Tyresö: nybakade småkakor levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura — vi finns själva på Antennvägen i Tyresö.",
+      "Företagsfika i Tyresö: klassiska småkakor på riktigt smör, levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura — vi finns själva på Antennvägen i Tyresö.",
     heroHeading: "Kakor till företag i Tyresö",
     heroText:
-      "Vi bakar och levererar fika direkt till arbetsplatser i Tyresö — kontor, verkstäder, butiker och kliniker. Vi finns själva på Antennvägen i Tyresö, så leveransen kommer från grannskapet.",
+      "Vi levererar fika direkt till arbetsplatser i Tyresö — kontor, verkstäder, butiker och kliniker. Vi finns själva på Antennvägen i Tyresö, så leveransen kommer från grannskapet.",
     midHeading: "Företagsfika i Tyresö",
     midText:
       "Fredagsfika på kontoret vid Tyresö centrum, kundmöte i Bollmora eller personalrum i Trollbäcken — vi kör ut samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
@@ -51,10 +51,10 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     name: "Nacka",
     title: "Kakor till företag i Nacka",
     metaDescription:
-      "Företagsfika i Nacka: nybakade småkakor levererade till kontor, butiker och verkstäder i hela kommunen. Betalning mot faktura, lokal leverans från Tyresö.",
+      "Företagsfika i Nacka: klassiska småkakor på riktigt smör, levererade till kontor, butiker och verkstäder i hela kommunen. Betalning mot faktura, lokal leverans från Tyresö.",
     heroHeading: "Kakor till företag i Nacka",
     heroText:
-      "Vi bakar och levererar fika direkt till arbetsplatser i Nacka — kontor, verkstäder, butiker och kliniker. Bageriet ligger i grannkommunen Tyresö, så leveransen kommer från närområdet.",
+      "Vi levererar fika direkt till arbetsplatser i Nacka — kontor, verkstäder, butiker och kliniker. Bageriet ligger i grannkommunen Tyresö, så leveransen kommer från närområdet.",
     midHeading: "Företagsfika i Nacka",
     midText:
       "Fredagsfika på kontoret i Sickla, kundmöte i Nacka strand eller personalrum i Orminge — vi kör ut samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
@@ -82,10 +82,10 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     name: "Haninge",
     title: "Kakor till företag i Haninge",
     metaDescription:
-      "Företagsfika i Haninge: nybakade småkakor levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura, lokal leverans från Tyresö.",
+      "Företagsfika i Haninge: klassiska småkakor på riktigt smör, levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura, lokal leverans från Tyresö.",
     heroHeading: "Kakor till företag i Haninge",
     heroText:
-      "Vi bakar och levererar fika direkt till arbetsplatser i Haninge — kontor, verkstäder, butiker och kliniker. Bageriet ligger i grannkommunen Tyresö, så leveransen kommer från närområdet.",
+      "Vi levererar fika direkt till arbetsplatser i Haninge — kontor, verkstäder, butiker och kliniker. Bageriet ligger i grannkommunen Tyresö, så leveransen kommer från närområdet.",
     midHeading: "Företagsfika i Haninge",
     midText:
       "Fredagsfika på kontoret i Handen, kundmöte i Vega eller personalrum i Västerhaninge — vi kör ut samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
@@ -113,10 +113,10 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     name: "Huddinge",
     title: "Kakor till företag i Huddinge",
     metaDescription:
-      "Företagsfika i Huddinge: nybakade småkakor levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura, lokal leverans från Tyresö.",
+      "Företagsfika i Huddinge: klassiska småkakor på riktigt smör, levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura, lokal leverans från Tyresö.",
     heroHeading: "Kakor till företag i Huddinge",
     heroText:
-      "Vi bakar och levererar fika direkt till arbetsplatser i Huddinge — kontor, verkstäder, butiker och kliniker. Bageriet ligger i Tyresö på andra sidan kommungränsen, så leveransen kommer från närområdet.",
+      "Vi levererar fika direkt till arbetsplatser i Huddinge — kontor, verkstäder, butiker och kliniker. Bageriet ligger i Tyresö på andra sidan kommungränsen, så leveransen kommer från närområdet.",
     midHeading: "Företagsfika i Huddinge",
     midText:
       "Fredagsfika på kontoret i Kungens kurva, kundmöte i Flemingsberg eller personalrum i Skogås — vi kör ut samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",

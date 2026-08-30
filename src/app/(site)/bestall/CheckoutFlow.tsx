@@ -569,7 +569,7 @@ export function CheckoutFlow({
             <br />
             1. Ni får en orderbekräftelse till er e-post.
             <br />
-            2. Vi bakar och levererar på vald leveransdag.
+            2. Vi packar och levererar på vald leveransdag.
             <br />
             3. Fakturan skickas till er faktura-e-post.
           </div>

@@ -146,7 +146,7 @@ export default async function ProductPage({ params }: Props) {
           <section className="card" style={{ padding: "22px 24px" }}>
             <h2 style={{ fontSize: 19, marginBottom: 10 }}>Så levereras den</h2>
             <p style={{ margin: 0, fontSize: "14.5px", lineHeight: 1.65, color: "var(--brown-2)" }}>
-              Vi bakar färskt och kör själva ut till bemannade företagsadresser i{" "}
+              Vi kör själva ut till bemannade företagsadresser i{" "}
               <Link href="/tyreso">Tyresö</Link>, <Link href="/nacka">Nacka</Link>,{" "}
               <Link href="/haninge">Haninge</Link> och <Link href="/huddinge">Huddinge</Link> på
               områdets leveransdag — under dagen. Betalning mot faktura.{" "}

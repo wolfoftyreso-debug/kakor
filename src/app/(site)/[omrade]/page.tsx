@@ -84,7 +84,7 @@ export default async function AreaPage({ params }: Props) {
         </div>
         <div style={{ minHeight: 280, borderRadius: 8, overflow: "hidden" }}>
           <ImageSlot
-            label="Skål med nybakade mandelkubb bredvid en kopp kaffe"
+            label="Skål med mandelkubb bredvid en kopp kaffe"
             src="/images/hero.jpg"
             priority
           />
