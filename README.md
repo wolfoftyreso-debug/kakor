@@ -191,10 +191,11 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
   eller ändras i admin → Produkter (historiska ordrar påverkas inte)
 - Exakta leveransdagar per område (seedade tis+tors; ändras i admin →
   Inställningar)
-- Produktfoton finns nu i `public/images/` (mandelkubb, kolasnittar,
-  chokladsnittar + hero/OG-beskärningar). Kvarvarande foton enligt shot
-  list i `design/Designsystem.dc.html`: miljöbilder (leverans genom entré,
-  bakning, arbetsplatsfika, råvaror smör/socker/mjöl) — tills dess
-  återanvänds produktfotona respektive neutral platshållare
+- Fotouppsättningen är KOMPLETT (verksamhetens beslut): produktfoton
+  (mandelkubb, kolasnittar, chokladsnittar), hero med alla tre sorterna,
+  OG-beskärningar samt samtliga fyra råvarufoton (smör, strösocker,
+  vetemjöl, mandel) i `public/images/`. Designpaketets miljöbilder
+  (leverans, bakning, arbetsplatsfika) utgår — sektionsytorna använder
+  produktfotona, vilket är slutgiltigt.
 - Google-recensioner: sektionen renderas inte förrän verifierade omdömen
   kopplas in (inga fejkade recensioner, även enligt designpaketet)
