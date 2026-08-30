@@ -20,7 +20,11 @@ import { PrismaClient } from "@prisma/client";
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function createClient(): PrismaClient {
-  const url = process.env.DATABASE_URL;
+  // TESTDEPLOY (demo-testdeploy-grenen): på Vercel utan DATABASE_URL används
+  // den inbyggda SQLite-demodatabasen som instrumentation kopierat till /tmp.
+  const url =
+    process.env.DATABASE_URL ??
+    (process.env.VERCEL ? "file:/tmp/sockerbagaren-demo.db" : undefined);
   if (!url) {
     // Fail-fast med tydligt fel — utan hemligheter i meddelandet.
     throw new Error(

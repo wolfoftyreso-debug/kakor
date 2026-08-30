@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
   // spåras in i funktionen.
   outputFileTracingIncludes: {
     "/kakor/[slug]": ["./public/images/*-og.jpg"],
+    // Testdeploy (demo-grenen): demodatabasen måste följa med i alla funktioner.
+    "/**": ["./prisma/demo.db"],
   },
   async redirects() {
     return [

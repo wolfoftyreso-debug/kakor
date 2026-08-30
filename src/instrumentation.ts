@@ -11,6 +11,24 @@ export const onRequestError = Sentry.captureRequestError;
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
+  // TESTDEPLOY (demo-testdeploy-grenen): utan DATABASE_URL på Vercel kopieras
+  // den byggda demodatabasen till /tmp så serverless-funktionerna kan skriva.
+  // /tmp är per instans och nollställs vid kallstart — flyktig demodata.
+  if (process.env.VERCEL && !process.env.DATABASE_URL) {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const target = "/tmp/sockerbagaren-demo.db";
+    if (!fs.existsSync(target)) {
+      const source = path.join(process.cwd(), "prisma", "demo.db");
+      if (fs.existsSync(source)) {
+        fs.copyFileSync(source, target);
+        console.log("[demo] demodatabas kopierad till /tmp (flyktig testdata)");
+      } else {
+        console.error("[demo] prisma/demo.db saknas i bundlen — kör build:demo");
+      }
+    }
+  }
+
   if (SENTRY_ENABLED) {
     Sentry.init({
       dsn: SENTRY_DSN,

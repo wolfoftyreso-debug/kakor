@@ -7,6 +7,7 @@
     "dev": "next dev",
     "dev:db": "tsx scripts/dev-db.ts",
     "build": "prisma generate && next build",
+    "build:demo": "prisma generate && tsx scripts/build-demo-db.ts && next build",
     "check": "npm run typecheck && npm run lint && npm test",
     "start": "next start",
     "lint": "eslint .",
