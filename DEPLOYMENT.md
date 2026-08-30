@@ -150,6 +150,18 @@ Vercel-loggarna.
 - Manuell körning: knappen i admin → Prenumerationer, eller
   `npm run subscriptions:generate`, eller autentiserad POST mot endpointen.
 
+## Smoke test
+
+Efter varje viktig deploy (eller efter Neon-kopplingen):
+
+```bash
+npm run smoke -- https://sockerbagaren.vercel.app          # GET-kontroller
+SMOKE_PRODUCT_ID=<id från admin> npm run smoke -- <url> --order   # + riktig testorder + PDF
+```
+
+Rapporterar PASS/FAIL med exitkod (CI-vänlig). Testordern märks
+"SMOKE TEST — RADERA" och avbryts i admin efteråt.
+
 ## Observability
 
 - Strukturerade loggar till Vercel Logs: ordermotorfel (med referens-ID som
@@ -157,6 +169,27 @@ Vercel-loggarna.
   cron-resultat, misslyckade admin-inloggningar, miljövarningar vid boot.
 - `GET /api/health` → `{ok, database}` (200/503) för smoke tests —
   exponerar inga hemligheter.
+- **Sentry** (server-side, endast fel): projektet `landvex-ab/sockerbagaren`
+  (EU). Init i `src/instrumentation.ts`; DSN (publik identifierare) i
+  `src/lib/sentry-config.ts`, överstyrbar/avstängbar via `SENTRY_DSN`.
+  Aktiv endast i deployade miljöer — aldrig lokalt eller i tester.
+  Klient-SDK:n är medvetet bortvald (≈80 kB First Load JS); serverfelen
+  är de affärskritiska.
+
+## E-post: kvarstående Resend-steg
+
+Resend-kontot har nått sin domängräns — `sockerbagaren.se` kunde inte
+läggas upp automatiskt. Inför domänsteget, välj ett av:
+
+1. Uppgradera Resend-planen och lägg upp `sockerbagaren.se`
+   (region **eu-west-1**), eller
+2. frigör en plats — t.ex. `landvex.se` som ligger overifierad (failad
+   DNS) om den inte ska användas — och lägg sedan upp `sockerbagaren.se`.
+
+Därefter: sätt SPF/DKIM-posterna Resend visar i DNS, verifiera, och sätt
+`EMAIL_FROM` till en adress på domänen + `EMAIL_PROVIDER=resend` i
+Vercels Production-environment. (Ingen befintlig domän raderas
+automatiskt — det beslutet är verksamhetens.)
 
 ## Rollback
 

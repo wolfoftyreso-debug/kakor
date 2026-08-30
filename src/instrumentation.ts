@@ -1,8 +1,24 @@
 // Körs en gång per serverstart (Next.js instrumentation, Node-runtime).
-// Fail-fast-miljövalidering: saknad kritisk konfiguration ska synas direkt
-// i loggarna vid boot — inte som slumpmässiga krascher under checkout.
+// 1) Sentry-felövervakning (endast fel — ingen tracing, ingen PII).
+// 2) Fail-fast-miljövalidering: saknad kritisk konfiguration ska synas
+//    direkt i loggarna vid boot — inte som slumpmässiga krascher i checkout.
+import * as Sentry from "@sentry/nextjs";
+import { SENTRY_DSN, SENTRY_ENABLED } from "@/lib/sentry-config";
+
+// Fångar serverfel från App Router (server components, route handlers).
+export const onRequestError = Sentry.captureRequestError;
+
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+
+  if (SENTRY_ENABLED) {
+    Sentry.init({
+      dsn: SENTRY_DSN,
+      environment: process.env.VERCEL_ENV ?? "development",
+      tracesSampleRate: 0, // endast fel, ingen performance-tracing
+      sendDefaultPii: false,
+    });
+  }
 
   const { checkEnv } = await import("@/lib/env-check");
   const report = checkEnv();
