@@ -320,9 +320,10 @@ export function CheckoutFlow({
       {step === 2 && (
         <>
           <h1 style={{ fontSize: 32, marginBottom: 6 }}>Leverans</h1>
-          <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 28px" }}>
+          <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 20px" }}>
             Vi kör själva, på fasta leveransdagar per område.
           </p>
+          <MiniSummary lines={summaryLines} totalOre={totals.totalOre} onEdit={() => goTo(1)} />
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Vilket område?</div>
           <div
             style={{
@@ -403,9 +404,19 @@ export function CheckoutFlow({
       {step === 3 && (
         <>
           <h1 style={{ fontSize: 32, marginBottom: 6 }}>Företagsuppgifter</h1>
-          <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 28px" }}>
+          <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 20px" }}>
             Vi behöver bara det som krävs för leverans och faktura.
           </p>
+          <MiniSummary
+            lines={summaryLines}
+            totalOre={totals.totalOre}
+            delivery={
+              selectedArea && deliveryDate
+                ? `${selectedArea.name} · ${formatDeliveryDate(fromISODate(deliveryDate))}`
+                : undefined
+            }
+            onEdit={() => goTo(1)}
+          />
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -472,7 +483,10 @@ export function CheckoutFlow({
         <>
           <h1 style={{ fontSize: 32, marginBottom: 28 }}>Kontrollera er order</h1>
           <div className="card" style={{ padding: "24px 26px", display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
-            <div className="section-label">KAKOR</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <div className="section-label">KAKOR</div>
+              <EditStepLink onClick={() => goTo(1)} />
+            </div>
             {summaryLines.map((l) => (
               <div
                 key={l.name}
@@ -497,12 +511,18 @@ export function CheckoutFlow({
             </div>
           </div>
           <div className="card" style={{ padding: "24px 26px", display: "flex", flexDirection: "column", gap: 8, marginBottom: 20, fontSize: "14.5px", lineHeight: 1.6 }}>
-            <div className="section-label">LEVERANS</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <div className="section-label">LEVERANS</div>
+              <EditStepLink onClick={() => goTo(2)} />
+            </div>
             <div style={{ textTransform: "capitalize" }}>
               {selectedArea?.name} · {deliveryDate ? formatDeliveryDate(fromISODate(deliveryDate)) : "—"}
             </div>
             <div style={{ color: "var(--text-2)" }}>Leverans under dagen till bemannad företagsadress.</div>
-            <div className="section-label" style={{ marginTop: 10 }}>FÖRETAG</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 10 }}>
+              <div className="section-label">FÖRETAG</div>
+              <EditStepLink onClick={() => goTo(3)} />
+            </div>
             <div>
               {form.companyName} · {form.orgNumber} · {form.deliveryAddress}, {form.deliveryPostalCode}{" "}
               {form.deliveryCity}
@@ -517,7 +537,7 @@ export function CheckoutFlow({
               Tillbaka
             </button>
             <button type="button" className="btn btn-send btn-lg" disabled={submitting} onClick={submit}>
-              {submitting ? "Skickar…" : "Skicka beställning"}
+              {submitting ? "Skickar…" : `Skicka beställning · ${formatOre(totals.totalOre)}`}
             </button>
           </div>
         </>
@@ -600,5 +620,67 @@ function Field({
       />
       {error && <span className="error-text">{error}</span>}
     </label>
+  );
+}
+
+function EditStepLink({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        background: "none",
+        border: "none",
+        padding: 0,
+        cursor: "pointer",
+        color: "var(--red)",
+        fontWeight: 700,
+        fontSize: "12.5px",
+        fontFamily: "var(--font-sans)",
+        textDecoration: "underline",
+      }}
+    >
+      Ändra
+    </button>
+  );
+}
+
+// Kompakt ordersammanfattning i steg 2–3: beställningen ska vara synlig
+// genom hela flödet, inte bara i granskningssteget.
+function MiniSummary({
+  lines,
+  totalOre,
+  delivery,
+  onEdit,
+}: {
+  lines: { name: string; kg: number; ore: number }[];
+  totalOre: number;
+  delivery?: string;
+  onEdit: () => void;
+}) {
+  if (lines.length === 0) return null;
+  return (
+    <div
+      className="card"
+      style={{
+        padding: "14px 18px",
+        marginBottom: 24,
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "baseline",
+        gap: "6px 14px",
+        fontSize: "13.5px",
+      }}
+    >
+      <span className="section-label" style={{ fontSize: 11 }}>ER BESTÄLLNING</span>
+      <span style={{ color: "var(--text-2)", flex: "1 1 auto" }}>
+        {lines.map((l) => `${l.name} ${l.kg} kg`).join(" · ")}
+        {delivery ? (
+          <span style={{ textTransform: "capitalize" }}> · {delivery}</span>
+        ) : null}
+      </span>
+      <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>{formatOre(totalOre)} inkl. moms</span>
+      <EditStepLink onClick={onEdit} />
+    </div>
   );
 }

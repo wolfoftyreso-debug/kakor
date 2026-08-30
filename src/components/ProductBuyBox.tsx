@@ -53,7 +53,8 @@ export function ProductBuyBox({ product }: { product: ProductCardData }) {
           )
         }
       >
-        Lägg i korgen
+        {/* Knappen bär det uträknade priset — kunden ser vad valet kostar innan klicket. */}
+        Lägg i korgen · {formatOre(kg * product.pricePerKgOre)}
       </button>
       <Link href="/bestall" className="btn btn-butter" style={{ padding: 14, textAlign: "center" }}>
         Till beställningen
