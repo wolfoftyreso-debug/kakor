@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
 import { prisma } from "@/lib/db";
+import Link from "next/link";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 
 export const dynamic = "force-dynamic";
@@ -81,6 +82,15 @@ export default async function IngredienserPage() {
         Kontakta oss så hjälper vi er.
       </p>
     </div>
+
+      <section style={{ background: "var(--butter)", padding: "56px 24px", textAlign: "center", marginTop: 48 }}>
+        <h2 style={{ fontSize: "clamp(22px, 3vw, 30px)", marginBottom: 18 }}>
+          Riktiga råvaror, levererade till er arbetsplats
+        </h2>
+        <Link href="/bestall" className="btn btn-primary btn-lg">
+          Beställ kakor
+        </Link>
+      </section>
     </>
   );
 }

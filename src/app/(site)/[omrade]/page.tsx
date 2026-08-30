@@ -201,6 +201,13 @@ export default async function AreaPage({ params }: Props) {
             </div>
           ))}
         </div>
+        {content.moreLink && (
+          <div style={{ marginTop: 18, fontSize: "14.5px" }}>
+            <Link href={content.moreLink.href} style={{ fontWeight: 700 }}>
+              {content.moreLink.label} →
+            </Link>
+          </div>
+        )}
       </section>
 
       <section style={{ background: "var(--text)", color: "var(--bg)", padding: "56px 24px", textAlign: "center" }}>

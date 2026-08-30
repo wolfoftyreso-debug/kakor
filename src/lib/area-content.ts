@@ -12,6 +12,8 @@ export interface AreaContent {
   midHeading: string;
   midText: string;
   faqs: { q: string; a: string }[];
+  /** Valfri intern vidare-länk som renderas under FAQ:n. */
+  moreLink?: { href: string; label: string };
 }
 
 export const AREA_CONTENT: Record<string, AreaContent> = {
@@ -45,6 +47,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
         a: "Kontakta oss så löser vi det — vi finns på Antennvägen 2 i Tyresö.",
       },
     ],
+    moreLink: { href: "/bageri-tyreso", label: "Om bageriet på Antennvägen — Bageri i Tyresö" },
   },
   nacka: {
     slug: "nacka",

@@ -112,6 +112,7 @@ export default async function KakorPage() {
           </Link>
         </div>
 
+        {/* FAQ före sidans avslutande CTA-band — sidan ska sluta i handling. */}
         <section style={{ marginTop: 56 }}>
           <h2 style={{ fontSize: "clamp(22px, 3vw, 28px)", marginBottom: 8 }}>
             Vanliga frågor om småkakor
@@ -128,6 +129,15 @@ export default async function KakorPage() {
           </div>
         </section>
       </div>
+
+      <section style={{ background: "var(--butter)", padding: "56px 24px", textAlign: "center" }}>
+        <h2 style={{ fontSize: "clamp(22px, 3vw, 30px)", marginBottom: 18 }}>
+          Blanda sorterna fritt — vi levererar till er arbetsplats
+        </h2>
+        <Link href="/bestall" className="btn btn-primary btn-lg">
+          Beställ kakor
+        </Link>
+      </section>
     </>
   );
 }
