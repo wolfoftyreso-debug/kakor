@@ -280,8 +280,11 @@ export default async function HomePage() {
             <li>Leverans under dagen till bemannad adress</li>
           </ul>
         </div>
-        <div style={{ minHeight: 280, borderRadius: 8, overflow: "hidden" }}>
-          <ImageSlot label="Kolasnittar på ett fat bredvid en kopp kaffe" src="/images/fika.jpg" />
+        <div style={{ minHeight: 280, maxHeight: 420, borderRadius: 8, overflow: "hidden" }}>
+          <ImageSlot
+            label="Kollegor fikar med småkakor och kaffe vid ett bord i verkstaden"
+            src="/images/arbetsplatsfika.jpg"
+          />
         </div>
       </section>
 
