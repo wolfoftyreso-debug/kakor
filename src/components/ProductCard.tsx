@@ -38,7 +38,7 @@ export function ProductCard({
         <ImageSlot label={`${product.name} — närbild`} src={product.imageRef || undefined} />
       </div>
       <div style={{ padding: "20px 22px 22px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
           <Heading style={{ fontSize: 21 }}>
             <Link href={`/kakor/${product.slug}`} style={{ color: "var(--text)", textDecoration: "none" }}>
               {product.name}

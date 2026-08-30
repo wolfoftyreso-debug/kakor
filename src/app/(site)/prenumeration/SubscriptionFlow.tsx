@@ -189,7 +189,7 @@ export function SubscriptionFlow({
             {products.map((p) => (
               <div
                 key={p.id}
-                className="card"
+                className="card checkout-product-row"
                 style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 18px" }}
               >
                 <div style={{ width: 56, height: 56, borderRadius: 6, overflow: "hidden", flexShrink: 0 }}>
