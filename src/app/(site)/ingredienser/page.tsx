@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
 import { prisma } from "@/lib/db";
+import { allergenChips } from "@/lib/allergens";
 import Link from "next/link";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 
@@ -61,17 +62,11 @@ export default async function IngredienserPage() {
             )}
             <div className="section-label" style={{ marginBottom: 8 }}>ALLERGENER</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {p.allergens
-                .replace(/^Innehåller /, "")
-                .replace(/\.$/, "")
-                .split(/,| Kan innehålla spår av/)
-                .map((a) => a.trim())
-                .filter(Boolean)
-                .map((a) => (
-                  <span key={a} className="chip">
-                    {a.charAt(0).toUpperCase() + a.slice(1)}
-                  </span>
-                ))}
+              {allergenChips(p.allergens).map((a) => (
+                <span key={a} className="chip">
+                  {a}
+                </span>
+              ))}
             </div>
             <p style={{ fontSize: "12.5px", color: "var(--text-2)", margin: "12px 0 0" }}>{p.allergens}</p>
           </div>

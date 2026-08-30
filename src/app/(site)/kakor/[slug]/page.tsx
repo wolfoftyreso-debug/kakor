@@ -12,6 +12,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumbNode, graph, ids, productNode, webPageNode } from "@/lib/seo/schema";
 import { PRODUCT_KNOWLEDGE } from "@/lib/product-content";
+import { allergenChips } from "@/lib/allergens";
 import { formatOre } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
@@ -85,12 +86,7 @@ export default async function ProductPage({ params }: Props) {
     productNode(cardData)
   );
 
-  const allergenChips = product.allergens
-    .replace(/^Innehåller /, "")
-    .replace(/\.$/, "")
-    .split(/,| Kan innehålla spår av/)
-    .map((a) => a.trim())
-    .filter(Boolean);
+  const chips = allergenChips(product.allergens);
 
   return (
     <>
@@ -134,9 +130,9 @@ export default async function ProductPage({ params }: Props) {
           <section className="card" style={{ padding: "22px 24px" }}>
             <h2 style={{ fontSize: 19, marginBottom: 12 }}>Allergener</h2>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {allergenChips.map((a) => (
+              {chips.map((a) => (
                 <span key={a} className="chip">
-                  {a.charAt(0).toUpperCase() + a.slice(1)}
+                  {a}
                 </span>
               ))}
             </div>
