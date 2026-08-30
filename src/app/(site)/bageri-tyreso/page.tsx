@@ -88,7 +88,7 @@ export default async function BageriTyresoPage() {
           </div>
         </div>
         <div style={{ minHeight: 280, borderRadius: 8, overflow: "hidden" }}>
-          <ImageSlot label="Skål med mandelkubb bredvid en kopp kaffe" src="/images/hero.jpg" priority />
+          <ImageSlot label="Fat med chokladsnittar, mandelkubb och kolasnittar bredvid en kopp kaffe" src="/images/hero.jpg" priority />
         </div>
       </section>
 
