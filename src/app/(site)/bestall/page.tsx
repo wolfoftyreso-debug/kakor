@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharePreview } from "@/lib/seo/meta";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { CheckoutFlow } from "./CheckoutFlow";
 import { JsonLd } from "@/components/JsonLd";
@@ -11,6 +12,12 @@ export const metadata: Metadata = {
   description:
     "Snabbeställning för företag: välj kakor per kilo, leveransdag och betala mot faktura. Lokal leverans i Tyresö, Nacka, Haninge och Huddinge.",
   alternates: { canonical: "/bestall" },
+  ...sharePreview({
+    title: "Beställ kakor",
+    description:
+      "Snabbeställning för företag: välj kakor per kilo, leveransdag och betala mot faktura. Lokal leverans i Tyresö, Nacka, Haninge och Huddinge.",
+    path: "/bestall",
+  }),
 };
 
 export default async function BestallPage() {

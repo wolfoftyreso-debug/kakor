@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
 import { formatDate, formatDeliveryDate } from "@/lib/dates";
+import { isOrderOverdue } from "@/lib/status";
 import {
   DeliveryStatusPill,
   OrderStatusPill,
@@ -15,6 +17,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — orderdetalj", robots: { index: false } };
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPage();
   const { id } = await params;
   const order = await prisma.order.findUnique({
     where: { id },
@@ -42,7 +45,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <OrderStatusPill status={order.status} />
         <PaymentStatusPill
           status={order.paymentStatus}
-          overdue={!!order.invoice && order.invoice.status === "UNPAID" && order.invoice.dueDate < new Date()}
+          overdue={isOrderOverdue(order)}
         />
         <DeliveryStatusPill status={order.deliveryStatus} />
         {order.subscription && (

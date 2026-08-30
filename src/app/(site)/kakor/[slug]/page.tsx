@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharePreview } from "@/lib/seo/meta";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import Link from "next/link";
@@ -23,20 +24,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await prisma.product.findUnique({ where: { slug } });
   if (!product || !product.active) return {};
   const title = `${product.name} — beställ per kilo till företag`;
-  const description = `${product.description} ${formatOre(product.pricePerKgOre)}/kg. Levereras till arbetsplatser i Tyresö, Nacka, Haninge och Huddinge — betalning mot faktura.`;
+  const description = `${product.description} ${formatOre(product.pricePerKgOre)}/kg exkl. moms. Levereras till arbetsplatser i Tyresö, Nacka, Haninge och Huddinge — betalning mot faktura.`;
   return {
     title,
     description,
     alternates: { canonical: `/kakor/${product.slug}` },
-    openGraph: {
-      title: `${title} — Sockerbagaren`,
+    ...sharePreview({
+      title,
       description,
-      url: `/kakor/${product.slug}`,
-      siteName: "Sockerbagaren",
-      locale: "sv_SE",
-      type: "website",
-      images: [{ url: productOgImage(product.imageRef), width: 1200, height: 630, alt: product.name }],
-    },
+      path: `/kakor/${product.slug}`,
+      image: { url: productOgImage(product.imageRef), alt: product.name },
+    }),
   };
 }
 
@@ -176,7 +174,7 @@ export default async function ProductPage({ params }: Props) {
                   <div style={{ padding: "14px 16px" }}>
                     <div style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 700 }}>{p.name}</div>
                     <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 4 }}>
-                      {formatOre(p.pricePerKgOre)}/kg · blanda fritt i samma order
+                      {formatOre(p.pricePerKgOre)}/kg exkl. moms · blanda fritt i samma order
                     </div>
                   </div>
                 </Link>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { addDays, formatDeliveryDate, toISODate, todayInStockholm } from "@/lib/dates";
@@ -14,6 +15,7 @@ export default async function DeliveriesPage({
 }: {
   searchParams: Promise<{ visa?: string }>;
 }) {
+  await requireAdminPage();
   const { visa = "kommande" } = await searchParams;
   const today = todayInStockholm();
 

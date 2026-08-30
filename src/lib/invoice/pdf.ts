@@ -97,7 +97,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
       doc.font("Helvetica");
       doc.text(`${line.weightKg} kg`, cols.kg, rowY, { width: 70, align: "right" });
       doc.text(formatOre(line.unitPricePerKgOre), cols.price, rowY, { width: 75, align: "right" });
-      doc.text(`${line.vatRateBp / 100} %`, cols.vat, rowY, { width: 40, align: "right" });
+      doc.text(`${String(line.vatRateBp / 100).replace(".", ",")} %`, cols.vat, rowY, { width: 40, align: "right" });
       doc.text(formatOre(line.lineTotalOre), cols.total, rowY, {
         width: W - M - cols.total - 8,
         align: "right",

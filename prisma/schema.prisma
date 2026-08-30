@@ -186,6 +186,9 @@ model Subscription {
   id     String @id @default(cuid())
   number String @unique // t.ex. PREN-1001
 
+  // Dubbelklick/nätverksretry vid start får aldrig ge två prenumerationer.
+  idempotencyKey String? @unique
+
   companyName String
   orgNumber   String
   contactName String

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — översikt", robots: { index: false } };
 
 export default async function AdminDashboard() {
+  await requireAdminPage();
   const today = todayInStockholm();
   const weekAhead = addDays(today, 7);
 

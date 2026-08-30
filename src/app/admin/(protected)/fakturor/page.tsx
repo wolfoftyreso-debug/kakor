@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
@@ -25,6 +26,7 @@ export default async function InvoicesPage({
 }: {
   searchParams: Promise<{ filter?: string; sida?: string }>;
 }) {
+  await requireAdminPage();
   const { filter = "alla", sida = "1" } = await searchParams;
   const page = Math.max(1, parseInt(sida, 10) || 1);
   const today = todayInStockholm();
@@ -101,7 +103,7 @@ export default async function InvoicesPage({
             </thead>
             <tbody>
               {invoices.map((inv) => {
-                const overdue = isInvoiceOverdue(inv);
+                const overdue = inv.order.status !== "CANCELLED" && isInvoiceOverdue(inv);
                 return (
                   <tr key={inv.id}>
                     <td>

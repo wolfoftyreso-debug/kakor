@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { ImageSlot } from "@/components/ImageSlot";
-import { invoiceConfig } from "@/lib/config";
+import { invoiceConfig, isVerifiedValue } from "@/lib/config";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 
 export const metadata: Metadata = {
@@ -9,6 +10,12 @@ export const metadata: Metadata = {
   description:
     "Sockerbagaren är ett lokalt bageri i Tyresö som bakar klassiska småkakor på riktiga råvaror och levererar till arbetsplatser i södra Stockholm.",
   alternates: { canonical: "/om" },
+  ...sharePreview({
+    title: "Om Sockerbagaren",
+    description:
+      "Sockerbagaren är ett lokalt bageri i Tyresö som bakar klassiska småkakor på riktiga råvaror och levererar till arbetsplatser i södra Stockholm.",
+    path: "/om",
+  }),
 };
 
 export default function OmPage() {
@@ -46,6 +53,20 @@ export default function OmPage() {
         Org.nr {invoiceConfig.orgNumber}
         <br />
         {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}
+        {/* Kontaktvägar visas när verksamheten verifierat dem — platshållare
+            renderas aldrig publikt. */}
+        {isVerifiedValue(invoiceConfig.email) && (
+          <>
+            <br />
+            <a href={`mailto:${invoiceConfig.email}`}>{invoiceConfig.email}</a>
+          </>
+        )}
+        {isVerifiedValue(invoiceConfig.phone) && (
+          <>
+            <br />
+            <a href={`tel:${invoiceConfig.phone.replace(/[^\d+]/g, "")}`}>{invoiceConfig.phone}</a>
+          </>
+        )}
       </p>
       <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
         <Link href="/bestall" className="btn btn-primary">

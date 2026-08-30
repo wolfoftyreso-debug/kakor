@@ -537,7 +537,8 @@ button, input, select, textarea {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: #b9a88c;
+  /* WCAG AA: ≥4,5:1 mot --bg — kommande steg ska också gå att läsa. */
+  color: var(--text-2);
 }
 .progress-step.done .progress-step-label {
   color: var(--text);
@@ -646,4 +647,17 @@ button, input, select, textarea {
   left: 8px;
   top: 8px;
   color: var(--bg);
+}
+
+/* ---------- Header: mobilnav (server-renderad CSS — ingen FOUC) ---------- */
+@media (max-width: 900px) {
+  .site-nav {
+    display: none !important;
+  }
+  .menu-toggle {
+    display: flex !important;
+  }
+  header.site-header {
+    padding: 14px 20px !important;
+  }
 }

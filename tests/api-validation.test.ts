@@ -27,14 +27,33 @@ describe("checkout-validering (server-side)", () => {
     expect(checkoutSchema.safeParse(validBody).success).toBe(true);
   });
 
-  it("prismanipulation är omöjlig — okända fält som total/price ignoreras", () => {
-    const parsed = checkoutSchema.parse({
-      ...validBody,
-      totalOre: 1,
-      items: [{ productId: "abc123", weightKg: 2, unitPrice: 1 }],
-    });
-    expect("totalOre" in parsed).toBe(false);
-    expect("unitPrice" in parsed.items[0]).toBe(false);
+  it("prismanipulation är omöjlig — okända fält som total/price avvisas", () => {
+    // strictObject: okända fält ger valideringsfel i stället för tyst strippning.
+    expect(checkoutSchema.safeParse({ ...validBody, totalOre: 1 }).success).toBe(false);
+    expect(
+      checkoutSchema.safeParse({
+        ...validBody,
+        items: [{ productId: "abc123", weightKg: 2, unitPrice: 1 }],
+      }).success
+    ).toBe(false);
+  });
+
+  it("avvisar dubblerade produktrader och orimligt många rader", () => {
+    expect(
+      checkoutSchema.safeParse({
+        ...validBody,
+        items: [
+          { productId: "abc123", weightKg: 1 },
+          { productId: "abc123", weightKg: 2 },
+        ],
+      }).success
+    ).toBe(false);
+    expect(
+      checkoutSchema.safeParse({
+        ...validBody,
+        items: Array.from({ length: 31 }, (_, i) => ({ productId: `p${i}`, weightKg: 1 })),
+      }).success
+    ).toBe(false);
   });
 
   it("avvisar tom varukorg", () => {

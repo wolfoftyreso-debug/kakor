@@ -112,7 +112,7 @@ export function OrderActions({
         </div>
       )}
 
-      {status !== "CANCELLED" && (
+      {status !== "CANCELLED" && paymentStatus !== "PAID" && deliveryStatus !== "DELIVERED" && (
         <div className="card" style={{ padding: 18, borderColor: "var(--red)" }}>
           <div style={{ fontWeight: 700, marginBottom: 10, color: "var(--red)" }}>Avbryt order</div>
           <button

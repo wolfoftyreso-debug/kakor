@@ -7,9 +7,14 @@ function env(name: string, fallback: string): string {
 }
 
 // Publik bas-URL: SITE_URL styr alltid; på Vercel utan SITE_URL (testdeploy)
-// härleds den från deployment-URL:en.
+// härleds den från produktions-URL:en (stabil mellan deployer) och i sista
+// hand från deployment-URL:en, så att sitemap/canonical inte pekar på en
+// engångs-deploy-URL.
 function resolveSiteUrl(): string {
   if (process.env.SITE_URL) return process.env.SITE_URL;
+  if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return "http://localhost:3000";
 }
@@ -34,6 +39,11 @@ export const invoiceConfig = {
   fSkatt: env("INVOICE_F_SKATT", "Godkänd för F-skatt"),
   paymentTermsDays: parseInt(env("INVOICE_PAYMENT_TERMS_DAYS", "30"), 10),
 };
+
+/** Platshållare ("[EJ VERIFIERAT: …]") får aldrig visas publikt på sajten. */
+export function isVerifiedValue(value: string): boolean {
+  return value !== "" && !value.startsWith("[EJ VERIFIERAT");
+}
 
 export const emailConfig = {
   provider: env("EMAIL_PROVIDER", "log"),

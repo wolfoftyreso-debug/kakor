@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { formatOre } from "@/lib/money";
 import { formatDate } from "@/lib/dates";
 import { todayInStockholm } from "@/lib/dates";
+import { isOrderOverdue } from "@/lib/status";
 import {
   DeliveryStatusPill,
   OrderStatusPill,
@@ -31,6 +33,7 @@ export default async function OrdersPage({
 }: {
   searchParams: Promise<{ filter?: string; q?: string; sida?: string }>;
 }) {
+  await requireAdminPage();
   const { filter = "alla", q = "", sida = "1" } = await searchParams;
   const page = Math.max(1, parseInt(sida, 10) || 1);
 
@@ -159,7 +162,7 @@ export default async function OrdersPage({
                       <OrderStatusPill status={o.status} />
                       <PaymentStatusPill
                         status={o.paymentStatus}
-                        overdue={!!o.invoice && o.invoice.status === "UNPAID" && o.invoice.dueDate < new Date()}
+                        overdue={isOrderOverdue(o)}
                       />
                       <DeliveryStatusPill status={o.deliveryStatus} />
                     </div>

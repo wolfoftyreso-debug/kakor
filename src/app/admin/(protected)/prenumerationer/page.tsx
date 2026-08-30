@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatDeliveryDate } from "@/lib/dates";
@@ -9,6 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — prenumerationer", robots: { index: false } };
 
 export default async function SubscriptionsPage() {
+  await requireAdminPage();
   const subscriptions = await prisma.subscription.findMany({
     orderBy: [{ status: "asc" }, { nextDeliveryDate: "asc" }],
     include: {

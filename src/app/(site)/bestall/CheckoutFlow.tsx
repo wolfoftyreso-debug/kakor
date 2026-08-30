@@ -14,6 +14,7 @@ import { formatOre, calculateTotals } from "@/lib/money";
 import { formatDeliveryDate, fromISODate } from "@/lib/dates";
 import { LogoMark } from "@/components/Logo";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
+import { newIdempotencyKey } from "@/lib/idempotency";
 
 interface FormState {
   companyName: string;
@@ -70,8 +71,9 @@ export function CheckoutFlow({
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<OrderResult | null>(null);
   const headingRef = useRef<HTMLDivElement>(null);
-  // Ny nyckel varje gång kunden når granskningssteget; återanvänds vid retry
-  // så att dubbelklick/nätverksfel aldrig ger två ordrar.
+  // EN nyckel per beställningsförsök — behålls även om kunden går tillbaka
+  // och fram igen, så att ett tappat svar + nytt "Skicka" aldrig ger två
+  // ordrar. Nollställs först när en order lyckats.
   const idempotencyKey = useRef<string>("");
 
   const qtyFor = (productId: string) => cart.lines.find((l) => l.productId === productId)?.kg ?? 0;
@@ -115,11 +117,8 @@ export function CheckoutFlow({
   }, [selectedArea, deliveryDate]);
 
   const goTo = (s: number) => {
-    if (s === 4) {
-      idempotencyKey.current =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+    if (s === 4 && !idempotencyKey.current) {
+      idempotencyKey.current = newIdempotencyKey();
     }
     setStep(s);
     setGlobalError(null);
@@ -184,6 +183,7 @@ export function CheckoutFlow({
       });
       const data = await res.json();
       if (data.ok) {
+        idempotencyKey.current = "";
         setResult({
           orderNumber: data.orderNumber,
           invoiceUrl: data.invoiceUrl,
@@ -263,7 +263,7 @@ export function CheckoutFlow({
                   <div style={{ fontFamily: "var(--font-serif)", fontSize: 19, fontWeight: 700 }}>{p.name}</div>
                   <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 2 }}>{p.description}</div>
                   <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
-                    {formatOre(p.pricePerKgOre)}/kg · {p.allergens.replace("Innehåller ", "").replace(".", "")}
+                    {formatOre(p.pricePerKgOre)}/kg exkl. moms · {p.allergens.replace("Innehåller ", "").replace(".", "")}
                   </div>
                 </div>
                 <div className="stepper">
@@ -299,7 +299,7 @@ export function CheckoutFlow({
             }}
           >
             <div>
-              <div style={{ fontSize: 13, color: "var(--text-2)" }}>Totalt</div>
+              <div style={{ fontSize: 13, color: "var(--text-2)" }}>Totalt inkl. moms</div>
               <div style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 700 }}>
                 {totalKg} kg · {formatOre(totals.totalOre)}
               </div>
@@ -490,7 +490,7 @@ export function CheckoutFlow({
               <span>{formatOre(totals.vatOre)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 16 }}>
-              <span>Totalt</span>
+              <span>Totalt inkl. moms</span>
               <span>
                 {totalKg} kg · {formatOre(totals.totalOre)}
               </span>

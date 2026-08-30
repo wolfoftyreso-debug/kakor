@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharePreview } from "@/lib/seo/meta";
 import { invoiceConfig } from "@/lib/config";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 
@@ -6,6 +7,12 @@ export const metadata: Metadata = {
   title: "Integritetspolicy",
   description: "Hur Sockerbagaren behandlar personuppgifter i samband med beställningar.",
   alternates: { canonical: "/integritet" },
+  ...sharePreview({
+    title: "Integritetspolicy",
+    description:
+      "Hur Sockerbagaren behandlar personuppgifter i samband med beställningar.",
+    path: "/integritet",
+  }),
 };
 
 // Senast innehållsändrad — uppdateras manuellt vid verklig policyändring.

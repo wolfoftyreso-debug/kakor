@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 
@@ -16,8 +17,10 @@ async function runCron(req: NextRequest): Promise<NextResponse> {
       { status: 503 }
     );
   }
-  const auth = req.headers.get("authorization");
-  if (auth !== `Bearer ${secret}`) {
+  const auth = req.headers.get("authorization") ?? "";
+  // Hash före jämförelsen: konstant längd => timingSafeEqual utan tidig avbrytning.
+  const digest = (s: string) => createHash("sha256").update(s).digest();
+  if (!timingSafeEqual(digest(auth), digest(`Bearer ${secret}`))) {
     return NextResponse.json({ ok: false, error: "Obehörig" }, { status: 401 });
   }
   try {

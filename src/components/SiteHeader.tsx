@@ -162,19 +162,6 @@ export function SiteHeader() {
           </nav>
         )}
       </header>
-      <style jsx>{`
-        @media (max-width: 900px) {
-          .site-nav {
-            display: none !important;
-          }
-          .menu-toggle {
-            display: flex !important;
-          }
-          header.site-header {
-            padding: 14px 20px !important;
-          }
-        }
-      `}</style>
     </>
   );
 }

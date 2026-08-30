@@ -17,9 +17,17 @@ export interface ProductCardData {
   imageRef: string;
 }
 
-export function ProductCard({ product }: { product: ProductCardData }) {
+export function ProductCard({
+  product,
+  headingLevel = "h3",
+}: {
+  product: ProductCardData;
+  /** h2 där kortet ligger direkt under sidans h1 (t.ex. /kakor). */
+  headingLevel?: "h2" | "h3";
+}) {
   const { addKg } = useCart();
   const [kg, setSelectedKg] = useState(product.weightOptions[0] ?? 1);
+  const Heading = headingLevel;
 
   return (
     <div
@@ -31,13 +39,14 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       </div>
       <div style={{ padding: "20px 22px 22px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
-          <h3 style={{ fontSize: 21 }}>
+          <Heading style={{ fontSize: 21 }}>
             <Link href={`/kakor/${product.slug}`} style={{ color: "var(--text)", textDecoration: "none" }}>
               {product.name}
             </Link>
-          </h3>
+          </Heading>
           <div style={{ fontFamily: "var(--font-serif)", fontSize: 15, color: "var(--text-2)", whiteSpace: "nowrap" }}>
-            {formatOre(product.pricePerKgOre)}/kg
+            {formatOre(product.pricePerKgOre)}/kg{" "}
+            <span style={{ fontSize: 11.5, fontFamily: "var(--font-sans)" }}>exkl. moms</span>
           </div>
         </div>
         <p style={{ margin: 0, fontSize: 14, color: "var(--text-2)", lineHeight: 1.5, flex: 1 }}>

@@ -135,6 +135,15 @@ export function productNode(product: ProductCardData): JsonLdNode {
       "@type": "Offer",
       priceCurrency: "SEK",
       price: (product.pricePerKgOre / 100).toFixed(2),
+      // B2B-pris per kilo, exklusive moms — måste deklareras så att priset
+      // i sökresultat inte utger sig för att vara konsumentpris inkl. moms.
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: (product.pricePerKgOre / 100).toFixed(2),
+        priceCurrency: "SEK",
+        valueAddedTaxIncluded: false,
+        referenceQuantity: { "@type": "QuantitativeValue", value: 1, unitCode: "KGM" },
+      },
       availability: "https://schema.org/InStock",
       seller: { "@id": ids.organization() },
     },

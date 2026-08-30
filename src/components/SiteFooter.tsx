@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LogoSolid } from "@/components/Logo";
-import { invoiceConfig } from "@/lib/config";
+import { invoiceConfig, isVerifiedValue } from "@/lib/config";
 
 const AREAS = [
   { slug: "tyreso", name: "Tyresö" },
@@ -42,6 +42,26 @@ export function SiteFooter() {
               Org.nr {invoiceConfig.orgNumber}
               <br />
               {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}
+              {/* Visas först när verksamheten verifierat uppgifterna. */}
+              {isVerifiedValue(invoiceConfig.email) && (
+                <>
+                  <br />
+                  <a href={`mailto:${invoiceConfig.email}`} style={{ color: "var(--footer-text)" }}>
+                    {invoiceConfig.email}
+                  </a>
+                </>
+              )}
+              {isVerifiedValue(invoiceConfig.phone) && (
+                <>
+                  <br />
+                  <a
+                    href={`tel:${invoiceConfig.phone.replace(/[^\d+]/g, "")}`}
+                    style={{ color: "var(--footer-text)" }}
+                  >
+                    {invoiceConfig.phone}
+                  </a>
+                </>
+              )}
             </div>
           </div>
           <FooterCol

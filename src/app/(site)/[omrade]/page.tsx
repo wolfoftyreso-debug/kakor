@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AREA_CONTENT } from "@/lib/area-content";
+import { sharePreview } from "@/lib/seo/meta";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
 import { fromISODate, weekdayName, formatDeliveryDate } from "@/lib/dates";
@@ -24,15 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: content.title,
     description: content.metaDescription,
     alternates: { canonical: `/${content.slug}` },
-    openGraph: {
-      title: `${content.title} — Sockerbagaren`,
+    ...sharePreview({
+      title: content.title,
       description: content.metaDescription,
-      url: `/${content.slug}`,
-      siteName: "Sockerbagaren",
-      locale: "sv_SE",
-      type: "website",
-      images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Sockerbagaren" }],
-    },
+      path: `/${content.slug}`,
+    }),
   };
 }
 

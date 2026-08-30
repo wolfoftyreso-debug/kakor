@@ -111,4 +111,55 @@ describe("prenumeration → order → faktura", () => {
       createSubscription(subscriptionInput({ firstDeliveryDate: "2020-01-01" }))
     ).rejects.toThrow(/inte tillgänglig/);
   });
+
+  it("samma idempotencyKey ger samma prenumeration — aldrig två", async () => {
+    const key = `test-sub-idem-${Date.now()}`;
+    const first = await createSubscription(subscriptionInput({ idempotencyKey: key }));
+    const second = await createSubscription(subscriptionInput({ idempotencyKey: key }));
+    expect(second.id).toBe(first.id);
+    expect(second.number).toBe(first.number);
+    expect(await prisma.subscription.count({ where: { idempotencyKey: key } })).toBe(1);
+  });
+
+  it("passerat leveransdatum genererar ingen bakdaterad order — datumet flyttas fram", async () => {
+    const sub = await createSubscription(subscriptionInput());
+    // Simulera lång paus: nästa leverans ligger långt bak i tiden.
+    const stale = addDays(sub.nextDeliveryDate, -60);
+    await prisma.subscription.update({
+      where: { id: sub.id },
+      data: { nextDeliveryDate: stale },
+    });
+
+    const now = addDays(sub.nextDeliveryDate, -2);
+    const run = await generateDueSubscriptionOrders({ now, horizonDays: 3, skipEmails: true });
+
+    expect(run.generated.filter((g) => g.subscriptionNumber === sub.number)).toHaveLength(0);
+    expect(
+      run.skipped.some((s) => s.subscriptionNumber === sub.number && /framflyttad/.test(s.reason))
+    ).toBe(true);
+    expect(await prisma.order.count({ where: { subscriptionId: sub.id } })).toBe(0);
+
+    const reloaded = await prisma.subscription.findUniqueOrThrow({ where: { id: sub.id } });
+    expect(reloaded.nextDeliveryDate.getTime()).toBeGreaterThanOrEqual(
+      addDays(now, -1).getTime()
+    );
+  });
+
+  it("avvisar postnummer utanför områdets prefixspärr", async () => {
+    // Seeden lämnar spärren tom — aktivera den för testet och återställ efteråt.
+    await prisma.deliveryArea.update({
+      where: { slug: "nacka" },
+      data: { postalCodePrefixesJson: '["131"]' },
+    });
+    try {
+      await expect(
+        createSubscription(subscriptionInput({ deliveryPostalCode: "999 99" }))
+      ).rejects.toThrow(/Postnumret/);
+    } finally {
+      await prisma.deliveryArea.update({
+        where: { slug: "nacka" },
+        data: { postalCodePrefixesJson: "[]" },
+      });
+    }
+  });
 });

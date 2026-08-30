@@ -4,7 +4,7 @@
 // kakor + intervall + leveransdag + uppgifter och sticky sammanställning.
 // Prenumeration = återkommande order mot faktura, ingen kortdebitering.
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { ProductCardData } from "@/components/ProductCard";
 import type { AreaWithDates } from "@/lib/products";
@@ -12,11 +12,12 @@ import { ImageSlot } from "@/components/ImageSlot";
 import { calculateTotals, formatOre } from "@/lib/money";
 import { formatDeliveryDate, fromISODate } from "@/lib/dates";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
+import { newIdempotencyKey } from "@/lib/idempotency";
 
 const INTERVALS = [
   { value: "WEEKLY", label: "Varje vecka", sub: "För arbetsplatser som fikar ofta" },
   { value: "BIWEEKLY", label: "Varannan vecka", sub: "Vanligast — lagom påfyllning" },
-  { value: "MONTHLY", label: "En gång i månaden", sub: "Till möten och fredagsfika" },
+  { value: "MONTHLY", label: "Var fjärde vecka", sub: "Till möten och fredagsfika" },
 ] as const;
 
 export function SubscriptionFlow({
@@ -50,6 +51,9 @@ export function SubscriptionFlow({
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ number: string; nextDate: string } | null>(null);
+  // EN nyckel per startförsök — retry efter nätverksfel återanvänder nyckeln
+  // så att en tappad bekräftelse aldrig ger två prenumerationer.
+  const idempotencyKey = useRef<string>("");
 
   const selectedArea = areas.find((a) => a.slug === areaSlug) ?? null;
   const lines = products.map((p) => ({ product: p, kg: qty[p.id] ?? 0 })).filter((l) => l.kg > 0);
@@ -101,11 +105,13 @@ export function SubscriptionFlow({
     }
     setSubmitting(true);
     setGlobalError(null);
+    if (!idempotencyKey.current) idempotencyKey.current = newIdempotencyKey();
     try {
       const res = await fetch("/api/subscriptions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          idempotencyKey: idempotencyKey.current,
           items: lines.map((l) => ({ productId: l.product.id, weightKg: l.kg })),
           frequency,
           areaSlug,
@@ -125,6 +131,7 @@ export function SubscriptionFlow({
       });
       const data = await res.json();
       if (data.ok) {
+        idempotencyKey.current = "";
         setDone({ number: data.subscriptionNumber, nextDate: data.nextDeliveryDate });
         window.scrollTo({ top: 0 });
       } else {
@@ -191,7 +198,7 @@ export function SubscriptionFlow({
                 <div style={{ flex: 1, minWidth: 120 }}>
                   <div style={{ fontFamily: "var(--font-serif)", fontSize: 17, fontWeight: 700 }}>{p.name}</div>
                   <div style={{ fontSize: "12.5px", color: "var(--text-2)" }}>
-                    {p.description} · {formatOre(p.pricePerKgOre)}/kg
+                    {p.description} · {formatOre(p.pricePerKgOre)}/kg exkl. moms
                   </div>
                 </div>
                 <div className="stepper">
@@ -372,7 +379,7 @@ export function SubscriptionFlow({
             </span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-2)" }}>
-            <span>Pris per leverans</span>
+            <span>Pris per leverans (inkl. moms)</span>
             <span>{formatOre(totals.totalOre)}</span>
           </div>
         </div>
@@ -400,6 +407,19 @@ export function SubscriptionFlow({
   );
 }
 
+// Samma ifyllnadshjälp som checkoutens fält (WCAG 1.3.5).
+const SUB_AUTOCOMPLETE: Record<string, string> = {
+  companyName: "organization",
+  orgNumber: "off",
+  contactName: "name",
+  email: "email",
+  invoiceEmail: "email",
+  phone: "tel",
+  deliveryAddress: "street-address",
+  deliveryPostalCode: "postal-code",
+  deliveryCity: "address-level2",
+};
+
 function SubField({
   label,
   k,
@@ -425,6 +445,7 @@ function SubField({
         type={type}
         value={form[k] ?? ""}
         placeholder={placeholder}
+        autoComplete={SUB_AUTOCOMPLETE[k]}
         onChange={(e) => set(k as never, e.target.value)}
         aria-invalid={!!error}
       />

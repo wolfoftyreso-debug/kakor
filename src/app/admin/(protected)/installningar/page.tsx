@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { invoiceConfig, emailConfig, siteConfig } from "@/lib/config";
 import { AreaForm } from "./AreaForm";
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — inställningar", robots: { index: false } };
 
 export default async function SettingsPage() {
+  await requireAdminPage();
   const areas = await prisma.deliveryArea.findMany({ orderBy: { sortOrder: "asc" } });
 
   const companyRows: [string, string][] = [

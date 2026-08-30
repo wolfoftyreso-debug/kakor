@@ -3,6 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit"],
   poweredByHeader: false,
+  // public/ finns inte i serverless-funktionens filsystem på Vercel —
+  // produktsidans existsSync-val av OG-bildvariant kräver att filerna
+  // spåras in i funktionen.
+  outputFileTracingIncludes: {
+    "/kakor/[slug]": ["./public/images/*-og.jpg"],
+  },
   async redirects() {
     return [
       // Kanonisk host: www → apex (gäller endast produktionsdomänen).

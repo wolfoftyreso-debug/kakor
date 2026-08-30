@@ -1,3 +1,5 @@
+import { todayInStockholm } from "@/lib/dates";
+
 // Separata statusmodeller — en order kan t.ex. vara CONFIRMED + UNPAID + DELIVERED.
 
 export const ORDER_STATUS = ["NEW", "CONFIRMED", "CANCELLED"] as const;
@@ -18,10 +20,11 @@ export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUS)[number];
 export const SUBSCRIPTION_FREQUENCY = ["WEEKLY", "BIWEEKLY", "MONTHLY"] as const;
 export type SubscriptionFrequency = (typeof SUBSCRIPTION_FREQUENCY)[number];
 
+// MONTHLY = var 28:e dag (fast leveransveckodag) — etiketten ska inte lova kalendermånad.
 export const FREQUENCY_LABELS: Record<SubscriptionFrequency, string> = {
   WEEKLY: "Varje vecka",
   BIWEEKLY: "Varannan vecka",
-  MONTHLY: "En gång i månaden",
+  MONTHLY: "Var fjärde vecka",
 };
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
@@ -40,13 +43,38 @@ export const DELIVERY_STATUS_LABELS: Record<DeliveryStatus, string> = {
   DELIVERED: "Levererad",
 };
 
-/** OVERDUE lagras aldrig — den beräknas alltid från förfallodatum + status. */
+/**
+ * OVERDUE lagras aldrig — den beräknas alltid från förfallodatum + status.
+ * "Idag" räknas i svensk tid (inte serverns lokala tidszon); förfallen först
+ * dagen EFTER förfallodatumet.
+ */
 export function isInvoiceOverdue(invoice: { status: string; dueDate: Date }, now = new Date()): boolean {
-  return invoice.status === "UNPAID" && invoice.dueDate.getTime() < startOfDay(now).getTime();
+  return invoice.status === "UNPAID" && invoice.dueDate.getTime() < todayInStockholm(now).getTime();
 }
 
-function startOfDay(d: Date): Date {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x;
+/** En avbruten order är aldrig "förfallen" — fakturan drivs inte in. */
+export function isOrderOverdue(
+  order: { status: string; invoice: { status: string; dueDate: Date } | null },
+  now = new Date()
+): boolean {
+  return order.status !== "CANCELLED" && !!order.invoice && isInvoiceOverdue(order.invoice, now);
+}
+
+/**
+ * Servervakt för orderövergångar — UI:t döljer knappar, men server actions är
+ * anropbara endpoints och får aldrig lita på klienten.
+ */
+export function canTransitionOrder(
+  order: { status: string; paymentStatus: string; deliveryStatus: string },
+  action: "pay" | "deliver" | "confirm" | "cancel"
+): boolean {
+  switch (action) {
+    case "pay":
+    case "deliver":
+    case "confirm":
+      return order.status !== "CANCELLED";
+    case "cancel":
+      // Betald eller levererad order avbryts inte — den krediteras/hanteras manuellt.
+      return order.status !== "CANCELLED" && order.paymentStatus !== "PAID" && order.deliveryStatus !== "DELIVERED";
+  }
 }

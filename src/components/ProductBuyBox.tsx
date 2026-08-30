@@ -18,7 +18,10 @@ export function ProductBuyBox({ product }: { product: ProductCardData }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
         <span className="section-label">BESTÄLL</span>
         <span style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 700 }}>
-          {formatOre(product.pricePerKgOre)}/kg
+          {formatOre(product.pricePerKgOre)}/kg{" "}
+          <span style={{ fontSize: 12, fontWeight: 400, fontFamily: "var(--font-sans)", color: "var(--text-2)" }}>
+            exkl. moms
+          </span>
         </span>
       </div>
       <div style={{ display: "flex", gap: 8 }} role="group" aria-label={`Välj vikt för ${product.name}`}>

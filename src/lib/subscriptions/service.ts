@@ -17,8 +17,32 @@ import { createOrder, OrderError } from "@/lib/orders/create-order";
 // Motorn genererar vanliga ordrar via samma ordermotor som engångsköp.
 
 export async function createSubscription(input: SubscriptionInput) {
+  // Idempotens: dubbelklick/nätverksretry returnerar den befintliga
+  // prenumerationen istället för att starta en till (unikt villkor i DB).
+  if (input.idempotencyKey) {
+    const existing = await prisma.subscription.findUnique({
+      where: { idempotencyKey: input.idempotencyKey },
+      include: { items: true },
+    });
+    if (existing) return existing;
+  }
+
   const area = await prisma.deliveryArea.findUnique({ where: { slug: input.areaSlug } });
   if (!area || !area.active) throw new OrderError("Okänt leveransområde", "areaSlug");
+  const areaId = area.id;
+
+  // Samma postnummerspärr som checkouten — annars startas prenumerationer
+  // som ordergenereringen sedan inte kan leverera.
+  const prefixes = safeParseStringArray(area.postalCodePrefixesJson);
+  if (prefixes.length > 0) {
+    const compact = input.deliveryPostalCode.replace(/\s/g, "");
+    if (!prefixes.some((p) => compact.startsWith(p.replace(/\s/g, "")))) {
+      throw new OrderError(
+        `Postnumret verkar inte ligga i ${area.name} — kontrollera adressen eller välj rätt område`,
+        "deliveryPostalCode"
+      );
+    }
+  }
 
   const firstDate = fromISODate(input.firstDeliveryDate);
   const areaConfig = {
@@ -36,32 +60,63 @@ export async function createSubscription(input: SubscriptionInput) {
     throw new OrderError("En produkt i prenumerationen finns inte längre", "items");
   }
 
-  return prisma.$transaction(async (tx) => {
-    const number = await nextNumber(tx, "subscription");
-    return tx.subscription.create({
-      data: {
-        number,
-        companyName: input.companyName,
-        orgNumber: input.orgNumber,
-        contactName: input.contactName,
-        email: input.email,
-        phone: input.phone,
-        deliveryAddress: input.deliveryAddress,
-        deliveryPostalCode: input.deliveryPostalCode,
-        deliveryCity: input.deliveryCity,
-        deliveryInstruction: input.deliveryInstruction,
-        deliveryAreaId: area.id,
-        invoiceEmail: input.invoiceEmail,
-        reference: input.reference,
-        frequency: input.frequency,
-        nextDeliveryDate: firstDate,
-        items: {
-          create: input.items.map((i) => ({ productId: i.productId, weightKg: i.weightKg })),
+  try {
+    return await runCreate();
+  } catch (e) {
+    // Kapplöpning på idempotensnyckeln: parallell förfrågan hann först.
+    if (
+      input.idempotencyKey &&
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2002" &&
+      (e.meta?.target as string[] | undefined)?.includes?.("idempotencyKey")
+    ) {
+      const existing = await prisma.subscription.findUnique({
+        where: { idempotencyKey: input.idempotencyKey },
+        include: { items: true },
+      });
+      if (existing) return existing;
+    }
+    throw e;
+  }
+
+  function runCreate() {
+    return prisma.$transaction(async (tx) => {
+      const number = await nextNumber(tx, "subscription");
+      return tx.subscription.create({
+        data: {
+          number,
+          idempotencyKey: input.idempotencyKey,
+          companyName: input.companyName,
+          orgNumber: input.orgNumber,
+          contactName: input.contactName,
+          email: input.email,
+          phone: input.phone,
+          deliveryAddress: input.deliveryAddress,
+          deliveryPostalCode: input.deliveryPostalCode,
+          deliveryCity: input.deliveryCity,
+          deliveryInstruction: input.deliveryInstruction,
+          deliveryAreaId: areaId,
+          invoiceEmail: input.invoiceEmail,
+          reference: input.reference,
+          frequency: input.frequency,
+          nextDeliveryDate: firstDate,
+          items: {
+            create: input.items.map((i) => ({ productId: i.productId, weightKg: i.weightKg })),
+          },
         },
-      },
-      include: { items: true },
+        include: { items: true },
+      });
     });
-  });
+  }
+}
+
+function safeParseStringArray(json: string): string[] {
+  try {
+    const arr = JSON.parse(json);
+    return Array.isArray(arr) ? arr.filter((x) => typeof x === "string" && x.length > 0) : [];
+  } catch {
+    return [];
+  }
 }
 
 export interface GenerationResult {
@@ -79,7 +134,8 @@ export async function generateDueSubscriptionOrders(
   options: { horizonDays?: number; now?: Date; skipEmails?: boolean } = {}
 ): Promise<GenerationResult> {
   const now = options.now ?? new Date();
-  const horizon = addDays(todayInStockholm(now), options.horizonDays ?? 3);
+  const today = todayInStockholm(now);
+  const horizon = addDays(today, options.horizonDays ?? 3);
 
   const due = await prisma.subscription.findMany({
     where: { status: "ACTIVE", nextDeliveryDate: { lte: horizon } },
@@ -93,6 +149,25 @@ export async function generateDueSubscriptionOrders(
     const area = sub.deliveryArea;
     if (!area) {
       result.skipped.push({ subscriptionNumber: sub.number, reason: "Leveransområde saknas" });
+      continue;
+    }
+
+    // Passerat datum (t.ex. paus som släppts efter lång tid): skapa ingen
+    // bakdaterad order — flytta fram till nästa giltiga dag och fortsätt där.
+    if (sub.nextDeliveryDate.getTime() < today.getTime()) {
+      const areaConfig = {
+        weekdays: JSON.parse(area.weekdaysJson) as number[],
+        leadTimeDays: area.leadTimeDays,
+      };
+      let next = sub.nextDeliveryDate;
+      for (let i = 0; i < 60 && next.getTime() < today.getTime(); i++) {
+        next = nextSubscriptionDate(next, sub.frequency as SubscriptionFrequency, areaConfig);
+      }
+      await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: next } });
+      result.skipped.push({
+        subscriptionNumber: sub.number,
+        reason: `Passerat datum ${period} — framflyttad till ${toISODate(next)}`,
+      });
       continue;
     }
     const activeItems = sub.items.filter((i) => i.product.active && i.weightKg > 0);
@@ -128,7 +203,11 @@ export async function generateDueSubscriptionOrders(
         deliveryDate: period,
       });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002" &&
+        (e.meta?.target as string[] | undefined)?.includes?.("subscriptionId")
+      ) {
         // Ordern för perioden finns redan (retry/dubbelkörning) — hoppa vidare.
         result.skipped.push({ subscriptionNumber: sub.number, reason: `Period ${period} redan genererad` });
       } else {

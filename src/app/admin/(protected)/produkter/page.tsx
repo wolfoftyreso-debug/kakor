@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — produkter", robots: { index: false } };
 
 export default async function ProductsPage() {
+  await requireAdminPage();
   const products = await prisma.product.findMany({ orderBy: { sortOrder: "asc" } });
 
   return (

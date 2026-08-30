@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharePreview } from "@/lib/seo/meta";
 import { invoiceConfig } from "@/lib/config";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 
@@ -6,6 +7,12 @@ export const metadata: Metadata = {
   title: "Leverans- & köpvillkor",
   description: "Leverans-, köp- och fakturavillkor för beställningar hos Sockerbagaren.",
   alternates: { canonical: "/villkor" },
+  ...sharePreview({
+    title: "Leverans- & köpvillkor",
+    description:
+      "Leverans-, köp- och fakturavillkor för beställningar hos Sockerbagaren.",
+    path: "/villkor",
+  }),
 };
 
 // Senast innehållsändrad — uppdateras manuellt vid verklig villkorsändring,
@@ -52,8 +59,8 @@ export default function VillkorPage() {
           <p style={{ margin: 0 }}>
             Betalning sker mot faktura. Fakturan skickas till angiven faktura-e-post och kan även
             laddas ner som PDF. Betalningsvillkor: {invoiceConfig.paymentTermsDays} dagar från
-            fakturadatum. Priser anges inklusive moms (livsmedel, 12&nbsp;%) i kassan; fakturan
-            specificerar nettobelopp, moms och totalsumma.
+            fakturadatum. Priser anges exklusive moms; moms för livsmedel (12&nbsp;%) tillkommer
+            och specificeras i kassan och på fakturan tillsammans med nettobelopp och totalsumma.
           </p>
         </section>
         <section>

@@ -16,7 +16,8 @@ import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 import { formatOre } from "@/lib/money";
-import { fromISODate } from "@/lib/dates";
+import { fromISODate, todayInStockholm } from "@/lib/dates";
+import { canTransitionOrder } from "@/lib/status";
 
 async function requireAdmin() {
   const admin = await getAdmin();
@@ -42,7 +43,8 @@ export async function loginAction(
 
   const ok = await loginAdmin(email, password);
   if (!ok) {
-    console.warn(`[admin] misslyckad inloggning för ${email}`);
+    // JSON-encoda: rå formdata i loggrader möjliggör annars loggforgery via radbrytningar.
+    console.warn(`[admin] misslyckad inloggning för ${JSON.stringify(email.slice(0, 200))}`);
     return { error: "Fel e-post eller lösenord." };
   }
   redirect("/admin");
@@ -62,7 +64,7 @@ async function logEvent(orderId: string, type: string, message: string, actor: s
 export async function markOrderPaid(orderId: string, note: string) {
   const admin = await requireAdmin();
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
-  if (!order) return;
+  if (!order || !canTransitionOrder(order, "pay")) return;
   const now = new Date();
   await prisma.$transaction([
     prisma.order.update({
@@ -90,7 +92,7 @@ export async function markOrderPaid(orderId: string, note: string) {
 export async function markOrderDelivered(orderId: string, note: string) {
   const admin = await requireAdmin();
   const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order) return;
+  if (!order || !canTransitionOrder(order, "deliver")) return;
   await prisma.order.update({
     where: { id: orderId },
     data: {
@@ -106,6 +108,8 @@ export async function markOrderDelivered(orderId: string, note: string) {
 
 export async function confirmOrder(orderId: string) {
   const admin = await requireAdmin();
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order || !canTransitionOrder(order, "confirm")) return;
   await prisma.order.update({ where: { id: orderId }, data: { status: "CONFIRMED" } });
   await logEvent(orderId, "CONFIRMED", "Order bekräftad", admin.email);
   revalidatePath("/admin", "layout");
@@ -113,6 +117,8 @@ export async function confirmOrder(orderId: string) {
 
 export async function cancelOrder(orderId: string, note: string) {
   const admin = await requireAdmin();
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order || !canTransitionOrder(order, "cancel")) return;
   await prisma.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } });
   await logEvent(orderId, "CANCELLED", `Order avbruten${note ? ` — ${note}` : ""}`, admin.email);
   revalidatePath("/admin", "layout");
@@ -185,9 +191,12 @@ export async function setSubscriptionStatus(id: string, status: "ACTIVE" | "PAUS
 export async function setSubscriptionNextDate(id: string, isoDate: string) {
   await requireAdmin();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return;
+  const date = fromISODate(isoDate);
+  // Passerade datum skulle få generatorn att skapa bakdaterade ordrar.
+  if (date.getTime() < todayInStockholm().getTime()) return;
   await prisma.subscription.update({
     where: { id },
-    data: { nextDeliveryDate: fromISODate(isoDate) },
+    data: { nextDeliveryDate: date },
   });
   revalidatePath("/admin/prenumerationer");
 }

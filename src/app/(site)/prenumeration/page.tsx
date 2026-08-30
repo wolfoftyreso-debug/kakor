@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { SubscriptionFlow } from "./SubscriptionFlow";
@@ -12,6 +13,12 @@ export const metadata: Metadata = {
   description:
     "Fika som bara dyker upp: välj kakor, mängd och hur ofta — vi levererar på er leveransdag och fakturerar efteråt. Pausa eller avsluta enkelt.",
   alternates: { canonical: "/prenumeration" },
+  ...sharePreview({
+    title: "Fikaprenumeration",
+    description:
+      "Fika som bara dyker upp: välj kakor, mängd och hur ofta — vi levererar på er leveransdag och fakturerar efteråt. Pausa eller avsluta enkelt.",
+    path: "/prenumeration",
+  }),
 };
 
 export default async function PrenumerationPage() {

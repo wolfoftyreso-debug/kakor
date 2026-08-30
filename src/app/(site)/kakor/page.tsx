@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { getActiveProducts } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
@@ -14,6 +15,12 @@ export const metadata: Metadata = {
   description:
     "Mandelkubb, kolasnittar och chokladsnittar bakade på riktigt smör — säljs per kilo till företag i södra Stockholm. Blanda fritt i samma order, betalning mot faktura.",
   alternates: { canonical: "/kakor" },
+  ...sharePreview({
+    title: "Våra kakor — beställ per kilo",
+    description:
+      "Mandelkubb, kolasnittar och chokladsnittar bakade på riktigt smör — säljs per kilo till företag i södra Stockholm. Blanda fritt i samma order, betalning mot faktura.",
+    path: "/kakor",
+  }),
 };
 
 const CRUMBS = [
@@ -71,7 +78,7 @@ export default async function KakorPage() {
           }}
         >
           {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard key={p.id} product={p} headingLevel="h2" />
           ))}
         </div>
         <div style={{ marginTop: 32, display: "flex", gap: 14, flexWrap: "wrap" }}>

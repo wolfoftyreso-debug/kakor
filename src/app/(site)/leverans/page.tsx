@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { getAreasWithDates } from "@/lib/products";
 import { formatDeliveryDate, fromISODate, weekdayName } from "@/lib/dates";
@@ -13,6 +14,12 @@ export const metadata: Metadata = {
   description:
     "Så fungerar leveransen: fasta leveransdagar per område i Tyresö, Nacka, Haninge och Huddinge. Vi levererar under dagen till bemannade företagsadresser.",
   alternates: { canonical: "/leverans" },
+  ...sharePreview({
+    title: "Leverans",
+    description:
+      "Så fungerar leveransen: fasta leveransdagar per område i Tyresö, Nacka, Haninge och Huddinge. Vi levererar under dagen till bemannade företagsadresser.",
+    path: "/leverans",
+  }),
 };
 
 const CRUMBS = [

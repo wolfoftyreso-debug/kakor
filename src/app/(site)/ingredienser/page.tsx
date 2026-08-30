@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharePreview } from "@/lib/seo/meta";
 import { prisma } from "@/lib/db";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 
@@ -9,6 +10,12 @@ export const metadata: Metadata = {
   description:
     "Fullständiga ingredienser och allergener för Sockerbagarens kakor: riktigt smör, vetemjöl, strösocker och traditionella råvaror.",
   alternates: { canonical: "/ingredienser" },
+  ...sharePreview({
+    title: "Ingredienser & allergener",
+    description:
+      "Fullständiga ingredienser och allergener för Sockerbagarens kakor: riktigt smör, vetemjöl, strösocker och traditionella råvaror.",
+    path: "/ingredienser",
+  }),
 };
 
 export default async function IngredienserPage() {

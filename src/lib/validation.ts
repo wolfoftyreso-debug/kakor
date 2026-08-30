@@ -20,15 +20,30 @@ const phoneSchema = z
   .max(25)
   .regex(/^[0-9+\-() ]+$/, "Ogiltigt telefonnummer");
 
-export const orderItemInputSchema = z.object({
+// strictObject: okända fält (t.ex. klientskickade priser) avvisas i stället
+// för att tyst strippas — API-kontraktet är exakt.
+export const orderItemInputSchema = z.strictObject({
   productId: z.string().min(1),
   weightKg: z.number().int("Vikt anges i hela kilo").min(1).max(100),
 });
 
-export const checkoutSchema = z.object({
+// Tak + dubblettspärr: utan dem kan ett enda anrop skapa en gigantisk
+// order/faktura/PDF genom att upprepa samma produktrad tusentals gånger.
+const itemsSchema = z
+  .array(orderItemInputSchema)
+  .min(1, "Välj minst en kaka")
+  .max(30, "För många orderrader")
+  .refine(
+    (items) => new Set(items.map((i) => i.productId)).size === items.length,
+    "Samma produkt får bara förekomma en gång"
+  );
+
+const idempotencyKeySchema = z.string().regex(/^[a-zA-Z0-9-]{16,64}$/);
+
+export const checkoutSchema = z.strictObject({
   // Skydd mot dubbelbeställning — klienten genererar en nyckel per försök.
-  idempotencyKey: z.string().regex(/^[a-zA-Z0-9-]{16,64}$/).optional(),
-  items: z.array(orderItemInputSchema).min(1, "Välj minst en kaka"),
+  idempotencyKey: idempotencyKeySchema.optional(),
+  items: itemsSchema,
   areaSlug: z.string().min(1, "Välj leveransområde"),
   deliveryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Välj leveransdag"),
 
@@ -50,8 +65,10 @@ export const checkoutSchema = z.object({
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
 
-export const subscriptionSchema = z.object({
-  items: z.array(orderItemInputSchema).min(1, "Välj minst en kaka"),
+export const subscriptionSchema = z.strictObject({
+  // Skydd mot dubbelstart av prenumeration (nätverksretry/dubbelklick).
+  idempotencyKey: idempotencyKeySchema.optional(),
+  items: itemsSchema,
   frequency: z.enum(SUBSCRIPTION_FREQUENCY),
   areaSlug: z.string().min(1, "Välj leveransområde"),
   firstDeliveryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Välj första leveransdag"),

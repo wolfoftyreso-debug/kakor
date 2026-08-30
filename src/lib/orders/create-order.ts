@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { calculateTotals } from "@/lib/money";
 import { nextNumber } from "@/lib/numbering";
 import { invoiceConfig } from "@/lib/config";
-import { addDays, fromISODate, isValidDeliveryDate, toISODate } from "@/lib/dates";
+import { addDays, fromISODate, isValidDeliveryDate, toISODate, todayInStockholm } from "@/lib/dates";
 import type { InvoiceSnapshot } from "@/lib/invoice/snapshot";
 import type { CheckoutInput } from "@/lib/validation";
 import { sendOrderEmails } from "@/lib/orders/order-emails";
@@ -80,6 +80,9 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
   const lines = input.items.map((item) => {
     const product = productById.get(item.productId);
     if (!product) throw new OrderError("En produkt i beställningen finns inte längre", "items");
+    // Vikten är medvetet INTE begränsad till weightOptionsJson: alternativen är
+    // snabbval i UI:t, checkoutens stepper tillåter valfritt helt kilo.
+    // Taken sätts av valideringen: 1–100 kg per rad, max 30 rader.
     return {
       productId: product.id,
       productName: product.name,
@@ -94,7 +97,8 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
     lines.map((l) => ({ netOre: l.lineTotalOre, vatRateBp: l.vatRateBp }))
   );
 
-  const invoiceDate = new Date();
+  // Svensk dag, inte UTC — en order kl 00–02 sommartid ska inte fakturadateras föregående dag.
+  const invoiceDate = todayInStockholm();
   const dueDate = addDays(invoiceDate, invoiceConfig.paymentTermsDays);
   const downloadToken = randomBytes(24).toString("hex");
 
