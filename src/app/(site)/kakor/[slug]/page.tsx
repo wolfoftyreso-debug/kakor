@@ -11,6 +11,7 @@ import { ImageSlot } from "@/components/ImageSlot";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumbNode, graph, ids, productNode, webPageNode } from "@/lib/seo/schema";
+import { PRODUCT_KNOWLEDGE } from "@/lib/product-content";
 import { formatOre } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await prisma.product.findUnique({ where: { slug } });
   if (!product || !product.active) return {};
   const title = `${product.name} — beställ per kilo till företag`;
-  const description = `${product.description} ${formatOre(product.pricePerKgOre)}/kg exkl. moms. Levereras till arbetsplatser i Tyresö, Nacka, Haninge och Huddinge — betalning mot faktura.`;
+  const aka = PRODUCT_KNOWLEDGE[product.slug]?.aka;
+  const description = `${product.description}${aka ? ` (${aka})` : ""} ${formatOre(product.pricePerKgOre)}/kg exkl. moms. Levereras till arbetsplatser i Tyresö, Nacka, Haninge och Huddinge — betalning mot faktura.`;
   return {
     title,
     description,
@@ -154,6 +156,22 @@ export default async function ProductPage({ params }: Props) {
             </p>
           </section>
         </div>
+
+        {PRODUCT_KNOWLEDGE[product.slug] && (
+          <section style={{ marginTop: 48, maxWidth: "70ch" }}>
+            <h2 style={{ fontSize: "clamp(20px, 3vw, 26px)", marginBottom: 14 }}>
+              {PRODUCT_KNOWLEDGE[product.slug].heading}
+            </h2>
+            {PRODUCT_KNOWLEDGE[product.slug].paragraphs.map((p) => (
+              <p
+                key={p.slice(0, 24)}
+                style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", margin: "0 0 14px" }}
+              >
+                {p}
+              </p>
+            ))}
+          </section>
+        )}
 
         {related.length > 0 && (
           <section style={{ marginTop: 48 }}>

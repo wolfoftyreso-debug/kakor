@@ -9,7 +9,7 @@ import { fromISODate, weekdayName, formatDeliveryDate } from "@/lib/dates";
 import { invoiceConfig } from "@/lib/config";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { breadcrumbNode, graph, webPageNode } from "@/lib/seo/schema";
+import { breadcrumbNode, faqNode, graph, webPageNode } from "@/lib/seo/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +56,9 @@ export default async function AreaPage({ params }: Props) {
       <JsonLd
         data={graph(
           webPageNode({ path, title: content.title, description: content.metaDescription, breadcrumbs: crumbs }),
-          breadcrumbNode(path, crumbs)
+          breadcrumbNode(path, crumbs),
+          // Exakt samma frågor/svar som renderas synligt längre ner på sidan.
+          faqNode(path, content.faqs)
         )}
       />
       <Breadcrumbs crumbs={crumbs} />

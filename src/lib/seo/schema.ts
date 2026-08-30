@@ -162,6 +162,22 @@ export function productListNode(path: string, products: ProductCardData[]): Json
   };
 }
 
+/**
+ * FAQPage-nod — används ENDAST för frågor/svar som faktiskt visas på sidan,
+ * med exakt samma text. Aldrig påhittade frågor.
+ */
+export function faqNode(path: string, faqs: { q: string; a: string }[]): JsonLdNode {
+  return {
+    "@type": "FAQPage",
+    "@id": `${SITE()}${path}#faq`,
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+}
+
 /** Bygger en @graph av noder — en <script>-tagg per sida. */
 export function graph(...nodes: (JsonLdNode | null | undefined)[]): JsonLdNode {
   return {

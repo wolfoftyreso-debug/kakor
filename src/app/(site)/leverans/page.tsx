@@ -10,14 +10,14 @@ import { breadcrumbNode, graph, webPageNode } from "@/lib/seo/schema";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Leverans",
+  title: "Fikaleverans i södra Stockholm",
   description:
-    "Så fungerar leveransen: fasta leveransdagar per område i Tyresö, Nacka, Haninge och Huddinge. Vi levererar under dagen till bemannade företagsadresser.",
+    "Fikaleverans till arbetsplatser i södra Stockholm: fasta leveransdagar per område i Tyresö, Nacka, Haninge och Huddinge. Vi kör själva, under dagen, till bemannade företagsadresser.",
   alternates: { canonical: "/leverans" },
   ...sharePreview({
-    title: "Leverans",
+    title: "Fikaleverans i södra Stockholm",
     description:
-      "Så fungerar leveransen: fasta leveransdagar per område i Tyresö, Nacka, Haninge och Huddinge. Vi levererar under dagen till bemannade företagsadresser.",
+      "Fikaleverans till arbetsplatser i södra Stockholm: fasta leveransdagar per område i Tyresö, Nacka, Haninge och Huddinge. Vi kör själva, under dagen, till bemannade företagsadresser.",
     path: "/leverans",
   }),
 };
@@ -35,7 +35,7 @@ export default async function LeveransPage() {
       data={graph(
         webPageNode({
           path: "/leverans",
-          title: "Leverans",
+          title: "Fikaleverans i södra Stockholm",
           description: metadata.description ?? undefined,
           breadcrumbs: CRUMBS,
         }),
@@ -44,7 +44,9 @@ export default async function LeveransPage() {
     />
     <Breadcrumbs crumbs={CRUMBS} container="container-narrow" />
     <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
-      <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 12 }}>Leverans</h1>
+      <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 12 }}>
+        Fikaleverans i södra Stockholm
+      </h1>
       <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
         Vi kör själva, på fasta leveransdagar per område. Leveransen kommer under dagen — vi kan
         inte lova exakt klockslag, så någon behöver finnas på plats för att ta emot den: reception,
