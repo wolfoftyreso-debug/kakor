@@ -218,6 +218,8 @@ const productSchema = z.object({
     .regex(/^[a-z0-9-]{2,60}$/, "Slug: små bokstäver, siffror och bindestreck"),
   description: z.string().trim().min(2).max(500),
   priceKr: z.coerce.number().min(0).max(100000),
+  unit: z.enum(["kg", "paket"]).default("kg"),
+  packageWeightGrams: z.coerce.number().int().min(0).max(100000).default(0),
   weightOptions: z
     .string()
     .trim()
@@ -240,6 +242,8 @@ export async function saveProduct(
     slug: formData.get("slug"),
     description: formData.get("description"),
     priceKr: formData.get("priceKr"),
+    unit: formData.get("unit") ?? "kg",
+    packageWeightGrams: formData.get("packageWeightGrams") ?? 0,
     weightOptions: formData.get("weightOptions"),
     ingredients: formData.get("ingredients") ?? "",
     allergens: formData.get("allergens") ?? "",
@@ -256,6 +260,8 @@ export async function saveProduct(
     slug: d.slug,
     description: d.description,
     pricePerKgOre: Math.round(d.priceKr * 100),
+    unit: d.unit,
+    packageWeightGrams: d.packageWeightGrams,
     weightOptionsJson: JSON.stringify(
       d.weightOptions.split(",").map((s) => parseInt(s.trim(), 10)).filter((n) => n > 0)
     ),

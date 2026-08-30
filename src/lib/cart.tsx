@@ -5,13 +5,15 @@
 // servern räknar alltid om från databasen vid beställning.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { qtyLabel } from "@/lib/units";
 
 export interface CartLine {
   productId: string;
   slug: string;
   name: string;
-  pricePerKgOre: number;
-  kg: number;
+  pricePerKgOre: number; // á-pris per enhet (kg eller paket)
+  unit: string; // "kg" | "paket"
+  kg: number; // antal enheter
 }
 
 interface CartContextValue {
@@ -40,7 +42,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as CartLine[];
-        if (Array.isArray(parsed)) setLines(parsed.filter((l) => l && l.kg > 0));
+        if (Array.isArray(parsed))
+          setLines(parsed.filter((l) => l && l.kg > 0).map((l) => ({ ...l, unit: l.unit ?? "kg" })));
       }
     } catch {
       // korrupt lagring — börja om med tom korg
@@ -74,7 +77,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
         return [...prev, { ...product, kg }];
       });
-      showToast(`${product.name} ${kg} kg lades i korgen`);
+      showToast(`${product.name} ${qtyLabel(kg, product.unit)} lades i korgen`);
     },
     [showToast]
   );

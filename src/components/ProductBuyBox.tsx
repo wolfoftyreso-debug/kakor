@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { formatOre } from "@/lib/money";
+import { priceSuffix, qtyLabel } from "@/lib/units";
 import type { ProductCardData } from "@/components/ProductCard";
 
 export function ProductBuyBox({ product }: { product: ProductCardData }) {
@@ -18,13 +19,18 @@ export function ProductBuyBox({ product }: { product: ProductCardData }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
         <span className="section-label">BESTÄLL</span>
         <span style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 700 }}>
-          {formatOre(product.pricePerKgOre)}/kg{" "}
+          {formatOre(product.pricePerKgOre)}
+          {priceSuffix(product.unit)}{" "}
           <span style={{ fontSize: 12, fontWeight: 400, fontFamily: "var(--font-sans)", color: "var(--text-2)" }}>
             exkl. moms
           </span>
         </span>
       </div>
-      <div style={{ display: "flex", gap: 8 }} role="group" aria-label={`Välj vikt för ${product.name}`}>
+      <div
+        style={{ display: "flex", gap: 8 }}
+        role="group"
+        aria-label={`Välj ${product.unit === "paket" ? "antal" : "vikt"} för ${product.name}`}
+      >
         {product.weightOptions.map((w) => (
           <button
             key={w}
@@ -33,7 +39,7 @@ export function ProductBuyBox({ product }: { product: ProductCardData }) {
             aria-pressed={kg === w}
             onClick={() => setKg(w)}
           >
-            {w} kg
+            {qtyLabel(w, product.unit)}
           </button>
         ))}
       </div>
@@ -48,6 +54,7 @@ export function ProductBuyBox({ product }: { product: ProductCardData }) {
               slug: product.slug,
               name: product.name,
               pricePerKgOre: product.pricePerKgOre,
+              unit: product.unit,
             },
             kg
           )

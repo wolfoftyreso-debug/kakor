@@ -27,7 +27,9 @@ export interface InvoiceSnapshot {
   deliveryDate: string; // ISO-datum
   lines: {
     productName: string;
-    weightKg: number;
+    weightKg: number; // antal enheter
+    /** "kg" | "paket". Saknas i äldre snapshots — tolkas då som "kg". */
+    unit?: string;
     unitPricePerKgOre: number;
     vatRateBp: number;
     lineTotalOre: number;

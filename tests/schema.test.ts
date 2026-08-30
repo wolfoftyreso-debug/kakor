@@ -19,6 +19,8 @@ const product: ProductCardData = {
   name: "Kolasnittar",
   description: "Spröda, smöriga och precis lagom sega.",
   pricePerKgOre: 29500,
+  unit: "kg",
+  packageWeightGrams: 0,
   weightOptions: [1, 2, 3],
   allergens: "Innehåller vete, smör (mjölk).",
   imageRef: "/images/kolasnittar.jpg",

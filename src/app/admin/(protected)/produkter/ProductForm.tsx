@@ -8,6 +8,8 @@ export interface ProductFormValues {
   slug: string;
   description: string;
   priceKr: string;
+  unit: string; // "kg" | "paket"
+  packageWeightGrams: number;
   weightOptions: string;
   ingredients: string;
   allergens: string;
@@ -41,11 +43,28 @@ export function ProductForm({
         <textarea name="description" defaultValue={initial.description} rows={2} required style={{ resize: "vertical" }} />
       </label>
       <label className="field">
-        Pris per kg (kr)
+        Pris per enhet (kr)
         <input name="priceKr" type="number" step="0.01" min="0" defaultValue={initial.priceKr} required />
       </label>
       <label className="field">
-        Viktalternativ (kg, kommaseparerat)
+        Säljs per
+        <select name="unit" defaultValue={initial.unit}>
+          <option value="kg">kilo (lösvikt)</option>
+          <option value="paket">paket (styckvara)</option>
+        </select>
+      </label>
+      <label className="field">
+        Paketvikt (gram — endast styckvaror, 0 för lösvikt)
+        <input
+          name="packageWeightGrams"
+          type="number"
+          min="0"
+          max="100000"
+          defaultValue={initial.packageWeightGrams}
+        />
+      </label>
+      <label className="field">
+        Snabbval för antal (kommaseparerat)
         <input name="weightOptions" defaultValue={initial.weightOptions} required placeholder="1,2,3" />
       </label>
       <label className="field" style={{ gridColumn: "1 / -1" }}>

@@ -24,9 +24,16 @@ model Product {
   slug        String   @unique
   name        String
   description String
-  // Pris per kilo i öre. Historiska ordrar/fakturor påverkas ALDRIG av ändringar här
+  // Pris i öre per försäljningsenhet (per kilo för unit "kg", per paket för
+  // unit "paket"). Historiska ordrar/fakturor påverkas ALDRIG av ändringar här
   // (snapshot sparas på orderrad och faktura).
   pricePerKgOre Int
+  // Försäljningsenhet: "kg" (lösvikt per helt kilo) eller "paket" (styckvara,
+  // t.ex. prova-på-paketet). Beloppsmatematiken är identisk: antal × á-pris.
+  unit String @default("kg")
+  // Informativ vikt per paket i gram (0 för lösviktsprodukter). Används för
+  // sanna viktsummor i kassan/leveransvyn, aldrig för prisberäkning.
+  packageWeightGrams Int @default(0)
   // Moms i baspunkter (livsmedel = 1200 = 12 %).
   vatRateBp   Int      @default(1200)
   // JSON-array med viktalternativ i kg, t.ex. [1,2,3].
@@ -141,7 +148,8 @@ model OrderItem {
 
   // Snapshot — får inte ändras när produkten senare ändras.
   productName      String
-  weightKg         Int // antal kilo av sorten
+  weightKg         Int // antal enheter (kilo för unit "kg", paket för unit "paket")
+  unit             String @default("kg")
   unitPricePerKgOre Int
   vatRateBp        Int
   lineTotalOre     Int // weightKg * unitPricePerKgOre

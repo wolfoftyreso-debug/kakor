@@ -3,6 +3,7 @@ import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { addDays, formatDeliveryDate, toISODate, todayInStockholm } from "@/lib/dates";
+import { qtyLabel } from "@/lib/units";
 import { MarkDeliveredInline } from "./MarkDeliveredInline";
 
 export const dynamic = "force-dynamic";
@@ -73,10 +74,16 @@ export default async function DeliveriesPage({
 
       {sortedKeys.map((dateKey) => {
         const dayOrders = groups.get(dateKey)!;
-        const totalKg = dayOrders.reduce(
-          (s, o) => s + o.items.reduce((s2, i) => s2 + i.weightKg, 0),
-          0
-        );
+        // Lösvikt och paket summeras separat — "12 kg + 2 paket" är packlistans sanning.
+        const allItems = dayOrders.flatMap((o) => o.items);
+        const totalKg = allItems.filter((i) => i.unit !== "paket").reduce((s, i) => s + i.weightKg, 0);
+        const totalPaket = allItems.filter((i) => i.unit === "paket").reduce((s, i) => s + i.weightKg, 0);
+        const dayTotal = [
+          totalKg > 0 ? `${totalKg} kg` : null,
+          totalPaket > 0 ? `${totalPaket} paket` : null,
+        ]
+          .filter(Boolean)
+          .join(" + ") || "0 kg";
         return (
           <section key={dateKey} style={{ marginBottom: 32 }}>
             <h2
@@ -91,7 +98,7 @@ export default async function DeliveriesPage({
               {formatDeliveryDate(dayOrders[0].deliveryDate)}
             </h2>
             <div style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 14 }}>
-              {dayOrders.length} leverans{dayOrders.length === 1 ? "" : "er"} · {totalKg} kg totalt
+              {dayOrders.length} leverans{dayOrders.length === 1 ? "" : "er"} · {dayTotal} totalt
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {dayOrders.map((o) => (
@@ -113,7 +120,7 @@ export default async function DeliveriesPage({
                     <div style={{ fontSize: 14, textAlign: "right", minWidth: 140 }}>
                       {o.items.map((i) => (
                         <div key={i.id}>
-                          <strong>{i.weightKg} kg</strong> {i.productName}
+                          <strong>{qtyLabel(i.weightKg, i.unit)}</strong> {i.productName}
                         </div>
                       ))}
                     </div>

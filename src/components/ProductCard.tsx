@@ -5,13 +5,16 @@ import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { ImageSlot } from "@/components/ImageSlot";
 import { formatOre } from "@/lib/money";
+import { priceSuffix, qtyLabel } from "@/lib/units";
 
 export interface ProductCardData {
   id: string;
   slug: string;
   name: string;
   description: string;
-  pricePerKgOre: number;
+  pricePerKgOre: number; // á-pris per enhet (kg eller paket)
+  unit: string; // "kg" | "paket"
+  packageWeightGrams: number; // 0 för lösvikt
   weightOptions: number[];
   allergens: string;
   imageRef: string;
@@ -45,14 +48,19 @@ export function ProductCard({
             </Link>
           </Heading>
           <div style={{ fontFamily: "var(--font-serif)", fontSize: 15, color: "var(--text-2)", whiteSpace: "nowrap" }}>
-            {formatOre(product.pricePerKgOre)}/kg{" "}
+            {formatOre(product.pricePerKgOre)}
+            {priceSuffix(product.unit)}{" "}
             <span style={{ fontSize: 11.5, fontFamily: "var(--font-sans)" }}>exkl. moms</span>
           </div>
         </div>
         <p style={{ margin: 0, fontSize: 14, color: "var(--text-2)", lineHeight: 1.5, flex: 1 }}>
           {product.description}
         </p>
-        <div style={{ display: "flex", gap: 8 }} role="group" aria-label={`Välj vikt för ${product.name}`}>
+        <div
+          style={{ display: "flex", gap: 8 }}
+          role="group"
+          aria-label={`Välj ${product.unit === "paket" ? "antal" : "vikt"} för ${product.name}`}
+        >
           {product.weightOptions.map((w) => (
             <button
               key={w}
@@ -61,7 +69,7 @@ export function ProductCard({
               aria-pressed={kg === w}
               onClick={() => setSelectedKg(w)}
             >
-              {w} kg
+              {qtyLabel(w, product.unit)}
             </button>
           ))}
         </div>
@@ -76,6 +84,7 @@ export function ProductCard({
                 slug: product.slug,
                 name: product.name,
                 pricePerKgOre: product.pricePerKgOre,
+                unit: product.unit,
               },
               kg
             )

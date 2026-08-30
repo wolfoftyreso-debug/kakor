@@ -11,6 +11,7 @@ import type { ProductCardData } from "@/components/ProductCard";
 import type { AreaWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
 import { formatOre, calculateTotals } from "@/lib/money";
+import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/units";
 import { formatDeliveryDate, fromISODate } from "@/lib/dates";
 import { LogoMark } from "@/components/Logo";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
@@ -86,6 +87,7 @@ export function CheckoutFlow({
           slug: product.slug,
           name: product.name,
           pricePerKgOre: product.pricePerKgOre,
+          unit: product.unit,
         },
         kg
       );
@@ -98,6 +100,11 @@ export function CheckoutFlow({
     .map((p) => ({ product: p, kg: qtyFor(p.id) }))
     .filter((l) => l.kg > 0);
   const totalKg = activeLines.reduce((s, l) => s + l.kg, 0);
+  // Sann totalvikt: lösvikt räknas per kilo, paket via sin paketvikt (1 paket = 1,5 kg).
+  const totalWeightGrams = activeLines.reduce(
+    (s, l) => s + lineWeightGrams(l.kg, l.product.unit, l.product.packageWeightGrams),
+    0
+  );
   const totals = useMemo(
     () =>
       calculateTotals(
@@ -210,7 +217,12 @@ export function CheckoutFlow({
 
   const summaryLines = result
     ? []
-    : activeLines.map((l) => ({ name: l.product.name, kg: l.kg, ore: l.kg * l.product.pricePerKgOre }));
+    : activeLines.map((l) => ({
+        name: l.product.name,
+        kg: l.kg,
+        unit: l.product.unit,
+        ore: l.kg * l.product.pricePerKgOre,
+      }));
 
   return (
     <div className="container-narrow" style={{ padding: "40px 24px 100px" }} ref={headingRef}>
@@ -247,7 +259,7 @@ export function CheckoutFlow({
         <>
           <h1 style={{ fontSize: 32, marginBottom: 6 }}>Välj kakor</h1>
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 28px" }}>
-            Alla sorter säljs per kilo. Blanda fritt.
+            Sorterna säljs per kilo, prova-på-paketet per paket. Blanda fritt.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {products.map((p) => (
@@ -263,7 +275,8 @@ export function CheckoutFlow({
                   <div style={{ fontFamily: "var(--font-serif)", fontSize: 19, fontWeight: 700 }}>{p.name}</div>
                   <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 2 }}>{p.description}</div>
                   <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
-                    {formatOre(p.pricePerKgOre)}/kg exkl. moms · {p.allergens}
+                    {formatOre(p.pricePerKgOre)}
+                    {priceSuffix(p.unit)} exkl. moms · {p.allergens}
                   </div>
                 </div>
                 <div className="stepper">
@@ -275,7 +288,7 @@ export function CheckoutFlow({
                     −
                   </button>
                   <div className="stepper-value" aria-live="polite">
-                    {qtyFor(p.id)} kg
+                    {qtyLabel(qtyFor(p.id), p.unit)}
                   </div>
                   <button type="button" aria-label={`Öka ${p.name}`} onClick={() => setQty(p, qtyFor(p.id) + 1)}>
                     +
@@ -301,7 +314,7 @@ export function CheckoutFlow({
             <div>
               <div style={{ fontSize: 13, color: "var(--text-2)" }}>Totalt inkl. moms</div>
               <div style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 700 }}>
-                {totalKg} kg · {formatOre(totals.totalOre)}
+                {formatWeightKg(totalWeightGrams)} · {formatOre(totals.totalOre)}
               </div>
             </div>
             <button
@@ -495,7 +508,7 @@ export function CheckoutFlow({
               >
                 <span style={{ fontWeight: 600 }}>{l.name}</span>
                 <span>
-                  {l.kg} kg · {formatOre(l.ore)}
+                  {qtyLabel(l.kg, l.unit)} · {formatOre(l.ore)}
                 </span>
               </div>
             ))}
@@ -506,7 +519,7 @@ export function CheckoutFlow({
             <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 16 }}>
               <span>Totalt inkl. moms</span>
               <span>
-                {totalKg} kg · {formatOre(totals.totalOre)}
+                {formatWeightKg(totalWeightGrams)} · {formatOre(totals.totalOre)}
               </span>
             </div>
           </div>
@@ -653,7 +666,7 @@ function MiniSummary({
   delivery,
   onEdit,
 }: {
-  lines: { name: string; kg: number; ore: number }[];
+  lines: { name: string; kg: number; unit: string; ore: number }[];
   totalOre: number;
   delivery?: string;
   onEdit: () => void;
@@ -674,7 +687,7 @@ function MiniSummary({
     >
       <span className="section-label" style={{ fontSize: 11 }}>ER BESTÄLLNING</span>
       <span style={{ color: "var(--text-2)", flex: "1 1 auto" }}>
-        {lines.map((l) => `${l.name} ${l.kg} kg`).join(" · ")}
+        {lines.map((l) => `${l.name} ${qtyLabel(l.kg, l.unit)}`).join(" · ")}
         {delivery ? (
           <span style={{ textTransform: "capitalize" }}> · {delivery}</span>
         ) : null}

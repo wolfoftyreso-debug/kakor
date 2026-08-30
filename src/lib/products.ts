@@ -12,6 +12,8 @@ export async function getActiveProducts(): Promise<ProductCardData[]> {
     name: p.name,
     description: p.description,
     pricePerKgOre: p.pricePerKgOre,
+    unit: p.unit,
+    packageWeightGrams: p.packageWeightGrams,
     weightOptions: safeWeights(p.weightOptionsJson),
     allergens: p.allergens,
     imageRef: p.imageRef,

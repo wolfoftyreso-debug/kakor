@@ -10,6 +10,7 @@ import type { ProductCardData } from "@/components/ProductCard";
 import type { AreaWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
 import { calculateTotals, formatOre } from "@/lib/money";
+import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/units";
 import { formatDeliveryDate, fromISODate } from "@/lib/dates";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 import { newIdempotencyKey } from "@/lib/idempotency";
@@ -58,6 +59,11 @@ export function SubscriptionFlow({
   const selectedArea = areas.find((a) => a.slug === areaSlug) ?? null;
   const lines = products.map((p) => ({ product: p, kg: qty[p.id] ?? 0 })).filter((l) => l.kg > 0);
   const totalKg = lines.reduce((s, l) => s + l.kg, 0);
+  // Sann totalvikt per leverans: paket räknas via sin paketvikt (1 paket = 1,5 kg).
+  const totalWeightGrams = lines.reduce(
+    (s, l) => s + lineWeightGrams(l.kg, l.product.unit, l.product.packageWeightGrams),
+    0
+  );
   const totals = useMemo(
     () =>
       calculateTotals(lines.map((l) => ({ netOre: l.kg * l.product.pricePerKgOre, vatRateBp: 1200 }))),
@@ -198,14 +204,15 @@ export function SubscriptionFlow({
                 <div style={{ flex: 1, minWidth: 120 }}>
                   <div style={{ fontFamily: "var(--font-serif)", fontSize: 17, fontWeight: 700 }}>{p.name}</div>
                   <div style={{ fontSize: "12.5px", color: "var(--text-2)" }}>
-                    {p.description} · {formatOre(p.pricePerKgOre)}/kg exkl. moms
+                    {p.description} · {formatOre(p.pricePerKgOre)}
+                    {priceSuffix(p.unit)} exkl. moms
                   </div>
                 </div>
                 <div className="stepper">
                   <button type="button" aria-label={`Minska ${p.name}`} onClick={() => bump(p.id, -1)}>
                     −
                   </button>
-                  <div className="stepper-value">{qty[p.id] ?? 0} kg</div>
+                  <div className="stepper-value">{qtyLabel(qty[p.id] ?? 0, p.unit)}</div>
                   <button type="button" aria-label={`Öka ${p.name}`} onClick={() => bump(p.id, 1)}>
                     +
                   </button>
@@ -347,7 +354,7 @@ export function SubscriptionFlow({
             {lines.map((l) => (
               <div key={l.product.id} style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ fontWeight: 600 }}>{l.product.name}</span>
-                <span>{l.kg} kg</span>
+                <span>{qtyLabel(l.kg, l.product.unit)}</span>
               </div>
             ))}
           </div>
@@ -366,7 +373,7 @@ export function SubscriptionFlow({
         >
           <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700 }}>
             <span>Totalt per leverans</span>
-            <span>{totalKg} kg</span>
+            <span>{formatWeightKg(totalWeightGrams)}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-2)" }}>
             <span>Intervall</span>

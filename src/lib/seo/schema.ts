@@ -142,7 +142,12 @@ export function productNode(product: ProductCardData): JsonLdNode {
         price: (product.pricePerKgOre / 100).toFixed(2),
         priceCurrency: "SEK",
         valueAddedTaxIncluded: false,
-        referenceQuantity: { "@type": "QuantitativeValue", value: 1, unitCode: "KGM" },
+        // KGM = kilogram (lösvikt), PK = paket/kolli (styckvara, UN/CEFACT).
+        referenceQuantity: {
+          "@type": "QuantitativeValue",
+          value: 1,
+          unitCode: product.unit === "paket" ? "PK" : "KGM",
+        },
       },
       availability: "https://schema.org/InStock",
       seller: { "@id": ids.organization() },
