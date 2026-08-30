@@ -89,7 +89,7 @@ export default async function HomePage() {
         className="hero-grid"
       >
         <div className="hero-copy">
-          <div className="eyebrow">Lokalt bageri · Södra Stockholm</div>
+          <div className="eyebrow">Bakat med recept från Svenskt konditorlexikon 1957</div>
           <h1 style={{ fontSize: "clamp(34px, 5vw, 58px)", lineHeight: 1.08, letterSpacing: "-0.5px" }}>
             Riktigt fika till jobbet.
           </h1>
