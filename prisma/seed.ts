@@ -44,7 +44,7 @@ const products = [
     slug: "prova-pa-paket",
     name: "Prova-på-paket",
     description:
-      "1,5 kg blandade småkakor — mandelkubb, kolasnittar och chokladsnittar i samma paket. Ett enkelt sätt att låta arbetsplatsen provsmaka alla sorterna.",
+      "1,5 kg småkakor — 0,5 kg vardera av mandelkubb, kolasnittar och chokladsnittar. Ett enkelt sätt att låta arbetsplatsen provsmaka alla sorterna.",
     pricePerKgOre: 44250,
     unit: "paket",
     packageWeightGrams: 1500,
