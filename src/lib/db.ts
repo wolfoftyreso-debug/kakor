@@ -7,14 +7,19 @@ import { PrismaClient } from "@prisma/client";
 //    med ?pgbouncer=true — Prisma stänger då av prepared statements som
 //    inte fungerar genom PgBouncers transaction mode. Poolen skyddar mot
 //    connection exhaustion när många funktioner kör samtidigt.
-//  - Klienten återanvänds per instans via globalThis (varm lambda
-//    återanvänder anslutningen; nya instanser öppnar via poolern).
+//  - Klienten skapas LAZY vid första användningen — aldrig vid import.
+//    `next build` samlar page-data genom att importera routes, och en
+//    import-tids-konstruktion skulle göra builden databasberoende
+//    (CI/Vercel bygger utan DATABASE_URL). Saknad konfiguration ger
+//    istället ett tydligt fel vid första faktiska databasanropet.
+//  - Instansen återanvänds per process (varm lambda återanvänder
+//    anslutningen; nya instanser öppnar via poolern).
 //  - Migrations går mot DIRECT_DATABASE_URL (se prisma/schema.prisma) och
 //    körs ALDRIG från runtime — endast från deploy-steget/CLI.
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-function requireDatabaseUrl(): string {
+function createClient(): PrismaClient {
   const url = process.env.DATABASE_URL;
   if (!url) {
     // Fail-fast med tydligt fel — utan hemligheter i meddelandet.
@@ -22,14 +27,20 @@ function requireDatabaseUrl(): string {
       "DATABASE_URL är inte satt. Sätt Neons poolade anslutningssträng i miljön (se .env.example och DEPLOYMENT.md)."
     );
   }
-  return url;
-}
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    datasourceUrl: requireDatabaseUrl(),
+  return new PrismaClient({
+    datasourceUrl: url,
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+function getClient(): PrismaClient {
+  return (globalForPrisma.prisma ??= createClient());
+}
+
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const client = getClient();
+    const value = client[prop as keyof PrismaClient];
+    return typeof value === "function" ? (value as (...a: unknown[]) => unknown).bind(client) : value;
+  },
+});
