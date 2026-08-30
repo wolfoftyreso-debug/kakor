@@ -37,7 +37,7 @@ const INGREDIENTS: { name: string; src?: string }[] = [
   { name: "Strösocker", src: "/images/socker.jpg" },
   { name: "Vetemjöl", src: "/images/vetemjol.jpg" },
   { name: "Mandel", src: "/images/mandel.jpg" },
-  { name: "Choklad", src: "/images/choklad.jpg" },
+  { name: "Mörk choklad", src: "/images/choklad.jpg" },
 ];
 
 const FAQS = [

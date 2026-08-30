@@ -32,7 +32,8 @@ const products = [
     name: "Chokladsnittar",
     description: "Klassiska snittar med ordentlig chokladkaraktär.",
     pricePerKgOre: 29500,
-    ingredients: "Vetemjöl, smör, socker, kakao, ljus sirap, vaniljsocker, bakpulver, salt.",
+    ingredients:
+      "Vetemjöl, smör, socker, mörk choklad, kakao, ljus sirap, vaniljsocker, bakpulver, salt.",
     allergens: "Innehåller vete, smör (mjölk). Kan innehålla spår av mandel.",
     imageRef: "/images/chokladsnittar.jpg",
     sortOrder: 3,
