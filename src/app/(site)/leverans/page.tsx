@@ -3,6 +3,7 @@ import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { getAreasWithDates } from "@/lib/products";
 import { formatDeliveryDate, fromISODate, weekdayName } from "@/lib/dates";
+import { ImageSlot } from "@/components/ImageSlot";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumbNode, graph, webPageNode } from "@/lib/seo/schema";
@@ -52,6 +53,13 @@ export default async function LeveransPage() {
         inte lova exakt klockslag, så någon behöver finnas på plats för att ta emot den: reception,
         personalrum eller lastkaj.
       </p>
+
+      <div style={{ height: 340, borderRadius: 8, overflow: "hidden", margin: "28px 0 4px" }}>
+        <ImageSlot
+          label="Sockerbagarens bud bär en kartong med kakor till leveransbilen"
+          src="/images/leverans.jpg"
+        />
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, margin: "32px 0" }}>
         {areas.map((a) => (
