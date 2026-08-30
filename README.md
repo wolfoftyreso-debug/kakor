@@ -193,8 +193,8 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
   Inställningar)
 - Foton i `public/images/`: produktfoton (mandelkubb, kolasnittar,
   chokladsnittar), hero med alla tre sorterna, OG-beskärningar samt
-  RÅVARUSERIEN komplett och enhetlig (smör, strösocker, vetemjöl, mandel
-  — samma fotoserie). Kvarvarande enligt designpaketets shot list:
+  RÅVARUSERIEN komplett och enhetlig (smör, strösocker, vetemjöl, mandel,
+  choklad — samma fotoserie). Kvarvarande enligt designpaketets shot list:
   miljöbilder (leverans, bakning, arbetsplatsfika) — tills dess
   återanvänds produktfotona på sektionsytorna.
 - Google-recensioner: sektionen renderas inte förrän verifierade omdömen
