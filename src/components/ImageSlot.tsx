@@ -5,7 +5,7 @@
 // varumärkets färger tills foton enligt designpaketets shot list levereras.
 // Inga AI-genererade eller lånade foton används.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function ImageSlot({
   label,
@@ -19,12 +19,22 @@ export function ImageSlot({
   circle?: boolean;
 }) {
   const [broken, setBroken] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Bilden kan fela INNAN React hydrerat (SSR) — då missas onError.
+  // Kontrollera därför även efter mount om bilden faktiskt laddades.
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth === 0) setBroken(true);
+  }, [src]);
+
   const showImage = !!src && !broken;
 
   if (showImage) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
+        ref={imgRef}
         src={src}
         alt={label}
         onError={() => setBroken(true)}

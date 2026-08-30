@@ -79,6 +79,8 @@ describe("schema-motorn", () => {
   it("produktnoden speglar databasens pris och säljare via @id — inga ratings", () => {
     const node = productNode(product);
     expect(node["@id"]).toBe(ids.product("kolasnittar"));
+    // Kanonisk entitets-URL = produktens egen sida.
+    expect(node.url).toMatch(/\/kakor\/kolasnittar$/);
     const offer = node.offers as Record<string, unknown>;
     expect(offer.price).toBe("295.00");
     expect(offer.priceCurrency).toBe("SEK");

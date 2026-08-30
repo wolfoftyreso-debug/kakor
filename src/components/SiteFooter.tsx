@@ -49,7 +49,7 @@ export function SiteFooter() {
             links={[
               { href: "/bestall", label: "Beställ kakor" },
               { href: "/prenumeration", label: "Fikaprenumeration" },
-              { href: "/#kakor", label: "Våra kakor" },
+              { href: "/kakor", label: "Våra kakor" },
             ]}
           />
           <FooterCol

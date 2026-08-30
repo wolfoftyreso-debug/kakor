@@ -6,7 +6,7 @@ import { LogoMark } from "@/components/Logo";
 import { useCart } from "@/lib/cart";
 
 const NAV = [
-  { href: "/#kakor", label: "Kakor" },
+  { href: "/kakor", label: "Kakor" },
   { href: "/prenumeration", label: "Fikaprenumeration" },
   { href: "/leverans", label: "Leverans" },
   { href: "/om", label: "Om Sockerbagaren" },

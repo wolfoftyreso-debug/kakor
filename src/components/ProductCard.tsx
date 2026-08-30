@@ -31,7 +31,11 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       </div>
       <div style={{ padding: "20px 22px 22px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
-          <h3 style={{ fontSize: 21 }}>{product.name}</h3>
+          <h3 style={{ fontSize: 21 }}>
+            <Link href={`/kakor/${product.slug}`} style={{ color: "var(--text)", textDecoration: "none" }}>
+              {product.name}
+            </Link>
+          </h3>
           <div style={{ fontFamily: "var(--font-serif)", fontSize: 15, color: "var(--text-2)", whiteSpace: "nowrap" }}>
             {formatOre(product.pricePerKgOre)}/kg
           </div>

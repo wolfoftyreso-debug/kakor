@@ -122,7 +122,10 @@ export default async function HomePage() {
         >
           <h2 style={{ fontSize: "clamp(24px, 3vw, 34px)" }}>Våra kakor</h2>
           <div style={{ fontSize: 14, color: "var(--text-2)" }}>
-            Säljs per kilo · blanda fritt i samma order
+            Säljs per kilo · blanda fritt i samma order ·{" "}
+            <Link href="/kakor" style={{ fontWeight: 700 }}>
+              Alla kakor →
+            </Link>
           </div>
         </div>
         <div

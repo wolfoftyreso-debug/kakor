@@ -117,8 +117,10 @@ export function webPageNode(opts: WebPageOptions): JsonLdNode {
 }
 
 /**
- * Produktentitet från databasen. Priset är sajtens faktiska försäljningspris
- * (per kilo). Inga ratings/recensioner — sådana finns inte verifierade.
+ * Produktentitet från databasen. Kanonisk entitets-URL är produktens egen
+ * sida (/kakor/<slug>) — samma @id återanvänds överallt där produkten
+ * refereras. Priset är sajtens faktiska försäljningspris (per kilo).
+ * Inga ratings/recensioner — sådana finns inte verifierade.
  */
 export function productNode(product: ProductCardData): JsonLdNode {
   return {
@@ -126,7 +128,7 @@ export function productNode(product: ProductCardData): JsonLdNode {
     "@id": ids.product(product.slug),
     name: product.name,
     description: product.description,
-    url: `${SITE()}/#kakor`,
+    url: `${SITE()}/kakor/${product.slug}`,
     brand: { "@id": ids.organization() },
     offers: {
       "@type": "Offer",

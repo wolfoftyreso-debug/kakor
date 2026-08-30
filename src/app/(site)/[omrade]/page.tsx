@@ -144,7 +144,12 @@ export default async function AreaPage({ params }: Props) {
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
           {products.map((p) => (
-            <div key={p.id} className="card" style={{ overflow: "hidden" }}>
+            <Link
+              key={p.id}
+              href={`/kakor/${p.slug}`}
+              className="card"
+              style={{ overflow: "hidden", textDecoration: "none", color: "var(--text)" }}
+            >
               <div style={{ height: 170 }}>
                 <ImageSlot label={`${p.name} — närbild`} src={p.imageRef || undefined} />
               </div>
@@ -154,7 +159,7 @@ export default async function AreaPage({ params }: Props) {
                   {p.description}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
         <div style={{ marginTop: 20 }}>
