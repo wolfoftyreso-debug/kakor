@@ -33,7 +33,7 @@ const STEPS = [
 ];
 
 const INGREDIENTS: { name: string; src?: string }[] = [
-  { name: "Riktigt smör" },
+  { name: "Riktigt smör", src: "/images/smor.jpg" },
   { name: "Strösocker" },
   { name: "Vetemjöl" },
   { name: "Mandel", src: "/images/mandel.jpg" },
