@@ -34,10 +34,14 @@
 
 html {
   scroll-behavior: smooth;
+  /* Skyddsnät mot horisontell overflow på mobil: clip skapar ingen
+     scrollcontainer (position: sticky fortsätter fungera). */
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
+  overflow-x: clip;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
@@ -556,6 +560,11 @@ button, input, select, textarea {
   gap: 40px;
   align-items: start;
 }
+/* Gridbarn har implicit min-width:auto — utan detta tvingar inre
+   auto-fit-grids (minmax(160px...)) ut kolumnen bredare än skärmen. */
+.sub-grid > * {
+  min-width: 0;
+}
 @media (max-width: 900px) {
   .sub-grid {
     grid-template-columns: 1fr;
@@ -659,5 +668,36 @@ button, input, select, textarea {
   }
   header.site-header {
     padding: 14px 20px !important;
+  }
+}
+/* Smala mobiler: headerns innehåll (logotyp + Beställ + Korg + meny) måste
+   rymmas på ~360 px — annars breddas hela sidan och allt klipps i kanten. */
+@media (max-width: 520px) {
+  header.site-header {
+    padding: 12px 14px !important;
+    gap: 8px !important;
+  }
+  .logo-link {
+    gap: 8px !important;
+  }
+  .logo-word {
+    font-size: 14px !important;
+    letter-spacing: 0.2px !important;
+  }
+  .header-actions {
+    gap: 8px !important;
+  }
+  .header-actions .btn {
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+  }
+  .menu-toggle {
+    padding: 4px !important;
+  }
+}
+/* Mycket smala skärmar: S-märket ensamt räcker som logotyp. */
+@media (max-width: 350px) {
+  .logo-word {
+    display: none !important;
   }
 }

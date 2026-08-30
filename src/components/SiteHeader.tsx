@@ -48,10 +48,12 @@ export function SiteHeader() {
       >
         <Link
           href="/"
+          className="logo-link"
           style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "var(--text)" }}
         >
           <LogoMark size={36} />
           <span
+            className="logo-word"
             style={{
               fontFamily: "var(--font-serif)",
               fontSize: 19,
@@ -75,7 +77,7 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <Link href="/bestall" className="btn btn-primary" style={{ padding: "11px 22px", fontSize: 14 }}>
             Beställ
           </Link>
