@@ -126,6 +126,7 @@ Deployment dupliceras inte i CI — det sköter Vercels Git-integration.
 | `INVOICE_*` | verifierade uppgifter | valfritt | nej |
 | `NEXT_PUBLIC_PREFERRED_SOURCES` | `true` | (utelämna) | nej |
 | `NEXT_PUBLIC_GA4_ID` | mät-ID om GA används | (utelämna) | nej |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | GSC:s HTML-taggvärde | (utelämna) | nej |
 
 Miljövalidering körs vid varje serverstart (`src/instrumentation.ts`):
 saknad `DATABASE_URL` och overifierade fakturauppgifter syns direkt i

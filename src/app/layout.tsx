@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Libre_Caslon_Text, Public_Sans } from "next/font/google";
 import { siteConfig } from "@/lib/config";
 import "./globals.css";
@@ -58,6 +58,21 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: ["/og.jpg"],
   },
+  applicationName: "Sockerbagaren",
+  appleWebApp: { title: "Sockerbagaren" },
+  // iOS auto-länkar annars nummerlika strängar — org.nr 556677-8899 skulle
+  // bli en falsk telefonlänk. Riktiga telefonlänkar sätts explicit med tel:.
+  formatDetection: { telephone: false },
+  // Search Console-verifiering via meta-tagg, utan kodändring: sätt
+  // NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION i Vercel så renderas taggen.
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
+};
+
+// Adressfältets färg följer sajtens gräddvita bakgrund.
+export const viewport: Viewport = {
+  themeColor: "#FAF5EA",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
