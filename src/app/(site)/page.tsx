@@ -34,7 +34,7 @@ const STEPS = [
 
 const INGREDIENTS: { name: string; src?: string }[] = [
   { name: "Riktigt smör", src: "/images/smor.jpg" },
-  { name: "Strösocker" },
+  { name: "Strösocker", src: "/images/socker.jpg" },
   { name: "Vetemjöl" },
   { name: "Mandel", src: "/images/mandel.jpg" },
 ];
