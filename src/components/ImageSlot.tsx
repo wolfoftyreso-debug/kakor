@@ -11,12 +11,15 @@ export function ImageSlot({
   label,
   src,
   circle = false,
+  priority = false,
 }: {
   /** Beskrivning för skärmläsare/alt-text, t.ex. "Kolasnittar — närbild". */
   label: string;
   /** Sökväg till riktig bild (frivillig). Trasig/saknad bild faller tillbaka till platshållaren. */
   src?: string;
   circle?: boolean;
+  /** true för sidans LCP-bild (hero): eager + hög fetch-prioritet. Övriga lazy-laddas. */
+  priority?: boolean;
 }) {
   const [broken, setBroken] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -37,6 +40,9 @@ export function ImageSlot({
         ref={imgRef}
         src={src}
         alt={label}
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
+        fetchPriority={priority ? "high" : undefined}
         onError={() => setBroken(true)}
         style={{
           width: "100%",

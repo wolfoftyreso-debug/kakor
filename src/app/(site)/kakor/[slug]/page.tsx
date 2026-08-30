@@ -99,7 +99,7 @@ export default async function ProductPage({ params }: Props) {
       <div className="container-medium" style={{ padding: "24px 24px 64px" }}>
         <div className="two-col" style={{ display: "grid", gap: 40, alignItems: "start" }}>
           <div style={{ minHeight: 340, borderRadius: 8, overflow: "hidden" }}>
-            <ImageSlot label={`${product.name} — närbild`} src={product.imageRef || undefined} />
+            <ImageSlot label={`${product.name} — närbild`} src={product.imageRef || undefined} priority />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div>
