@@ -199,11 +199,11 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
 - Foton i `public/images/`: produktfoton (mandelkubb, kolasnittar,
   chokladsnittar), hero med alla tre sorterna, OG-beskärningar samt
   RÅVARUSERIEN komplett och enhetlig (smör, strösocker, vetemjöl, mandel,
-  choklad — samma fotoserie) samt miljöbilderna LEVERANS (budet med
-  kartong vid leveransbilen — på /leverans och områdessidorna) och
-  BAKNING (bagaren vid plåten — på /om och /bageri-tyreso). Kvarvarande
-  enligt designpaketets shot list: miljöbild för arbetsplatsfika samt ett
-  riktigt paketfoto för prova-på-paketet — tills dess återanvänds
-  produktfotona på de ytorna.
+  choklad — samma fotoserie) samt SAMTLIGA miljöbilder från designpaketets
+  shot list: LEVERANS (budet med kartong vid leveransbilen — /leverans och
+  områdessidorna), BAKNING (bagaren vid plåten — /om och /bageri-tyreso)
+  och ARBETSPLATSFIKA (kollegorna vid fikabordet — startsidans "Fika för
+  arbetsplatser"). Kvarvarande: ett riktigt paketfoto för prova-på-paketet
+  — tills dess återanvänds fikabilden där.
 - Google-recensioner: sektionen renderas inte förrän verifierade omdömen
   kopplas in (inga fejkade recensioner, även enligt designpaketet)
