@@ -57,13 +57,13 @@ const products = [
   },
 ];
 
-// Leveransdagar per område: tisdag (2) och torsdag (4) som start —
-// ändras i databasen utan kodändring.
+// Leveransdagar per område: endast torsdag (4) just nu (verksamhetens
+// uppgift, aug 2026) — ändras i admin -> Inställningar utan kodändring.
 const areas = [
-  { slug: "tyreso", name: "Tyresö", weekdaysJson: "[2,4]", sortOrder: 1 },
-  { slug: "nacka", name: "Nacka", weekdaysJson: "[2,4]", sortOrder: 2 },
-  { slug: "haninge", name: "Haninge", weekdaysJson: "[2,4]", sortOrder: 3 },
-  { slug: "huddinge", name: "Huddinge", weekdaysJson: "[2,4]", sortOrder: 4 },
+  { slug: "tyreso", name: "Tyresö", weekdaysJson: "[4]", sortOrder: 1 },
+  { slug: "nacka", name: "Nacka", weekdaysJson: "[4]", sortOrder: 2 },
+  { slug: "haninge", name: "Haninge", weekdaysJson: "[4]", sortOrder: 3 },
+  { slug: "huddinge", name: "Huddinge", weekdaysJson: "[4]", sortOrder: 4 },
 ];
 
 async function main() {

@@ -194,8 +194,13 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
 - Bankgironummer och momsregistreringsnummer (visas på fakturan)
 - **Slutliga priser** — seedade 295 kr/kg är ett startvärde som ska bekräftas
   eller ändras i admin → Produkter (historiska ordrar påverkas inte)
-- Exakta leveransdagar per område (seedade tis+tors; ändras i admin →
-  Inställningar)
+- Leveransdagar: endast TORSDAG just nu (verksamhetens uppgift aug 2026,
+  seedad och migrerad); ändras i admin → Inställningar när fler dagar
+  tillkommer
+- Lagret ligger på Radiovägen 19 i Tyresö (verksamhetens uppgift —
+  används i områdestexterna). OBS: fakturaadressen i `.env`
+  (INVOICE_ADDRESS, default Antennvägen 2) är en separat uppgift som
+  fortfarande ska bekräftas av verksamheten
 - Foton i `public/images/`: produktfoton (mandelkubb, kolasnittar,
   chokladsnittar), hero med alla tre sorterna, OG-beskärningar samt
   RÅVARUSERIEN komplett och enhetlig (smör, strösocker, vetemjöl, mandel,
