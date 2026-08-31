@@ -84,28 +84,28 @@ export function SiteHeader() {
           <Link
             href="/bestall"
             style={{
-              position: "relative",
+              // Inline-badge bredvid texten — aldrig absolut positionerad,
+              // så den kan varken täcka bokstäverna eller grannelementen.
+              display: "inline-flex",
+              alignItems: "flex-start",
+              gap: 3,
               fontSize: 14,
               fontWeight: 600,
               color: "var(--text)",
               textDecoration: "none",
-              // Reserverar plats för badgen så att den sitter PÅ Korg-etiketten
-              // och aldrig hänger in i menyknappen bredvid.
-              paddingRight: 12,
             }}
             aria-label={`Varukorg (${totalKg})`}
           >
             Korg
             <span
               style={{
-                position: "absolute",
-                top: -8,
-                right: 0,
                 background: "var(--butter)",
                 borderRadius: 999,
                 fontSize: "10.5px",
                 fontWeight: 700,
-                padding: "2px 6px",
+                lineHeight: 1,
+                padding: "3px 6px",
+                marginTop: -5,
               }}
             >
               {totalKg}

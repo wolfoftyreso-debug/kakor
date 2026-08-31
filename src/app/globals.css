@@ -674,21 +674,21 @@ button, input, select, textarea {
    rymmas på ~360 px — annars breddas hela sidan och allt klipps i kanten. */
 @media (max-width: 520px) {
   header.site-header {
-    padding: 12px 12px !important;
+    padding: 12px 11px !important;
     gap: 6px !important;
   }
   .logo-link {
-    gap: 8px !important;
+    gap: 7px !important;
   }
   .logo-word {
-    font-size: 14px !important;
+    font-size: 13.5px !important;
     letter-spacing: 0.2px !important;
   }
   .header-actions {
-    gap: 6px !important;
+    gap: 5px !important;
   }
   .header-actions .btn {
-    padding: 10px 11px !important;
+    padding: 10px 10px !important;
     font-size: 13px !important;
   }
   .menu-toggle {
