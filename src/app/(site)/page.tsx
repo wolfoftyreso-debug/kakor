@@ -38,8 +38,7 @@ const INGREDIENTS: { name: string; src?: string }[] = [
   { name: "Vetemjöl", src: "/images/vetemjol.jpg" },
   { name: "Mandel", src: "/images/mandel.jpg" },
   { name: "Mörk choklad", src: "/images/choklad.jpg" },
-  // Foto enligt råvaruseriens shot list saknas ännu — platshållare tills dess.
-  { name: "Ägg från frigående höns" },
+  { name: "Ägg från frigående höns", src: "/images/agg.jpg" },
 ];
 
 const FAQS = [
