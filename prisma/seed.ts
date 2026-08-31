@@ -52,7 +52,7 @@ const products = [
     ingredients:
       "Innehåller alla tre kaksorterna — se respektive sort ovan för fullständig ingrediensförteckning.",
     allergens: "Innehåller vete, mandel, ägg, smör (mjölk).",
-    imageRef: "/images/fika.jpg",
+    imageRef: "/images/prova-pa-paket.jpg",
     sortOrder: 4,
   },
 ];
