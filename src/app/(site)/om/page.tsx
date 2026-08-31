@@ -51,7 +51,9 @@ export default function OmPage() {
         <br />
         Org.nr {invoiceConfig.orgNumber}
         <br />
-        {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}
+        Kontor: {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}
+        <br />
+        Lager: Radiovägen 19, Tyresö
         {/* Kontaktvägar visas när verksamheten verifierat dem — platshållare
             renderas aldrig publikt. */}
         {isVerifiedValue(invoiceConfig.email) && (
