@@ -72,5 +72,5 @@ function safeWeekdays(json: string): number[] {
   } catch {
     // fall igenom
   }
-  return [2, 4];
+  return [4];
 }

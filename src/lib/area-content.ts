@@ -25,7 +25,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       "Företagsfika i Tyresö: klassiska småkakor på riktigt smör, levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Tyresö",
     heroText:
-      "Vi levererar fika direkt till arbetsplatser i Tyresö — kontor, verkstäder, butiker och kliniker. Vi kör själva, på fasta leveransdagar.",
+      "Vi levererar fika direkt till arbetsplatser i Tyresö — kontor, verkstäder, butiker och kliniker. Vi utgår från vårt lager på Radiovägen i Tyresö, så leveransen kommer från grannskapet.",
     midHeading: "Företagsfika i Tyresö",
     midText:
       "Fredagsfika på kontoret vid Tyresö centrum, kundmöte i Bollmora eller personalrum i Trollbäcken — vi kör ut samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
@@ -44,7 +44,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       },
       {
         q: "Kan vi hämta själva?",
-        a: "Vi är upplagda för utkörning till företagsadresser — kontakta oss om ni har särskilda önskemål så ser vi vad vi kan lösa.",
+        a: "Kontakta oss så löser vi det — vårt lager ligger på Radiovägen 19 i Tyresö.",
       },
     ],
   },
@@ -56,7 +56,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       "Företagsfika i Nacka: klassiska småkakor på riktigt smör, levererade till kontor, butiker och verkstäder i hela kommunen. Betalning mot faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Nacka",
     heroText:
-      "Vi levererar fika direkt till arbetsplatser i Nacka — kontor, verkstäder, butiker och kliniker. Vi kör själva, på fasta leveransdagar.",
+      "Vi levererar fika direkt till arbetsplatser i Nacka — kontor, verkstäder, butiker och kliniker. Vi utgår från vårt lager i grannkommunen Tyresö, så leveransen kommer från närområdet.",
     midHeading: "Företagsfika i Nacka",
     midText:
       "Fredagsfika på kontoret i Sickla, kundmöte i Nacka strand eller personalrum i Orminge — vi kör ut samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
@@ -87,7 +87,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       "Företagsfika i Haninge: klassiska småkakor på riktigt smör, levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Haninge",
     heroText:
-      "Vi levererar fika direkt till arbetsplatser i Haninge — kontor, verkstäder, butiker och kliniker. Vi kör själva, på fasta leveransdagar.",
+      "Vi levererar fika direkt till arbetsplatser i Haninge — kontor, verkstäder, butiker och kliniker. Vi utgår från vårt lager i grannkommunen Tyresö, så leveransen kommer från närområdet.",
     midHeading: "Företagsfika i Haninge",
     midText:
       "Fredagsfika på kontoret i Handen, kundmöte i Vega eller personalrum i Västerhaninge — vi kör ut samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
@@ -118,7 +118,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       "Företagsfika i Huddinge: klassiska småkakor på riktigt smör, levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Huddinge",
     heroText:
-      "Vi levererar fika direkt till arbetsplatser i Huddinge — kontor, verkstäder, butiker och kliniker. Vi kör själva, på fasta leveransdagar.",
+      "Vi levererar fika direkt till arbetsplatser i Huddinge — kontor, verkstäder, butiker och kliniker. Vi utgår från vårt lager i Tyresö på andra sidan kommungränsen, så leveransen kommer från närområdet.",
     midHeading: "Företagsfika i Huddinge",
     midText:
       "Fredagsfika på kontoret i Kungens kurva, kundmöte i Flemingsberg eller personalrum i Skogås — vi kör ut samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",

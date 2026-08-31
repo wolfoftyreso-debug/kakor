@@ -55,7 +55,7 @@ model DeliveryArea {
   slug     String  @unique
   name     String
   // JSON-array med ISO-veckodagar (1 = måndag ... 7 = söndag) då vi levererar hit.
-  weekdaysJson String @default("[2,4]")
+  weekdaysJson String @default("[4]")
   // Antal hela dagar framförhållning som krävs (beställ senast N dagar före leverans).
   leadTimeDays Int    @default(2)
   // JSON-array med postnummerprefix (t.ex. ["135","136"]). Tom = ingen postnummerspärr.
