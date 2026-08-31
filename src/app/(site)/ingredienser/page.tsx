@@ -47,6 +47,7 @@ export default async function IngredienserPage() {
         <span className="badge-butter">STRÖSOCKER</span>
         <span className="badge-butter">VETEMJÖL</span>
         <span className="badge-butter">MÖRK CHOKLAD</span>
+        <span className="badge-butter">ÄGG FRÅN FRIGÅENDE HÖNS</span>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

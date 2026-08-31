@@ -38,6 +38,8 @@ const INGREDIENTS: { name: string; src?: string }[] = [
   { name: "Vetemjöl", src: "/images/vetemjol.jpg" },
   { name: "Mandel", src: "/images/mandel.jpg" },
   { name: "Mörk choklad", src: "/images/choklad.jpg" },
+  // Foto enligt råvaruseriens shot list saknas ännu — platshållare tills dess.
+  { name: "Ägg från frigående höns" },
 ];
 
 const FAQS = [
@@ -171,7 +173,9 @@ export default async function HomePage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))",
+              // Sex råvaror: fasta 3 kolumner ger jämna 2 rader på alla bredder
+              // (auto-fit gav 5+1 med en ensam ruta på sista raden).
+              gridTemplateColumns: "repeat(3, 1fr)",
               gap: 14,
             }}
           >
