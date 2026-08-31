@@ -75,8 +75,8 @@ export default async function IngredienserPage() {
       </div>
 
       <p style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 28, maxWidth: "60ch" }}>
-        Har ni frågor om allergener eller behöver detaljerad information inför en beställning?
-        Kontakta oss så hjälper vi er.
+        Ovan finns hela innehållet för varje kaksort — allt ni behöver veta inför en beställning.
+        Beställ direkt i webbshoppen, så skapas fakturan vid ordern och mejlas till er.
       </p>
     </div>
 

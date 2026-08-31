@@ -169,8 +169,8 @@ export function SubscriptionFlow({
           </strong>
           .
           <br />
-          3. Inför varje leverans skapas en order med faktura — pausa eller avsluta när ni vill
-          genom att kontakta oss.
+          3. Inför varje leverans skapas en order med faktura som mejlas till er — ingen
+          bindningstid, ni kan pausa eller avsluta när ni vill.
         </div>
         <PreferredSourceCTA placement="subscription_success" />
         <div style={{ marginTop: 28 }}>

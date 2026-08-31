@@ -69,7 +69,7 @@ Sockerbagaren`,
     return NextResponse.json(
       {
         ok: false,
-        error: `Prenumerationen kunde inte startas — ingenting har sparats. Försök igen eller kontakta oss. Referens: ${ref}`,
+        error: `Prenumerationen kunde inte startas — ingenting har sparats. Försök igen om en liten stund. Referens: ${ref}`,
       },
       { status: 500 }
     );

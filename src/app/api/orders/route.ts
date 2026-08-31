@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        error: `Beställningen kunde inte genomföras — ingen order har skapats. Försök igen eller kontakta oss. Referens: ${ref}`,
+        error: `Beställningen kunde inte genomföras — ingen order har skapats. Försök igen om en liten stund. Referens: ${ref}`,
       },
       { status: 500 }
     );

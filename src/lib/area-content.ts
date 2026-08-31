@@ -43,8 +43,8 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
         a: "Beställ i checkouten så visar vi nästa tillgängliga leveransdag för Tyresö.",
       },
       {
-        q: "Kan vi hämta själva?",
-        a: "Kontakta oss så löser vi det — vårt lager ligger på Radiovägen 19 (c/o Mewab Ängelsholmsglass) i Tyresö.",
+        q: "Hur fungerar betalningen?",
+        a: "Allt sker direkt i webbshoppen — fakturan skapas när ordern läggs och mejlas till den fakturaadress ni anger.",
       },
     ],
   },
