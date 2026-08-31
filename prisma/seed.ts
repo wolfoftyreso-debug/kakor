@@ -20,7 +20,8 @@ const products = [
   {
     slug: "kolasnittar",
     name: "Kolasnittar",
-    description: "Spröda, smöriga och precis lagom sega.",
+    description:
+      "Vår överlägsna bästsäljare — nötig, med toner av brynt smör och knäck och en vuxen sälta. Härligt frasig klassisk småkaka med seg kärna och lätt smörfriterad botten.",
     pricePerKgOre: 29500,
     ingredients: "Vetemjöl, smör, socker, ljus sirap, vaniljsocker, bikarbonat, keltiskt salt.",
     allergens: "Innehåller vete, smör (mjölk).",
