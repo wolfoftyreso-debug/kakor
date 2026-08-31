@@ -197,10 +197,9 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
 - Leveransdagar: endast TORSDAG just nu (verksamhetens uppgift aug 2026,
   seedad och migrerad); ändras i admin → Inställningar när fler dagar
   tillkommer
-- Lagret ligger på Radiovägen 19 i Tyresö (verksamhetens uppgift —
-  används i områdestexterna). OBS: fakturaadressen i `.env`
-  (INVOICE_ADDRESS, default Antennvägen 2) är en separat uppgift som
-  fortfarande ska bekräftas av verksamheten
+- Adresser BEKRÄFTADE av verksamheten: kontoret på Antennvägen 2
+  (= fakturaadressen i `.env`/footer) och lagret på Radiovägen 19,
+  c/o Mewab Ängelsholmsglass, Tyresö (används i områdestexterna)
 - Foton i `public/images/`: produktfoton (mandelkubb, kolasnittar,
   chokladsnittar), hero med alla tre sorterna, OG-beskärningar samt
   RÅVARUSERIEN komplett och enhetlig (smör, strösocker, vetemjöl, mandel,
