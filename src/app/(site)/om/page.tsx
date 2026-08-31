@@ -8,12 +8,12 @@ import { InfoPageSeo } from "@/components/InfoPageSeo";
 export const metadata: Metadata = {
   title: "Om Sockerbagaren",
   description:
-    "Sockerbagaren är ett lokalt bageri i Tyresö som bakar klassiska småkakor på riktiga råvaror och levererar till arbetsplatser i södra Stockholm.",
+    "Sockerbagaren bakar klassiska svenska småkakor på riktiga råvaror och levererar till arbetsplatser i södra Stockholm. Betalning mot faktura.",
   alternates: { canonical: "/om" },
   ...sharePreview({
     title: "Om Sockerbagaren",
     description:
-      "Sockerbagaren är ett lokalt bageri i Tyresö som bakar klassiska småkakor på riktiga råvaror och levererar till arbetsplatser i södra Stockholm.",
+      "Sockerbagaren bakar klassiska svenska småkakor på riktiga råvaror och levererar till arbetsplatser i södra Stockholm. Betalning mot faktura.",
     path: "/om",
   }),
 };
@@ -30,14 +30,13 @@ export default function OmPage() {
     <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
       <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 12 }}>Om Sockerbagaren</h1>
       <p style={{ fontSize: 17, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
-        Sockerbagaren är ett lokalt bageri på Antennvägen i Tyresö. Vi bakar klassiska svenska
-        småkakor — mandelkubb, kolasnittar och chokladsnittar — på riktigt smör, vanligt strösocker
-        och kvalitativa traditionella råvaror, och kör själva ut dem till arbetsplatser i södra
-        Stockholm.
+        Sockerbagaren bakar klassiska svenska småkakor — mandelkubb, kolasnittar och
+        chokladsnittar — på riktigt smör, vanligt strösocker och kvalitativa traditionella
+        råvaror, och kör själva ut dem till arbetsplatser i södra Stockholm.
       </p>
       <div style={{ minHeight: 280, borderRadius: 8, overflow: "hidden", margin: "28px 0" }}>
         <ImageSlot
-          label="Bagare i Sockerbagarens bageri lägger upp chokladsnittar på en plåt"
+          label="Bagare lägger upp chokladsnittar på en plåt"
           src="/images/bakning.jpg"
         />
       </div>

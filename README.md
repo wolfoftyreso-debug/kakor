@@ -201,7 +201,7 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
   RÅVARUSERIEN komplett och enhetlig (smör, strösocker, vetemjöl, mandel,
   choklad — samma fotoserie) samt SAMTLIGA miljöbilder från designpaketets
   shot list: LEVERANS (budet med kartong vid leveransbilen — /leverans och
-  områdessidorna), BAKNING (bagaren vid plåten — /om och /bageri-tyreso)
+  områdessidorna), BAKNING (bagaren vid plåten — /om)
   och ARBETSPLATSFIKA (kollegorna vid fikabordet — startsidans "Fika för
   arbetsplatser") samt PAKETFOTOT för prova-på-paketet (alla tre sorterna
   på fat). Hela fotouppsättningen enligt designpaketet är därmed komplett.
