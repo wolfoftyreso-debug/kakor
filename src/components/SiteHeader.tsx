@@ -89,15 +89,18 @@ export function SiteHeader() {
               fontWeight: 600,
               color: "var(--text)",
               textDecoration: "none",
+              // Reserverar plats för badgen så att den sitter PÅ Korg-etiketten
+              // och aldrig hänger in i menyknappen bredvid.
+              paddingRight: 12,
             }}
-            aria-label={`Varukorg, ${totalKg} kg`}
+            aria-label={`Varukorg (${totalKg})`}
           >
             Korg
             <span
               style={{
                 position: "absolute",
                 top: -8,
-                right: -16,
+                right: 0,
                 background: "var(--butter)",
                 borderRadius: 999,
                 fontSize: "10.5px",
