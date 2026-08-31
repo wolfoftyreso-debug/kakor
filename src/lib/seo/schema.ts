@@ -7,7 +7,7 @@
 //    inga ratings, reviews, öppettider, telefonnummer eller geokoordinater
 //    förrän verksamheten verifierat dem.
 //  - Stabil @id-strategi:
-//      {SITE}/#organization   kanonisk organisation (Bakery ⊂ LocalBusiness ⊂ Organization)
+//      {SITE}/#organization   kanonisk organisation
 //      {SITE}/#website        webbplatsen
 //      {url}#webpage          sidentitet
 //      {url}#breadcrumbs      sidans brödsmulelista
@@ -32,14 +32,15 @@ export const ids = {
 };
 
 /**
- * Kanonisk organisationsentitet. Typen Bakery är en subtyp av både
- * LocalBusiness och Organization — EN entitet med ETT stabilt @id
+ * Kanonisk organisationsentitet — EN entitet med ETT stabilt @id
  * återanvänds överallt (publisher, seller, breadcrumb-hem osv).
- * Adressen är verifierad via designunderlaget/fakturakonfigurationen.
+ * Typen är Organization, INTE Bakery/LocalBusiness: verksamheten har
+ * inget bageri/besökslokal att deklarera (verksamhetens uppgift).
+ * Adressen är den registrerade fakturaadressen från konfigurationen.
  */
 export function organizationNode(): JsonLdNode {
   return {
-    "@type": ["Organization", "Bakery"],
+    "@type": "Organization",
     "@id": ids.organization(),
     name: siteConfig.name,
     legalName: invoiceConfig.companyName,
@@ -53,7 +54,6 @@ export function organizationNode(): JsonLdNode {
       addressCountry: "SE",
     },
     areaServed: ["Tyresö", "Nacka", "Haninge", "Huddinge"],
-    servesCuisine: "Svenska småkakor",
   };
 }
 

@@ -83,7 +83,6 @@ export function SiteFooter() {
               { href: "/villkor", label: "Leverans- & köpvillkor" },
               { href: "/integritet", label: "Integritetspolicy" },
               { href: "/om", label: "Om Sockerbagaren" },
-              { href: "/bageri-tyreso", label: "Bageri i Tyresö" },
             ]}
           />
         </div>

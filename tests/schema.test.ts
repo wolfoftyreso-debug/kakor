@@ -34,9 +34,10 @@ describe("schema-motorn", () => {
     expect(ids.product("kolasnittar")).toMatch(/#product-kolasnittar$/);
   });
 
-  it("organisationen är EN entitet (Bakery ⊂ Organization) med verifierad adress", () => {
+  it("organisationen är EN entitet (Organization — inget bageri att deklarera)", () => {
     const org = organizationNode();
-    expect(org["@type"]).toEqual(["Organization", "Bakery"]);
+    // Verksamheten har inget bageri/besökslokal — aldrig Bakery/LocalBusiness.
+    expect(org["@type"]).toBe("Organization");
     expect(org["@id"]).toBe(ids.organization());
     const address = org.address as Record<string, string>;
     expect(address.streetAddress).toBe("Antennvägen 2");
@@ -47,6 +48,7 @@ describe("schema-motorn", () => {
     expect(org).not.toHaveProperty("openingHoursSpecification");
     expect(org).not.toHaveProperty("telephone");
     expect(org).not.toHaveProperty("foundingDate");
+    expect(org).not.toHaveProperty("servesCuisine");
   });
 
   it("webbplatsen refererar organisationen via @id (graf, inte kopior)", () => {
