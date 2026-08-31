@@ -38,7 +38,7 @@ export function SiteHeader() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "16px 48px",
+          padding: "12px 48px",
           borderBottom: "1px solid var(--border)",
           background: "var(--bg)",
           gap: 16,
@@ -51,7 +51,7 @@ export function SiteHeader() {
           className="logo-link"
           style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "var(--text)" }}
         >
-          <LogoSigill size={44} />
+          <LogoSigill size={88} />
           <span
             className="logo-word"
             style={{
