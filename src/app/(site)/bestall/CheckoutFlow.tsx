@@ -1,12 +1,19 @@
 "use client";
 
-// Snabbeställning/checkout enligt Bestallning.dc.html:
-// Kakor -> Leverans -> Uppgifter -> Kontrollera -> Tack.
+// Sajtens ENDA beställningsflöde: Kakor -> Leverans -> Uppgifter ->
+// Kontrollera -> Tack. Engångsköp och återkommande leverans är samma
+// funnel och samma varukorg — köpläget väljs i leveranssteget
+// (produkt först, leveranssätt sedan), och submit grenar mot
+// /api/orders respektive /api/subscriptions.
+//
 // Steg 1 är varukorgen: kvantiteter synkas mot cart-context (localStorage).
+// Vald plats i flödet + formulärdata sparas i sessionStorage så att
+// tillbaka-navigering, reload eller en avstickare till en produktsida
+// aldrig kastar bort kundens arbete.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useCart } from "@/lib/cart";
+import { useCart, type PurchaseMode, type RecurrenceInterval } from "@/lib/cart";
 import type { ProductCardData } from "@/components/ProductCard";
 import type { AreaWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
@@ -16,6 +23,7 @@ import { formatDeliveryDate, fromISODate } from "@/lib/dates";
 import { LogoSigill } from "@/components/Logo";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 import { newIdempotencyKey } from "@/lib/idempotency";
+import { track } from "@/lib/analytics";
 
 interface FormState {
   companyName: string;
@@ -47,11 +55,30 @@ const EMPTY_FORM: FormState = {
 
 const STEP_LABELS = ["Kakor", "Leverans", "Uppgifter", "Kontrollera"];
 
-interface OrderResult {
-  orderNumber: string;
-  invoiceUrl: string;
-  deliveryDate: string;
-  totalOre: number;
+const INTERVALS: { value: RecurrenceInterval; label: string; sub: string }[] = [
+  { value: "WEEKLY", label: "Varje vecka", sub: "För arbetsplatser som fikar ofta" },
+  { value: "BIWEEKLY", label: "Varannan vecka", sub: "Vanligast — lagom påfyllning" },
+  { value: "MONTHLY", label: "Var fjärde vecka", sub: "Till möten och fredagsfika" },
+];
+
+function intervalLabel(value: RecurrenceInterval): string {
+  return INTERVALS.find((i) => i.value === value)?.label ?? value;
+}
+
+type SubmitResult =
+  | { kind: "order"; orderNumber: string; invoiceUrl: string; deliveryDate: string; totalOre: number }
+  | { kind: "subscription"; number: string; nextDate: string; interval: RecurrenceInterval; totalOre: number };
+
+// Pågående flödesdata (steg, leveransval, formulär) — sessionStorage så att
+// reload/back/avstickare inte kastar bort något. Korgen bor i localStorage.
+const FLOW_STORAGE_KEY = "sb_checkout_v1";
+
+interface StoredFlow {
+  step: number;
+  areaSlug: string | null;
+  deliveryDate: string | null;
+  form: FormState;
+  sameEmail: boolean;
 }
 
 export function CheckoutFlow({
@@ -70,12 +97,58 @@ export function CheckoutFlow({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<OrderResult | null>(null);
+  const [result, setResult] = useState<SubmitResult | null>(null);
+  const [flowRestored, setFlowRestored] = useState(false);
   const headingRef = useRef<HTMLDivElement>(null);
   // EN nyckel per beställningsförsök — behålls även om kunden går tillbaka
   // och fram igen, så att ett tappat svar + nytt "Skicka" aldrig ger två
-  // ordrar. Nollställs först när en order lyckats.
+  // ordrar/prenumerationer. Nollställs först när ett försök lyckats.
   const idempotencyKey = useRef<string>("");
+  const presetApplied = useRef(false);
+
+  const mode: PurchaseMode = cart.purchaseMode;
+  const interval: RecurrenceInterval = cart.recurrenceInterval;
+
+  // Återställ pågående flöde (reload, browser back, avstickare till annan sida).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(FLOW_STORAGE_KEY);
+      if (raw) {
+        const s = JSON.parse(raw) as StoredFlow;
+        if (s && typeof s.step === "number") {
+          setStep(Math.min(4, Math.max(1, s.step)));
+          setAreaSlug(typeof s.areaSlug === "string" ? s.areaSlug : null);
+          setDeliveryDate(typeof s.deliveryDate === "string" ? s.deliveryDate : null);
+          if (s.form && typeof s.form === "object") setForm({ ...EMPTY_FORM, ...s.form });
+          setSameEmail(s.sameEmail !== false);
+        }
+      }
+    } catch {
+      // korrupt lagring — starta från steg 1
+    }
+    setFlowRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (!flowRestored || result) return;
+    try {
+      const stored: StoredFlow = { step, areaSlug, deliveryDate, form, sameEmail };
+      sessionStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify(stored));
+    } catch {
+      // privat läge — flödet funkar ändå under sessionen
+    }
+  }, [flowRestored, result, step, areaSlug, deliveryDate, form, sameEmail]);
+
+  // /bestall?typ=aterkommande (från prenumerations-CTA:er) förväljer
+  // återkommande leverans — appliceras efter att korgen hydrerats så att
+  // lagrat läge inte skriver över kundens avsikt.
+  useEffect(() => {
+    if (!cart.hydrated || presetApplied.current) return;
+    presetApplied.current = true;
+    const typ = new URLSearchParams(window.location.search).get("typ");
+    if (typ === "aterkommande") cart.setPurchaseMode("RECURRING");
+    if (typ === "engang") cart.setPurchaseMode("ONE_TIME");
+  }, [cart]);
 
   const qtyFor = (productId: string) => cart.lines.find((l) => l.productId === productId)?.kg ?? 0;
 
@@ -123,6 +196,13 @@ export function CheckoutFlow({
     }
   }, [selectedArea, deliveryDate]);
 
+  // Tomkorgsvakt: hamnar kunden i steg 2–4 utan varor (korgen tömd i en
+  // annan flik, eller återställt flöde med utgången korg) renderas en
+  // åtgärdsbar empty state i stället för döda knappar. Deriverad direkt
+  // från korgen — kan inte försvinna i någon effekt-race.
+  const cartEmptiedMidFlow =
+    flowRestored && cart.hydrated && !result && step >= 2 && step <= 4 && activeLines.length === 0;
+
   const goTo = (s: number) => {
     if (s === 4 && !idempotencyKey.current) {
       idempotencyKey.current = newIdempotencyKey();
@@ -161,54 +241,86 @@ export function CheckoutFlow({
     return Object.keys(e).length === 0;
   };
 
+  // Servern kan returnera fältfel — visa dem i det steg där felet hör hemma.
+  const stepForFields = (fields: Record<string, string>): number => {
+    if (fields.items) return 1;
+    if (fields.areaSlug || fields.deliveryDate || fields.firstDeliveryDate || fields.frequency)
+      return 2;
+    return 3;
+  };
+
   const submit = async () => {
-    if (!areaSlug || !deliveryDate || activeLines.length === 0) return;
+    if (!areaSlug || !deliveryDate || activeLines.length === 0 || submitting) return;
     setSubmitting(true);
     setGlobalError(null);
+    track("order_submitted", { mode });
+    const common = {
+      idempotencyKey: idempotencyKey.current || undefined,
+      items: activeLines.map((l) => ({ productId: l.product.id, weightKg: l.kg })),
+      areaSlug,
+      companyName: form.companyName.trim(),
+      orgNumber: form.orgNumber.trim(),
+      contactName: form.contactName.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      deliveryAddress: form.deliveryAddress.trim(),
+      deliveryPostalCode: form.deliveryPostalCode.trim(),
+      deliveryCity: form.deliveryCity.trim(),
+      deliveryInstruction: form.deliveryInstruction.trim(),
+      invoiceEmail: (sameEmail ? form.email : form.invoiceEmail).trim(),
+      reference: form.reference.trim(),
+    };
     try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idempotencyKey: idempotencyKey.current || undefined,
-          items: activeLines.map((l) => ({ productId: l.product.id, weightKg: l.kg })),
-          areaSlug,
-          deliveryDate,
-          companyName: form.companyName.trim(),
-          orgNumber: form.orgNumber.trim(),
-          contactName: form.contactName.trim(),
-          email: form.email.trim(),
-          phone: form.phone.trim(),
-          deliveryAddress: form.deliveryAddress.trim(),
-          deliveryPostalCode: form.deliveryPostalCode.trim(),
-          deliveryCity: form.deliveryCity.trim(),
-          deliveryInstruction: form.deliveryInstruction.trim(),
-          invoiceEmail: (sameEmail ? form.email : form.invoiceEmail).trim(),
-          reference: form.reference.trim(),
-          billingAddress: "",
-        }),
-      });
+      const res =
+        mode === "RECURRING"
+          ? await fetch("/api/subscriptions", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...common, frequency: interval, firstDeliveryDate: deliveryDate }),
+            })
+          : await fetch("/api/orders", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...common, deliveryDate, billingAddress: "" }),
+            });
       const data = await res.json();
       if (data.ok) {
         idempotencyKey.current = "";
-        setResult({
-          orderNumber: data.orderNumber,
-          invoiceUrl: data.invoiceUrl,
-          deliveryDate: data.deliveryDate,
-          totalOre: data.totalOre,
-        });
+        track("order_completed", { mode });
+        setResult(
+          mode === "RECURRING"
+            ? {
+                kind: "subscription",
+                number: data.subscriptionNumber,
+                nextDate: data.nextDeliveryDate,
+                interval,
+                totalOre: totals.totalOre,
+              }
+            : {
+                kind: "order",
+                orderNumber: data.orderNumber,
+                invoiceUrl: data.invoiceUrl,
+                deliveryDate: data.deliveryDate,
+                totalOre: data.totalOre,
+              }
+        );
+        try {
+          sessionStorage.removeItem(FLOW_STORAGE_KEY);
+        } catch {
+          // lagring otillgänglig — inget att rensa
+        }
         cart.clear();
         goTo(5);
       } else {
+        track("order_failed", { mode, reason: "validation" });
         setGlobalError(data.error ?? "Något gick fel");
         if (data.fields) {
           setErrors(data.fields);
-          if (data.fields.deliveryDate || data.fields.areaSlug) goTo(2);
-          else if (data.fields.items) goTo(1);
-          else goTo(3);
+          goTo(stepForFields(data.fields));
         }
       }
     } catch {
+      track("order_failed", { mode, reason: "network" });
       setGlobalError("Kunde inte skicka beställningen — kontrollera uppkopplingen och försök igen.");
     } finally {
       setSubmitting(false);
@@ -223,6 +335,9 @@ export function CheckoutFlow({
         unit: l.product.unit,
         ore: l.kg * l.product.pricePerKgOre,
       }));
+
+  const modeSummary =
+    mode === "RECURRING" ? `Återkommande · ${intervalLabel(interval).toLowerCase()}` : undefined;
 
   return (
     <div className="container-narrow" style={{ padding: "40px 24px 100px" }} ref={headingRef}>
@@ -251,6 +366,18 @@ export function CheckoutFlow({
           }}
         >
           {globalError}
+        </div>
+      )}
+      {/* Åtgärdsbar empty state: korgen tömdes mitt i flödet. */}
+      {cartEmptiedMidFlow && (
+        <div className="card" style={{ padding: "36px 28px", textAlign: "center", display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
+          <h1 style={{ fontSize: 26, margin: 0 }}>Er varukorg är tom.</h1>
+          <p style={{ fontSize: 15, color: "var(--text-2)", margin: 0, maxWidth: "44ch" }}>
+            Välj era favoriter så ordnar vi resten — allt ni redan fyllt i finns kvar.
+          </p>
+          <button type="button" className="btn btn-primary btn-lg" onClick={() => goTo(1)}>
+            Välj kakor
+          </button>
         </div>
       )}
 
@@ -321,7 +448,10 @@ export function CheckoutFlow({
               type="button"
               className="btn btn-primary btn-lg"
               disabled={totalKg === 0}
-              onClick={() => goTo(2)}
+              onClick={() => {
+                track("checkout_started", { items: activeLines.length, total_ore: totals.totalOre });
+                goTo(2);
+              }}
             >
               Fortsätt till leverans
             </button>
@@ -329,15 +459,88 @@ export function CheckoutFlow({
         </>
       )}
 
-      {/* STEG 2: LEVERANS */}
-      {step === 2 && (
+      {/* STEG 2: LEVERANS (köpläge -> område -> dag) */}
+      {step === 2 && !cartEmptiedMidFlow && (
         <>
           <h1 style={{ fontSize: 32, marginBottom: 6 }}>Leverans</h1>
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 20px" }}>
             Vi kör själva, på fasta leveransdagar per område.
           </p>
-          <MiniSummary lines={summaryLines} totalOre={totals.totalOre} onEdit={() => goTo(1)} />
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Vilket område?</div>
+          <MiniSummary
+            lines={summaryLines}
+            totalOre={totals.totalOre}
+            mode={modeSummary}
+            onEdit={() => goTo(1)}
+          />
+
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>En gång eller återkommande?</div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 10,
+              marginBottom: 14,
+            }}
+          >
+            <button
+              type="button"
+              className={`choice-btn${mode === "ONE_TIME" ? " selected" : ""}`}
+              aria-pressed={mode === "ONE_TIME"}
+              onClick={() => {
+                cart.setPurchaseMode("ONE_TIME");
+                track("purchase_mode_selected", { mode: "ONE_TIME" });
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: 15 }}>Engångsbeställning</div>
+              <div className="choice-sub">En leverans, en faktura — klart.</div>
+            </button>
+            <button
+              type="button"
+              className={`choice-btn${mode === "RECURRING" ? " selected" : ""}`}
+              aria-pressed={mode === "RECURRING"}
+              onClick={() => {
+                cart.setPurchaseMode("RECURRING");
+                track("purchase_mode_selected", { mode: "RECURRING" });
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: 15 }}>Återkommande leverans</div>
+              <div className="choice-sub">Samma beställning kommer automatiskt — ingen bindningstid.</div>
+            </button>
+          </div>
+
+          {mode === "RECURRING" && (
+            <>
+              <div style={{ fontWeight: 700, fontSize: 15, margin: "18px 0 12px" }}>Hur ofta?</div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+                  gap: 10,
+                  marginBottom: 14,
+                }}
+              >
+                {INTERVALS.map((iv) => (
+                  <button
+                    key={iv.value}
+                    type="button"
+                    className={`choice-btn${interval === iv.value ? " selected" : ""}`}
+                    aria-pressed={interval === iv.value}
+                    style={{ textAlign: "center", padding: "16px 14px" }}
+                    onClick={() => cart.setRecurrenceInterval(iv.value)}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: 15 }}>{iv.label}</div>
+                    <div className="choice-sub" style={{ marginTop: 3 }}>{iv.sub}</div>
+                  </button>
+                ))}
+              </div>
+              <div className="info-box-muted" style={{ marginBottom: 14, fontSize: "13.5px" }}>
+                Inför varje leverans skapas en vanlig order med faktura som mejlas till er. Ingen
+                bindningstid — pausa eller avsluta när ni vill.
+              </div>
+            </>
+          )}
+
+          <div style={{ fontWeight: 700, fontSize: 15, margin: "18px 0 12px" }}>Vilket område?</div>
           <div
             style={{
               display: "grid",
@@ -361,7 +564,9 @@ export function CheckoutFlow({
           </div>
           {errors.areaSlug && <p className="error-text">{errors.areaSlug}</p>}
 
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>När vill ni ha leveransen?</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>
+            {mode === "RECURRING" ? "När vill ni ha första leveransen?" : "När vill ni ha leveransen?"}
+          </div>
           {!selectedArea && (
             <p style={{ fontSize: 14, color: "var(--text-2)", margin: "0 0 16px" }}>
               Välj område först så visar vi tillgängliga leveransdagar.
@@ -387,12 +592,16 @@ export function CheckoutFlow({
                   <div style={{ fontWeight: 700, fontSize: 15, textTransform: "capitalize" }}>
                     {formatDeliveryDate(fromISODate(d))}
                   </div>
-                  <div className="choice-sub">Leverans under dagen</div>
+                  <div className="choice-sub">
+                    {mode === "RECURRING" ? "Första leverans · sedan " + intervalLabel(interval).toLowerCase() : "Leverans under dagen"}
+                  </div>
                 </button>
               ))}
             </div>
           )}
-          {errors.deliveryDate && <p className="error-text">{errors.deliveryDate}</p>}
+          {(errors.deliveryDate || errors.firstDeliveryDate) && (
+            <p className="error-text">{errors.deliveryDate ?? errors.firstDeliveryDate}</p>
+          )}
           <div className="info-box" style={{ marginBottom: 28 }}>
             Vi levererar under dagen till bemannade företagsadresser. Se därför till att någon kan
             ta emot leveransen.
@@ -414,7 +623,7 @@ export function CheckoutFlow({
       )}
 
       {/* STEG 3: UPPGIFTER */}
-      {step === 3 && (
+      {step === 3 && !cartEmptiedMidFlow && (
         <>
           <h1 style={{ fontSize: 32, marginBottom: 6 }}>Företagsuppgifter</h1>
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 20px" }}>
@@ -423,6 +632,7 @@ export function CheckoutFlow({
           <MiniSummary
             lines={summaryLines}
             totalOre={totals.totalOre}
+            mode={modeSummary}
             delivery={
               selectedArea && deliveryDate
                 ? `${selectedArea.name} · ${formatDeliveryDate(fromISODate(deliveryDate))}`
@@ -433,7 +643,10 @@ export function CheckoutFlow({
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (validateStep3()) goTo(4);
+              if (validateStep3()) {
+                track("customer_details_completed", { mode });
+                goTo(4);
+              }
             }}
             noValidate
           >
@@ -477,7 +690,7 @@ export function CheckoutFlow({
             </div>
             <div className="info-box-muted" style={{ margin: "20px 0 28px" }}>
               <strong>Betalning sker mot faktura.</strong> Ingen kortbetalning behövs — fakturan
-              skickas till er faktura-e-post.
+              skickas till er faktura-e-post{mode === "RECURRING" ? " inför varje leverans" : ""}.
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
               <button type="button" className="btn btn-outline" onClick={() => goTo(2)}>
@@ -492,7 +705,7 @@ export function CheckoutFlow({
       )}
 
       {/* STEG 4: KONTROLLERA */}
-      {step === 4 && (
+      {step === 4 && !cartEmptiedMidFlow && (
         <>
           <h1 style={{ fontSize: 32, marginBottom: 28 }}>Kontrollera er order</h1>
           <div className="card" style={{ padding: "24px 26px", display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
@@ -517,7 +730,7 @@ export function CheckoutFlow({
               <span>{formatOre(totals.vatOre)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 16 }}>
-              <span>Totalt inkl. moms</span>
+              <span>{mode === "RECURRING" ? "Totalt per leverans inkl. moms" : "Totalt inkl. moms"}</span>
               <span>
                 {formatWeightKg(totalWeightGrams)} · {formatOre(totals.totalOre)}
               </span>
@@ -528,8 +741,16 @@ export function CheckoutFlow({
               <div className="section-label">LEVERANS</div>
               <EditStepLink onClick={() => goTo(2)} />
             </div>
+            <div>
+              {mode === "RECURRING"
+                ? `Återkommande — ${intervalLabel(interval).toLowerCase()}`
+                : "Engångsbeställning"}
+            </div>
             <div style={{ textTransform: "capitalize" }}>
-              {selectedArea?.name} · {deliveryDate ? formatDeliveryDate(fromISODate(deliveryDate)) : "—"}
+              {selectedArea?.name} ·{" "}
+              {deliveryDate
+                ? `${mode === "RECURRING" ? "första leverans " : ""}${formatDeliveryDate(fromISODate(deliveryDate))}`
+                : "—"}
             </div>
             <div style={{ color: "var(--text-2)" }}>Leverans under dagen till bemannad företagsadress.</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 10 }}>
@@ -544,20 +765,28 @@ export function CheckoutFlow({
               {form.contactName} · {form.email} · Faktura till {sameEmail ? form.email : form.invoiceEmail}
             </div>
           </div>
-          <div className="info-box" style={{ marginBottom: 28 }}>Betalning sker mot faktura.</div>
+          <div className="info-box" style={{ marginBottom: 28 }}>
+            {mode === "RECURRING"
+              ? "Betalning sker mot faktura — en faktura per leverans. Ingen bindningstid."
+              : "Betalning sker mot faktura."}
+          </div>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
             <button type="button" className="btn btn-outline" onClick={() => goTo(3)}>
               Tillbaka
             </button>
             <button type="button" className="btn btn-send btn-lg" disabled={submitting} onClick={submit}>
-              {submitting ? "Skickar…" : `Skicka beställning · ${formatOre(totals.totalOre)}`}
+              {submitting
+                ? "Skickar…"
+                : mode === "RECURRING"
+                  ? `Skicka beställning · ${formatOre(totals.totalOre)} per leverans`
+                  : `Skicka beställning · ${formatOre(totals.totalOre)}`}
             </button>
           </div>
         </>
       )}
 
       {/* STEG 5: TACK */}
-      {step === 5 && result && (
+      {step === 5 && result?.kind === "order" && (
         <>
           <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
             <div style={{ marginBottom: 16, display: "inline-block" }}>
@@ -592,6 +821,47 @@ export function CheckoutFlow({
             </a>
           </div>
           <PreferredSourceCTA placement="result_success" />
+          <div style={{ textAlign: "center", marginTop: 28 }}>
+            <Link href="/" style={{ fontWeight: 700, fontSize: 15 }}>
+              ← Till startsidan
+            </Link>
+          </div>
+        </>
+      )}
+
+      {step === 5 && result?.kind === "subscription" && (
+        <>
+          <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
+            <div style={{ marginBottom: 16, display: "inline-block" }}>
+              <LogoSigill size={110} />
+            </div>
+            <h1 style={{ fontSize: 34, marginBottom: 10 }}>Tack! Er återkommande leverans är igång.</h1>
+            <div className="mono" style={{ fontSize: 13, letterSpacing: 1, color: "var(--text-2)", marginBottom: 28 }}>
+              PRENUMERATION {result.number}
+            </div>
+          </div>
+          <div className="card" style={{ padding: "24px 26px", display: "flex", flexDirection: "column", gap: 12, marginBottom: 20, fontSize: "14.5px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700 }}>
+              <span>Per leverans</span>
+              <span>{formatOre(result.totalOre)}</span>
+            </div>
+            <div style={{ color: "var(--text-2)" }}>
+              {intervalLabel(result.interval)} ·{" "}
+              <span style={{ textTransform: "capitalize" }}>
+                första leverans {formatDeliveryDate(fromISODate(result.nextDate))}
+              </span>
+            </div>
+          </div>
+          <div className="info-box-muted" style={{ padding: "22px 24px", fontSize: "14.5px", lineHeight: 1.8 }}>
+            <strong>Vad händer nu?</strong>
+            <br />
+            1. Ni får en bekräftelse till er e-post.
+            <br />
+            2. Inför varje leverans skapas en order med faktura som mejlas till er.
+            <br />
+            3. Ingen bindningstid — ni kan pausa eller avsluta när ni vill.
+          </div>
+          <PreferredSourceCTA placement="subscription_success" />
           <div style={{ textAlign: "center", marginTop: 28 }}>
             <Link href="/" style={{ fontWeight: 700, fontSize: 15 }}>
               ← Till startsidan
@@ -664,11 +934,13 @@ function MiniSummary({
   lines,
   totalOre,
   delivery,
+  mode,
   onEdit,
 }: {
   lines: { name: string; kg: number; unit: string; ore: number }[];
   totalOre: number;
   delivery?: string;
+  mode?: string;
   onEdit: () => void;
 }) {
   if (lines.length === 0) return null;
@@ -688,6 +960,7 @@ function MiniSummary({
       <span className="section-label" style={{ fontSize: 11 }}>ER BESTÄLLNING</span>
       <span style={{ color: "var(--text-2)", flex: "1 1 auto" }}>
         {lines.map((l) => `${l.name} ${qtyLabel(l.kg, l.unit)}`).join(" · ")}
+        {mode ? ` · ${mode}` : null}
         {delivery ? (
           <span style={{ textTransform: "capitalize" }}> · {delivery}</span>
         ) : null}

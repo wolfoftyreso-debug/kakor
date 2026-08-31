@@ -73,7 +73,7 @@ export default function OmPage() {
         <Link href="/bestall" className="btn btn-primary">
           Beställ kakor
         </Link>
-        <Link href="/prenumeration" className="btn btn-butter">
+        <Link href="/bestall?typ=aterkommande" className="btn btn-butter">
           Starta fikaprenumeration
         </Link>
       </div>

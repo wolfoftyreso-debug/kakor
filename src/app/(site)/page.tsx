@@ -102,7 +102,7 @@ export default async function HomePage() {
             <Link href="/bestall" className="btn btn-primary btn-lg">
               Beställ kakor
             </Link>
-            <Link href="/prenumeration" className="btn btn-butter btn-lg">
+            <Link href="/bestall?typ=aterkommande" className="btn btn-butter btn-lg">
               Starta fikaprenumeration
             </Link>
           </div>
@@ -257,7 +257,7 @@ export default async function HomePage() {
               ihåg det. Pausa eller avsluta enkelt.
             </p>
             <div>
-              <Link href="/prenumeration" className="btn btn-butter btn-lg">
+              <Link href="/bestall?typ=aterkommande" className="btn btn-butter btn-lg">
                 Starta fikaprenumeration
               </Link>
             </div>
@@ -358,7 +358,7 @@ export default async function HomePage() {
             <Link href="/bestall" className="btn btn-primary btn-lg">
               Beställ kakor
             </Link>
-            <Link href="/prenumeration" className="btn btn-cream btn-lg">
+            <Link href="/bestall?typ=aterkommande" className="btn btn-cream btn-lg">
               Starta fikaprenumeration
             </Link>
           </div>

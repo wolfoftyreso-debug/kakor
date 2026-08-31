@@ -3,6 +3,11 @@
 // Varukorg — klientbaserad fram till checkout, sparas i localStorage så att
 // den överlever navigation och refresh. Priserna här är endast visning;
 // servern räknar alltid om från databasen vid beställning.
+//
+// EN korg för hela sajten: engångsköp och återkommande leverans är inte två
+// flöden utan ett köpläge (purchaseMode) på samma varukorg — kunden väljer
+// först VAD, sedan HUR (Mobbin-mönstret från t.ex. Hims/Walmart där
+// prenumeration är ett attribut på ordern, inte en egen butik).
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { qtyLabel } from "@/lib/units";
@@ -16,23 +21,45 @@ export interface CartLine {
   kg: number; // antal enheter
 }
 
+export type PurchaseMode = "ONE_TIME" | "RECURRING";
+export type RecurrenceInterval = "WEEKLY" | "BIWEEKLY" | "MONTHLY";
+
 interface CartContextValue {
   lines: CartLine[];
   totalKg: number;
   subtotalOre: number;
+  purchaseMode: PurchaseMode;
+  recurrenceInterval: RecurrenceInterval;
+  /** true när localStorage lästs — guards ska inte agera på o-hydrerat state. */
+  hydrated: boolean;
   addKg: (product: Omit<CartLine, "kg">, kg: number) => void;
   setKg: (productId: string, kg: number) => void;
   remove: (productId: string) => void;
   clear: () => void;
+  setPurchaseMode: (mode: PurchaseMode) => void;
+  setRecurrenceInterval: (interval: RecurrenceInterval) => void;
   toast: string | null;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const STORAGE_KEY = "sb_cart_v1";
+// v1 lagrade bara raderna (en array). v2 lagrar hela korgen inkl. köpläge.
+const STORAGE_KEY_V1 = "sb_cart_v1";
+const STORAGE_KEY = "sb_cart_v2";
+
+const INTERVALS: RecurrenceInterval[] = ["WEEKLY", "BIWEEKLY", "MONTHLY"];
+
+function sanitizeLines(raw: unknown): CartLine[] {
+  if (!Array.isArray(raw)) return [];
+  return (raw as CartLine[])
+    .filter((l) => l && typeof l.productId === "string" && typeof l.kg === "number" && l.kg > 0)
+    .map((l) => ({ ...l, unit: l.unit ?? "kg" }));
+}
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
+  const [purchaseMode, setPurchaseModeState] = useState<PurchaseMode>("ONE_TIME");
+  const [recurrenceInterval, setRecurrenceIntervalState] = useState<RecurrenceInterval>("BIWEEKLY");
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [hydrated, setHydrated] = useState(false);
@@ -41,9 +68,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as CartLine[];
-        if (Array.isArray(parsed))
-          setLines(parsed.filter((l) => l && l.kg > 0).map((l) => ({ ...l, unit: l.unit ?? "kg" })));
+        const parsed = JSON.parse(raw) as {
+          lines?: unknown;
+          purchaseMode?: unknown;
+          recurrenceInterval?: unknown;
+        };
+        setLines(sanitizeLines(parsed.lines));
+        if (parsed.purchaseMode === "RECURRING") setPurchaseModeState("RECURRING");
+        if (INTERVALS.includes(parsed.recurrenceInterval as RecurrenceInterval))
+          setRecurrenceIntervalState(parsed.recurrenceInterval as RecurrenceInterval);
+      } else {
+        // Migrera en äldre korg (bara rader) så att ingen kund tappar sitt val.
+        const v1 = localStorage.getItem(STORAGE_KEY_V1);
+        if (v1) {
+          setLines(sanitizeLines(JSON.parse(v1)));
+          localStorage.removeItem(STORAGE_KEY_V1);
+        }
       }
     } catch {
       // korrupt lagring — börja om med tom korg
@@ -54,11 +94,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ lines, purchaseMode, recurrenceInterval })
+      );
     } catch {
       // t.ex. privat läge — korgen funkar ändå under sessionen
     }
-  }, [lines, hydrated]);
+  }, [lines, purchaseMode, recurrenceInterval, hydrated]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -94,13 +137,49 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setLines((prev) => prev.filter((l) => l.productId !== productId));
   }, []);
 
-  const clear = useCallback(() => setLines([]), []);
+  const clear = useCallback(() => {
+    setLines([]);
+    setPurchaseModeState("ONE_TIME");
+    setRecurrenceIntervalState("BIWEEKLY");
+  }, []);
+
+  const setPurchaseMode = useCallback((mode: PurchaseMode) => setPurchaseModeState(mode), []);
+  const setRecurrenceInterval = useCallback(
+    (interval: RecurrenceInterval) => setRecurrenceIntervalState(interval),
+    []
+  );
 
   const value = useMemo<CartContextValue>(() => {
     const totalKg = lines.reduce((s, l) => s + l.kg, 0);
     const subtotalOre = lines.reduce((s, l) => s + l.kg * l.pricePerKgOre, 0);
-    return { lines, totalKg, subtotalOre, addKg, setKg, remove, clear, toast };
-  }, [lines, addKg, setKg, remove, clear, toast]);
+    return {
+      lines,
+      totalKg,
+      subtotalOre,
+      purchaseMode,
+      recurrenceInterval,
+      hydrated,
+      addKg,
+      setKg,
+      remove,
+      clear,
+      setPurchaseMode,
+      setRecurrenceInterval,
+      toast,
+    };
+  }, [
+    lines,
+    purchaseMode,
+    recurrenceInterval,
+    hydrated,
+    addKg,
+    setKg,
+    remove,
+    clear,
+    setPurchaseMode,
+    setRecurrenceInterval,
+    toast,
+  ]);
 
   return (
     <CartContext.Provider value={value}>
