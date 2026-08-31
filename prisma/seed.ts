@@ -12,7 +12,7 @@ const products = [
     description: "Klassisk svensk mandelkubb — mör, mandeldoftande och rejäl.",
     pricePerKgOre: 29500,
     ingredients:
-      "Vetemjöl, smör, socker, mandel, ägg, bakpulver, salt.",
+      "Vetemjöl, smör, socker, mandel, ägg från frigående höns, bakpulver, salt.",
     allergens: "Innehåller vete, mandel, ägg, smör (mjölk).",
     imageRef: "/images/mandelkubb.jpg",
     sortOrder: 1,
