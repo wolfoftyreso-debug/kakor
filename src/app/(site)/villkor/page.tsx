@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 // Senast innehållsändrad — uppdateras manuellt vid verklig villkorsändring,
 // aldrig automatiskt per deploy.
-const CONTENT_UPDATED = "2026-08-29";
+const CONTENT_UPDATED = "2026-08-31";
 
 export default function VillkorPage() {
   return (
@@ -57,7 +57,8 @@ export default function VillkorPage() {
         <section>
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Betalning &amp; faktura</h2>
           <p style={{ margin: 0 }}>
-            Betalning sker mot faktura. Fakturan skickas till angiven faktura-e-post och kan även
+            Betalning sker mot faktura. Fakturan skapas i samband med beställningen, skickas till
+            angiven faktura-e-post och kan även
             laddas ner som PDF. Betalningsvillkor: {invoiceConfig.paymentTermsDays} dagar från
             fakturadatum. Priser anges exklusive moms; moms för livsmedel (12&nbsp;%) tillkommer
             och specificeras i kassan och på fakturan tillsammans med nettobelopp och totalsumma.
@@ -67,15 +68,15 @@ export default function VillkorPage() {
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Prenumeration</h2>
           <p style={{ margin: 0 }}>
             Fikaprenumerationen innebär att en vanlig order med faktura skapas inför varje
-            leverans enligt valt intervall. Ingen bindningstid — ni kan pausa eller avsluta genom
-            att kontakta oss.
+            leverans enligt valt intervall. Ingen bindningstid — ni kan pausa eller avsluta när
+            ni vill.
           </p>
         </section>
         <section>
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Avbokning &amp; ändringar</h2>
           <p style={{ margin: 0 }}>
-            Kontakta oss så snart som möjligt om ni behöver ändra eller avboka en beställning, så
-            löser vi det tillsammans. Eftersom leveranserna packas och planeras per leveransdag kan
+            Ändringar och avbokningar hanteras så långt det är möjligt — ju tidigare besked,
+            desto bättre. Eftersom leveranserna packas och planeras per leveransdag kan
             ändringar nära inpå leveransdagen vara svåra att tillgodose.
           </p>
         </section>
