@@ -45,7 +45,14 @@ async function seedDemoContent() {
   const { toISODate, upcomingDeliveryDates } = await import("../src/lib/dates");
 
   const products = await prisma.product.findMany({ orderBy: { sortOrder: "asc" } });
-  const dates = upcomingDeliveryDates({ weekdays: [2, 4], leadTimeDays: 2 }, 2).map(toISODate);
+  // Leveransdagar hämtas från områdets VERKLIGA konfiguration (seedad av
+  // prisma/seed.ts) — aldrig hårdkodade veckodagar, annars spricker
+  // demoseedet när verksamheten ändrar leveransdagarna.
+  const area = await prisma.deliveryArea.findUniqueOrThrow({ where: { slug: "tyreso" } });
+  const dates = upcomingDeliveryDates(
+    { weekdays: JSON.parse(area.weekdaysJson) as number[], leadTimeDays: area.leadTimeDays },
+    2
+  ).map(toISODate);
 
   const base = {
     areaSlug: "tyreso",
