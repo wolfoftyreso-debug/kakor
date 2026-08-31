@@ -203,7 +203,7 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
   shot list: LEVERANS (budet med kartong vid leveransbilen — /leverans och
   områdessidorna), BAKNING (bagaren vid plåten — /om och /bageri-tyreso)
   och ARBETSPLATSFIKA (kollegorna vid fikabordet — startsidans "Fika för
-  arbetsplatser"). Kvarvarande: ett riktigt paketfoto för prova-på-paketet
-  — tills dess återanvänds fikabilden där.
+  arbetsplatser") samt PAKETFOTOT för prova-på-paketet (alla tre sorterna
+  på fat). Hela fotouppsättningen enligt designpaketet är därmed komplett.
 - Google-recensioner: sektionen renderas inte förrän verifierade omdömen
   kopplas in (inga fejkade recensioner, även enligt designpaketet)
