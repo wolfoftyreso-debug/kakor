@@ -553,27 +553,6 @@ button, input, select, textarea {
   }
 }
 
-/* ---------- Prenumerationslayout ---------- */
-.sub-grid {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 40px;
-  align-items: start;
-}
-/* Gridbarn har implicit min-width:auto — utan detta tvingar inre
-   auto-fit-grids (minmax(160px...)) ut kolumnen bredare än skärmen. */
-.sub-grid > * {
-  min-width: 0;
-}
-@media (max-width: 900px) {
-  .sub-grid {
-    grid-template-columns: 1fr;
-  }
-  .sub-aside {
-    position: static !important;
-  }
-}
-
 /* ---------- Formulärgrid (checkout) ---------- */
 .form-grid {
   display: grid;

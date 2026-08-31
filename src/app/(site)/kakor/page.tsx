@@ -107,7 +107,7 @@ export default async function KakorPage() {
           <Link href="/bestall" className="btn btn-primary btn-lg">
             Beställ kakor
           </Link>
-          <Link href="/prenumeration" className="btn btn-butter btn-lg">
+          <Link href="/bestall?typ=aterkommande" className="btn btn-butter btn-lg">
             Starta fikaprenumeration
           </Link>
         </div>

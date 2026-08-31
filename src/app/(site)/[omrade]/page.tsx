@@ -79,7 +79,7 @@ export default async function AreaPage({ params }: Props) {
             <Link href="/bestall" className="btn btn-primary" style={{ padding: "15px 26px" }}>
               Beställ till {content.name}
             </Link>
-            <Link href="/prenumeration" className="btn btn-butter" style={{ padding: "15px 26px" }}>
+            <Link href="/bestall?typ=aterkommande" className="btn btn-butter" style={{ padding: "15px 26px" }}>
               Fikaprenumeration
             </Link>
           </div>

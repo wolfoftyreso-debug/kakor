@@ -111,7 +111,15 @@ först — e-postfel förlorar aldrig en order.
 ## Prenumerationer
 
 Prenumeration = instruktion som genererar **vanliga ordrar** (med vanliga
-fakturor) via samma ordermotor. Generering:
+fakturor) via samma ordermotor.
+
+I frontend är prenumeration INTE ett eget flöde: sajten har EN funnel
+(`/bestall` — Kakor → Leverans → Uppgifter → Kontrollera) och EN varukorg,
+där köpläget (engång/återkommande + intervall) väljs i leveranssteget och
+sparas på korgen (`purchaseMode`/`recurrenceInterval` i cart-contexten).
+Submit grenar mot `/api/orders` respektive `/api/subscriptions`.
+`/prenumeration` är en förklarande sida som skickar in kunden i funneln
+med återkommande förvalt (`/bestall?typ=aterkommande`). Generering:
 
 - Automatiskt: Vercel Cron (schema i `vercel.json`) anropar
   `GET /api/cron/generate-subscription-orders` dagligen med
