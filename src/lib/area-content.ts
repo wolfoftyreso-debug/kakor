@@ -44,7 +44,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       },
       {
         q: "Kan vi hämta själva?",
-        a: "Kontakta oss så löser vi det — vårt lager ligger på Radiovägen 19 i Tyresö.",
+        a: "Kontakta oss så löser vi det — vårt lager ligger på Radiovägen 19 (c/o Mewab Ängelsholmsglass) i Tyresö.",
       },
     ],
   },
