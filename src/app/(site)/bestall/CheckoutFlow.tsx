@@ -13,7 +13,7 @@ import { ImageSlot } from "@/components/ImageSlot";
 import { formatOre, calculateTotals } from "@/lib/money";
 import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/units";
 import { formatDeliveryDate, fromISODate } from "@/lib/dates";
-import { LogoMark } from "@/components/Logo";
+import { LogoSigill } from "@/components/Logo";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 import { newIdempotencyKey } from "@/lib/idempotency";
 
@@ -561,7 +561,7 @@ export function CheckoutFlow({
         <>
           <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
             <div style={{ marginBottom: 16, display: "inline-block" }}>
-              <LogoMark size={72} />
+              <LogoSigill size={110} />
             </div>
             <h1 style={{ fontSize: 34, marginBottom: 10 }}>Tack! Vi har tagit emot er beställning.</h1>
             <div className="mono" style={{ fontSize: 13, letterSpacing: 1, color: "var(--text-2)", marginBottom: 28 }}>

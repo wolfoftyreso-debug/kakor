@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdmin } from "@/lib/auth/session";
 import { logoutAction } from "@/app/admin/actions";
-import { LogoMark } from "@/components/Logo";
+import { LogoSigill } from "@/components/Logo";
 
 // Server-side route-skydd för hela admin. Varje mutation verifierar
 // dessutom sessionen igen i sin server action.
@@ -38,7 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           href="/admin"
           style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--bg)", textDecoration: "none" }}
         >
-          <LogoMark size={28} inverted />
+          <LogoSigill size={30} />
           <strong style={{ fontFamily: "var(--font-serif)", fontSize: 16 }}>
             SOCKERBAGAREN · ADMIN
           </strong>

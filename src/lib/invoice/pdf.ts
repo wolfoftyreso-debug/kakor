@@ -2,6 +2,7 @@ import PDFDocument from "pdfkit";
 import type { InvoiceSnapshot } from "@/lib/invoice/snapshot";
 import { formatOre } from "@/lib/money";
 import { qtyLabel } from "@/lib/units";
+import { SIGILL_PNG_BASE64 } from "@/lib/invoice/sigill-png";
 
 // PDF-faktura — renderas enbart från fakturans snapshot (historiskt dokument).
 // Diskret varumärkesfärg, standardtypsnitt (Helvetica) för stabil server-side-rendering.
@@ -32,16 +33,13 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    // --- Sidhuvud ---
-    doc.save();
-    doc.circle(M + 16, M + 16, 16).lineWidth(2.5).stroke(BROWN);
-    doc.font("Times-Bold").fontSize(20).fillColor(BROWN).text("S", M + 9.5, M + 5.5);
-    doc.restore();
+    // --- Sidhuvud: sigillet (primärsymbolen ur designsystemet) ---
+    doc.image(Buffer.from(SIGILL_PNG_BASE64, "base64"), M, M - 4, { width: 44 });
 
     doc.font("Helvetica-Bold").fontSize(16).fillColor(BROWN);
-    doc.text("SOCKERBAGAREN", M + 44, M + 2);
+    doc.text("SOCKERBAGAREN", M + 56, M + 4);
     doc.font("Helvetica").fontSize(8.5).fillColor(MUTED);
-    doc.text(snapshot.seller.companyName, M + 44, M + 21);
+    doc.text(snapshot.seller.companyName, M + 56, M + 23);
 
     doc.font("Helvetica-Bold").fontSize(22).fillColor(BROWN);
     doc.text("FAKTURA", M, M, { width: CONTENT_W, align: "right" });
