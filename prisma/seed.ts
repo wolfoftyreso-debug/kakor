@@ -12,7 +12,7 @@ const products = [
     description: "Klassisk svensk mandelkubb — mör, mandeldoftande och rejäl.",
     pricePerKgOre: 29500,
     ingredients:
-      "Vetemjöl, smör, socker, mandel, ägg från frigående höns, bakpulver, salt.",
+      "Vetemjöl, smör, socker, mandel, ägg från frigående höns, bakpulver, keltiskt salt.",
     allergens: "Innehåller vete, mandel, ägg, smör (mjölk).",
     imageRef: "/images/mandelkubb.jpg",
     sortOrder: 1,
@@ -22,7 +22,7 @@ const products = [
     name: "Kolasnittar",
     description: "Spröda, smöriga och precis lagom sega.",
     pricePerKgOre: 29500,
-    ingredients: "Vetemjöl, smör, socker, ljus sirap, vaniljsocker, bikarbonat, salt.",
+    ingredients: "Vetemjöl, smör, socker, ljus sirap, vaniljsocker, bikarbonat, keltiskt salt.",
     allergens: "Innehåller vete, smör (mjölk).",
     imageRef: "/images/kolasnittar.jpg",
     sortOrder: 2,
@@ -33,7 +33,7 @@ const products = [
     description: "Klassiska snittar med ordentlig chokladkaraktär.",
     pricePerKgOre: 29500,
     ingredients:
-      "Vetemjöl, smör, socker, mörk choklad, kakao, ljus sirap, vaniljsocker, bakpulver, salt.",
+      "Vetemjöl, smör, socker, mörk choklad, kakao, ljus sirap, vaniljsocker, bakpulver, keltiskt salt.",
     allergens: "Innehåller vete, smör (mjölk). Kan innehålla spår av mandel.",
     imageRef: "/images/chokladsnittar.jpg",
     sortOrder: 3,
