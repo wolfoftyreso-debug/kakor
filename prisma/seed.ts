@@ -9,7 +9,8 @@ const products = [
   {
     slug: "mandelkubb",
     name: "Mandelkubb",
-    description: "Klassisk svensk mandelkubb — mör, mandeldoftande och rejäl.",
+    description:
+      "Mör, mandeldoftande och rejäl — en tät svensk klassiker med gyllene, lätt knaprig yta och mjuk, smörig kärna. Generös med mandeln och med en rund sötma som gör sig perfekt till kaffet.",
     pricePerKgOre: 29500,
     ingredients:
       "Vetemjöl, smör, socker, mandel, ägg från frigående höns, bakpulver, keltiskt salt.",
@@ -31,7 +32,8 @@ const products = [
   {
     slug: "chokladsnittar",
     name: "Chokladsnittar",
-    description: "Klassiska snittar med ordentlig chokladkaraktär.",
+    description:
+      "Djup chokladkaraktär av mörk choklad och kakao — härligt frasiga snittar med seg kärna, rund sötma av ljus sirap och en fin sälta som lyfter chokladen.",
     pricePerKgOre: 29500,
     ingredients:
       "Vetemjöl, smör, socker, mörk choklad, kakao, ljus sirap, vaniljsocker, bakpulver, keltiskt salt.",
@@ -45,7 +47,7 @@ const products = [
     slug: "prova-pa-paket",
     name: "Prova-på-paket",
     description:
-      "1,5 kg småkakor — 0,5 kg vardera av mandelkubb, kolasnittar och chokladsnittar. Ett enkelt sätt att låta arbetsplatsen provsmaka alla sorterna.",
+      "1,5 kg småkakor — 0,5 kg vardera av mandelkubb, kolasnittar och chokladsnittar. Hela sortimentet i en beställning: det enkla sättet att låta arbetsplatsen provsmaka och hitta sin favorit.",
     pricePerKgOre: 44250,
     unit: "paket",
     packageWeightGrams: 1500,
