@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogoSolid } from "@/components/Logo";
+import { LogoSigill } from "@/components/Logo";
 import { invoiceConfig, isVerifiedValue } from "@/lib/config";
 
 const AREAS = [
@@ -24,7 +24,7 @@ export function SiteFooter() {
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <LogoSolid size={34} />
+              <LogoSigill size={40} />
               <div
                 style={{
                   fontFamily: "var(--font-serif)",

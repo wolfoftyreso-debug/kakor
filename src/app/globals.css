@@ -680,6 +680,11 @@ button, input, select, textarea {
   .logo-link {
     gap: 7px !important;
   }
+  /* Sigillet krymps så att raden fortsatt ryms på 320–360 px. */
+  .logo-link svg {
+    width: 36px !important;
+    height: 36px !important;
+  }
   .logo-word {
     font-size: 13.5px !important;
     letter-spacing: 0.2px !important;

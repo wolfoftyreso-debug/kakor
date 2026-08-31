@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { LogoMark } from "@/components/Logo";
+import { LogoSigill } from "@/components/Logo";
 import { useCart } from "@/lib/cart";
 
 const NAV = [
@@ -51,7 +51,7 @@ export function SiteHeader() {
           className="logo-link"
           style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "var(--text)" }}
         >
-          <LogoMark size={36} />
+          <LogoSigill size={44} />
           <span
             className="logo-word"
             style={{
