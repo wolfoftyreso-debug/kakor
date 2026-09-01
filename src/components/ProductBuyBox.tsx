@@ -18,11 +18,14 @@ export function ProductBuyBox({ product }: { product: ProductCardData }) {
     <div className="card" style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
         <span className="section-label">BESTÄLL</span>
+        {/* Priset följer valt antal — á-priset visas som hint när fler än en valts. */}
         <span style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 700 }}>
-          {formatOre(product.pricePerKgOre)}
-          {priceSuffix(product.unit)}{" "}
+          {formatOre(kg * product.pricePerKgOre)}
+          {kg === 1 ? priceSuffix(product.unit) : ""}{" "}
           <span style={{ fontSize: 12, fontWeight: 400, fontFamily: "var(--font-sans)", color: "var(--text-2)" }}>
-            exkl. moms
+            {kg > 1
+              ? `(${formatOre(product.pricePerKgOre)}${priceSuffix(product.unit)}) exkl. moms`
+              : "exkl. moms"}
           </span>
         </span>
       </div>
