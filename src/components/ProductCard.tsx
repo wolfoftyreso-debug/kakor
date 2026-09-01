@@ -63,22 +63,29 @@ export function ProductCard({
         <p style={{ margin: 0, fontSize: 14, color: "var(--text-2)", lineHeight: 1.5, flex: 1 }}>
           {product.description}
         </p>
+        {/* Fritt antal — riktig stepper i stället för fasta förval. */}
         <div
-          style={{ display: "flex", gap: 8 }}
+          className="stepper"
           role="group"
           aria-label={`Välj ${product.unit === "paket" ? "antal" : "vikt"} för ${product.name}`}
         >
-          {product.weightOptions.map((w) => (
-            <button
-              key={w}
-              type="button"
-              className={`weight-btn${kg === w ? " selected" : ""}`}
-              aria-pressed={kg === w}
-              onClick={() => setSelectedKg(w)}
-            >
-              {qtyLabel(w, product.unit)}
-            </button>
-          ))}
+          <button
+            type="button"
+            aria-label={`Minska ${product.name}`}
+            onClick={() => setSelectedKg(Math.max(1, kg - 1))}
+          >
+            −
+          </button>
+          <div className="stepper-value" aria-live="polite">
+            {qtyLabel(kg, product.unit)}
+          </div>
+          <button
+            type="button"
+            aria-label={`Öka ${product.name}`}
+            onClick={() => setSelectedKg(Math.min(100, kg + 1))}
+          >
+            +
+          </button>
         </div>
         <button
           type="button"
