@@ -47,9 +47,16 @@ export function ProductCard({
               {product.name}
             </Link>
           </Heading>
+          {/* Priset följer valt antal — á-priset visas som hint när fler än en valts. */}
           <div style={{ fontFamily: "var(--font-serif)", fontSize: 15, color: "var(--text-2)", whiteSpace: "nowrap" }}>
-            {formatOre(product.pricePerKgOre)}
-            {priceSuffix(product.unit)}{" "}
+            {formatOre(kg * product.pricePerKgOre)}
+            {kg === 1 ? priceSuffix(product.unit) : ""}{" "}
+            {kg > 1 && (
+              <span style={{ fontSize: 11.5, fontFamily: "var(--font-sans)" }}>
+                ({formatOre(product.pricePerKgOre)}
+                {priceSuffix(product.unit)}){" "}
+              </span>
+            )}
             <span style={{ fontSize: 11.5, fontFamily: "var(--font-sans)" }}>exkl. moms</span>
           </div>
         </div>
