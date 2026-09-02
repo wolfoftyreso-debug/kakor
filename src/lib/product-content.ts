@@ -32,7 +32,7 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
   chokladsnittar: {
     heading: "Om chokladsnittar",
     paragraphs: [
-      "Chokladsnittar är kolasnittarnas chokladiga syskon — en skuren småkaka på smördeg med kakao, ofta toppad med pärlsocker. Snittkakor är en egen familj i det svenska kakbaket: degen kavlas i längder, grädds och skärs i diagonala bitar.",
+      "Chokladsnittar är kolasnittarnas chokladiga syskon — en skuren småkaka på mördeg med kakao, ofta toppad med pärlsocker. Snittkakor är en egen familj i det svenska kakbaket: degen kavlas i längder, grädds och skärs i diagonala bitar.",
       "Förvaringstips: förvara i tät burk i rumstemperatur, separera lagren med bakplåtspapper. Chokladsnittar går bra att frysa och tinar snabbt i rumstemperatur.",
     ],
   },

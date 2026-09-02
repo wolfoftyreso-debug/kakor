@@ -33,6 +33,11 @@ export function fromISODate(iso: string): Date {
 
 const WEEKDAY_NAMES = ["måndag", "tisdag", "onsdag", "torsdag", "fredag", "lördag", "söndag"];
 
+/** Versal första bokstav — svenska datum skrivs "Torsdag 10 september", inte "Torsdag 10 September" (CSS capitalize). */
+export function capitalizeFirst(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export function weekdayName(isoWd: number): string {
   return WEEKDAY_NAMES[isoWd - 1] ?? "";
 }
@@ -120,4 +125,16 @@ export function nextSubscriptionDate(
     cursor = addDays(cursor, 1);
   }
   return target;
+}
+
+/** Riktig tidsstämpel (t.ex. levererad kl 00:30) — visas i svensk tid, inte UTC. */
+export function formatTimestamp(date: Date): string {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Stockholm",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }

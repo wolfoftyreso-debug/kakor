@@ -14,6 +14,7 @@ export function OrderStatusPill({ status }: { status: string }) {
 
 export function PaymentStatusPill({ status, overdue }: { status: string; overdue?: boolean }) {
   if (overdue && status === "UNPAID") return <span className="pill pill-warn">Förfallen</span>;
+  if (status === "CREDITED") return <span className="pill pill-neutral">Krediterad</span>;
   const cls = status === "PAID" ? "pill-ok" : "pill-new";
   return <span className={`pill ${cls}`}>{PAYMENT_STATUS_LABELS[status as PaymentStatus] ?? status}</span>;
 }

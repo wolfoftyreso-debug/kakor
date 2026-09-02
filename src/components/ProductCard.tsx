@@ -20,6 +20,8 @@ export interface ProductCardData {
   imageRef: string;
   /** Kort etikett från admin, t.ex. "Bästsäljare". Tom sträng = ingen. */
   badge: string;
+  /** Momssats i baspunkter (1200 = 12 %) — klientens summering speglar serverns. */
+  vatRateBp: number;
 }
 
 export function ProductCard({

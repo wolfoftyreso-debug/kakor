@@ -63,6 +63,11 @@ export function AreaForm({
           {state.error}
         </div>
       )}
+      {state?.saved && (
+        <div role="status" className="info-box" style={{ fontSize: 13.5 }}>
+          {state.saved}
+        </div>
+      )}
       <button type="submit" className="btn btn-outline" disabled={pending}>
         {pending ? "Sparar…" : "Spara"}
       </button>

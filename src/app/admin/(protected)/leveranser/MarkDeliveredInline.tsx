@@ -26,6 +26,8 @@ export function MarkDeliveredInline({ orderId }: { orderId: string }) {
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder="Leveransnotering (frivilligt)"
+        aria-label="Leveransnotering"
+        maxLength={500}
         style={{
           border: "1.5px solid var(--input-border)",
           borderRadius: 6,
@@ -37,7 +39,7 @@ export function MarkDeliveredInline({ orderId }: { orderId: string }) {
       />
       <button
         className="btn btn-primary"
-        style={{ padding: "9px 16px", fontSize: 13 }}
+        style={{ padding: "12px 16px", fontSize: 13, minHeight: 44 }}
         disabled={pending}
         onClick={() => startTransition(async () => void (await markOrderDelivered(orderId, note)))}
       >

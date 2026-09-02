@@ -9,8 +9,10 @@ import type { SubscriptionInput } from "@/lib/validation";
 
 let productIds: string[] = [];
 let firstDate = "";
+let seq = 0; // unik kund per anrop — missbruksspärren ska inte slå till i sviten
 
 function subscriptionInput(overrides: Partial<SubscriptionInput> = {}): SubscriptionInput {
+  seq++;
   return {
     items: [
       { productId: productIds[0], weightKg: 2 },
@@ -20,15 +22,15 @@ function subscriptionInput(overrides: Partial<SubscriptionInput> = {}): Subscrip
     areaSlug: "nacka",
     firstDeliveryDate: firstDate,
     companyName: "Prenumerationsbolaget AB",
-    orgNumber: "556011-2233",
+    orgNumber: `${556100 + seq}-2233`,
     contactName: "Prenumerant Person",
-    email: "fika@prenbolaget.se",
+    email: `fika${seq}@prenbolaget.se`,
     phone: "",
     deliveryAddress: "Prenumerationsvägen 5",
     deliveryPostalCode: "131 30",
     deliveryCity: "Nacka",
     deliveryInstruction: "",
-    invoiceEmail: "faktura@prenbolaget.se",
+    invoiceEmail: `faktura${seq}@prenbolaget.se`,
     reference: "",
     ...overrides,
   };
@@ -47,7 +49,7 @@ beforeAll(async () => {
 
 describe("prenumeration → order → faktura", () => {
   it("skapar prenumeration med nummer och rader", async () => {
-    const sub = await createSubscription(subscriptionInput());
+    const { subscription: sub } = await createSubscription(subscriptionInput());
     expect(sub.number).toMatch(/^PREN-\d{4,}$/);
     expect(sub.status).toBe("ACTIVE");
     expect(sub.items).toHaveLength(2);
@@ -55,7 +57,7 @@ describe("prenumeration → order → faktura", () => {
   });
 
   it("genererar en vanlig order via ordermotorn och flyttar fram nästa leverans — idempotent", async () => {
-    const sub = await createSubscription(subscriptionInput());
+    const { subscription: sub } = await createSubscription(subscriptionInput());
     // "Kör" generatorn strax före leveransdatumet.
     const now = addDays(sub.nextDeliveryDate, -2);
 
@@ -95,7 +97,7 @@ describe("prenumeration → order → faktura", () => {
   });
 
   it("pausad prenumeration genererar inga ordrar", async () => {
-    const sub = await createSubscription(subscriptionInput());
+    const { subscription: sub } = await createSubscription(subscriptionInput());
     await prisma.subscription.update({ where: { id: sub.id }, data: { status: "PAUSED" } });
     const run = await generateDueSubscriptionOrders({
       now: addDays(sub.nextDeliveryDate, -2),
@@ -114,15 +116,16 @@ describe("prenumeration → order → faktura", () => {
 
   it("samma idempotencyKey ger samma prenumeration — aldrig två", async () => {
     const key = `test-sub-idem-${Date.now()}`;
-    const first = await createSubscription(subscriptionInput({ idempotencyKey: key }));
-    const second = await createSubscription(subscriptionInput({ idempotencyKey: key }));
+    const same = { idempotencyKey: key, orgNumber: "556011-2233", email: "idem@prenbolaget.se", invoiceEmail: "idem@prenbolaget.se" };
+    const { subscription: first } = await createSubscription(subscriptionInput(same));
+    const { subscription: second } = await createSubscription(subscriptionInput(same));
     expect(second.id).toBe(first.id);
     expect(second.number).toBe(first.number);
     expect(await prisma.subscription.count({ where: { idempotencyKey: key } })).toBe(1);
   });
 
   it("passerat leveransdatum ger aldrig en bakdaterad order — framflyttat datum inom horisonten genereras", async () => {
-    const sub = await createSubscription(subscriptionInput());
+    const { subscription: sub } = await createSubscription(subscriptionInput());
     // Simulera lång paus: nästa leverans ligger långt bak i tiden.
     const stale = addDays(sub.nextDeliveryDate, -60);
     await prisma.subscription.update({
@@ -147,7 +150,7 @@ describe("prenumeration → order → faktura", () => {
   });
 
   it("passerat leveransdatum som flyttas fram bortom horisonten hoppas över med förklaring", async () => {
-    const sub = await createSubscription(subscriptionInput());
+    const { subscription: sub } = await createSubscription(subscriptionInput());
     const stale = addDays(sub.nextDeliveryDate, -60);
     await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: stale } });
 

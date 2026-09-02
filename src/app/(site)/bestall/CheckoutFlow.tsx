@@ -13,13 +13,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { MAX_UNITS, useCart, type PurchaseMode, type RecurrenceInterval } from "@/lib/cart";
 import type { ProductCardData } from "@/components/ProductCard";
 import type { AreaWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
 import { formatOre, calculateTotals } from "@/lib/money";
 import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/units";
-import { formatDeliveryDate, fromISODate } from "@/lib/dates";
+import { capitalizeFirst, formatDeliveryDate, fromISODate, toISODate, upcomingDeliveryDates } from "@/lib/dates";
 import { LogoSigill } from "@/components/Logo";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 import { newIdempotencyKey } from "@/lib/idempotency";
@@ -57,7 +58,7 @@ const STEP_LABELS = ["Kakor", "Leverans", "Uppgifter", "Kontrollera"];
 
 const INTERVALS: { value: RecurrenceInterval; label: string; sub: string }[] = [
   { value: "WEEKLY", label: "Varje vecka", sub: "För arbetsplatser som fikar ofta" },
-  { value: "BIWEEKLY", label: "Varannan vecka", sub: "Vanligast — lagom påfyllning" },
+  { value: "BIWEEKLY", label: "Varannan vecka", sub: "Lagom påfyllning" },
   { value: "MONTHLY", label: "Var fjärde vecka", sub: "Till möten och fredagsfika" },
 ];
 
@@ -112,6 +113,16 @@ export function CheckoutFlow({
   // annars skulle servern kunna svara med en gammal order för en ny beställning.
   const idempotencyFingerprint = useRef<string>("");
   const presetApplied = useRef(false);
+  const router = useRouter();
+  // Honeypot: dolt fält som riktiga kunder aldrig ser eller fyller i.
+  const [honeypot, setHoneypot] = useState("");
+  // Klockan tickar var 60:e sekund så att leveransdagarna räknas om om fliken
+  // ligger öppen över midnatt/framförhållningsgränsen.
+  const [clockTick, setClockTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setClockTick((n) => n + 1), 60_000);
+    return () => clearInterval(t);
+  }, []);
 
   const mode: PurchaseMode = cart.purchaseMode;
   const interval: RecurrenceInterval = cart.recurrenceInterval;
@@ -126,7 +137,13 @@ export function CheckoutFlow({
           setStep(Math.min(4, Math.max(1, s.step)));
           setAreaSlug(typeof s.areaSlug === "string" ? s.areaSlug : null);
           setDeliveryDate(typeof s.deliveryDate === "string" ? s.deliveryDate : null);
-          if (s.form && typeof s.form === "object") setForm({ ...EMPTY_FORM, ...s.form });
+          if (s.form && typeof s.form === "object") {
+            // Bara kända fält med strängvärden — sessionStorage är opålitlig input.
+            const safe = Object.fromEntries(
+              Object.entries(s.form).filter(([k, v]) => k in EMPTY_FORM && typeof v === "string")
+            ) as Partial<FormState>;
+            setForm({ ...EMPTY_FORM, ...safe });
+          }
           setSameEmail(s.sameEmail !== false);
           if (typeof s.idempotencyKey === "string") idempotencyKey.current = s.idempotencyKey;
           if (typeof s.idempotencyFingerprint === "string")
@@ -217,7 +234,7 @@ export function CheckoutFlow({
   const totals = useMemo(
     () =>
       calculateTotals(
-        activeLines.map((l) => ({ netOre: l.kg * l.product.pricePerKgOre, vatRateBp: 1200 }))
+        activeLines.map((l) => ({ netOre: l.kg * l.product.pricePerKgOre, vatRateBp: l.product.vatRateBp ?? 1200 }))
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(activeLines.map((l) => [l.product.id, l.kg]))]
@@ -225,18 +242,46 @@ export function CheckoutFlow({
 
   const selectedArea = areas.find((a) => a.slug === areaSlug) ?? null;
 
+  // Leveransdagarna räknas om på klienten (från områdets veckodagar +
+  // framförhållning) i stället för att lita på listan från sidladdningen —
+  // annars visar steg 2 samma passerade datum som servern just avvisade.
+  const upcomingDates = useMemo(
+    () =>
+      selectedArea
+        ? upcomingDeliveryDates(
+            { weekdays: selectedArea.weekdays, leadTimeDays: selectedArea.leadTimeDays },
+            Math.max(4, selectedArea.upcomingDates.length)
+          ).map(toISODate)
+        : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedArea, clockTick]
+  );
+
+  useEffect(() => {
+    // Återställt flöde med ett område som inte längre erbjuds (inaktiverat i
+    // admin): nollställ valet i stället för att visa "undefined" i steg 4.
+    if (flowRestored && areaSlug && !areas.some((a) => a.slug === areaSlug)) {
+      setAreaSlug(null);
+      setDeliveryDate(null);
+      if (step >= 3) {
+        setStep(2);
+        setGlobalError("Leveransområdet är inte längre tillgängligt — välj område igen.");
+      }
+    }
+  }, [flowRestored, areaSlug, areas, step]);
+
   useEffect(() => {
     // Rensa valt datum om området byts eller datumet inte längre erbjuds
     // (t.ex. fliken låg öppen över framförhållningsgränsen). Står kunden
     // längre fram i flödet leds hen tillbaka till dagvalet — aldrig en död Skicka-knapp.
-    if (selectedArea && deliveryDate && !selectedArea.upcomingDates.includes(deliveryDate)) {
+    if (selectedArea && deliveryDate && !upcomingDates.includes(deliveryDate)) {
       setDeliveryDate(null);
       if (step >= 3) {
         setStep(2);
         setGlobalError("Leveransdagen är inte längre tillgänglig — välj en ny dag.");
       }
     }
-  }, [selectedArea, deliveryDate, step]);
+  }, [selectedArea, upcomingDates, deliveryDate, step]);
 
   // Tomkorgsvakt: hamnar kunden i steg 2–4 utan varor (korgen tömd i en
   // annan flik, eller återställt flöde med utgången korg) renderas en
@@ -246,9 +291,6 @@ export function CheckoutFlow({
     flowRestored && cart.hydrated && !result && step >= 2 && step <= 4 && activeLines.length === 0;
 
   const goTo = (s: number) => {
-    if (s === 4 && !idempotencyKey.current) {
-      idempotencyKey.current = newIdempotencyKey();
-    }
     setStep(s);
     setGlobalError(null);
     setNotice(null);
@@ -335,6 +377,9 @@ export function CheckoutFlow({
       deliveryInstruction: form.deliveryInstruction.trim(),
       invoiceEmail: (sameEmail ? form.email : form.invoiceEmail).trim(),
       reference: form.reference.trim(),
+      // Beloppet kunden bekräftade — servern avvisar om priset hunnit ändras.
+      expectedTotalOre: totals.totalOre,
+      ...(honeypot ? { website: honeypot } : {}),
     };
     try {
       const res =
@@ -349,7 +394,12 @@ export function CheckoutFlow({
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ ...common, deliveryDate, billingAddress: "" }),
             });
-      const data = await res.json();
+      // Ett HTML-svar (gateway-timeout, för stor body) är inte ett nätverksfel —
+      // säg vad som hände i stället för "kontrollera uppkopplingen".
+      const isJson = (res.headers.get("content-type") ?? "").includes("application/json");
+      const data = isJson
+        ? await res.json()
+        : { ok: false, error: `Servern svarade med fel ${res.status} — försök igen om en liten stund.` };
       if (data.ok) {
         idempotencyKey.current = "";
         idempotencyFingerprint.current = "";
@@ -379,14 +429,31 @@ export function CheckoutFlow({
         cart.clear();
         goTo(5);
       } else {
-        track("order_failed", { mode, reason: "validation" });
+        track("order_failed", { mode, reason: data.code ?? "validation" });
         setGlobalError(data.error ?? "Något gick fel");
+        if (data.code === "IDEMPOTENCY_MISMATCH") {
+          // Nyckeln bär en annan payload — rotera så nästa försök går igenom.
+          idempotencyKey.current = newIdempotencyKey();
+          idempotencyFingerprint.current = fingerprint;
+          saveFlow();
+        }
+        if (data.code === "PRICE_CHANGED" || data.fields?.items) {
+          // Priser/sortiment har ändrats sedan sidladdningen — hämta färska
+          // produkter så att summan och stale-rensningen speglar servern.
+          router.refresh();
+        }
         if (data.fields) {
           const fields: Record<string, string> = { ...data.fields };
           const itemKey = Object.keys(fields).find((k) => k.startsWith("items."));
           if (itemKey && !fields.items) fields.items = fields[itemKey];
           setErrors(fields);
           goTo(stepForFields(fields));
+          // Fokus till det felaktiga fältet (samma beteende som klientvalideringen).
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() =>
+              headingRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+            )
+          );
         }
       }
     } catch {
@@ -666,7 +733,7 @@ export function CheckoutFlow({
                 marginBottom: 16,
               }}
             >
-              {selectedArea.upcomingDates.map((d) => (
+              {upcomingDates.map((d) => (
                 <button
                   key={d}
                   type="button"
@@ -674,8 +741,8 @@ export function CheckoutFlow({
                   aria-pressed={deliveryDate === d}
                   onClick={() => setDeliveryDate(d)}
                 >
-                  <div style={{ fontWeight: 700, fontSize: 15, textTransform: "capitalize" }}>
-                    {formatDeliveryDate(fromISODate(d))}
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>
+                    {capitalizeFirst(formatDeliveryDate(fromISODate(d)))}
                   </div>
                   <div className="choice-sub">
                     {mode === "RECURRING" ? "Första leverans · sedan " + intervalLabel(interval).toLowerCase() : "Leverans under dagen"}
@@ -762,19 +829,38 @@ export function CheckoutFlow({
               <div style={{ gridColumn: "1 / -1" }}>
                 <Field label="Referens / märkning (frivilligt)" value={form.reference} error={errors.reference} onChange={(v) => setField("reference", v)} placeholder="T.ex. kostnadsställe" />
               </div>
-              <label className="field" style={{ gridColumn: "1 / -1" }}>
+              <label className="field" style={{ gridColumn: "1 / -1" }} htmlFor="falt-kommentar">
                 Kommentar till leveransen (frivilligt)
                 <textarea
+                  id="falt-kommentar"
                   rows={2}
                   maxLength={500}
                   placeholder="T.ex. portkod, lastkaj, våning"
                   value={form.deliveryInstruction}
                   onChange={(e) => setField("deliveryInstruction", e.target.value)}
                   aria-invalid={!!errors.deliveryInstruction}
+                  aria-describedby={errors.deliveryInstruction ? "falt-kommentar-fel" : undefined}
                   style={{ resize: "vertical" }}
                 />
-                {errors.deliveryInstruction && <span className="error-text">{errors.deliveryInstruction}</span>}
+                {errors.deliveryInstruction && (
+                  <span id="falt-kommentar-fel" className="error-text">
+                    {errors.deliveryInstruction}
+                  </span>
+                )}
               </label>
+              {/* Honeypot — osynligt för människor, autofylls av botar. */}
+              <div className="hp-field" aria-hidden="true">
+                <label htmlFor="falt-webbplats">Webbplats</label>
+                <input
+                  id="falt-webbplats"
+                  name="website"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                />
+              </div>
             </div>
             <div className="info-box-muted" style={{ margin: "20px 0 28px" }}>
               <strong>Betalning sker mot faktura.</strong> Ingen kortbetalning behövs — fakturan
@@ -814,7 +900,7 @@ export function CheckoutFlow({
               </div>
             ))}
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "var(--text-2)" }}>
-              <span>Moms (12 %)</span>
+              <span>Moms</span>
               <span>{formatOre(totals.vatOre)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 16 }}>
@@ -834,7 +920,7 @@ export function CheckoutFlow({
                 ? `Återkommande — ${intervalLabel(interval).toLowerCase()}`
                 : "Engångsbeställning"}
             </div>
-            <div style={{ textTransform: "capitalize" }}>
+            <div>
               {selectedArea?.name} ·{" "}
               {deliveryDate
                 ? `${mode === "RECURRING" ? "första leverans " : ""}${formatDeliveryDate(fromISODate(deliveryDate))}`
@@ -895,7 +981,7 @@ export function CheckoutFlow({
               <span>Totalt</span>
               <span>{formatOre(result.totalOre)}</span>
             </div>
-            <div style={{ color: "var(--text-2)", textTransform: "capitalize" }}>
+            <div style={{ color: "var(--text-2)" }}>
               Leverans {formatDeliveryDate(fromISODate(result.deliveryDate))} · under dagen
             </div>
           </div>
@@ -940,9 +1026,7 @@ export function CheckoutFlow({
             </div>
             <div style={{ color: "var(--text-2)" }}>
               {intervalLabel(result.interval)} ·{" "}
-              <span style={{ textTransform: "capitalize" }}>
-                första leverans {formatDeliveryDate(fromISODate(result.nextDate))}
-              </span>
+              <span>första leverans {formatDeliveryDate(fromISODate(result.nextDate))}</span>
             </div>
           </div>
           <div className="info-box-muted" style={{ padding: "22px 24px", fontSize: "14.5px", lineHeight: 1.8 }}>
@@ -1014,7 +1098,9 @@ function EditStepLink({ onClick }: { onClick: () => void }) {
       style={{
         background: "none",
         border: "none",
-        padding: 0,
+        // ≥ 44 px träffyta utan att layouten växer.
+        padding: "10px 8px",
+        margin: "-10px -8px",
         cursor: "pointer",
         color: "var(--red)",
         fontWeight: 700,
@@ -1062,7 +1148,7 @@ function MiniSummary({
         {lines.map((l) => `${l.name} ${qtyLabel(l.kg, l.unit)}`).join(" · ")}
         {mode ? ` · ${mode}` : null}
         {delivery ? (
-          <span style={{ textTransform: "capitalize" }}> · {delivery}</span>
+          <span> · {delivery}</span>
         ) : null}
       </span>
       <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>{formatOre(totalOre)} inkl. moms</span>

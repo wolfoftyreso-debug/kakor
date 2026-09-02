@@ -22,3 +22,6 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      # Varning, inte grind: transitiva sårbarheter i byggverktyg ska synas
+      # utan att blockera en deploy som annars är grön.
+      - run: npm audit --omit=dev --audit-level=high || echo "::warning::npm audit hittade sårbarheter — se loggen"

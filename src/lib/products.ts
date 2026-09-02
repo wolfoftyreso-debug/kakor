@@ -18,6 +18,7 @@ export async function getActiveProducts(): Promise<ProductCardData[]> {
     allergens: p.allergens,
     imageRef: p.imageRef,
     badge: p.badge,
+    vatRateBp: p.vatRateBp,
   }));
 }
 

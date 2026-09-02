@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
-import { invoiceConfig } from "@/lib/config";
+import { invoiceConfig, isVerifiedValue } from "@/lib/config";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 
 export const metadata: Metadata = {
@@ -64,8 +64,15 @@ export default function IntegritetPage() {
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Personuppgiftsansvarig</h2>
           <p style={{ margin: 0 }}>
             {invoiceConfig.companyName}, org.nr {invoiceConfig.orgNumber},{" "}
-            {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}. Kontakta oss
-            om ni vill få era uppgifter rättade eller raderade (i den mån lagkrav tillåter).
+            {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}.{" "}
+            {isVerifiedValue(invoiceConfig.email) ? (
+              <>
+                Mejla <a href={`mailto:${invoiceConfig.email}`}>{invoiceConfig.email}</a> om ni vill
+                få era uppgifter rättade eller raderade (i den mån lagkrav tillåter).
+              </>
+            ) : (
+              "Svara på er orderbekräftelse om ni vill få era uppgifter rättade eller raderade (i den mån lagkrav tillåter)."
+            )}
           </p>
         </section>
       </div>

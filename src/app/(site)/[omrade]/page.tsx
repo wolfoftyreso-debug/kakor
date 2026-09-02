@@ -5,7 +5,7 @@ import { AREA_CONTENT } from "@/lib/area-content";
 import { sharePreview } from "@/lib/seo/meta";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
-import { fromISODate, weekdayName, formatDeliveryDate } from "@/lib/dates";
+import { fromISODate, weekdayName, formatDeliveryDate, capitalizeFirst } from "@/lib/dates";
 import { invoiceConfig } from "@/lib/config";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -19,7 +19,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { omrade } = await params;
-  const content = AREA_CONTENT[omrade];
+  const content = Object.hasOwn(AREA_CONTENT, omrade) ? AREA_CONTENT[omrade] : undefined;
   if (!content) return {};
   return {
     title: content.title,
@@ -35,7 +35,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function AreaPage({ params }: Props) {
   const { omrade } = await params;
-  const content = AREA_CONTENT[omrade];
+  // Object.hasOwn: /constructor och /toString ska ge 404, inte en trasig sida.
+  const content = Object.hasOwn(AREA_CONTENT, omrade) ? AREA_CONTENT[omrade] : undefined;
   if (!content) notFound();
 
   const [products, areas] = await Promise.all([getActiveProducts(), getAreasWithDates(2)]);
@@ -108,16 +109,15 @@ export default async function AreaPage({ params }: Props) {
                 fontSize: 24,
                 fontWeight: 700,
                 color: "var(--red)",
-                textTransform: "capitalize",
               }}
             >
-              {weekdayLabel ?? "—"}
+              {weekdayLabel ? capitalizeFirst(weekdayLabel) : "—"}
             </div>
             <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 8, lineHeight: 1.55 }}>
               {nextDate ? (
                 <>
                   Nästa tillgängliga leverans:{" "}
-                  <strong style={{ textTransform: "capitalize" }}>{formatDeliveryDate(nextDate)}</strong>.
+                  <strong>{capitalizeFirst(formatDeliveryDate(nextDate))}</strong>.
                 </>
               ) : (
                 "Tillgängliga dagar visas i checkouten."

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { getAreasWithDates } from "@/lib/products";
-import { formatDeliveryDate, fromISODate, weekdayName } from "@/lib/dates";
+import { capitalizeFirst, formatDeliveryDate, fromISODate, weekdayName } from "@/lib/dates";
 import { ImageSlot } from "@/components/ImageSlot";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -69,15 +69,13 @@ export default async function LeveransPage() {
                 {a.name}
               </Link>
             </div>
-            <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 6, textTransform: "capitalize" }}>
+            <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 6 }}>
               Leveransdag: {[...new Set(a.weekdays)].map(weekdayName).join(" och ")}
             </div>
             {a.upcomingDates[0] && (
               <div style={{ fontSize: "13.5px", marginTop: 4 }}>
                 Nästa:{" "}
-                <strong style={{ textTransform: "capitalize" }}>
-                  {formatDeliveryDate(fromISODate(a.upcomingDates[0]))}
-                </strong>
+                <strong>{capitalizeFirst(formatDeliveryDate(fromISODate(a.upcomingDates[0])))}</strong>
               </div>
             )}
           </div>

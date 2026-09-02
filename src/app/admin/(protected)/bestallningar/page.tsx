@@ -111,6 +111,7 @@ export default async function OrdersPage({
           name="q"
           defaultValue={q}
           placeholder="Sök ordernummer, företag, org.nr, e-post, fakturanummer"
+          aria-label="Sök beställningar"
           style={{
             flex: 1,
             border: "1.5px solid var(--input-border)",

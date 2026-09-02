@@ -13,11 +13,69 @@ import { sendOrderEmails } from "@/lib/orders/order-emails";
 export class OrderError extends Error {
   constructor(
     message: string,
-    public readonly field?: string
+    public readonly field?: string,
+    /** Maskinläsbar kod för klienten, t.ex. PRICE_CHANGED / IDEMPOTENCY_MISMATCH / TOO_MANY. */
+    public readonly code?: string
   ) {
     super(message);
   }
 }
+
+// Missbruksspärrar som håller över serverless-instanser: en publik endpoint
+// som utfärdar löpnumrerade fakturor och mejlar dem får inte kunna användas
+// som spam-/nätfiskerelä. Riktiga kunder når aldrig taken.
+const ABUSE_WINDOW_MS = 24 * 3600_000;
+export const ABUSE_LIMITS = { perEmail: 5, perOrgNumber: 10 } as const;
+
+export async function assertNotAbusive(input: { email: string; invoiceEmail: string; orgNumber: string }) {
+  const since = new Date(Date.now() - ABUSE_WINDOW_MS);
+  const emails = [...new Set([input.email.toLowerCase(), input.invoiceEmail.toLowerCase()])];
+  const [byEmail, byOrg] = await Promise.all([
+    prisma.order.count({
+      where: {
+        createdAt: { gte: since },
+        subscriptionId: null,
+        OR: [{ email: { in: emails } }, { invoiceEmail: { in: emails } }],
+      },
+    }),
+    prisma.order.count({
+      where: { createdAt: { gte: since }, subscriptionId: null, orgNumber: input.orgNumber },
+    }),
+  ]);
+  if (byEmail >= ABUSE_LIMITS.perEmail || byOrg >= ABUSE_LIMITS.perOrgNumber) {
+    throw new OrderError(
+      "Ni har redan lagt flera beställningar det senaste dygnet — svara på er senaste orderbekräftelse om ni vill lägga till mer.",
+      undefined,
+      "TOO_MANY"
+    );
+  }
+}
+
+/** Samma nyckel måste bära samma beställning — annars är det inte en retry. */
+function sameOrderPayload(
+  existing: { items: { productId: string | null; weightKg: number }[]; deliveryDate: Date; companyName: string; orgNumber: string; email: string; invoiceEmail: string; deliveryAddress: string; deliveryPostalCode: string },
+  input: CheckoutInput
+): boolean {
+  const key = (items: { productId: string | null; weightKg: number }[]) =>
+    items.map((i) => `${i.productId ?? ""}:${i.weightKg}`).sort().join("|");
+  return (
+    key(existing.items) === key(input.items) &&
+    toISODate(existing.deliveryDate) === input.deliveryDate &&
+    existing.companyName === input.companyName &&
+    existing.orgNumber === input.orgNumber &&
+    existing.email.toLowerCase() === input.email.toLowerCase() &&
+    existing.invoiceEmail.toLowerCase() === input.invoiceEmail.toLowerCase() &&
+    existing.deliveryAddress === input.deliveryAddress &&
+    existing.deliveryPostalCode === input.deliveryPostalCode
+  );
+}
+
+const IDEMPOTENCY_MISMATCH = () =>
+  new OrderError(
+    "Den här beställningen har redan skickats med andra uppgifter — ladda om sidan och försök igen.",
+    undefined,
+    "IDEMPOTENCY_MISMATCH"
+  );
 
 export interface CreateOrderOptions {
   /** Sätts för prenumerationsgenererade ordrar (idempotensnyckel). */
@@ -40,9 +98,12 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
       include: { items: true, invoice: true },
     });
     if (existing && existing.invoice) {
+      if (!sameOrderPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
       return { order: existing, invoice: existing.invoice, duplicate: true as const };
     }
   }
+
+  if (!options.subscription) await assertNotAbusive(input);
 
   const area = await prisma.deliveryArea.findUnique({ where: { slug: input.areaSlug } });
   if (!area || !area.active) throw new OrderError("Okänt leveransområde", "areaSlug");
@@ -98,6 +159,13 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
   const totals = calculateTotals(
     lines.map((l) => ({ netOre: l.lineTotalOre, vatRateBp: l.vatRateBp }))
   );
+  if (input.expectedTotalOre !== undefined && input.expectedTotalOre !== totals.totalOre) {
+    throw new OrderError(
+      "Priset har uppdaterats sedan ni började beställa — kontrollera den nya summan och skicka igen.",
+      undefined,
+      "PRICE_CHANGED"
+    );
+  }
 
   // Svensk dag, inte UTC — en order kl 00–02 sommartid ska inte fakturadateras föregående dag.
   const invoiceDate = todayInStockholm();
@@ -121,6 +189,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
         include: { items: true, invoice: true },
       });
       if (existing && existing.invoice) {
+        if (!sameOrderPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
         return { order: existing, invoice: existing.invoice, duplicate: true as const };
       }
     }

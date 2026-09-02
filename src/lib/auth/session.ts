@@ -4,7 +4,11 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 
-const SESSION_COOKIE = "sb_admin_session";
+// __Host-prefix i produktion: cookien kan då bara sättas över HTTPS, från
+// samma värd och utan Domain-attribut (skydd mot cookie tossing från
+// underdomäner). Lokalt (http) accepterar webbläsare inte prefixet.
+const SESSION_COOKIE =
+  process.env.NODE_ENV === "production" ? "__Host-sb_admin_session" : "sb_admin_session";
 const SESSION_TTL_HOURS = 12;
 
 function hashToken(token: string): string {
@@ -20,6 +24,10 @@ export async function loginAdmin(email: string, password: string): Promise<boole
 
   const token = randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_TTL_HOURS * 3600_000);
+  // Städa utgångna sessioner (alla användare) vid varje lyckad inloggning —
+  // annars växer tabellen obegränsat, eftersom utgångna rader annars bara
+  // raderas när just den cookien används igen.
+  await prisma.adminSession.deleteMany({ where: { expiresAt: { lt: new Date() } } }).catch(() => {});
   await prisma.adminSession.create({
     data: { tokenHash: hashToken(token), userId: user.id, expiresAt },
   });

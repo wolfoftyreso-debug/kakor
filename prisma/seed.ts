@@ -79,6 +79,16 @@ async function main() {
     });
   }
 
+  // Nummerserierna seedas explicit så att allra första ordern/fakturan inte
+  // förlitar sig på upsert under samtidighet (numbering.ts).
+  for (const [name, value] of [
+    ["order", 100000],
+    ["invoice", 10000],
+    ["subscription", 1000],
+  ] as const) {
+    await prisma.counter.upsert({ where: { name }, create: { name, value }, update: {} });
+  }
+
   for (const a of areas) {
     await prisma.deliveryArea.upsert({
       where: { slug: a.slug },

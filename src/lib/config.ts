@@ -36,7 +36,7 @@ export const invoiceConfig = {
   phone: env("INVOICE_PHONE", "[EJ VERIFIERAT: telefonnummer]"),
   bankgiro: env("INVOICE_BANKGIRO", "[EJ VERIFIERAT: bankgironummer]"),
   vatNumber: env("INVOICE_VAT_NUMBER", "[EJ VERIFIERAT: momsreg.nr]"),
-  fSkatt: env("INVOICE_F_SKATT", "Godkänd för F-skatt"),
+  fSkatt: env("INVOICE_F_SKATT", "[EJ VERIFIERAT: F-skatt]"),
   paymentTermsDays: parseInt(env("INVOICE_PAYMENT_TERMS_DAYS", "30"), 10),
 };
 
@@ -49,4 +49,6 @@ export const emailConfig = {
   provider: env("EMAIL_PROVIDER", "log"),
   resendApiKey: env("RESEND_API_KEY", ""),
   from: env("EMAIL_FROM", "Sockerbagaren <order@sockerbagaren.se>"),
+  // Svarsadress för "svara på det här mejlet" — måste vara en bevakad låda.
+  replyTo: env("EMAIL_REPLY_TO", ""),
 };

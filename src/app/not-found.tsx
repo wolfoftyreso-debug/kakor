@@ -9,7 +9,7 @@ export default function NotFound() {
       <LogoSigill size={110} />
       <h1 style={{ fontSize: 32, margin: "20px 0 10px" }}>Sidan hittades inte</h1>
       <p style={{ color: "var(--text-2)", marginBottom: 28 }}>
-        Kanske är du sugen på kakor istället?
+        Kanske är ni sugna på kakor istället?
       </p>
       <Link href="/" className="btn btn-primary btn-lg">
         Till startsidan

@@ -85,7 +85,7 @@ export default async function KakorPage() {
         >
           <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)" }}>Våra kakor</h1>
           <div style={{ fontSize: 14, color: "var(--text-2)" }}>
-            Säljs per kilo · blanda fritt i samma order
+            Säljs per kilo eller paket · blanda fritt i samma order
           </div>
         </div>
         <p className="lede" style={{ margin: "0 0 28px" }}>

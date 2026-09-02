@@ -68,7 +68,7 @@ export default async function PrenumerationPage() {
           </Link>
         </div>
         <p style={{ marginTop: 16, fontSize: 14 }}>
-          <Link href="/bestall" style={{ fontWeight: 600 }}>
+          <Link href="/bestall?typ=engang" style={{ fontWeight: 600 }}>
             Vill ni bara beställa en gång? Samma väg — välj engångsbeställning i kassan.
           </Link>
         </p>

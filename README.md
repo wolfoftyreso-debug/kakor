@@ -84,8 +84,10 @@ Viktiga principer:
 
 - `/admin/login` → `/admin` (översikt), Beställningar, Fakturor (reskontra),
   Leveranser (mobilanpassad arbetsvy), Prenumerationer, Produkter, Inställningar.
-- Sessioner: HttpOnly + SameSite + Secure (prod), 12 h livslängd, hashade
-  tokens i DB. Rate limiting på login. Ingen publik registrering.
+- Sessioner: HttpOnly + SameSite + Secure + `__Host-`-prefix (prod), 12 h
+  livslängd, hashade tokens i DB; utgångna sessioner städas vid inloggning
+  och lösenordsbyte loggar ut alla sessioner. Rate limiting på login per IP
+  (5/5 min) och per konto (10/15 min). Ingen publik registrering.
 - Första admin skapas av seed från `ADMIN_EMAIL`/`ADMIN_PASSWORD` (endast om
   ingen admin finns), eller när som helst med `npm run admin:create`.
 
@@ -96,6 +98,11 @@ Viktiga principer:
 - Kunden når PDF:n via en 48-teckens slumpad token: `/faktura/<token>`
   (noindex, ej gissningsbar). Skickas även som PDF-bilaga i fakturamejlet.
 - Admin kan ladda ner, skicka igen och markera betald (reskontran).
+- **Kreditfaktura:** när en fakturerad order avbryts i admin utfärdas
+  automatiskt en kreditfaktura (nästa nummer i fakturaserien, negativa belopp,
+  egen PDF-länk) som mejlas till faktura-e-posten; originalfakturan får
+  status `CREDITED` och döljs aldrig. Betald/levererad order kan inte avbrytas.
+- Flersidiga fakturor pagineras med sidfot på varje sida.
 
 ## E-post
 
@@ -128,6 +135,33 @@ med återkommande förvalt (`/bestall?typ=aterkommande`). Generering:
 - Manuellt: knappen "Generera kommande prenumerationsleveranser" i admin,
   eller `npm run subscriptions:generate`.
 
+## Säkerhet & missbruksskydd
+
+- **CSP med nonce** per request (`src/middleware.ts`): script bara från egen
+  domän + nonce (`strict-dynamic`), GA4 via nonce, `frame-ancestors 'none'`,
+  `form-action 'self'`. HSTS, nosniff, X-Frame-Options, Referrer-Policy,
+  Permissions-Policy sätts i `next.config.ts`.
+- **Rate limiting i två lager** (`src/lib/rate-limit.ts`): in-memory per
+  instans + delad räknare i databasen (`RateLimitBucket`) som håller över
+  serverless-instanser och cold starts. Utgångna räknare städas av cronen.
+- **Missbruksspärrar i ordermotorn** (`assertNotAbusive`): max 5 ordrar per
+  e-post och dygn, 10 per org.nr och dygn, 2 prenumerationsstarter per e-post
+  och dygn — en publik endpoint som utfärdar löpnumrerade fakturor får inte
+  kunna användas som spam-/nätfiskerelä. Riktiga kunder når aldrig taken;
+  felmeddelandet hänvisar till att svara på senaste orderbekräftelsen.
+- **Honeypot-fält** (`website`) i checkouten: ifyllt värde avvisas som
+  valideringsfel.
+- **Idempotens med payload-kontroll:** samma nyckel med annan beställning ger
+  409 `IDEMPOTENCY_MISMATCH` i stället för att returnera en främmande order.
+- **Prisspärr:** klienten skickar `expectedTotalOre`; avviker serverns summa
+  (pris ändrat i admin under köpet) svarar API:t 409 `PRICE_CHANGED` och
+  kunden får bekräfta det nya priset.
+- Enradsfält saneras från radbrytningar/kontrolltecken (PDF-/mejlskydd),
+  `imageRef` begränsas till `/images/*`, loggar innehåller aldrig
+  personuppgifter i klartext (maskad e-post, avkortade felmeddelanden).
+- Vill ni ha CAPTCHA (Cloudflare Turnstile) ovanpå detta krävs nycklar från
+  verksamheten — inte infört.
+
 ## Environment variables
 
 Se [`.env.example`](.env.example). Sammanfattning:
@@ -138,7 +172,7 @@ Se [`.env.example`](.env.example). Sammanfattning:
 | `DIRECT_DATABASE_URL` | Neon direkt anslutningssträng (endast migrations) |
 | `SITE_URL` | publik bas-URL (länkar i mejl, sitemap, canonical) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | bootstrap av första admin (seed/CLI) |
-| `EMAIL_PROVIDER` / `RESEND_API_KEY` / `EMAIL_FROM` | e-post |
+| `EMAIL_PROVIDER` / `RESEND_API_KEY` / `EMAIL_FROM` / `EMAIL_REPLY_TO` | e-post (reply-to = bevakad låda) |
 | `INVOICE_*` | juridiska fakturauppgifter (se nedan) |
 | `CRON_SECRET` | skyddar cron-endpointen |
 
