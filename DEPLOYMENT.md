@@ -224,7 +224,10 @@ automatiskt — det beslutet är verksamhetens.)
 1. **Neon**: projekt i EU-region, `DATABASE_URL` (poolad) och `DIRECT_DATABASE_URL`
    (direkt) i Vercel → Production. Skapa en återställningspunkt före första migrationen.
 2. **Migrationer**: körs automatiskt av `scripts/vercel-build.mjs` i Production
-   (kräver `DIRECT_DATABASE_URL` i build-miljön). Preview migrerar aldrig.
+   när `DIRECT_DATABASE_URL` finns i build-miljön. Finns `DATABASE_URL` men inte
+   `DIRECT_DATABASE_URL` avbryts bygget (databasen skulle annars hamna i otakt
+   med koden). Saknas databas helt byggs sajten med en varning — det är läget
+   tills Neon är kopplat. Preview migrerar aldrig.
 3. **Seed + admin**: `DATABASE_URL=<prod> I_KNOW_THIS_IS_PROD=1 ADMIN_EMAIL=… ADMIN_PASSWORD=… npm run admin:create`
    (minst 12 tecken, aldrig exempelvärden). Sätt etiketten "Bästsäljare" och
    kontrollera priser/momssats i admin → Produkter.
