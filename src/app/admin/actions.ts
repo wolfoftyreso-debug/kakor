@@ -13,13 +13,16 @@ import { getAdmin, loginAdmin, logoutAdmin } from "@/lib/auth/session";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { maskEmail } from "@/lib/log";
 import { sendOrderEmails } from "@/lib/orders/order-emails";
-import { issueCreditNote } from "@/lib/invoice/credit";
+import { issueCreditNoteInTx, sendCreditNoteEmail } from "@/lib/invoice/credit";
+import { isoDateSchema } from "@/lib/validation";
+import { createHash } from "node:crypto";
+import { addDays } from "@/lib/dates";
 import { sendEmail } from "@/lib/email";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 import { formatOre } from "@/lib/money";
-import { fromISODate, todayInStockholm, isoWeekday, weekdayName } from "@/lib/dates";
+import { fromISODate, todayInStockholm, isoWeekday, weekdayName, toISODate } from "@/lib/dates";
 import { canTransitionOrder } from "@/lib/status";
 
 async function requireAdmin() {
@@ -39,13 +42,14 @@ export async function loginAction(
   // Per IP OCH per konto (delad räknare): distribuerat brute force mot ett
   // känt adminmejl begränsas annars bara av scrypt-kostnaden.
   const ipLimit = await rateLimit(clientKey(hdrs, "admin-login"), { limit: 5, windowMs: 5 * 60_000 });
-  const accountLimit = await rateLimit(`admin-login-account:${rawEmail.toLowerCase().trim()}`, {
-    limit: 10,
-    windowMs: 15 * 60_000,
-  });
-  if (!ipLimit.ok || !accountLimit.ok) {
-    const retry = Math.max(ipLimit.retryAfterSeconds, accountLimit.retryAfterSeconds);
-    return { error: `För många inloggningsförsök — vänta ${retry} sekunder.`, email: rawEmail };
+  if (!ipLimit.ok) {
+    return { error: `För många inloggningsförsök — vänta ${ipLimit.retryAfterSeconds} sekunder.`, email: rawEmail };
+  }
+  // Kontonyckeln hashas: godtyckliga strängar ska inte bli rader i databasen.
+  const accountKey = createHash("sha256").update(rawEmail.toLowerCase().trim()).digest("hex").slice(0, 32);
+  const accountLimit = await rateLimit(`admin-login-account:${accountKey}`, { limit: 10, windowMs: 15 * 60_000 });
+  if (!accountLimit.ok) {
+    return { error: `För många inloggningsförsök — vänta ${accountLimit.retryAfterSeconds} sekunder.`, email: rawEmail };
   }
 
   // Längdgränser innan scrypt: obegränsat lösenord = gratis CPU-förstärkning.
@@ -76,7 +80,7 @@ async function logEvent(orderId: string, type: string, message: string, actor: s
 
 export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
 
-const noteSchema = z.string().max(500, "Noteringen är för lång (max 500 tecken)").default("");
+const noteSchema = z.string().trim().max(500, "Noteringen är för lång (max 500 tecken)").default("");
 const idSchema = z.string().cuid();
 
 export async function markOrderPaid(orderId: string, note: string): Promise<ActionResult> {
@@ -147,7 +151,7 @@ export async function confirmOrder(orderId: string): Promise<ActionResult> {
     where: { id: orderId, status: "NEW" },
     data: { status: "CONFIRMED" },
   });
-  if (res.count !== 1) return { ok: false, error: "Ordern är redan bekräftad" };
+  if (res.count !== 1) return { ok: false, error: "Ordern ändrades samtidigt av någon annan — ladda om sidan" };
   await logEvent(orderId, "CONFIRMED", "Order bekräftad", admin.email);
   revalidatePath("/admin", "layout");
   return { ok: true, message: "Order bekräftad" };
@@ -162,20 +166,61 @@ export async function cancelOrder(orderId: string, note: string): Promise<Action
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
   if (!order) return { ok: false, error: "Ordern finns inte" };
   if (!canTransitionOrder(order, "cancel")) return { ok: false, error: "Betald eller levererad order kan inte avbrytas — kreditera manuellt" };
-  const res = await prisma.order.updateMany({
-    where: { id: orderId, status: { not: "CANCELLED" }, paymentStatus: "UNPAID", deliveryStatus: "PENDING" },
-    data: { status: "CANCELLED" },
-  });
-  if (res.count !== 1) return { ok: false, error: "Ordern ändrades samtidigt av någon annan — ladda om sidan" };
-  await logEvent(orderId, "CANCELLED", `Order avbruten${note ? ` — ${note}` : ""}`, admin.email);
-  // En utfärdad faktura kan inte bara gömmas — den krediteras (bokföringskrav).
-  let creditMessage = "";
-  if (order.invoice) {
-    const credit = await issueCreditNote(order.invoice.id, admin.email);
-    creditMessage = credit ? ` Kreditfaktura ${credit.creditNumber} utfärdad och mejlad.` : "";
+  // Avbrytande + kreditering i EN transaktion: en avbruten order utan
+  // kreditfaktura får aldrig uppstå (bokföringskrav). Mejlet går efter commit.
+  let creditId: string | null = null;
+  let creditNumber = "";
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        const res = await tx.order.updateMany({
+          where: { id: orderId, status: { not: "CANCELLED" }, paymentStatus: "UNPAID", deliveryStatus: "PENDING" },
+          data: { status: "CANCELLED" },
+        });
+        if (res.count !== 1) throw new Error("CONCURRENT");
+        await tx.orderEvent.create({
+          data: { orderId, type: "CANCELLED", message: `Order avbruten${note ? ` — ${note}` : ""}`, actor: admin.email },
+        });
+        if (order.invoice) {
+          const credit = await issueCreditNoteInTx(tx, order.invoice.id, admin.email);
+          if (credit) {
+            creditId = credit.id;
+            creditNumber = credit.creditNumber;
+          }
+        }
+      },
+      { timeout: 15000 }
+    );
+  } catch (e) {
+    if (e instanceof Error && e.message === "CONCURRENT") {
+      return { ok: false, error: "Ordern ändrades samtidigt av någon annan — ladda om sidan" };
+    }
+    console.error("Avbryt order misslyckades:", e instanceof Error ? e.message.slice(0, 300) : e);
+    return { ok: false, error: "Ordern kunde inte avbrytas — ingenting har ändrats. Försök igen." };
   }
+  const mailed = creditId ? await sendCreditNoteEmail(creditId) : false;
   revalidatePath("/admin", "layout");
-  return { ok: true, message: `Order avbruten.${creditMessage}` };
+  return {
+    ok: true,
+    message: creditNumber
+      ? `Order avbruten. Kreditfaktura ${creditNumber} utfärdad${mailed ? " och mejlad" : " — mejlet kunde inte skickas, skicka igen från fakturalistan"}.`
+      : "Order avbruten.",
+  };
+}
+
+/** Säkerhetsnät: kreditera en redan avbruten order som saknar kreditfaktura. */
+export async function issueCreditNoteForOrder(orderId: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: { include: { creditNote: true } } } });
+  if (!order?.invoice) return { ok: false, error: "Ordern saknar faktura" };
+  if (order.status !== "CANCELLED") return { ok: false, error: "Bara avbrutna ordrar krediteras här" };
+  if (order.invoice.creditNote) return { ok: false, error: `Kreditfaktura ${order.invoice.creditNote.creditNumber} finns redan` };
+  const credit = await prisma.$transaction((tx) => issueCreditNoteInTx(tx, order.invoice!.id, admin.email), { timeout: 15000 });
+  if (!credit) return { ok: false, error: "Krediteringen misslyckades" };
+  const mailed = await sendCreditNoteEmail(credit.id);
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: `Kreditfaktura ${credit.creditNumber} utfärdad${mailed ? " och mejlad" : ""}.` };
 }
 
 export async function addOrderNote(orderId: string, note: string): Promise<ActionResult> {
@@ -193,6 +238,8 @@ export async function resendInvoiceEmail(orderId: string): Promise<ActionResult>
   if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
   if (!order?.invoice) return { ok: false, error: "Ordern saknar faktura" };
+  if (order.invoice.status === "CREDITED") return { ok: false, error: "Fakturan är krediterad — skicka inte om den" };
+  if (order.invoice.status === "PAID") return { ok: false, error: "Fakturan är registrerad som betald — inget att kräva" };
 
   let attachments: { filename: string; content: Buffer; contentType: string }[] | undefined;
   try {
@@ -270,18 +317,22 @@ export async function setSubscriptionStatus(
 
 export async function setSubscriptionNextDate(id: string, isoDate: string): Promise<{ error: string } | null> {
   await requireAdmin();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return { error: "Ange datum som ÅÅÅÅ-MM-DD" };
-  const date = fromISODate(isoDate);
-  // Passerade datum skulle få generatorn att skapa bakdaterade ordrar.
-  if (date.getTime() < todayInStockholm().getTime()) return { error: "Datumet har redan passerat" };
-  // Bara områdets leveransdagar — annars skapar generatorn en order på en dag utan leverans.
+  if (!idSchema.safeParse(id).success) return { error: "Ogiltigt id" };
+  const parsedDate = isoDateSchema("Ange datum som ÅÅÅÅ-MM-DD").safeParse(isoDate);
+  if (!parsedDate.success) return { error: parsedDate.error.issues[0]?.message ?? "Ogiltigt datum" };
+  const date = fromISODate(parsedDate.data);
   const sub = await prisma.subscription.findUnique({ where: { id }, include: { deliveryArea: true } });
   if (!sub) return { error: "Prenumerationen finns inte" };
-  if (sub.deliveryArea) {
-    const weekdays = safeWeekdays(sub.deliveryArea.weekdaysJson);
-    if (weekdays.length > 0 && !weekdays.includes(isoWeekday(date))) {
-      return { error: `${sub.deliveryArea.name} levererar bara ${weekdays.map(weekdayName).join(", ")}` };
-    }
+  if (!sub.deliveryArea?.active) return { error: "Leveransområdet är inaktivt — aktivera det under Inställningar först" };
+  // Aldrig idag eller bakåt — generatorn skulle skapa en order som inte hinner packas.
+  const earliest = addDays(todayInStockholm(), 1);
+  if (date.getTime() < earliest.getTime()) {
+    return { error: `Tidigast ${toISODate(earliest)} — leverans samma dag går inte att planera` };
+  }
+  // Bara områdets leveransdagar — annars skapar generatorn en order på en dag utan leverans.
+  const weekdays = safeWeekdays(sub.deliveryArea.weekdaysJson);
+  if (weekdays.length > 0 && !weekdays.includes(isoWeekday(date))) {
+    return { error: `${sub.deliveryArea.name} levererar bara ${weekdays.map(weekdayName).join(", ")}` };
   }
   await prisma.subscription.update({
     where: { id },
@@ -309,6 +360,9 @@ const productSchema = z.object({
     .refine((v) => !["constructor", "prototype", "__proto__", "tostring", "valueof"].includes(v), "Slug är reserverad"),
   description: z.string().trim().min(2).max(500),
   priceKr: z.coerce.number().min(0.01, "Ange ett pris över 0 kr").max(100000),
+  // Momssats i baspunkter. Livsmedel 12 % (eller tillfälligt sänkt sats),
+  // övrigt 25 % — sätts av verksamheten efter besked från Skatteverket/revisor.
+  vatRateBp: z.coerce.number().int().refine((v) => [600, 1200, 2500].includes(v), "Momssats: 6, 12 eller 25 %").default(1200),
   unit: z.enum(["kg", "paket"]).default("kg"),
   packageWeightGrams: z.coerce.number().int().min(0).max(100000).default(0),
   weightOptions: z
@@ -346,6 +400,7 @@ export async function saveProduct(
     slug: formData.get("slug"),
     description: formData.get("description"),
     priceKr: formData.get("priceKr"),
+    vatRateBp: formData.get("vatRateBp") ?? 1200,
     unit: formData.get("unit") ?? "kg",
     packageWeightGrams: formData.get("packageWeightGrams") ?? 0,
     weightOptions: formData.get("weightOptions"),
@@ -365,6 +420,7 @@ export async function saveProduct(
     slug: d.slug,
     description: d.description,
     pricePerKgOre: Math.round(d.priceKr * 100),
+    vatRateBp: d.vatRateBp,
     unit: d.unit,
     packageWeightGrams: d.packageWeightGrams,
     // Förval över serverns tak (100) skulle bara klampas i korgen — filtrera bort.
@@ -394,10 +450,15 @@ export async function saveProduct(
   redirect("/admin/produkter");
 }
 
-export async function setProductActive(productId: string, active: boolean) {
+export async function setProductActive(productId: string, active: boolean): Promise<ActionResult> {
   await requireAdmin();
-  await prisma.product.update({ where: { id: productId }, data: { active } });
+  if (!idSchema.safeParse(productId).success) return { ok: false, error: "Ogiltigt produkt-id" };
+  const parsedActive = z.boolean().safeParse(active);
+  if (!parsedActive.success) return { ok: false, error: "Ogiltigt värde" };
+  const product = await prisma.product.update({ where: { id: productId }, data: { active: parsedActive.data } });
   revalidatePath("/admin/produkter");
+  revalidatePath("/", "layout");
+  return { ok: true, message: `${product.name} är nu ${parsedActive.data ? "aktiv" : "inaktiv"}` };
 }
 
 // ---------- Leveransinställningar ----------

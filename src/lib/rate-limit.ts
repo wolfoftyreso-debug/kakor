@@ -49,7 +49,7 @@ export function rateLimitMemory(key: string, opts: { limit: number; windowMs: nu
  * Delad räknare: atomisk increment i databasen inom ett fast fönster.
  * Returnerar ok=false när fönstrets gräns nåtts.
  */
-async function rateLimitShared(key: string, opts: { limit: number; windowMs: number }): Promise<RateLimitResult> {
+export async function rateLimitShared(key: string, opts: { limit: number; windowMs: number }): Promise<RateLimitResult> {
   const now = new Date();
   try {
     // Aktivt fönster: räkna upp atomiskt.

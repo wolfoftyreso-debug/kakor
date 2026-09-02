@@ -36,10 +36,23 @@ async function main() {
     (e) => ({ status: 0, body: null, error: e })
   );
   const dbUp = health.body?.database === "ok";
-  report("GET /api/health", health.status === 200 || health.status === 503, JSON.stringify(health.body));
+  // 503 = databasen nere = FAIL (om inte --allow-db-down anges för en tom miljö).
+  const allowDbDown = process.argv.includes("--allow-db-down");
+  report("GET /api/health", health.status === 200 || (allowDbDown && health.status === 503), JSON.stringify(health.body));
   if (!dbUp) {
     console.log("  ⚠ databasen är inte kopplad — sidkontroller som kräver databas hoppar över.");
   }
+
+  // Testordern mejlas — använd verksamhetens egen låda (SMOKE_EMAIL), aldrig example.com i produktion.
+  const smokeEmail = process.env.SMOKE_EMAIL ?? "smoke@example.com";
+
+  // Säkerhetsheaders och cron-skydd — billiga kontroller som fångar felkonfiguration.
+  const headRes = await fetch(base + "/", { redirect: "manual" }).catch(() => null);
+  const csp = headRes?.headers.get("content-security-policy") ?? "";
+  report("CSP-header med nonce", /nonce-/.test(csp), csp ? "finns" : "saknas");
+  report("X-Frame-Options", headRes?.headers.get("x-frame-options") === "DENY", headRes?.headers.get("x-frame-options") ?? "saknas");
+  const cron = await fetch(base + "/api/cron/generate-subscription-orders").catch(() => null);
+  report("Cron kräver Bearer (401/503)", cron?.status === 401 || cron?.status === 503, `status ${cron?.status}`);
 
   await checkPage("/om", "Sockerbagaren");
   await checkPage("/villkor", "faktura");
@@ -79,15 +92,15 @@ async function main() {
             areaSlug: "tyreso",
             deliveryDate,
             companyName: "SMOKE TEST — RADERA",
-            orgNumber: "556000-0000",
+            orgNumber: "556000-0001",
             contactName: "Smoke Test",
-            email: "smoke@example.com",
+            email: smokeEmail,
             phone: "070-000 00 00",
             deliveryAddress: "Testgatan 1",
             deliveryPostalCode: "135 48",
             deliveryCity: "Tyresö",
             deliveryInstruction: "SMOKE TEST",
-            invoiceEmail: "smoke@example.com",
+            invoiceEmail: smokeEmail,
             reference: "SMOKE",
             billingAddress: "",
           }),

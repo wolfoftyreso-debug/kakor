@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { checkoutSchema, fieldErrors } from "@/lib/validation";
 import { createOrder, OrderError } from "@/lib/orders/create-order";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
@@ -42,13 +43,14 @@ export async function POST(req: NextRequest) {
     if (e instanceof OrderError) {
       return NextResponse.json(
         { ok: false, error: e.message, code: e.code, fields: e.field ? { [e.field]: e.message } : undefined },
-        { status: e.code === "IDEMPOTENCY_MISMATCH" || e.code === "PRICE_CHANGED" ? 409 : e.code === "TOO_MANY" ? 429 : 400 }
+        { status: e.code === "IDEMPOTENCY_MISMATCH" || e.code === "PRICE_CHANGED" ? 409 : e.code === "TOO_MANY" ? 429 : e.code === "INVOICING_NOT_CONFIGURED" ? 503 : 400 }
       );
     }
     // Felreferens: gör produktionsfel sökbara i Vercel-loggarna utan att
     // exponera stack traces för kunden. Ordern har INTE skapats här.
     const ref = Math.random().toString(36).slice(2, 10).toUpperCase();
     console.error(`Orderfel [ref ${ref}]:`, describeError(e));
+    Sentry.captureException(e, { tags: { flow: "checkout", ref } });
     return NextResponse.json(
       {
         ok: false,

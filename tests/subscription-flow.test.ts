@@ -6,6 +6,7 @@ import {
 } from "@/lib/subscriptions/service";
 import { addDays, toISODate, upcomingDeliveryDates } from "@/lib/dates";
 import type { SubscriptionInput } from "@/lib/validation";
+import { orgNumber } from "./helpers";
 
 let productIds: string[] = [];
 let firstDate = "";
@@ -22,10 +23,10 @@ function subscriptionInput(overrides: Partial<SubscriptionInput> = {}): Subscrip
     areaSlug: "nacka",
     firstDeliveryDate: firstDate,
     companyName: "Prenumerationsbolaget AB",
-    orgNumber: `${556100 + seq}-2233`,
+    orgNumber: orgNumber(`${556100 + seq}223`),
     contactName: "Prenumerant Person",
     email: `fika${seq}@prenbolaget.se`,
-    phone: "",
+    phone: "070-123 45 67",
     deliveryAddress: "Prenumerationsvägen 5",
     deliveryPostalCode: "131 30",
     deliveryCity: "Nacka",
@@ -116,7 +117,7 @@ describe("prenumeration → order → faktura", () => {
 
   it("samma idempotencyKey ger samma prenumeration — aldrig två", async () => {
     const key = `test-sub-idem-${Date.now()}`;
-    const same = { idempotencyKey: key, orgNumber: "556011-2233", email: "idem@prenbolaget.se", invoiceEmail: "idem@prenbolaget.se" };
+    const same = { idempotencyKey: key, orgNumber: "556011-2236", email: "idem@prenbolaget.se", invoiceEmail: "idem@prenbolaget.se" };
     const { subscription: first } = await createSubscription(subscriptionInput(same));
     const { subscription: second } = await createSubscription(subscriptionInput(same));
     expect(second.id).toBe(first.id);

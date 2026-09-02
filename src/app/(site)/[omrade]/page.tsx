@@ -134,8 +134,8 @@ export default async function AreaPage({ params }: Props) {
           <div className="card" style={{ padding: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Betalning</div>
             <div style={{ fontSize: "13.5px", color: "var(--brown-2)", lineHeight: 1.65 }}>
-              Alltid mot faktura. Ni beställer, vi levererar, fakturan kommer efteråt. Inga kort,
-              inga konton.
+              Alltid mot faktura. Fakturan skapas när ni beställer och mejlas direkt — 30 dagars
+              betalningsvillkor. Inga kort, inga konton.
             </div>
           </div>
         </div>

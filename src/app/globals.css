@@ -1167,8 +1167,15 @@ button, input, select, textarea {
 header.site-header {
   position: sticky;
   top: 0;
-  z-index: 40;
+  /* Över sticky-köpbar/totalrad (60) så att den öppna mobilmenyn aldrig täcks. */
+  z-index: 70;
   box-shadow: 0 1px 0 var(--border);
+}
+/* Innehåll som scrollas till med JS (kassans steg, skip-länken) hamnar under
+   den sticky headern utan denna marginal. */
+.checkout-root,
+#innehall {
+  scroll-margin-top: 128px;
 }
 .cart-link:hover {
   color: var(--red);
@@ -1227,7 +1234,7 @@ header.site-header {
   }
   /* Ge plats åt baren så sidfoten inte döljs bakom den. */
   .has-sticky-buy {
-    padding-bottom: 76px;
+    padding-bottom: 96px !important;
   }
 }
 
@@ -1253,7 +1260,7 @@ header.site-header {
     box-shadow: 0 -8px 24px rgba(59, 40, 27, 0.1);
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
     border-radius: 10px 10px 0 0;
-    margin: 28px -4px 0;
+    margin: 28px 0 0;
     flex-wrap: nowrap;
   }
   .checkout-total-bar .btn {
@@ -1315,8 +1322,6 @@ header.site-header {
 /* Minst 44 px träffyta på mobil för header-länkar och menyknapp. */
 .cart-link {
   min-height: 44px;
-  display: inline-flex !important;
-  align-items: center;
 }
 @media (max-width: 860px) {
   .menu-toggle {
@@ -1325,10 +1330,10 @@ header.site-header {
     justify-content: center;
   }
 }
+/* Träffyta ≥ 44 px via padding (inte min-height) — annars hamnar
+   hover-understrykningen (::after på bottom:0) långt under texten. */
 .site-nav a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
+  padding: 12px 0;
 }
 
 
@@ -1439,9 +1444,10 @@ header.site-header {
   background: var(--butter-soft);
 }
 
-/* Toast: ovanför sticky-barer på mobil så den aldrig täcker knappen. */
+/* Toast: ovanför sticky-barer på mobil — bara på sidor som faktiskt har en bar. */
 @media (max-width: 860px) {
-  .toast {
+  body:has(.sticky-buy.visible) .toast,
+  body:has(.checkout-total-bar) .toast {
     bottom: 96px !important;
   }
 }

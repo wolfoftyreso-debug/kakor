@@ -5,7 +5,7 @@ import { fromISODate, toISODate } from "@/lib/dates";
 // Kalenderriktigt datum: "2026-13-45" (Invalid Date → RangeError → 500) och
 // "2026-02-30" (V8 tolkar som 2 mars → ordern hamnar på ett annat datum än
 // kunden skickade) avvisas båda med ett vanligt fältfel.
-const isoDateSchema = (message: string) =>
+export const isoDateSchema = (message: string) =>
   z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, message)
@@ -22,7 +22,8 @@ const isoDateSchema = (message: string) =>
 const singleLine = (min: number, minMessage: string, max: number) =>
   z
     .string()
-    .transform((s) => s.replace(/[\p{Cc}\s]+/gu, " ").trim())
+    // \p{Cc} = kontrolltecken, \p{Cf} = osynliga formattecken (zero-width, RTL-override).
+    .transform((s) => s.replace(/[\p{Cc}\p{Cf}\s]+/gu, " ").trim())
     .pipe(z.string().min(min, minMessage).max(max));
 
 // Flerradsfält: radbrytningar tillåts men övriga kontrolltecken tas bort och
@@ -33,7 +34,7 @@ const multiLine = (max: number, maxLines: number) =>
     .transform((s) =>
       s
         .replace(/\r\n?/g, "\n")
-        .replace(/[^\P{Cc}\n]/gu, "")
+        .replace(/[^\P{Cc}\n]|\p{Cf}/gu, "")
         .split("\n")
         .map((l) => l.trim())
         .filter((l, i, arr) => l.length > 0 || i === arr.length - 1)
@@ -51,12 +52,32 @@ const emailSchema = (message: string) =>
 
 // Honeypot: fältet är dolt i formuläret och ska alltid vara tomt. Ifyllt
 // värde = bot; avvisas med ett vanligt valideringsfel utan att avslöja varför.
+// Nyckeln är medvetet intetsägande ("website" autofylls av lösenordshanterare).
 const honeypotSchema = z.string().max(0, "Kontrollera uppgifterna").optional();
+
+// Svenska organisationsnummer har Luhn-kontrollsiffra — ett formatriktigt men
+// påhittat nummer (556677-8899 är t.ex. ogiltigt) ska inte kunna faktureras.
+export function isValidOrgNumber(value: string): boolean {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length !== 10) return false;
+  let sum = 0;
+  for (let i = 0; i < 10; i++) {
+    let d = Number(digits[i]);
+    if (i % 2 === 0) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    sum += d;
+  }
+  return sum % 10 === 0;
+}
 
 const orgNumberSchema = z
   .string()
   .trim()
-  .regex(/^\d{6}-?\d{4}$/, "Ange organisationsnummer i formatet 556677-8899");
+  .regex(/^\d{6}-?\d{4}$/, "Ange organisationsnummer i formatet 556677-8899")
+  .refine(isValidOrgNumber, "Organisationsnumret verkar inte stämma — kontrollera siffrorna")
+  .transform((v) => (v.includes("-") ? v : `${v.slice(0, 6)}-${v.slice(6)}`));
 
 const postalCodeSchema = z
   .string()
@@ -116,7 +137,7 @@ export const checkoutSchema = z.strictObject({
   // avviker summorna (pris ändrat i admin under tiden) avvisas ordern så att
   // kunden får bekräfta det nya priset i stället för att faktureras tyst.
   expectedTotalOre: z.number().int().min(0).optional(),
-  website: honeypotSchema,
+  sb_extra: honeypotSchema,
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
@@ -133,7 +154,8 @@ export const subscriptionSchema = z.strictObject({
   orgNumber: orgNumberSchema,
   contactName: singleLine(2, "Ange kontaktperson", 120),
   email: emailSchema("Ange en giltig e-postadress"),
-  phone: phoneSchema.or(z.literal("")).default(""),
+  // Chauffören behöver ett nummer även på prenumerationsleveranser — samma krav som checkouten.
+  phone: phoneSchema,
 
   deliveryAddress: singleLine(3, "Ange leveransadress", 200),
   deliveryPostalCode: postalCodeSchema,
@@ -144,7 +166,7 @@ export const subscriptionSchema = z.strictObject({
   reference: singleLine(0, "", 120).default(""),
 
   expectedTotalOre: z.number().int().min(0).optional(),
-  website: honeypotSchema,
+  sb_extra: honeypotSchema,
 });
 
 export type SubscriptionInput = z.infer<typeof subscriptionSchema>;

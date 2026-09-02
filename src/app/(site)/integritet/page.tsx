@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 // Senast innehållsändrad — uppdateras manuellt vid verklig policyändring.
-const CONTENT_UPDATED = "2026-08-29";
+const CONTENT_UPDATED = "2026-09-02";
 
 export default function IntegritetPage() {
   return (
@@ -35,44 +35,71 @@ export default function IntegritetPage() {
       </p>
       <div style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch", display: "flex", flexDirection: "column", gap: 18 }}>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Vilka uppgifter vi samlar in</h2>
+          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Personuppgiftsansvarig</h2>
           <p style={{ margin: 0 }}>
-            När ni beställer sparar vi de uppgifter som behövs för att hantera ordern: företagsnamn,
-            organisationsnummer, kontaktperson, e-post, telefon, leveransadress och
-            faktureringsuppgifter. Vi säljer inte uppgifterna vidare och använder dem inte för
-            annat än att hantera er beställning, leverans och fakturering.
+            {invoiceConfig.companyName}, org.nr {invoiceConfig.orgNumber},{" "}
+            {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}.
+            {isVerifiedValue(invoiceConfig.email) ? (
+              <>
+                {" "}E-post: <a href={`mailto:${invoiceConfig.email}`}>{invoiceConfig.email}</a>.
+              </>
+            ) : null}
+          </p>
+        </section>
+        <section>
+          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Vilka uppgifter vi behandlar och varför</h2>
+          <p style={{ margin: 0 }}>
+            När ni beställer behandlar vi företagsuppgifter samt kontaktpersonens namn, e-post och
+            telefon, leverans- och faktureringsuppgifter. Rättslig grund: fullgörande av avtal för
+            att leverera och fakturera; rättslig förpliktelse (bokföringslagen) för order- och
+            fakturaunderlag; berättigat intresse för kontaktpersoners uppgifter, för skydd mot
+            missbruk (tillfälliga, IP-baserade begränsningar) och för felsökning. Vi säljer aldrig
+            uppgifter vidare och använder dem inte för marknadsföring.
           </p>
         </section>
         <section>
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Hur länge uppgifterna sparas</h2>
           <p style={{ margin: 0 }}>
-            Order- och fakturauppgifter sparas så länge bokföringslagen kräver. Varukorgen sparas
-            endast lokalt i er webbläsare tills beställningen skickas.
+            Order- och fakturauppgifter sparas i sju år efter utgången av det räkenskapsår de avser
+            (bokföringslagen). Loggar över skickad e-post raderas efter 90 dagar och tekniska
+            begränsningsräknare inom ett dygn. Varukorg och pågående beställning lagras endast i er
+            webbläsare tills beställningen skickas.
           </p>
         </section>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Cookies</h2>
+          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Mottagare och överföring</h2>
+          <p style={{ margin: 0 }}>
+            Vi använder personuppgiftsbiträden för driften: Vercel Inc. (webbhotell, servrar i EU),
+            Neon Inc. (databas i EU), Resend Inc. (e-postutskick) och Functional Software Inc.
+            (Sentry, felövervakning i EU). Bolagen är amerikanska; i den mån uppgifter överförs
+            utanför EU/EES sker det med stöd av EU–US Data Privacy Framework eller EU-kommissionens
+            standardavtalsklausuler.
+          </p>
+        </section>
+        <section>
+          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Cookies och lokal lagring</h2>
           <p style={{ margin: 0 }}>
             {process.env.NEXT_PUBLIC_GA4_ID
-              ? "Webbplatsen använder Google Analytics 4 för anonymiserad besöksstatistik (IP-adresser anonymiseras, inga annonscookies). "
+              ? "Webbplatsen använder Google Analytics 4 för besöksstatistik. "
               : "Webbplatsen använder inga spårnings- eller marknadsföringscookies. "}
-            Varukorgen lagras i webbläsarens lokala lagring, och en sessionskaka används enbart för
-            administratörens inloggning.
+            Varukorgen lagras i webbläsarens lokala lagring och en nödvändig sessionskaka används
+            enbart för administratörens inloggning — ingen av dessa kräver samtycke.
           </p>
         </section>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Personuppgiftsansvarig</h2>
+          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Era rättigheter</h2>
           <p style={{ margin: 0 }}>
-            {invoiceConfig.companyName}, org.nr {invoiceConfig.orgNumber},{" "}
-            {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}.{" "}
+            Ni har rätt till tillgång, rättelse, radering (i den mån bokföringslagen tillåter),
+            begränsning, dataportabilitet och att invända mot behandling som stöds på berättigat
+            intresse.{" "}
             {isVerifiedValue(invoiceConfig.email) ? (
               <>
-                Mejla <a href={`mailto:${invoiceConfig.email}`}>{invoiceConfig.email}</a> om ni vill
-                få era uppgifter rättade eller raderade (i den mån lagkrav tillåter).
+                Mejla <a href={`mailto:${invoiceConfig.email}`}>{invoiceConfig.email}</a> så hjälper vi er.
               </>
             ) : (
-              "Svara på er orderbekräftelse om ni vill få era uppgifter rättade eller raderade (i den mån lagkrav tillåter)."
-            )}
+              "Svara på er orderbekräftelse så hjälper vi er."
+            )}{" "}
+            Ni kan också klaga hos Integritetsskyddsmyndigheten (imy.se).
           </p>
         </section>
       </div>

@@ -37,6 +37,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           ingredients: product.ingredients,
           allergens: product.allergens,
           imageRef: product.imageRef,
+          vatRateBp: product.vatRateBp,
           badge: product.badge,
           sortOrder: product.sortOrder,
           active: product.active,

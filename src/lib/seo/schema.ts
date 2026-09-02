@@ -54,7 +54,7 @@ export function organizationNode(): JsonLdNode {
       addressLocality: invoiceConfig.city,
       addressCountry: "SE",
     },
-    areaServed: ["Tyresö", "Nacka", "Haninge", "Huddinge"],
+    areaServed: ["Tyresö", "Nacka", "Haninge", "Huddinge"].map((name) => ({ "@type": "City", name })),
   };
 }
 
@@ -136,6 +136,11 @@ export function productNode(product: ProductCardData): JsonLdNode {
       "@type": "Offer",
       priceCurrency: "SEK",
       price: (product.pricePerKgOre / 100).toFixed(2),
+      url: `${SITE()}/kakor/${product.slug}`,
+      // Endast företagskunder, endast Sverige — så att sökmotorer inte visar
+      // priset som ett konsumentpris.
+      eligibleCustomerType: "https://schema.org/Business",
+      eligibleRegion: { "@type": "Country", name: "SE" },
       // B2B-pris per kilo, exklusive moms — måste deklareras så att priset
       // i sökresultat inte utger sig för att vara konsumentpris inkl. moms.
       priceSpecification: {

@@ -100,7 +100,18 @@ async function main() {
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
   const adminCount = await prisma.adminUser.count();
-  if (adminCount === 0 && adminEmail && adminPassword) {
+  // Exempelvärdena från .env.example får aldrig bli en riktig admin (Prisma
+  // läser .env implicit även när DATABASE_URL pekar på produktion).
+  const looksLikeExample =
+    !adminEmail ||
+    !adminPassword ||
+    /example\.com$/i.test(adminEmail) ||
+    /byt-mig|losenord/i.test(adminPassword) ||
+    adminPassword.length < 12;
+  if (adminCount === 0 && looksLikeExample && adminEmail) {
+    console.warn("Seed: ADMIN_EMAIL/ADMIN_PASSWORD ser ut som exempelvärden — ingen admin skapad. Kör npm run admin:create med riktiga värden.");
+  }
+  if (adminCount === 0 && adminEmail && adminPassword && !looksLikeExample) {
     await prisma.adminUser.create({
       data: {
         email: adminEmail.toLowerCase(),

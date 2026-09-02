@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
-import { siteConfig } from "@/lib/config";
+import { emailConfig, siteConfig } from "@/lib/config";
 import { formatOre } from "@/lib/money";
 import { priceSuffix, qtyLabel } from "@/lib/units";
-import { formatDeliveryDate } from "@/lib/dates";
+import { formatDeliveryDateWithYear } from "@/lib/dates";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 
@@ -22,10 +22,10 @@ export async function sendOrderEmails(orderId: string): Promise<boolean> {
   const lines = order.items
     .map(
       (i) =>
-        `  ${i.productName}: ${qtyLabel(i.weightKg, i.unit)} à ${formatOre(i.unitPricePerKgOre)}${priceSuffix(i.unit)}`
+        `  ${i.productName}: ${qtyLabel(i.weightKg, i.unit)} à ${formatOre(i.unitPricePerKgOre)}${priceSuffix(i.unit)} exkl. moms`
     )
     .join("\n");
-  const deliveryDay = formatDeliveryDate(order.deliveryDate);
+  const deliveryDay = formatDeliveryDateWithYear(order.deliveryDate);
   const invoiceUrl = `${siteConfig.url}/faktura/${order.invoice.downloadToken}`;
 
   const confirmationText = `Tack för er beställning!
@@ -35,9 +35,9 @@ Ordernummer: ${order.orderNumber}
 KAKOR
 ${lines}
 
-Summa: ${formatOre(order.subtotalOre)}
+Summa exkl. moms: ${formatOre(order.subtotalOre)}
 Moms: ${formatOre(order.vatOre)}
-Totalt: ${formatOre(order.totalOre)}
+Totalt inkl. moms: ${formatOre(order.totalOre)}
 
 LEVERANS
 ${order.deliveryAddress}, ${order.deliveryPostalCode} ${order.deliveryCity}
@@ -45,7 +45,7 @@ Leveransdag: ${deliveryDay}
 Vi levererar under dagen — se till att någon finns på plats för att ta emot leveransen.
 
 FAKTURA
-Betalning sker mot faktura. Fakturan skickas till ${order.invoiceEmail}.
+Betalning sker mot faktura. Fakturan skapas nu och skickas till ${order.invoiceEmail} — ${order.invoice.dueDate.toISOString().slice(0, 10)} är förfallodatum.
 Ni kan även ladda ner den här: ${invoiceUrl}
 
 Frågor? Svara på det här mejlet.
@@ -80,7 +80,7 @@ Sockerbagaren`;
 
   const invoiceText = `Faktura ${order.invoice.invoiceNumber} från Sockerbagaren (${order.orderNumber})
 
-Belopp att betala: ${formatOre(order.totalOre)}
+Belopp att betala: ${formatOre(order.totalOre)} inkl. moms
 Förfallodatum: ${order.invoice.dueDate.toISOString().slice(0, 10)}
 
 ${attachments ? "Fakturan bifogas som PDF." : ""}
@@ -97,5 +97,26 @@ Sockerbagaren`;
     type: "INVOICE",
     orderId: order.id,
   });
+  // Verksamheten ska inte behöva logga in för att upptäcka en ny order.
+  if (emailConfig.adminNotify) {
+    await sendEmail({
+      to: emailConfig.adminNotify,
+      subject: `Ny order ${order.orderNumber} — ${order.companyName} (${formatOre(order.totalOre)})`,
+      text: `Ny beställning via webben.
+
+Order: ${order.orderNumber}
+Kund: ${order.companyName} (${order.orgNumber})
+Kontakt: ${order.contactName}, ${order.email}${order.phone ? `, ${order.phone}` : ""}
+Leverans: ${deliveryDay} — ${order.deliveryAddress}, ${order.deliveryPostalCode} ${order.deliveryCity}${order.deliveryArea ? ` (${order.deliveryArea.name})` : ""}
+${order.deliveryInstruction ? `Kommentar: ${order.deliveryInstruction}\n` : ""}
+KAKOR
+${lines}
+
+Totalt inkl. moms: ${formatOre(order.totalOre)}
+Admin: ${siteConfig.url}/admin/bestallningar/${order.id}`,
+      type: "ADMIN_NEW_ORDER",
+      orderId: order.id,
+    });
+  }
   return confirmationSent && invoiceSent;
 }

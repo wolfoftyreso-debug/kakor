@@ -22,6 +22,7 @@ export default async function NewProductPage() {
           ingredients: "",
           allergens: "",
           imageRef: "",
+          vatRateBp: 1200,
           badge: "",
           sortOrder: 0,
           active: false,

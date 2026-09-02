@@ -66,6 +66,7 @@ function intervalLabel(value: RecurrenceInterval): string {
 }
 
 interface ResultLine {
+  productId: string;
   name: string;
   kg: number;
   unit: string;
@@ -244,13 +245,10 @@ export function CheckoutFlow({
     (s, l) => s + lineWeightGrams(l.kg, l.product.unit, l.product.packageWeightGrams),
     0
   );
-  const totals = useMemo(
-    () =>
-      calculateTotals(
-        activeLines.map((l) => ({ netOre: l.kg * l.product.pricePerKgOre, vatRateBp: l.product.vatRateBp ?? 1200 }))
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(activeLines.map((l) => [l.product.id, l.kg]))]
+  // Räknas per render (fyra rader — billigt): priset ingår då alltid, så
+  // en prisändring som hämtas via router.refresh() slår igenom i summan.
+  const totals = calculateTotals(
+    activeLines.map((l) => ({ netOre: l.kg * l.product.pricePerKgOre, vatRateBp: l.product.vatRateBp ?? 1200 }))
   );
 
   const selectedArea = areas.find((a) => a.slug === areaSlug) ?? null;
@@ -392,7 +390,7 @@ export function CheckoutFlow({
       reference: form.reference.trim(),
       // Beloppet kunden bekräftade — servern avvisar om priset hunnit ändras.
       expectedTotalOre: totals.totalOre,
-      ...(honeypot ? { website: honeypot } : {}),
+      ...(honeypot ? { sb_extra: honeypot } : {}),
     };
     try {
       const res =
@@ -419,6 +417,7 @@ export function CheckoutFlow({
         track("order_completed", { mode });
         const resultCommon: ResultCommon = {
           lines: activeLines.map((l) => ({
+            productId: l.product.id,
             name: l.product.name,
             kg: l.kg,
             unit: l.product.unit,
@@ -476,6 +475,16 @@ export function CheckoutFlow({
           if (itemKey && !fields.items) fields.items = fields[itemKey];
           setErrors(fields);
           goTo(stepForFields(fields));
+          // goTo nollställer globalError — sätt det EFTER, och lyft fält som
+          // inte har något synligt formulärfält (t.ex. "_" eller sb_extra) dit,
+          // annars blir felet osynligt.
+          const knownFields = new Set([...Object.keys(EMPTY_FORM), "items", "areaSlug", "deliveryDate", "firstDeliveryDate", "frequency"]);
+          const hidden = Object.entries(fields).filter(([k]) => !knownFields.has(k) && !k.startsWith("items."));
+          setGlobalError(
+            hidden.length > 0
+              ? `${data.error ?? "Kontrollera uppgifterna"} (${hidden.map(([, v]) => v).join(", ")}). Ladda om sidan om felet kvarstår.`
+              : (data.error ?? "Kontrollera uppgifterna")
+          );
           // Fokus till det felaktiga fältet (samma beteende som klientvalideringen).
           requestAnimationFrame(() =>
             requestAnimationFrame(() =>
@@ -495,6 +504,7 @@ export function CheckoutFlow({
   const summaryLines = result
     ? []
     : activeLines.map((l) => ({
+        productId: l.product.id,
         name: l.product.name,
         kg: l.kg,
         unit: l.product.unit,
@@ -503,16 +513,17 @@ export function CheckoutFlow({
       }));
 
   const modeSummary =
-    mode === "RECURRING" ? `Återkommande · ${intervalLabel(interval).toLowerCase()}` : undefined;
+    mode === "RECURRING" ? `Fikaprenumeration · ${intervalLabel(interval).toLowerCase()}` : undefined;
   const hasPackageProducts = products.some((p) => p.unit === "paket");
 
 
   return (
     <div
-      className="container-narrow"
-      // Steg 1 SSR-renderas alltid (SEO, utan JS). Ett lagrat flöde återställs
-      // direkt efter hydration — övergången döljs med opacity, HTML:en töms aldrig.
-      style={{ padding: "40px 24px 100px", opacity: flowRestored ? 1 : 0, transition: "opacity 120ms" }}
+      // Steg 1 SSR-renderas och är synligt direkt (LCP, utan JS). Ett lagrat
+      // flöde (reload på steg 2–4) återställs efter hydration — ett kort
+      // blink i det sällsynta fallet är bättre än en tom sida i det vanliga.
+      className="container-narrow checkout-root"
+      style={{ padding: "40px 24px 100px" }}
       ref={headingRef}
     >
       {step <= 4 && (
@@ -529,7 +540,10 @@ export function CheckoutFlow({
                 <span className="progress-dot" aria-hidden="true">
                   {state === "done" ? "✓" : n}
                 </span>
-                <span className="progress-step-label">{label}</span>
+                <span className="progress-step-label">
+                  {label}
+                  {state === "done" && <span className="visually-hidden"> (klart)</span>}
+                </span>
               </li>
             );
           })}
@@ -568,6 +582,13 @@ export function CheckoutFlow({
           <button type="button" className="btn btn-primary btn-lg" onClick={() => goTo(1)}>
             Välj kakor
           </button>
+        </div>
+      )}
+
+      {/* Inga aktiva områden: säg det i stället för ett tomt val och en död knapp. */}
+      {areas.length === 0 && step <= 4 && (
+        <div role="status" className="info-box" style={{ marginBottom: 20 }}>
+          Vi tar just nu inte emot beställningar — inget leveransområde är öppet. Prova igen om en stund.
         </div>
       )}
 
@@ -689,7 +710,7 @@ export function CheckoutFlow({
                 track("purchase_mode_selected", { mode: "RECURRING" });
               }}
             >
-              <div style={{ fontWeight: 700, fontSize: 15 }}>Återkommande leverans</div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>Fikaprenumeration</div>
               <div className="choice-sub">Samma beställning kommer automatiskt — ingen bindningstid.</div>
             </button>
           </div>
@@ -877,10 +898,10 @@ export function CheckoutFlow({
               </label>
               {/* Honeypot — osynligt för människor, autofylls av botar. */}
               <div className="hp-field" aria-hidden="true">
-                <label htmlFor="falt-webbplats">Webbplats</label>
+                <label htmlFor="falt-extra">Lämna tomt</label>
                 <input
-                  id="falt-webbplats"
-                  name="website"
+                  id="falt-extra"
+                  name="sb_extra"
                   type="text"
                   tabIndex={-1}
                   autoComplete="off"
@@ -891,7 +912,9 @@ export function CheckoutFlow({
             </div>
             <div className="info-box-muted" style={{ margin: "20px 0 28px" }}>
               <strong>Betalning sker mot faktura.</strong> Ingen kortbetalning behövs — fakturan
-              skickas till er faktura-e-post{mode === "RECURRING" ? " inför varje leverans" : ""}.
+              skapas {mode === "RECURRING" ? "inför varje leverans" : "när ni skickar beställningen"} och
+              mejlas till er faktura-e-post. Genom att beställa godkänner ni våra{" "}
+              <Link href="/villkor" target="_blank" rel="noopener">köpvillkor</Link>.
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
               <button type="button" className="btn btn-outline" onClick={() => goTo(2)}>
@@ -916,7 +939,7 @@ export function CheckoutFlow({
             </div>
             {summaryLines.map((l) => (
               <div
-                key={l.name}
+                key={l.productId}
                 className="divider-row"
                 style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 15, paddingBottom: 10 }}
               >
@@ -947,7 +970,7 @@ export function CheckoutFlow({
             </div>
             <div>
               {mode === "RECURRING"
-                ? `Återkommande — ${intervalLabel(interval).toLowerCase()}`
+                ? `Fikaprenumeration — ${intervalLabel(interval).toLowerCase()}`
                 : "Engångsbeställning"}
             </div>
             <div>
@@ -1012,17 +1035,17 @@ export function CheckoutFlow({
             lines={result.lines}
             totalOre={result.totalOre}
             totalLabel="Totalt inkl. moms"
-            delivery={`${result.areaName} · ${capitalizeFirst(formatDeliveryDate(fromISODate(result.deliveryDate)))} · under dagen`}
+            delivery={`${result.areaName} · ${result.deliveryDate ? capitalizeFirst(formatDeliveryDate(fromISODate(result.deliveryDate))) : "vald leveransdag"} · under dagen`}
             address={result.address}
           />
           <div className="info-box-muted" style={{ padding: "22px 24px", fontSize: "14.5px", lineHeight: 1.8 }}>
             <strong>Vad händer nu?</strong>
             <br />
-            1. Ni får en orderbekräftelse till er e-post.
+            1. Orderbekräftelse och faktura mejlas nu (30 dagars betalningsvillkor).
             <br />
             2. Vi packar och levererar på vald leveransdag.
             <br />
-            3. Fakturan skickas till er faktura-e-post.
+            3. Något att ändra? Svara på orderbekräftelsen.
           </div>
           <div style={{ textAlign: "center", marginTop: 24 }}>
             <a href={result.invoiceUrl} className="btn btn-outline" target="_blank" rel="noopener">
@@ -1054,7 +1077,7 @@ export function CheckoutFlow({
             lines={result.lines}
             totalOre={result.totalOre}
             totalLabel="Per leverans inkl. moms"
-            delivery={`${result.areaName} · ${intervalLabel(result.interval)} · första leverans ${formatDeliveryDate(fromISODate(result.nextDate))}`}
+            delivery={`${result.areaName} · ${intervalLabel(result.interval)} · första leverans ${result.nextDate ? formatDeliveryDate(fromISODate(result.nextDate)) : "enligt bekräftelsen"}`}
             address={result.address}
           />
           <div className="info-box-muted" style={{ padding: "22px 24px", fontSize: "14.5px", lineHeight: 1.8 }}>
@@ -1136,7 +1159,7 @@ function ResultSummary({
   return (
     <div className="card" style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 12, marginBottom: 20, fontSize: "14.5px" }}>
       {lines.map((l) => (
-        <div key={l.name} className="divider-row" style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 10 }}>
+        <div key={l.productId} className="divider-row" style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 10 }}>
           <span className="review-thumb">
             <ImageSlot label={l.name} src={l.imageRef || undefined} decorative />
           </span>
@@ -1196,7 +1219,7 @@ function MiniSummary({
   mode,
   onEdit,
 }: {
-  lines: { name: string; kg: number; unit: string; ore: number }[];
+  lines: { productId: string; name: string; kg: number; unit: string; ore: number }[];
   totalOre: number;
   delivery?: string;
   mode?: string;

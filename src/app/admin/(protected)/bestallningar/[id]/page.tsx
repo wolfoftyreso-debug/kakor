@@ -146,6 +146,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         status={order.status}
         paymentStatus={order.paymentStatus}
         deliveryStatus={order.deliveryStatus}
+        needsCreditNote={order.status === "CANCELLED" && !!order.invoice && !order.invoice.creditNote}
       />
 
       <section style={{ marginTop: 32 }}>

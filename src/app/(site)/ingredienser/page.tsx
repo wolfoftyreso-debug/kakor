@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
 import { prisma } from "@/lib/db";
 import { allergenChips } from "@/lib/allergens";
+import { IngredientList } from "@/components/IngredientList";
 import Link from "next/link";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 
@@ -40,7 +41,7 @@ export default async function IngredienserPage() {
       </h1>
       <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
         Smör ska smaka smör. Våra kakor bakas på riktigt smör, vanligt strösocker och kvalitativa
-        traditionella råvaror — inga onödiga tillsatser.
+        traditionella råvaror. Allergener är markerade i fetstil i varje förteckning.
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "20px 0 36px" }}>
         <span className="badge-butter">RIKTIGT SMÖR</span>
@@ -48,6 +49,7 @@ export default async function IngredienserPage() {
         <span className="badge-butter">VETEMJÖL</span>
         <span className="badge-butter">MÖRK CHOKLAD</span>
         <span className="badge-butter">ÄGG</span>
+        <span className="badge-butter">MANDEL</span>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -55,11 +57,27 @@ export default async function IngredienserPage() {
           <div key={p.id} className="card" style={{ padding: "24px 26px" }}>
             <h2 style={{ fontSize: 22, marginBottom: 6 }}>{p.name}</h2>
             <p style={{ fontSize: 14, color: "var(--text-2)", margin: "0 0 14px" }}>{p.description}</p>
-            {p.ingredients && (
+            {p.unit === "paket" ? (
               <>
-                <div className="section-label" style={{ marginBottom: 6 }}>INGREDIENSER</div>
-                <p style={{ fontSize: 14, lineHeight: 1.6, margin: "0 0 14px" }}>{p.ingredients}</p>
+                <div className="section-label" style={{ marginBottom: 6 }}>INGREDIENSER PER SORT</div>
+                <div style={{ display: "grid", gap: 8, margin: "0 0 14px" }}>
+                  {products
+                    .filter((q) => q.unit === "kg" && q.ingredients)
+                    .map((q) => (
+                      <div key={q.id}>
+                        <div style={{ fontWeight: 700, fontSize: 13.5 }}>{q.name}</div>
+                        <IngredientList ingredients={q.ingredients} style={{ fontSize: 14 }} />
+                      </div>
+                    ))}
+                </div>
               </>
+            ) : (
+              p.ingredients && (
+                <>
+                  <div className="section-label" style={{ marginBottom: 6 }}>INGREDIENSER</div>
+                  <IngredientList ingredients={p.ingredients} style={{ fontSize: 14, marginBottom: 14 }} />
+                </>
+              )
             )}
             <div className="section-label" style={{ marginBottom: 8 }}>ALLERGENER</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

@@ -3,7 +3,7 @@ import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
-import { addDays, formatDeliveryDate, todayInStockholm, capitalizeFirst } from "@/lib/dates";
+import { addDays, formatDeliveryDate, todayInStockholm, capitalizeFirst, startOfStockholmDay } from "@/lib/dates";
 import { OrderStatusPill, PaymentStatusPill } from "@/components/admin/StatusPills";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +43,8 @@ export default async function AdminDashboard() {
         _sum: { totalOre: true },
       }),
       prisma.subscription.count({ where: { status: "ACTIVE" } }),
-      prisma.order.count({ where: { createdAt: { gte: today } } }),
+      // Svenskt dygn (inte UTC-midnatt) — annars saknas ordrar lagda 00–02.
+      prisma.order.count({ where: { createdAt: { gte: startOfStockholmDay() } } }),
       prisma.order.count({ where: { status: "NEW" } }),
     ]);
 

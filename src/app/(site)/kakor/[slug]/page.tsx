@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { getActiveProducts, getDeliveryDaysLabel } from "@/lib/products";
 import { ProductBuyBox } from "@/components/ProductBuyBox";
 import { ImageSlot } from "@/components/ImageSlot";
+import { IngredientList } from "@/components/IngredientList";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumbNode, graph, ids, productNode, webPageNode } from "@/lib/seo/schema";
@@ -77,6 +78,14 @@ export default async function ProductPage({ params }: Props) {
   const cardData = allProducts.find((p) => p.id === product.id);
   if (!cardData) notFound();
   const knowledge = knowledgeFor(product.slug);
+  // Styckvara som innehåller sortimentet (prova-på-paketet): visa varje
+  // ingående sorts förteckning i stället för en hänvisning.
+  const bundleParts =
+    product.unit === "paket"
+      ? (await prisma.product.findMany({ where: { active: true, unit: "kg" }, orderBy: { sortOrder: "asc" } })).filter(
+          (p) => p.ingredients
+        )
+      : [];
   const related = allProducts.filter((p) => p.id !== product.id);
 
   const path = `/kakor/${product.slug}`;
@@ -105,7 +114,7 @@ export default async function ProductPage({ params }: Props) {
     <>
       <JsonLd data={pageGraph} />
       <Breadcrumbs crumbs={crumbs} />
-      <div className="container-medium has-sticky-buy" style={{ padding: "24px 24px 64px" }}>
+      <div className="container-medium has-sticky-buy" style={{ paddingTop: 24, paddingBottom: 64 }}>
         <div className="two-col" style={{ display: "grid", gap: 40, alignItems: "start" }}>
           <div className="card-media" style={{ minHeight: 340, borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-md)" }}>
             <ImageSlot label={`${product.name} — närbild`} src={product.imageRef || undefined} priority />
@@ -135,10 +144,23 @@ export default async function ProductPage({ params }: Props) {
             marginTop: 48,
           }}
         >
-          {product.ingredients && (
+          {(product.ingredients || bundleParts.length > 0) && (
             <section className="card" style={{ padding: "22px 24px" }}>
               <h2 style={{ fontSize: 19, marginBottom: 10 }}>Ingredienser</h2>
-              <p style={{ margin: 0, fontSize: "14.5px", lineHeight: 1.65 }}>{product.ingredients}</p>
+              {bundleParts.length > 0 ? (
+                // Paket: fullständig förteckning per ingående sort (obligatorisk
+                // information före köp vid distansförsäljning, 1169/2011 art. 14).
+                <div style={{ display: "grid", gap: 10 }}>
+                  {bundleParts.map((part) => (
+                    <div key={part.id}>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>{part.name}</div>
+                      <IngredientList ingredients={part.ingredients} style={{ fontSize: 13.5 }} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <IngredientList ingredients={product.ingredients} />
+              )}
             </section>
           )}
           <section className="card" style={{ padding: "22px 24px" }}>

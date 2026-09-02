@@ -17,9 +17,13 @@ const M = 50; // marginal
 const W = 595.28; // A4 pt
 const CONTENT_W = W - M * 2;
 
-function svDate(iso: string): string {
-  return iso; // ISO-datum (ÅÅÅÅ-MM-DD) är standard på svenska fakturor
+// pdfkit ritar med WinAnsi-Helvetica: Intl:s minustecken (U+2212) och smala
+// mellanslag (U+202F) finns inte där och blir " — använd ASCII-minus och
+// vanligt mellanslag i PDF:en.
+function pdfMoney(ore: number): string {
+  return formatOre(ore).replace(/\u2212/g, "-").replace(/[\u202f\u00a0]/g, " ");
 }
+
 
 // Kreditfaktura = samma dokument med negerade belopp och referens till originalet.
 const isCredit = (snapshot: InvoiceSnapshot) => !!snapshot.creditsInvoiceNumber;
@@ -76,17 +80,18 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
 
     const rows: [string, string][] = credit
       ? [
-          ["Kreditdatum", svDate(snapshot.invoiceDate)],
+          ["Kreditdatum", (snapshot.invoiceDate)],
           ["Krediterar faktura", snapshot.creditsInvoiceNumber ?? ""],
           ["Ordernummer", snapshot.orderNumber],
-          ["Leveransdatum", svDate(snapshot.deliveryDate)],
+          ["Avser leverans", (snapshot.deliveryDate)],
         ]
       : [
-          ["Fakturadatum", svDate(snapshot.invoiceDate)],
-          ["Förfallodatum", svDate(snapshot.dueDate)],
-          ["Betalningsvillkor", `${snapshot.paymentTermsDays} dagar`],
+          ["Fakturadatum", (snapshot.invoiceDate)],
+          ["Förfallodatum", (snapshot.dueDate)],
+          ["Betalningsvillkor", `${snapshot.paymentTermsDays} dagar netto`],
           ["Ordernummer", snapshot.orderNumber],
-          ["Leveransdatum", svDate(snapshot.deliveryDate)],
+          // Fakturan utfärdas vid beställning — leveransen ligger framåt i tiden.
+          ["Planerad leverans", (snapshot.deliveryDate)],
         ];
     let ry = y;
     for (const [label, value] of rows) {
@@ -106,7 +111,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
       const headY = y + 7;
       doc.text("PRODUKT", cols.name + 8, headY);
       doc.text("ANTAL", cols.kg, headY, { width: 70, align: "right" });
-      doc.text("Á-PRIS", cols.price, headY, { width: 75, align: "right" });
+      doc.text("À-PRIS", cols.price, headY, { width: 75, align: "right" });
       doc.text("MOMS", cols.vat, headY, { width: 40, align: "right" });
       doc.text("BELOPP", cols.total, headY, { width: W - M - cols.total - 8, align: "right" });
       y += 22;
@@ -125,9 +130,9 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
       doc.font("Helvetica-Bold").text(line.productName, cols.name + 8, rowY, { width: 200, height: 14, ellipsis: true, lineBreak: false });
       doc.font("Helvetica");
       doc.text(qtyLabel(line.weightKg, line.unit ?? "kg"), cols.kg, rowY, { width: 70, align: "right", lineBreak: false });
-      doc.text(formatOre(signed(snapshot, line.unitPricePerKgOre)), cols.price, rowY, { width: 75, align: "right", lineBreak: false });
+      doc.text(pdfMoney(signed(snapshot, line.unitPricePerKgOre)), cols.price, rowY, { width: 75, align: "right", lineBreak: false });
       doc.text(`${String(line.vatRateBp / 100).replace(".", ",")} %`, cols.vat, rowY, { width: 40, align: "right", lineBreak: false });
-      doc.text(formatOre(signed(snapshot, line.lineTotalOre)), cols.total, rowY, {
+      doc.text(pdfMoney(signed(snapshot, line.lineTotalOre)), cols.total, rowY, {
         width: W - M - cols.total - 8,
         align: "right",
         lineBreak: false,
@@ -145,17 +150,36 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
     y += 12;
     const sumX = M + 300;
     const sumW = W - M - sumX;
-    const sums: [string, string, boolean][] = [
-      ["Netto", formatOre(signed(snapshot, snapshot.subtotalOre)), false],
-      ["Moms", formatOre(signed(snapshot, snapshot.vatOre)), false],
-      [credit ? "Krediterat belopp" : "Att betala", formatOre(signed(snapshot, snapshot.totalOre)) + ` ${snapshot.currency}`, true],
-    ];
+    // Beskattningsunderlag och moms per momssats (ML 17 kap. 24 §) — en rad
+    // per sats om raderna har olika satser, annars som förut.
+    const byRate = new Map<number, { net: number; vat: number }>();
+    for (const line of snapshot.lines) {
+      const g = byRate.get(line.vatRateBp) ?? { net: 0, vat: 0 };
+      g.net += line.lineTotalOre;
+      g.vat += Math.round((line.lineTotalOre * line.vatRateBp) / 10000);
+      byRate.set(line.vatRateBp, g);
+    }
+    const rateLabel = (bp: number) => `${String(bp / 100).replace(".", ",")} %`;
+    const sums: [string, string, boolean][] =
+      byRate.size > 1
+        ? [
+            ...[...byRate.entries()].flatMap(([bp, g]): [string, string, boolean][] => [
+              [`Netto ${rateLabel(bp)}`, pdfMoney(signed(snapshot, g.net)), false],
+              [`Moms ${rateLabel(bp)}`, pdfMoney(signed(snapshot, g.vat)), false],
+            ]),
+            [credit ? "Krediterat belopp" : "Att betala", pdfMoney(signed(snapshot, snapshot.totalOre)), true],
+          ]
+        : [
+            ["Netto", pdfMoney(signed(snapshot, snapshot.subtotalOre)), false],
+            [`Moms ${rateLabel(snapshot.lines[0]?.vatRateBp ?? 1200)}`, pdfMoney(signed(snapshot, snapshot.vatOre)), false],
+            [credit ? "Krediterat belopp" : "Att betala", pdfMoney(signed(snapshot, snapshot.totalOre)), true],
+          ];
     for (const [label, value, bold] of sums) {
       doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(bold ? 12 : 10).fillColor(BROWN);
       doc.text(label, sumX, y, { width: 100 });
       doc.text(value, sumX + 100, y, { width: sumW - 100, align: "right" });
       y += bold ? 20 : 16;
-      if (label === "Moms") {
+      if (label.startsWith("Moms") && [...byRate.keys()].pop() !== undefined && label === `Moms ${rateLabel([...byRate.keys()].pop()!)}`) {
         doc.moveTo(sumX, y - 4).lineTo(W - M, y - 4).lineWidth(1).stroke(BROWN);
         y += 4;
       }
@@ -169,7 +193,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
     if (credit) {
       doc.text(`Denna kreditfaktura krediterar faktura ${snapshot.creditsInvoiceNumber} i sin helhet.`, M + 12, y + 24);
       doc.text("Fakturan ska inte betalas. Är den redan betald återbetalas beloppet.", M + 12, y + 38);
-      doc.text(`Kreditdatum: ${svDate(snapshot.invoiceDate)}`, M + 12, y + 52);
+      doc.text(`Kreditdatum: ${(snapshot.invoiceDate)}`, M + 12, y + 52);
     } else {
       // Platshållare ("[EJ VERIFIERAT …]") får aldrig hamna på en kundfaktura —
       // saknas verifierat bankgiro skrivs en neutral rad tills värdet är satt.
@@ -185,7 +209,12 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
         M + 12,
         y + 38
       );
-      doc.text(`Förfallodatum: ${svDate(snapshot.dueDate)}`, M + 12, y + 52);
+      doc.text(
+        `Förfallodatum: ${(snapshot.dueDate)}. Efter förfallodagen debiteras dröjsmålsränta enligt räntelagen.`,
+        M + 12,
+        y + 52,
+        { width: CONTENT_W - 24, lineBreak: false }
+      );
     }
 
     // --- Sidfot på varje sida ---

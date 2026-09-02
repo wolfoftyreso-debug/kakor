@@ -1,11 +1,13 @@
 "use client";
 
 // Bildyta. Om en riktig bild (t.ex. produktens bildreferens i /public) finns
-// visas den; annars — eller om filen saknas — en varsam platshållare i
-// varumärkets färger tills foton enligt designpaketets shot list levereras.
+// visas den via next/image (responsiva storlekar, WebP/AVIF, lazy) — annars,
+// eller om filen saknas, en varsam platshållare i varumärkets färger tills
+// foton enligt designpaketets shot list levereras.
 // Inga AI-genererade eller lånade foton används.
 
-import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { useState } from "react";
 
 export function ImageSlot({
   label,
@@ -13,6 +15,7 @@ export function ImageSlot({
   circle = false,
   priority = false,
   decorative = false,
+  sizes = "(max-width: 860px) 100vw, 50vw",
 }: {
   /** Beskrivning för skärmläsare/alt-text, t.ex. "Kolasnittar — närbild". */
   label: string;
@@ -23,38 +26,26 @@ export function ImageSlot({
   priority?: boolean;
   /** Bilden upprepar synlig text (t.ex. råvaruruta med namn under) — tom alt för skärmläsare. */
   decorative?: boolean;
+  /** Hint till bildoptimeringen om hur bred bilden visas (CSS-bredd). */
+  sizes?: string;
 }) {
   const [broken, setBroken] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  // Bilden kan fela INNAN React hydrerat (SSR) — då missas onError.
-  // Kontrollera därför även efter mount om bilden faktiskt laddades.
-  useEffect(() => {
-    const img = imgRef.current;
-    if (img && img.complete && img.naturalWidth === 0) setBroken(true);
-  }, [src]);
-
   const showImage = !!src && !broken;
 
   if (showImage) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        ref={imgRef}
-        src={src}
-        alt={decorative ? "" : label}
-        loading={priority ? "eager" : "lazy"}
-        decoding="async"
-        fetchPriority={priority ? "high" : undefined}
-        onError={() => setBroken(true)}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          display: "block",
-          borderRadius: circle ? "50%" : undefined,
-        }}
-      />
+      // fill kräver en positionerad förälder — wrappern fyller containern.
+      <span style={{ position: "relative", display: "block", width: "100%", height: "100%" }}>
+        <Image
+          src={src}
+          alt={decorative ? "" : label}
+          fill
+          sizes={sizes}
+          priority={priority}
+          onError={() => setBroken(true)}
+          style={{ objectFit: "cover", borderRadius: circle ? "50%" : undefined }}
+        />
+      </span>
     );
   }
 

@@ -9,6 +9,7 @@ import {
   markOrderPaid,
   resendInvoiceEmail,
   resendOrderEmails,
+  issueCreditNoteForOrder,
   type ActionResult,
 } from "@/app/admin/actions";
 
@@ -27,11 +28,14 @@ export function OrderActions({
   status,
   paymentStatus,
   deliveryStatus,
+  needsCreditNote = false,
 }: {
   orderId: string;
   status: string;
   paymentStatus: string;
   deliveryStatus: string;
+  /** Avbruten order med faktura men utan kreditfaktura (t.ex. efter ett avbrutet anrop). */
+  needsCreditNote?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [payNote, setPayNote] = useState("");
@@ -144,6 +148,18 @@ export function OrderActions({
             Spara notering
           </button>
         </div>
+
+        {needsCreditNote && (
+          <div className="card" style={{ padding: 18, borderColor: "var(--red)" }}>
+            <div style={{ fontWeight: 700, marginBottom: 10, color: "var(--red)" }}>Kreditfaktura saknas</div>
+            <p style={{ fontSize: 13, color: "var(--text-2)", margin: "0 0 10px" }}>
+              Ordern är avbruten men fakturan är inte krediterad. Utfärda kreditfakturan så att serien stämmer.
+            </p>
+            <button className="btn btn-primary btn-block" disabled={pending} onClick={() => run(() => issueCreditNoteForOrder(orderId))}>
+              Utfärda kreditfaktura
+            </button>
+          </div>
+        )}
 
         {status === "NEW" && (
           <div className="card" style={{ padding: 18 }}>

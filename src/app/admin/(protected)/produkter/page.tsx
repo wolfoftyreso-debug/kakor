@@ -61,7 +61,7 @@ export default async function ProductsPage() {
                   </span>
                 </td>
                 <td>
-                  <ProductActiveToggle productId={p.id} active={p.active} />
+                  <ProductActiveToggle productId={p.id} active={p.active} name={p.name} />
                 </td>
               </tr>
             ))}

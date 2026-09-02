@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { calculateTotals } from "@/lib/money";
 import { nextNumber } from "@/lib/numbering";
-import { invoiceConfig } from "@/lib/config";
+import { invoiceConfig, isVerifiedValue } from "@/lib/config";
 import { addDays, fromISODate, isValidDeliveryDate, toISODate, todayInStockholm } from "@/lib/dates";
 import { safeWeekdays } from "@/lib/products";
 import type { InvoiceSnapshot } from "@/lib/invoice/snapshot";
@@ -24,29 +24,57 @@ export class OrderError extends Error {
 // Missbruksspärrar som håller över serverless-instanser: en publik endpoint
 // som utfärdar löpnumrerade fakturor och mejlar dem får inte kunna användas
 // som spam-/nätfiskerelä. Riktiga kunder når aldrig taken.
+// Nycklarna är det som är unikt per BESTÄLLARE (kontakt-e-post) — inte den
+// delade fakturainkorgen — och org.nr-taket är högt nog för koncerner med
+// många beställande enheter. Avbrutna ordrar räknas inte (en omlagd order ska
+// inte bränna kvoten). Taken kan höjas via env utan kodändring.
 const ABUSE_WINDOW_MS = 24 * 3600_000;
-export const ABUSE_LIMITS = { perEmail: 5, perOrgNumber: 10 } as const;
+const envInt = (name: string, fallback: number) => {
+  const n = parseInt(process.env[name] ?? "", 10);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+};
+export const ABUSE_LIMITS = {
+  perEmail: envInt("ABUSE_LIMIT_PER_EMAIL", 10),
+  perOrgNumber: envInt("ABUSE_LIMIT_PER_ORG", 30),
+} as const;
 
 export async function assertNotAbusive(input: { email: string; invoiceEmail: string; orgNumber: string }) {
   const since = new Date(Date.now() - ABUSE_WINDOW_MS);
-  const emails = [...new Set([input.email.toLowerCase(), input.invoiceEmail.toLowerCase()])];
   const [byEmail, byOrg] = await Promise.all([
     prisma.order.count({
-      where: {
-        createdAt: { gte: since },
-        subscriptionId: null,
-        OR: [{ email: { in: emails } }, { invoiceEmail: { in: emails } }],
-      },
+      where: { createdAt: { gte: since }, subscriptionId: null, status: { not: "CANCELLED" }, email: input.email.toLowerCase() },
     }),
     prisma.order.count({
-      where: { createdAt: { gte: since }, subscriptionId: null, orgNumber: input.orgNumber },
+      where: { createdAt: { gte: since }, subscriptionId: null, status: { not: "CANCELLED" }, orgNumber: input.orgNumber },
     }),
   ]);
   if (byEmail >= ABUSE_LIMITS.perEmail || byOrg >= ABUSE_LIMITS.perOrgNumber) {
+    // Synligt för verksamheten: en riktig kund som stoppas ska gå att upptäcka i loggarna.
+    console.warn(
+      `[missbruksspärr] order avvisad: e-post ${byEmail}/${ABUSE_LIMITS.perEmail}, org.nr ${input.orgNumber} ${byOrg}/${ABUSE_LIMITS.perOrgNumber}`
+    );
     throw new OrderError(
-      "Ni har redan lagt flera beställningar det senaste dygnet — svara på er senaste orderbekräftelse om ni vill lägga till mer.",
+      "Vi har redan tagit emot ovanligt många beställningar från er det senaste dygnet. Svara på er senaste orderbekräftelse så lägger vi till det ni behöver.",
       undefined,
       "TOO_MANY"
+    );
+  }
+}
+
+/**
+ * En momsfaktura utan säljarens momsregistreringsnummer och betalningsväg är
+ * inte ett giltigt kunddokument (ML 17 kap. 24 §). I produktion stängs
+ * beställningen därför tills uppgifterna är verifierade i miljön — i stället
+ * för att löpnummer förbrukas på fakturor som ingen kan betala.
+ */
+export function assertInvoicingConfigured() {
+  if (process.env.VERCEL_ENV !== "production") return;
+  if (!isVerifiedValue(invoiceConfig.bankgiro) || !isVerifiedValue(invoiceConfig.vatNumber)) {
+    console.error("[faktura] beställning stoppad: INVOICE_BANKGIRO/INVOICE_VAT_NUMBER är inte verifierade i miljön");
+    throw new OrderError(
+      "Beställningar är tillfälligt stängda medan vi slutför fakturainställningarna. Försök igen senare.",
+      undefined,
+      "INVOICING_NOT_CONFIGURED"
     );
   }
 }
@@ -103,6 +131,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
     }
   }
 
+  assertInvoicingConfigured();
   if (!options.subscription) await assertNotAbusive(input);
 
   const area = await prisma.deliveryArea.findUnique({ where: { slug: input.areaSlug } });

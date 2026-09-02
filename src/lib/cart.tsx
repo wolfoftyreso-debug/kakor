@@ -116,6 +116,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== STORAGE_KEY) return;
       try {
+        lastWritten.current = e.newValue;
         const parsed = e.newValue ? (JSON.parse(e.newValue) as { lines?: unknown; purchaseMode?: unknown; recurrenceInterval?: unknown }) : {};
         setLines(sanitizeLines(parsed.lines));
         setPurchaseModeState(parsed.purchaseMode === "RECURRING" ? "RECURRING" : "ONE_TIME");
@@ -129,13 +130,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  const lastWritten = useRef<string | null>(null);
   useEffect(() => {
     if (!hydrated) return;
     try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ lines, purchaseMode, recurrenceInterval })
-      );
+      const serialized = JSON.stringify({ lines, purchaseMode, recurrenceInterval });
+      // Skriv bara när något ändrats — annars triggar varje flikstart ett
+      // storage-event (och en re-render) i alla andra flikar.
+      if (serialized === lastWritten.current) return;
+      lastWritten.current = serialized;
+      localStorage.setItem(STORAGE_KEY, serialized);
     } catch {
       // t.ex. privat läge — korgen funkar ändå under sessionen
     }
@@ -156,7 +160,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             l.productId === product.productId ? { ...l, ...product, kg: Math.min(MAX_UNITS, l.kg + kg) } : l
           );
         }
-        return [...prev, { ...product, kg: Math.min(MAX_UNITS, kg) }];
+        // Explicit fältordning = samma serialisering i alla flikar (ingen ping-pong via storage-event).
+        return [
+          ...prev,
+          { productId: product.productId, slug: product.slug, name: product.name, pricePerKgOre: product.pricePerKgOre, kg: Math.min(MAX_UNITS, kg), unit: product.unit },
+        ];
       });
       showToast(`${product.name} ${qtyLabel(kg, product.unit)} lades i korgen`);
     },

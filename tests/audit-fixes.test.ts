@@ -9,6 +9,7 @@ import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { rateLimit, rateLimitMemory } from "@/lib/rate-limit";
 import type { CheckoutInput } from "@/lib/validation";
+import { orgNumber } from "./helpers";
 
 // Regressionstester för fynden i den fullständiga granskningen (säkerhet +
 // affärslogik). Riktig databas — samma motor som produktion.
@@ -24,7 +25,7 @@ function input(overrides: Partial<CheckoutInput> = {}): CheckoutInput {
     areaSlug: "tyreso",
     deliveryDate: validDate,
     companyName: "Granskningsbolaget AB",
-    orgNumber: "556100-0001",
+    orgNumber: orgNumber("556100000"),
     contactName: "Test Person",
     email: `granskning${n}@example.com`,
     phone: "070-123 45 67",
@@ -47,10 +48,10 @@ function subInput(key: string) {
     areaSlug: "nacka",
     firstDeliveryDate: toISODate(upcomingDeliveryDates({ weekdays: [4], leadTimeDays: 2 }, 1)[0]),
     companyName: "Replay AB",
-    orgNumber: "556300-2222",
+    orgNumber: orgNumber("556300222"),
     contactName: "Replay Person",
     email: `replay-${key}@example.com`,
-    phone: "",
+    phone: "070-123 45 67",
     deliveryAddress: "Replayvägen 1",
     deliveryPostalCode: "131 30",
     deliveryCity: "Nacka",
@@ -95,10 +96,10 @@ describe("validering", () => {
     if (r.success) expect(r.data.deliveryInstruction.split(nl)).toHaveLength(6);
   });
 
-  it("honeypot: ifyllt website-fält avvisas", () => {
-    expect(checkoutSchema.safeParse({ ...base(), website: "http://spam.example" }).success).toBe(false);
-    expect(subscriptionSchema.safeParse({ ...subInput("abcdefghijklmnop1234"), website: "x" }).success).toBe(false);
-    expect(checkoutSchema.safeParse({ ...base(), website: "" }).success).toBe(true);
+  it("honeypot: ifyllt sb_extra-fält avvisas", () => {
+    expect(checkoutSchema.safeParse({ ...base(), sb_extra: "http://spam.example" }).success).toBe(false);
+    expect(subscriptionSchema.safeParse({ ...subInput("abcdefghijklmnop1234"), sb_extra: "x" }).success).toBe(false);
+    expect(checkoutSchema.safeParse({ ...base(), sb_extra: "" }).success).toBe(true);
   });
 });
 
@@ -130,10 +131,10 @@ describe("ordermotor — idempotens och prisspärr", () => {
   it("missbruksspärr: fler än gränsen per e-post och dygn avvisas (TOO_MANY)", async () => {
     const email = `spam-${Date.now()}@example.com`;
     for (let i = 0; i < ABUSE_LIMITS.perEmail; i++) {
-      await createOrder(input({ email, invoiceEmail: email, orgNumber: `55620${i}-0000` }), { skipEmails: true });
+      await createOrder(input({ email, invoiceEmail: email, orgNumber: orgNumber(`55620${i}000`) }), { skipEmails: true });
     }
     await expect(
-      createOrder(input({ email, invoiceEmail: email, orgNumber: "556299-0000" }), { skipEmails: true })
+      createOrder(input({ email, invoiceEmail: email, orgNumber: orgNumber("556299000") }), { skipEmails: true })
     ).rejects.toMatchObject({ code: "TOO_MANY" });
   });
 });

@@ -51,4 +51,6 @@ export const emailConfig = {
   from: env("EMAIL_FROM", "Sockerbagaren <order@sockerbagaren.se>"),
   // Svarsadress för "svara på det här mejlet" — måste vara en bevakad låda.
   replyTo: env("EMAIL_REPLY_TO", ""),
+  // Intern avisering vid ny order (tom = ingen).
+  adminNotify: env("ADMIN_NOTIFY_EMAIL", ""),
 };

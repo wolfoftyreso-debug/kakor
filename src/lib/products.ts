@@ -1,7 +1,8 @@
+import { cache } from "react";
 import { prisma } from "@/lib/db";
 import type { ProductCardData } from "@/components/ProductCard";
 
-export async function getActiveProducts(): Promise<ProductCardData[]> {
+export const getActiveProducts = cache(async function getActiveProducts(): Promise<ProductCardData[]> {
   const products = await prisma.product.findMany({
     where: { active: true },
     orderBy: { sortOrder: "asc" },
@@ -20,7 +21,7 @@ export async function getActiveProducts(): Promise<ProductCardData[]> {
     badge: p.badge,
     vatRateBp: p.vatRateBp,
   }));
-}
+});
 
 function safeWeights(json: string): number[] {
   try {
@@ -45,7 +46,7 @@ export interface AreaWithDates {
 
 import { toISODate, upcomingDeliveryDates, weekdayName } from "@/lib/dates";
 
-export async function getAreasWithDates(dateCount = 4): Promise<AreaWithDates[]> {
+export const getAreasWithDates = cache(async function getAreasWithDates(dateCount = 4): Promise<AreaWithDates[]> {
   const areas = await prisma.deliveryArea.findMany({
     where: { active: true },
     orderBy: { sortOrder: "asc" },
@@ -62,7 +63,7 @@ export async function getAreasWithDates(dateCount = 4): Promise<AreaWithDates[]>
       ),
     };
   });
-}
+});
 
 export function safeWeekdays(json: string): number[] {
   try {
@@ -83,7 +84,8 @@ export function safeWeekdays(json: string): number[] {
  * inget område har dagar konfigurerade. Leveransdagar är data, aldrig
  * hårdkodad text.
  */
-export async function getDeliveryDaysLabel(): Promise<string> {
+// React.cache: samma request anropar detta från hero, footer och sida — en DB-fråga, inte tre.
+export const getDeliveryDaysLabel = cache(async function getDeliveryDaysLabel(): Promise<string> {
   // Footern ligger på varje sida — ett databasfel här får aldrig fälla sidan.
   let areas: { weekdaysJson: string }[] = [];
   try {
@@ -96,4 +98,4 @@ export async function getDeliveryDaysLabel(): Promise<string> {
   if (plural.length === 0) return "";
   if (plural.length === 1) return plural[0];
   return `${plural.slice(0, -1).join(", ")} och ${plural[plural.length - 1]}`;
-}
+});

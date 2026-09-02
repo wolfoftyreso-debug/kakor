@@ -8,6 +8,7 @@ export interface ProductFormValues {
   slug: string;
   description: string;
   priceKr: string;
+  vatRateBp: number;
   unit: string; // "kg" | "paket"
   packageWeightGrams: number;
   weightOptions: string;
@@ -46,6 +47,14 @@ export function ProductForm({
       <label className="field">
         Pris per enhet (kr)
         <input name="priceKr" type="number" step="0.01" min="0" defaultValue={initial.priceKr} required />
+      </label>
+      <label className="field">
+        Momssats
+        <select name="vatRateBp" defaultValue={String(initial.vatRateBp)}>
+          <option value="1200">12 % (livsmedel)</option>
+          <option value="600">6 %</option>
+          <option value="2500">25 %</option>
+        </select>
       </label>
       <label className="field">
         Säljs per

@@ -4,11 +4,12 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 
-// __Host-prefix i produktion: cookien kan då bara sättas över HTTPS, från
-// samma värd och utan Domain-attribut (skydd mot cookie tossing från
-// underdomäner). Lokalt (http) accepterar webbläsare inte prefixet.
-const SESSION_COOKIE =
-  process.env.NODE_ENV === "production" ? "__Host-sb_admin_session" : "sb_admin_session";
+// __Host-prefix + Secure när sajten faktiskt serveras över HTTPS (Vercel,
+// eller SITE_URL med https). Signalen är trafiken — inte NODE_ENV: `next start`
+// lokalt över http skulle annars sätta en Secure-cookie som bara Chromium/
+// Firefox accepterar på localhost (Safari gör det inte → inloggningsloop).
+const SERVES_HTTPS = !!process.env.VERCEL || (process.env.SITE_URL ?? "").startsWith("https://");
+const SESSION_COOKIE = SERVES_HTTPS ? "__Host-sb_admin_session" : "sb_admin_session";
 const SESSION_TTL_HOURS = 12;
 
 function hashToken(token: string): string {
@@ -36,7 +37,7 @@ export async function loginAdmin(email: string, password: string): Promise<boole
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: SERVES_HTTPS,
     path: "/",
     expires: expiresAt,
   });

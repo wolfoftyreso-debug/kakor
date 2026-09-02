@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db";
 import { emailConfig } from "@/lib/config";
 
@@ -35,8 +36,10 @@ class LogProvider implements EmailProvider {
 class ResendProvider implements EmailProvider {
   readonly name = "resend";
   async send(msg: EmailMessage): Promise<void> {
+    // Timeout: ett hängande Resend-anrop får aldrig blockera kundens checkout-svar.
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
+      signal: AbortSignal.timeout(10_000),
       headers: {
         Authorization: `Bearer ${emailConfig.resendApiKey}`,
         "Content-Type": "application/json",
@@ -85,8 +88,9 @@ export async function sendEmail(msg: EmailMessage): Promise<boolean> {
     await provider.send(msg);
   } catch (e) {
     status = "FAILED";
-    error = e instanceof Error ? e.message : String(e);
+    error = e instanceof Error ? e.message.slice(0, 300) : String(e).slice(0, 300);
     console.error(`E-post misslyckades (${msg.type} till ${maskEmail(msg.to)}):`, error);
+    Sentry.captureException(e, { tags: { flow: "email", type: msg.type } });
   }
   try {
     await prisma.emailLog.create({
@@ -104,4 +108,12 @@ export async function sendEmail(msg: EmailMessage): Promise<boolean> {
     console.error("Kunde inte logga e-post:", logErr);
   }
   return status === "SENT";
+}
+
+/** Gallring (GDPR/lagringstid): e-postloggens mottagaradresser raderas efter 90 dagar. */
+export const EMAIL_LOG_RETENTION_DAYS = 90;
+export async function pruneEmailLogs(): Promise<number> {
+  const cutoff = new Date(Date.now() - EMAIL_LOG_RETENTION_DAYS * 86400_000);
+  const res = await prisma.emailLog.deleteMany({ where: { createdAt: { lt: cutoff } } });
+  return res.count;
 }

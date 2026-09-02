@@ -217,3 +217,26 @@ automatiskt — det beslutet är verksamhetens.)
   är medvetet bortvald i denna skala).
 - E-postutskick sker efter commit utan kö — vid providerfel finns ordern
   kvar och admin kan skicka om ("Skicka faktura igen").
+
+
+## Launch-checklista (i ordning)
+
+1. **Neon**: projekt i EU-region, `DATABASE_URL` (poolad) och `DIRECT_DATABASE_URL`
+   (direkt) i Vercel → Production. Skapa en återställningspunkt före första migrationen.
+2. **Migrationer**: körs automatiskt av `scripts/vercel-build.mjs` i Production
+   (kräver `DIRECT_DATABASE_URL` i build-miljön). Preview migrerar aldrig.
+3. **Seed + admin**: `DATABASE_URL=<prod> I_KNOW_THIS_IS_PROD=1 ADMIN_EMAIL=… ADMIN_PASSWORD=… npm run admin:create`
+   (minst 12 tecken, aldrig exempelvärden). Sätt etiketten "Bästsäljare" och
+   kontrollera priser/momssats i admin → Produkter.
+4. **Fakturauppgifter**: `INVOICE_BANKGIRO`, `INVOICE_VAT_NUMBER`, `INVOICE_EMAIL`,
+   `INVOICE_F_SKATT` med verifierade värden. Utan verifierat bankgiro/momsnr
+   stänger ordermotorn beställningar i produktion (503).
+5. **E-post**: Resend-domän verifierad (SPF/DKIM), `EMAIL_PROVIDER=resend`,
+   `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` (bevakad låda — obligatorisk),
+   `ADMIN_NOTIFY_EMAIL` (intern avisering vid ny order).
+6. **Cron**: `CRON_SECRET` satt; verifiera första körningen i Vercel → Cron Jobs.
+7. **Sajt**: `SITE_URL=https://sockerbagaren.se`, `NEXT_PUBLIC_GA4_ID` (kräver
+   samtyckesbanner om aktiverad), `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`.
+8. **Smoke**: `SMOKE_EMAIL=<egen låda> npm run smoke -- https://<deploy> --order`,
+   avbryt testordern i admin (kreditfaktura utfärdas).
+9. **Domän SIST**: apex + www i Vercel (www → apex-redirect finns i next.config).

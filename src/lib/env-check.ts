@@ -22,6 +22,16 @@ export function checkEnv(): EnvReport {
     if ((process.env.EMAIL_PROVIDER ?? "log") === "log") {
       warnings.push("EMAIL_PROVIDER=log i produktion — inga riktiga mejl skickas.");
     }
+    if (process.env.EMAIL_PROVIDER === "resend" && !process.env.RESEND_API_KEY) {
+      missing.push("RESEND_API_KEY (EMAIL_PROVIDER=resend utan nyckel — faller tyst till loggning)");
+    }
+    if (!process.env.EMAIL_REPLY_TO) {
+      // Hela supportvägen är "svara på mejlet" — utan bevakad svarsadress går svaren i tomma intet.
+      missing.push("EMAIL_REPLY_TO (kunder uppmanas svara på mejlen — adressen måste vara en bevakad låda)");
+    }
+    if (!process.env.ADMIN_NOTIFY_EMAIL) {
+      warnings.push("ADMIN_NOTIFY_EMAIL saknas — ingen intern avisering vid nya ordrar.");
+    }
     if (!process.env.CRON_SECRET) {
       warnings.push("CRON_SECRET saknas — prenumerations-cron är avstängd.");
     }

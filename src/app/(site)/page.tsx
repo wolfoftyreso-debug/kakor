@@ -49,7 +49,7 @@ const INGREDIENTS: { name: string; src?: string }[] = [
 const FAQS = [
   {
     q: "Hur betalar vi?",
-    a: "All betalning sker mot faktura. Ni skickar beställningen, vi levererar och fakturan kommer till er faktura-e-post.",
+    a: "All betalning sker mot faktura. Fakturan skapas när ni skickar beställningen och mejlas direkt till er faktura-e-post, med 30 dagars betalningsvillkor.",
   },
   {
     q: "Vart levererar ni?",

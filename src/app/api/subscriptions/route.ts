@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { subscriptionSchema, fieldErrors } from "@/lib/validation";
 import { createSubscription } from "@/lib/subscriptions/service";
 import { prisma } from "@/lib/db";
@@ -42,6 +43,9 @@ export async function POST(req: NextRequest) {
     const products = await prisma.product.findMany({
       where: { id: { in: parsed.data.items.map((i) => i.productId) }, active: true },
     });
+    if (products.length !== new Set(parsed.data.items.map((i) => i.productId)).size) {
+      throw new OrderError("En produkt i prenumerationen finns inte längre", "items");
+    }
     const totals = calculateTotals(
       parsed.data.items.map((i) => {
         const product = products.find((p) => p.id === i.productId);
@@ -92,11 +96,12 @@ Sockerbagaren`,
     if (e instanceof OrderError) {
       return NextResponse.json(
         { ok: false, error: e.message, code: e.code, fields: e.field ? { [e.field]: e.message } : undefined },
-        { status: e.code === "IDEMPOTENCY_MISMATCH" || e.code === "PRICE_CHANGED" ? 409 : e.code === "TOO_MANY" ? 429 : 400 }
+        { status: e.code === "IDEMPOTENCY_MISMATCH" || e.code === "PRICE_CHANGED" ? 409 : e.code === "TOO_MANY" ? 429 : e.code === "INVOICING_NOT_CONFIGURED" ? 503 : 400 }
       );
     }
     const ref = Math.random().toString(36).slice(2, 10).toUpperCase();
     console.error(`Prenumerationsfel [ref ${ref}]:`, describeError(e));
+    Sentry.captureException(e, { tags: { flow: "subscription", ref } });
     return NextResponse.json(
       {
         ok: false,
