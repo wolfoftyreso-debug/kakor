@@ -39,7 +39,7 @@ export function LogoSigill({ size = 44 }: { size?: number }) {
         }}
       >
         <textPath href={`#${bot}`} startOffset="50%" textAnchor="middle">
-          I GENERATIONER
+          SÖDRA STOCKHOLM
         </textPath>
       </text>
       <text
@@ -62,7 +62,7 @@ export function LogoSigill({ size = 44 }: { size?: number }) {
           fill: "#A03D2C",
         }}
       >
-        ANNO 1957
+        RECEPT 1957
       </text>
       <rect x="23" y="86.5" width="7" height="7" transform="rotate(45 26.5 90)" fill="#A03D2C" />
       <rect x="150" y="86.5" width="7" height="7" transform="rotate(45 153.5 90)" fill="#A03D2C" />
