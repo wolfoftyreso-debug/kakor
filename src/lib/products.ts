@@ -82,7 +82,13 @@ export function safeWeekdays(json: string): number[] {
  * hårdkodad text.
  */
 export async function getDeliveryDaysLabel(): Promise<string> {
-  const areas = await prisma.deliveryArea.findMany({ where: { active: true }, select: { weekdaysJson: true } });
+  // Footern ligger på varje sida — ett databasfel här får aldrig fälla sidan.
+  let areas: { weekdaysJson: string }[] = [];
+  try {
+    areas = await prisma.deliveryArea.findMany({ where: { active: true }, select: { weekdaysJson: true } });
+  } catch {
+    return "";
+  }
   const days = [...new Set(areas.flatMap((a) => safeWeekdays(a.weekdaysJson)))].sort((a, b) => a - b);
   const plural = days.map((d) => `${weekdayName(d)}ar`).filter((n) => n !== "ar");
   if (plural.length === 0) return "";
