@@ -28,7 +28,9 @@ export function checkEnv(): EnvReport {
     for (const name of ["INVOICE_BANKGIRO", "INVOICE_EMAIL", "INVOICE_VAT_NUMBER"]) {
       const v = process.env[name] ?? "";
       if (!v || v.includes("EJ VERIFIERAT")) {
-        warnings.push(`${name} är inte satt/verifierad — platshållare hamnar på fakturor.`);
+        // Blockerande i produktion: fakturor utan bankgiro/momsnr/faktura-e-post
+        // är inte giltiga kunddokument.
+        missing.push(`${name} (inte satt/verifierad — fakturor saknar uppgiften)`);
       }
     }
   }

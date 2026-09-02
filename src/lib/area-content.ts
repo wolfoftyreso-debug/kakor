@@ -75,7 +75,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       },
       {
         q: "Kan vi blanda olika kakor i samma order?",
-        a: "Ja — välj vikt per sort och blanda fritt i samma leverans.",
+        a: "Ja — välj mängd per sort och blanda fritt i samma leverans.",
       },
     ],
   },
@@ -106,7 +106,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       },
       {
         q: "Kan vi blanda olika kakor i samma order?",
-        a: "Ja — välj vikt per sort och blanda fritt i samma leverans.",
+        a: "Ja — välj mängd per sort och blanda fritt i samma leverans.",
       },
     ],
   },
@@ -137,7 +137,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       },
       {
         q: "Kan vi blanda olika kakor i samma order?",
-        a: "Ja — välj vikt per sort och blanda fritt i samma leverans.",
+        a: "Ja — välj mängd per sort och blanda fritt i samma leverans.",
       },
     ],
   },

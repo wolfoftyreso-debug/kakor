@@ -167,7 +167,7 @@ export default async function AreaPage({ params }: Props) {
         </div>
         <div style={{ marginTop: 20 }}>
           <Link href="/bestall" style={{ fontWeight: 700, fontSize: 15 }}>
-            Se vikter och beställ →
+            Se priser och beställ →
           </Link>
         </div>
       </section>

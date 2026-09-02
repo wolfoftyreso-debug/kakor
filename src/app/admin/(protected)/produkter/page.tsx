@@ -32,7 +32,7 @@ export default async function ProductsPage() {
             <tr>
               <th>Produkt</th>
               <th>Pris</th>
-              <th>Vikter</th>
+              <th>Förval</th>
               <th>Allergener</th>
               <th>Ordning</th>
               <th>Status</th>

@@ -11,7 +11,7 @@ import { graph, productListNode, productNode, webPageNode } from "@/lib/seo/sche
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Sockerbagaren — Riktigt fika till jobbet",
+  title: { absolute: "Sockerbagaren — Riktigt fika till jobbet" },
   description: siteConfig.description,
   alternates: { canonical: "/" },
   openGraph: {
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 };
 
 const STEPS = [
-  { n: "1", title: "Välj kakor", desc: "Blanda sorter och vikter som det passar er." },
+  { n: "1", title: "Välj kakor", desc: "Blanda sorter och mängder som det passar er." },
   { n: "2", title: "Välj leveransdag", desc: "Vi visar tillgängliga leveransdagar för ert område." },
   { n: "3", title: "Vi kör ut", desc: "Leverans under dagen till er bemannade adress." },
   { n: "4", title: "Ni får faktura", desc: "Ingen kortbetalning — fakturan kommer efteråt." },
@@ -54,7 +54,7 @@ const FAQS = [
     q: "När kommer leveransen?",
     a: "Vi levererar under dagen på områdets leveransdag, till bemannade företagsadresser. Se till att någon kan ta emot leveransen.",
   },
-  { q: "Kan vi blanda olika kakor?", a: "Ja — lägg flera sorter i samma order och välj vikt per sort." },
+  { q: "Kan vi blanda olika kakor?", a: "Ja — lägg flera sorter i samma order och välj mängd per sort." },
   {
     q: "Hur funkar fikaprenumerationen?",
     a: "Ni väljer kakor, mängd och intervall. Leveransen kommer på er leveransdag, och ni kan pausa eller avsluta enkelt.",

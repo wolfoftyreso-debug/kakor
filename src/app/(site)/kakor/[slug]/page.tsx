@@ -22,16 +22,21 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+function productPageTitle(product: { name: string; unit: string }): string {
+  return product.unit === "paket"
+    ? `${product.name} — beställ till företag`
+    : `${product.name} — beställ per kilo till företag`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await prisma.product.findUnique({ where: { slug } });
   if (!product || !product.active) return {};
-  const title =
-    product.unit === "paket"
-      ? `${product.name} — beställ till företag`
-      : `${product.name} — beställ per kilo till företag`;
+  const title = productPageTitle(product);
   const aka = PRODUCT_KNOWLEDGE[product.slug]?.aka;
-  const description = `${product.description}${aka ? ` (${aka})` : ""} ${formatOre(product.pricePerKgOre)}${priceSuffix(product.unit)} exkl. moms. Levereras till arbetsplatser i Tyresö, Nacka, Haninge och Huddinge — betalning mot faktura.`;
+  // Meta description ska vara kort (~155 tecken): första meningen av beskrivningen räcker.
+  const shortDescription = product.description.split(/(?<=[.!?])\s/)[0].slice(0, 110);
+  const description = `${shortDescription}${aka ? ` (${aka})` : ""} ${formatOre(product.pricePerKgOre)}${priceSuffix(product.unit)} exkl. moms. Levereras till företag i Tyresö, Nacka, Haninge och Huddinge — betalning mot faktura.`;
   return {
     title,
     description,
@@ -80,7 +85,7 @@ export default async function ProductPage({ params }: Props) {
   const pageGraph = graph(
     webPageNode({
       path,
-      title: `${product.name} — beställ per kilo till företag`,
+      title: productPageTitle(product),
       description: product.description,
       breadcrumbs: crumbs,
       mainEntityId: ids.product(product.slug),

@@ -5,12 +5,14 @@ import {
   fromISODate,
   isValidDeliveryDate,
   nextSubscriptionDate,
+  snapToDeliveryWeekday,
   toISODate,
   todayInStockholm,
   addDays,
 } from "@/lib/dates";
 import type { SubscriptionInput } from "@/lib/validation";
 import type { SubscriptionFrequency } from "@/lib/status";
+import { safeWeekdays } from "@/lib/products";
 import { createOrder, OrderError } from "@/lib/orders/create-order";
 
 // Prenumeration = återkommande order/fakturering — INTE kortdebitering.
@@ -46,7 +48,7 @@ export async function createSubscription(input: SubscriptionInput) {
 
   const firstDate = fromISODate(input.firstDeliveryDate);
   const areaConfig = {
-    weekdays: JSON.parse(area.weekdaysJson) as number[],
+    weekdays: safeWeekdays(area.weekdaysJson),
     leadTimeDays: area.leadTimeDays,
   };
   if (!isValidDeliveryDate(firstDate, areaConfig)) {
@@ -145,31 +147,47 @@ export async function generateDueSubscriptionOrders(
   const result: GenerationResult = { generated: [], skipped: [] };
 
   for (const sub of due) {
-    const period = toISODate(sub.nextDeliveryDate);
     const area = sub.deliveryArea;
     if (!area) {
       result.skipped.push({ subscriptionNumber: sub.number, reason: "Leveransområde saknas" });
       continue;
     }
+    const frequency = sub.frequency as SubscriptionFrequency;
+    const areaConfig = {
+      weekdays: safeWeekdays(area.weekdaysJson),
+      leadTimeDays: area.leadTimeDays,
+    };
 
-    // Passerat datum (t.ex. paus som släppts efter lång tid): skapa ingen
-    // bakdaterad order — flytta fram till nästa giltiga dag och fortsätt där.
-    if (sub.nextDeliveryDate.getTime() < today.getTime()) {
-      const areaConfig = {
-        weekdays: JSON.parse(area.weekdaysJson) as number[],
-        leadTimeDays: area.leadTimeDays,
-      };
-      let next = sub.nextDeliveryDate;
-      for (let i = 0; i < 60 && next.getTime() < today.getTime(); i++) {
-        next = nextSubscriptionDate(next, sub.frequency as SubscriptionFrequency, areaConfig);
-      }
-      await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: next } });
+    // 1) Passerat datum (t.ex. paus som släppts efter lång tid): skapa ingen
+    //    bakdaterad order — flytta fram enligt intervallet.
+    let deliveryDate = sub.nextDeliveryDate;
+    let moved = false;
+    for (let i = 0; i < 60 && deliveryDate.getTime() < today.getTime(); i++) {
+      deliveryDate = nextSubscriptionDate(deliveryDate, frequency, areaConfig);
+      moved = true;
+    }
+    // 2) Områdets leveransdagar kan ha ändrats sedan datumet sattes (t.ex.
+    //    tisdag+torsdag -> endast torsdag): snäpp till närmaste giltiga dag.
+    const snapped = snapToDeliveryWeekday(deliveryDate, areaConfig);
+    if (snapped.getTime() !== deliveryDate.getTime()) {
+      deliveryDate = snapped;
+      moved = true;
+    }
+    if (moved) {
+      await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: deliveryDate } });
+    }
+    // 3) Hamnar det framflyttade datumet utanför horisonten genereras det vid
+    //    en senare körning — men ligger det inom horisonten skapas ordern NU
+    //    (tidigare tappades leveransen om framflyttningen landade på "idag").
+    if (deliveryDate.getTime() > horizon.getTime()) {
       result.skipped.push({
         subscriptionNumber: sub.number,
-        reason: `Passerat datum ${period} — framflyttad till ${toISODate(next)}`,
+        reason: `Passerat datum ${toISODate(sub.nextDeliveryDate)} — framflyttad till ${toISODate(deliveryDate)}`,
       });
       continue;
     }
+    const period = toISODate(deliveryDate);
+
     const activeItems = sub.items.filter((i) => i.product.active && i.weightKg > 0);
     if (activeItems.length === 0) {
       result.skipped.push({ subscriptionNumber: sub.number, reason: "Inga aktiva produkter" });
@@ -211,24 +229,17 @@ export async function generateDueSubscriptionOrders(
         // Ordern för perioden finns redan (retry/dubbelkörning) — hoppa vidare.
         result.skipped.push({ subscriptionNumber: sub.number, reason: `Period ${period} redan genererad` });
       } else {
-        result.skipped.push({
-          subscriptionNumber: sub.number,
-          reason: e instanceof Error ? e.message : "Okänt fel",
-        });
+        const reason = e instanceof Error ? e.message : "Okänt fel";
+        result.skipped.push({ subscriptionNumber: sub.number, reason });
+        // Riktiga fel (inaktivt område, spärrat postnummer …) ska synas för
+        // verksamheten — inte bara ligga i ett cron-svar ingen läser.
+        console.error(`[prenumeration] ${sub.number} kunde inte generera order för ${period}: ${reason}`);
         continue; // flytta INTE fram datumet vid riktiga fel
       }
     }
 
     // Flytta fram nästa leveransdatum (även när perioden redan var genererad).
-    const areaConfig = {
-      weekdays: JSON.parse(area.weekdaysJson) as number[],
-      leadTimeDays: area.leadTimeDays,
-    };
-    const next = nextSubscriptionDate(
-      sub.nextDeliveryDate,
-      sub.frequency as SubscriptionFrequency,
-      areaConfig
-    );
+    const next = nextSubscriptionDate(deliveryDate, frequency, areaConfig);
     await prisma.subscription.update({
       where: { id: sub.id },
       data: { nextDeliveryDate: next },

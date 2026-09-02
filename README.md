@@ -199,7 +199,12 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
 `[EJ VERIFIERAT]` tills verksamheten bekräftat — **inget av det är påhittat**:
 
 - Faktura-e-post, telefonnummer
-- Bankgironummer och momsregistreringsnummer (visas på fakturan)
+- Bankgironummer och momsregistreringsnummer (visas på fakturan).
+  **Skydd:** fakturans PDF skriver aldrig ut `[EJ VERIFIERAT]`-platshållare
+  (bankgiro-raden blir "Betalningsuppgifter meddelas separat", overifierad
+  e-post/telefon/momsnr utelämnas), och i produktion (`VERCEL_ENV=production`)
+  rapporterar `checkEnv()` saknade `INVOICE_BANKGIRO`/`INVOICE_VAT_NUMBER`/
+  `INVOICE_EMAIL` som KRITISKA vid uppstart — sätt dem innan första riktiga ordern.
 - **Slutliga priser** — seedade 295 kr/kg är ett startvärde som ska bekräftas
   eller ändras i admin → Produkter (historiska ordrar påverkas inte)
 - Leveransdagar: endast TORSDAG just nu (verksamhetens uppgift aug 2026,

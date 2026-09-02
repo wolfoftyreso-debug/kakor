@@ -18,10 +18,21 @@ export function SubscriptionActions({
 }) {
   const [pending, startTransition] = useTransition();
   const [date, setDate] = useState(nextDeliveryDate);
-  const run = (fn: () => Promise<unknown>) => startTransition(async () => void (await fn()));
+  const [error, setError] = useState<string | null>(null);
+  const run = (fn: () => Promise<{ error: string } | null | void>) =>
+    startTransition(async () => {
+      setError(null);
+      const res = await fn();
+      if (res && typeof res === "object" && "error" in res && res.error) setError(res.error);
+    });
 
   return (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+      {error && (
+        <span role="alert" className="error-text" style={{ flexBasis: "100%" }}>
+          {error}
+        </span>
+      )}
       {status === "ACTIVE" && (
         <button className="btn btn-outline" style={{ padding: "8px 14px", fontSize: 13 }} disabled={pending} onClick={() => run(() => setSubscriptionStatus(id, "PAUSED"))}>
           Pausa

@@ -53,9 +53,11 @@ export default function IntegritetPage() {
         <section>
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Cookies</h2>
           <p style={{ margin: 0 }}>
-            Webbplatsen använder inga spårnings- eller marknadsföringscookies. Varukorgen lagras i
-            webbläsarens lokala lagring, och en sessionskaka används enbart för administratörens
-            inloggning.
+            {process.env.NEXT_PUBLIC_GA4_ID
+              ? "Webbplatsen använder Google Analytics 4 för anonymiserad besöksstatistik (IP-adresser anonymiseras, inga annonscookies). "
+              : "Webbplatsen använder inga spårnings- eller marknadsföringscookies. "}
+            Varukorgen lagras i webbläsarens lokala lagring, och en sessionskaka används enbart för
+            administratörens inloggning.
           </p>
         </section>
         <section>
