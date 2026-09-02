@@ -15,8 +15,11 @@ export async function register() {
   // den byggda demodatabasen till /tmp så serverless-funktionerna kan skriva.
   // /tmp är per instans och nollställs vid kallstart — flyktig demodata.
   if (process.env.VERCEL && !process.env.DATABASE_URL) {
-    const fs = await import("node:fs");
-    const path = await import("node:path");
+    // webpackIgnore: middlewaren gör att Next även kompilerar instrumentation
+    // för edge-runtime, där "node:"-moduler inte kan bundlas. Importen körs
+    // ändå bara i Node (guarden ovan) — låt runtime lösa den.
+    const fs = await import(/* webpackIgnore: true */ "node:fs");
+    const path = await import(/* webpackIgnore: true */ "node:path");
     const target = "/tmp/sockerbagaren-demo.db";
     if (!fs.existsSync(target)) {
       const source = path.join(process.cwd(), "prisma", "demo.db");
