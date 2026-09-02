@@ -5,6 +5,11 @@ import { JsonLd } from "@/components/JsonLd";
 import { graph, organizationNode, websiteNode } from "@/lib/seo/schema";
 import { AnalyticsScript } from "@/components/AnalyticsScript";
 
+// Footern hämtar leveransdagar från databasen — layouten renderas per
+// request så att texten alltid är aktuell (och aldrig förrenderas mot en
+// byggmiljö utan databas).
+export const dynamic = "force-dynamic";
+
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <CartProvider>
