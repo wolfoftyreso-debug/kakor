@@ -13,7 +13,7 @@ const products = [
       "Mör, mandeldoftande och rejäl — en tät svensk klassiker med gyllene, lätt knaprig yta och mjuk, smörig kärna. Generös med mandeln och med en rund sötma som gör sig perfekt till kaffet.",
     pricePerKgOre: 29500,
     ingredients:
-      "Vetemjöl, smör, socker, mandel, ägg från frigående höns, bakpulver, keltiskt salt.",
+      "Vetemjöl, smör, socker, mandel, ägg, bakpulver, keltiskt salt.",
     allergens: "Innehåller vete, mandel, ägg, smör (mjölk).",
     imageRef: "/images/mandelkubb.jpg",
     sortOrder: 1,
@@ -22,7 +22,7 @@ const products = [
     slug: "kolasnittar",
     name: "Kolasnittar",
     description:
-      "Vår överlägsna bästsäljare — nötig, med toner av brynt smör och knäck och en vuxen sälta. Härligt frasig klassisk småkaka med seg kärna och lätt smörfriterad botten.",
+      "Vår bästsäljare — nötig, med toner av brynt smör och knäck och en vuxen sälta. Härligt frasig klassisk småkaka med seg kärna och lätt smörfriterad botten.",
     pricePerKgOre: 29500,
     ingredients: "Vetemjöl, smör, socker, ljus sirap, vaniljsocker, bikarbonat, keltiskt salt.",
     allergens: "Innehåller vete, smör (mjölk).",
