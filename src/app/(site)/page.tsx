@@ -1,3 +1,4 @@
+import { invoiceConfig } from "@/lib/config";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
@@ -33,8 +34,8 @@ export const metadata: Metadata = {
 const STEPS = [
   { title: "Välj kakor", text: "Blanda sorter och mängder som det passar er." },
   { title: "Välj leveransdag", text: "Vi visar tillgängliga leveransdagar för ert område." },
-  { title: "Vi kör ut", text: "Leverans under dagen till er bemannade adress." },
-  { title: "Ni får faktura", text: "Ingen kortbetalning — fakturan skapas vid beställningen och mejlas." },
+  { title: "Vi levererar", text: "Leverans under dagen till er bemannade adress." },
+  { title: "Ni får faktura", text: "Ingen kortbetalning — fakturan mejlas direkt och förfaller först efter leveransen." },
 ];
 
 const INGREDIENTS: { name: string; src?: string }[] = [
@@ -49,11 +50,11 @@ const INGREDIENTS: { name: string; src?: string }[] = [
 const FAQS = [
   {
     q: "Hur betalar vi?",
-    a: "All betalning sker mot faktura. Fakturan skapas när ni skickar beställningen och mejlas direkt till er faktura-e-post, med 30 dagars betalningsvillkor.",
+    a: `All betalning sker mot faktura. Fakturan skapas när ni skickar beställningen och mejlas direkt till er faktura-e-post. Förfallodag ${invoiceConfig.paymentTermsDays} dagar efter leveransen — ni betalar aldrig före leverans.`,
   },
   {
     q: "Vart levererar ni?",
-    a: "Vi kör lokal leverans till företag i Tyresö, Nacka, Haninge och Huddinge.",
+    a: "Vi levererar lokalt till företag i Tyresö, Nacka, Haninge och Huddinge.",
   },
   {
     q: "När kommer leveransen?",
@@ -281,7 +282,7 @@ export default async function HomePage() {
           <div className="section-head">
             <div>
               <h2 className="h-section">Lokal leverans i södra Stockholm</h2>
-              <p>Vi kör själva, på fasta leveransdagar per område.</p>
+              <p>Fasta leveransdagar per område, under dagen.</p>
             </div>
             <Link href="/leverans" className="section-link">
               Om leveransen →

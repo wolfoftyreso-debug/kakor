@@ -58,15 +58,17 @@ export default async function InvoicesPage({
       orderBy: { invoiceDate: "desc" },
       take: PAGE_SIZE,
       skip: (page - 1) * PAGE_SIZE,
-      include: { order: true, creditNote: true },
+      include: { order: true, creditNotes: true },
     }),
     prisma.invoice.count({ where }),
   ]);
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
+  // Delkrediteringar minskar det som återstår att betala (kreditbelopp är negativa).
+  const owed = (i: (typeof invoices)[number]) => i.totalOre + i.creditNotes.reduce((s, c) => s + c.totalOre, 0);
   const unpaidSum = invoices
     .filter((i) => i.status === "UNPAID" && i.order.status !== "CANCELLED")
-    .reduce((s, i) => s + i.totalOre, 0);
+    .reduce((s, i) => s + owed(i), 0);
 
   return (
     <>
@@ -134,25 +136,33 @@ export default async function InvoicesPage({
                     <td style={overdue ? { color: "var(--red)", fontWeight: 700 } : undefined}>
                       {formatDate(inv.dueDate)}
                     </td>
-                    <td style={{ fontWeight: 700 }}>{formatOre(inv.totalOre)}</td>
+                    <td style={{ fontWeight: 700 }}>
+                      {formatOre(inv.totalOre)}
+                      {inv.creditNotes.length > 0 && inv.status !== "CREDITED" && (
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-2)" }}>
+                          att betala {formatOre(owed(inv))}
+                        </div>
+                      )}
+                    </td>
                     <td>
                       {inv.status === "CREDITED" ? (
                         <span className="pill pill-neutral">Krediterad</span>
                       ) : (
                         <PaymentStatusPill status={inv.status} overdue={overdue} />
                       )}
-                      {inv.creditNote && (
+                      {inv.creditNotes.map((c) => (
                         <a
-                          href={`/faktura/${inv.creditNote.downloadToken}`}
+                          key={c.id}
+                          href={`/faktura/${c.downloadToken}`}
                           target="_blank"
                           rel="noopener"
                           className="mono"
                           style={{ marginLeft: 6, fontSize: 12 }}
                         >
-                          Kredit {inv.creditNote.creditNumber}
+                          {c.kind === "FULL" ? "Kredit" : "Delkredit"} {c.creditNumber}
                         </a>
-                      )}
-                      {inv.order.status === "CANCELLED" && !inv.creditNote && (
+                      ))}
+                      {inv.order.status === "CANCELLED" && inv.status !== "CREDITED" && (
                         <span className="pill pill-neutral" style={{ marginLeft: 6 }}>
                           Order avbruten
                         </span>

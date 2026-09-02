@@ -34,6 +34,8 @@ export interface InvoiceSnapshot {
     unitPricePerKgOre: number;
     vatRateBp: number;
     lineTotalOre: number;
+    /** Kreditfakturor: index på raden i originalfakturan som krediteras. */
+    sourceLineIndex?: number;
   }[];
   subtotalOre: number;
   vatOre: number;
@@ -44,6 +46,10 @@ export interface InvoiceSnapshot {
   paymentTermsDays: number;
   /** Endast på kreditfakturor: numret på fakturan som krediteras. */
   creditsInvoiceNumber?: string;
+  /** Endast på kreditfakturor: FULL (stänger fakturan) eller PARTIAL (delkreditering). */
+  creditKind?: "FULL" | "PARTIAL";
+  /** Endast på kreditfakturor: anledning (visas på PDF:en). */
+  creditReason?: string;
 }
 
 // Validerat vid läsning: skyddar PDF-renderingen mot schemadrift och
@@ -82,6 +88,7 @@ const snapshotSchema = z.object({
       unitPricePerKgOre: z.number().int(),
       vatRateBp: z.number().int(),
       lineTotalOre: z.number().int(),
+      sourceLineIndex: z.number().int().optional(),
     })
   ),
   subtotalOre: z.number().int(),
@@ -92,6 +99,8 @@ const snapshotSchema = z.object({
   dueDate: str,
   paymentTermsDays: z.number().int(),
   creditsInvoiceNumber: z.string().optional(),
+  creditKind: z.enum(["FULL", "PARTIAL"]).optional(),
+  creditReason: z.string().optional(),
 });
 
 export function parseSnapshot(json: string): InvoiceSnapshot {

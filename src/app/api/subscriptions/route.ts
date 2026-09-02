@@ -10,6 +10,7 @@ import { FREQUENCY_LABELS } from "@/lib/status";
 import { formatDeliveryDate } from "@/lib/dates";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { describeError } from "@/lib/log";
+import { clientIp, verifyTurnstile } from "@/lib/turnstile";
 import { formatOre } from "@/lib/money";
 
 export async function POST(req: NextRequest) {
@@ -32,6 +33,20 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json(
       { ok: false, error: "Kontrollera uppgifterna", fields: fieldErrors(parsed.error) },
+      { status: 400 }
+    );
+  }
+
+  // Robotskydd (Cloudflare Turnstile) — no-op utan nycklar.
+  const captcha = await verifyTurnstile(parsed.data.turnstileToken, clientIp(req.headers));
+  if (!captcha.ok) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Robotkontrollen gick inte igenom — försök igen.",
+        code: "CAPTCHA_FAILED",
+        fields: { turnstileToken: "Bekräfta att ni inte är en robot" },
+      },
       { status: 400 }
     );
   }

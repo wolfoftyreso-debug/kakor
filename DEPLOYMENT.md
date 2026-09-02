@@ -230,7 +230,9 @@ automatiskt — det beslutet är verksamhetens.)
    tills Neon är kopplat. Preview migrerar aldrig.
 3. **Seed + admin**: `DATABASE_URL=<prod> I_KNOW_THIS_IS_PROD=1 ADMIN_EMAIL=… ADMIN_PASSWORD=… npm run admin:create`
    (minst 12 tecken, aldrig exempelvärden). Sätt etiketten "Bästsäljare" och
-   kontrollera priser/momssats i admin → Produkter.
+   kontrollera priser i admin → Produkter. Momssatsen seedas till 6 %
+   (tillfällig livsmedelsmoms t.o.m. 2027-12-31) — admin-översikten påminner
+   när den ska tillbaka till 12 %.
 4. **Fakturauppgifter**: `INVOICE_BANKGIRO`, `INVOICE_VAT_NUMBER`, `INVOICE_EMAIL`,
    `INVOICE_F_SKATT` med verifierade värden. Utan verifierat bankgiro/momsnr
    stänger ordermotorn beställningar i produktion (503).
@@ -238,8 +240,16 @@ automatiskt — det beslutet är verksamhetens.)
    `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` (bevakad låda — obligatorisk),
    `ADMIN_NOTIFY_EMAIL` (intern avisering vid ny order).
 6. **Cron**: `CRON_SECRET` satt; verifiera första körningen i Vercel → Cron Jobs.
-7. **Sajt**: `SITE_URL=https://sockerbagaren.se`, `NEXT_PUBLIC_GA4_ID` (kräver
-   samtyckesbanner om aktiverad), `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`.
+7. **Sajt**: `SITE_URL=https://sockerbagaren.se`, `NEXT_PUBLIC_GA4_ID` (samtyckes-
+   bannern är inbyggd — scriptet laddas först efter "Tillåt"),
+   `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`.
+7b. **Robotskydd**: skapa en Turnstile-widget i Cloudflare (Managed, gratis),
+   sätt `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`. Utan nycklar
+   är skyddet av (rate limiting + missbruksspärrar gäller ändå).
+7c. **Produktionsbranch**: grenen `main` finns i GitHub. Sätt den som
+   standardgren i GitHub (Settings → General → Default branch) och som
+   Production Branch i Vercel (Settings → Git). Då blir featuregrenar
+   preview-deployer och bara `main` går till produktion.
 8. **Smoke**: `SMOKE_EMAIL=<egen låda> npm run smoke -- https://<deploy> --order`,
    avbryt testordern i admin (kreditfaktura utfärdas).
 9. **Domän SIST**: apex + www i Vercel (www → apex-redirect finns i next.config).

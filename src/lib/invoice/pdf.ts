@@ -88,7 +88,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
       : [
           ["Fakturadatum", (snapshot.invoiceDate)],
           ["Förfallodatum", (snapshot.dueDate)],
-          ["Betalningsvillkor", `${snapshot.paymentTermsDays} dagar netto`],
+          ["Betalningsvillkor", `${snapshot.paymentTermsDays} dagar netto från leverans`],
           ["Ordernummer", snapshot.orderNumber],
           // Fakturan utfärdas vid beställning — leveransen ligger framåt i tiden.
           ["Planerad leverans", (snapshot.deliveryDate)],
@@ -191,9 +191,28 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
     doc.font("Helvetica-Bold").fontSize(8.5).fillColor(MUTED).text(credit ? "KREDITERING" : "BETALNINGSINFORMATION", M + 12, y + 10);
     doc.font("Helvetica").fontSize(9.5).fillColor(BROWN);
     if (credit) {
-      doc.text(`Denna kreditfaktura krediterar faktura ${snapshot.creditsInvoiceNumber} i sin helhet.`, M + 12, y + 24);
-      doc.text("Fakturan ska inte betalas. Är den redan betald återbetalas beloppet.", M + 12, y + 38);
-      doc.text(`Kreditdatum: ${(snapshot.invoiceDate)}`, M + 12, y + 52);
+      const partial = snapshot.creditKind === "PARTIAL";
+      doc.text(
+        partial
+          ? `Denna kreditfaktura krediterar faktura ${snapshot.creditsInvoiceNumber} delvis — raderna ovan.`
+          : `Denna kreditfaktura krediterar faktura ${snapshot.creditsInvoiceNumber} i sin helhet.`,
+        M + 12,
+        y + 24
+      );
+      doc.text(
+        partial
+          ? "Fakturans återstående belopp betalas enligt fakturans förfallodatum. Är den redan betald återbetalas det krediterade beloppet."
+          : "Fakturan ska inte betalas. Är den redan betald återbetalas beloppet.",
+        M + 12,
+        y + 38,
+        { width: CONTENT_W - 24, lineBreak: false }
+      );
+      doc.text(
+        `Kreditdatum: ${snapshot.invoiceDate}${snapshot.creditReason ? `. Anledning: ${snapshot.creditReason}` : ""}`,
+        M + 12,
+        y + 52,
+        { width: CONTENT_W - 24, lineBreak: false }
+      );
     } else {
       // Platshållare ("[EJ VERIFIERAT …]") får aldrig hamna på en kundfaktura —
       // saknas verifierat bankgiro skrivs en neutral rad tills värdet är satt.

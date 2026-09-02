@@ -23,6 +23,7 @@ import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/un
 import { capitalizeFirst, formatDeliveryDate, fromISODate, toISODate, upcomingDeliveryDates } from "@/lib/dates";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 import { newIdempotencyKey } from "@/lib/idempotency";
+import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/Turnstile";
 import { track } from "@/lib/analytics";
 
 interface FormState {
@@ -102,9 +103,11 @@ interface StoredFlow {
 export function CheckoutFlow({
   products,
   areas,
+  paymentTermsDays,
 }: {
   products: ProductCardData[];
   areas: AreaWithDates[];
+  paymentTermsDays: number;
 }) {
   const cart = useCart();
   const [step, setStep] = useState(1);
@@ -117,6 +120,9 @@ export function CheckoutFlow({
   const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
+  // Robotskydd (Cloudflare Turnstile) — bara när sajtnyckel finns i env.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
   const [flowRestored, setFlowRestored] = useState(false);
   const headingRef = useRef<HTMLDivElement>(null);
   // EN nyckel per beställningsförsök — behålls även om kunden går tillbaka
@@ -391,6 +397,7 @@ export function CheckoutFlow({
       // Beloppet kunden bekräftade — servern avvisar om priset hunnit ändras.
       expectedTotalOre: totals.totalOre,
       ...(honeypot ? { sb_extra: honeypot } : {}),
+      ...(captchaToken ? { turnstileToken: captchaToken } : {}),
     };
     try {
       const res =
@@ -469,6 +476,11 @@ export function CheckoutFlow({
           // produkter så att summan och stale-rensningen speglar servern.
           router.refresh();
         }
+        if (data.code === "CAPTCHA_FAILED" || data.fields?.turnstileToken) {
+          // Token förbrukad/ogiltig — ny widget så kunden kan försöka igen.
+          setCaptchaToken(null);
+          setCaptchaReset((n) => n + 1);
+        }
         if (data.fields) {
           const fields: Record<string, string> = { ...data.fields };
           const itemKey = Object.keys(fields).find((k) => k.startsWith("items."));
@@ -478,7 +490,7 @@ export function CheckoutFlow({
           // goTo nollställer globalError — sätt det EFTER, och lyft fält som
           // inte har något synligt formulärfält (t.ex. "_" eller sb_extra) dit,
           // annars blir felet osynligt.
-          const knownFields = new Set([...Object.keys(EMPTY_FORM), "items", "areaSlug", "deliveryDate", "firstDeliveryDate", "frequency"]);
+          const knownFields = new Set([...Object.keys(EMPTY_FORM), "items", "areaSlug", "deliveryDate", "firstDeliveryDate", "frequency", "turnstileToken"]);
           const hidden = Object.entries(fields).filter(([k]) => !knownFields.has(k) && !k.startsWith("items."));
           setGlobalError(
             hidden.length > 0
@@ -671,7 +683,7 @@ export function CheckoutFlow({
         <>
           <h1 tabIndex={-1} style={{ outline: "none", fontSize: 32, marginBottom: 6 }}>Leverans</h1>
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 20px" }}>
-            Vi kör själva, på fasta leveransdagar per område.
+            Fasta leveransdagar per område, leverans under dagen.
           </p>
           <MiniSummary
             lines={summaryLines}
@@ -997,6 +1009,16 @@ export function CheckoutFlow({
               ? "Betalning sker mot faktura — en faktura per leverans. Ingen bindningstid."
               : "Betalning sker mot faktura."}
           </div>
+          {TURNSTILE_SITE_KEY && (
+            <div style={{ marginBottom: 20 }}>
+              <Turnstile onToken={setCaptchaToken} resetKey={captchaReset} />
+              {errors.turnstileToken && (
+                <div className="error-text" role="alert" style={{ marginTop: 6 }}>
+                  {errors.turnstileToken}
+                </div>
+              )}
+            </div>
+          )}
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
             <button type="button" className="btn btn-outline" onClick={() => goTo(3)}>
               Tillbaka
@@ -1004,7 +1026,7 @@ export function CheckoutFlow({
             <button
               type="button"
               className="btn btn-send btn-lg"
-              disabled={submitting || !areaSlug || !deliveryDate || activeLines.length === 0}
+              disabled={submitting || !areaSlug || !deliveryDate || activeLines.length === 0 || (!!TURNSTILE_SITE_KEY && !captchaToken)}
               onClick={submit}
             >
               {submitting
@@ -1041,7 +1063,7 @@ export function CheckoutFlow({
           <div className="info-box-muted" style={{ padding: "22px 24px", fontSize: "14.5px", lineHeight: 1.8 }}>
             <strong>Vad händer nu?</strong>
             <br />
-            1. Orderbekräftelse och faktura mejlas nu (30 dagars betalningsvillkor).
+            1. Orderbekräftelse och faktura mejlas nu — fakturan förfaller {paymentTermsDays} dagar efter leveransen.
             <br />
             2. Vi packar och levererar på vald leveransdag.
             <br />

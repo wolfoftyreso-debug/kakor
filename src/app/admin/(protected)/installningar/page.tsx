@@ -19,7 +19,7 @@ export default async function SettingsPage() {
     ["Telefon", invoiceConfig.phone],
     ["Bankgiro", invoiceConfig.bankgiro],
     ["Momsreg.nr", invoiceConfig.vatNumber],
-    ["Betalningsvillkor", `${invoiceConfig.paymentTermsDays} dagar`],
+    ["Betalningsvillkor", `${invoiceConfig.paymentTermsDays} dagar netto räknat från leveransdagen`],
     ["E-postavsändare", emailConfig.from],
     ["E-postleverantör", emailConfig.provider],
     ["Sajt-URL", siteConfig.url],

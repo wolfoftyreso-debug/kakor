@@ -1,3 +1,4 @@
+import { invoiceConfig } from "@/lib/config";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { emailConfig, siteConfig } from "@/lib/config";
@@ -45,7 +46,7 @@ Leveransdag: ${deliveryDay}
 Vi levererar under dagen — se till att någon finns på plats för att ta emot leveransen.
 
 FAKTURA
-Betalning sker mot faktura. Fakturan skapas nu och skickas till ${order.invoiceEmail} — ${order.invoice.dueDate.toISOString().slice(0, 10)} är förfallodatum.
+Betalning sker mot faktura. Fakturan skapas nu och skickas till ${order.invoiceEmail}. Förfallodatum ${order.invoice.dueDate.toISOString().slice(0, 10)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen).
 Ni kan även ladda ner den här: ${invoiceUrl}
 
 Frågor? Svara på det här mejlet.

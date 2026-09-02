@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
 import { addDays, formatDeliveryDate, todayInStockholm, capitalizeFirst, startOfStockholmDay } from "@/lib/dates";
 import { OrderStatusPill, PaymentStatusPill } from "@/components/admin/StatusPills";
+import { foodVatNotice, FOOD_VAT_RATE_BP } from "@/lib/vat";
+import { toISODate } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +17,7 @@ export default async function AdminDashboard() {
   const today = todayInStockholm();
   const weekAhead = addDays(today, 7);
 
-  const [newOrders, upcomingDeliveries, unpaidInvoices, overdueInvoices, activeSubscriptions, ordersToday, newOrderCount] =
+  const [newOrders, upcomingDeliveries, unpaidInvoices, overdueInvoices, activeSubscriptions, ordersToday, newOrderCount, unpaidCredits, overdueCredits, productsAtTempVat] =
     await Promise.all([
       prisma.order.findMany({
         where: { status: "NEW" },
@@ -46,19 +48,30 @@ export default async function AdminDashboard() {
       // Svenskt dygn (inte UTC-midnatt) — annars saknas ordrar lagda 00–02.
       prisma.order.count({ where: { createdAt: { gte: startOfStockholmDay() } } }),
       prisma.order.count({ where: { status: "NEW" } }),
+      // Delkrediteringar (negativa belopp) på obetalda fakturor — reskontran visar vad som återstår.
+      prisma.creditNote.aggregate({
+        where: { invoice: { status: "UNPAID", order: { status: { not: "CANCELLED" } } } },
+        _sum: { totalOre: true },
+      }),
+      prisma.creditNote.aggregate({
+        where: { invoice: { status: "UNPAID", dueDate: { lt: today }, order: { status: { not: "CANCELLED" } } } },
+        _sum: { totalOre: true },
+      }),
+      prisma.product.count({ where: { active: true, vatRateBp: FOOD_VAT_RATE_BP } }),
     ]);
+  const vatNotice = foodVatNotice(toISODate(today), productsAtTempVat);
 
   const stats = [
     { label: "Nya beställningar", value: String(newOrderCount), href: "/admin/bestallningar?filter=nya" },
     { label: "Beställningar idag", value: String(ordersToday), href: "/admin/bestallningar" },
     {
       label: "Obetalda fakturor",
-      value: `${unpaidInvoices._count} · ${formatOre(unpaidInvoices._sum.totalOre ?? 0)}`,
+      value: `${unpaidInvoices._count} · ${formatOre((unpaidInvoices._sum.totalOre ?? 0) + (unpaidCredits._sum.totalOre ?? 0))}`,
       href: "/admin/fakturor?filter=obetalda",
     },
     {
       label: "Förfallna fakturor",
-      value: `${overdueInvoices._count} · ${formatOre(overdueInvoices._sum.totalOre ?? 0)}`,
+      value: `${overdueInvoices._count} · ${formatOre((overdueInvoices._sum.totalOre ?? 0) + (overdueCredits._sum.totalOre ?? 0))}`,
       href: "/admin/fakturor?filter=forfallna",
     },
     { label: "Aktiva prenumerationer", value: String(activeSubscriptions), href: "/admin/prenumerationer" },
@@ -67,6 +80,16 @@ export default async function AdminDashboard() {
   return (
     <>
       <h1 style={{ fontSize: 26, marginBottom: 20 }}>Att hantera</h1>
+      {vatNotice && (
+        <div
+          role={vatNotice.urgent ? "alert" : "status"}
+          className={vatNotice.urgent ? "error-text" : "info-box"}
+          style={{ marginBottom: 20, padding: "10px 14px", fontSize: 14 }}
+        >
+          <strong>Momssats:</strong> {vatNotice.text}{" "}
+          <Link href="/admin/produkter">Produkter →</Link>
+        </div>
+      )}
       <div
         style={{
           display: "grid",

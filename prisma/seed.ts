@@ -5,6 +5,8 @@ const prisma = new PrismaClient();
 
 // OBS: priserna nedan är START-/PLATSHÅLLARPRISER som verksamheten ska
 // bekräfta eller ändra i admin (Produkter). Historiska ordrar påverkas inte.
+import { FOOD_VAT_RATE_BP } from "../src/lib/vat";
+
 const products = [
   {
     slug: "mandelkubb",
@@ -25,7 +27,7 @@ const products = [
       "Vår bästsäljare — nötig, med toner av brynt smör och knäck och en vuxen sälta. Härligt frasig klassisk småkaka med seg kärna och lätt smörfriterad botten.",
     pricePerKgOre: 29500,
     ingredients: "Vetemjöl, smör, socker, ljus sirap, vaniljsocker, bikarbonat, keltiskt salt.",
-    allergens: "Innehåller vete, smör (mjölk).",
+    allergens: "Innehåller vete, smör (mjölk). Kan innehålla spår av mandel.",
     imageRef: "/images/kolasnittar.jpg",
     badge: "Bästsäljare",
     sortOrder: 2,
@@ -38,7 +40,7 @@ const products = [
     pricePerKgOre: 29500,
     ingredients:
       "Vetemjöl, smör, socker, mörk choklad, kakao, ljus sirap, vaniljsocker, bakpulver, keltiskt salt.",
-    allergens: "Innehåller vete, smör (mjölk). Kan innehålla spår av mandel.",
+    allergens: "Innehåller vete, smör (mjölk). Kan innehålla spår av mandel och soja.",
     imageRef: "/images/chokladsnittar.jpg",
     sortOrder: 3,
   },
@@ -55,7 +57,7 @@ const products = [
     weightOptionsJson: "[1,2]",
     ingredients:
       "Innehåller alla tre kaksorterna — fullständig ingrediensförteckning per sort finns under Ingredienser & allergener.",
-    allergens: "Innehåller vete, mandel, ägg, smör (mjölk).",
+    allergens: "Innehåller vete, mandel, ägg, smör (mjölk). Kan innehålla spår av soja.",
     imageRef: "/images/prova-pa-paket.jpg",
     sortOrder: 4,
   },
@@ -74,7 +76,9 @@ async function main() {
   for (const p of products) {
     await prisma.product.upsert({
       where: { slug: p.slug },
-      create: { weightOptionsJson: "[1,2,3]", vatRateBp: 1200, ...p },
+      // Livsmedelsmoms: tillfälligt 6 % 2026-04-01–2027-12-31 (riksdagsbeslut
+      // 2025/26:SkU9), därefter 12 % igen — ändras i admin → Produkter.
+      create: { weightOptionsJson: "[1,2,3]", vatRateBp: FOOD_VAT_RATE_BP, ...p },
       update: {}, // rör aldrig befintlig produktdata vid om-seed
     });
   }

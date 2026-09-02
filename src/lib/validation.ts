@@ -111,6 +111,9 @@ const itemsSchema = z
 
 const idempotencyKeySchema = z.string().regex(/^[a-zA-Z0-9-]{16,64}$/);
 
+// Cloudflare Turnstile-token (endast när robotskyddet är aktiverat via env).
+const turnstileTokenSchema = z.string().max(4096).optional();
+
 export const checkoutSchema = z.strictObject({
   // Skydd mot dubbelbeställning — klienten genererar en nyckel per försök.
   idempotencyKey: idempotencyKeySchema.optional(),
@@ -138,6 +141,7 @@ export const checkoutSchema = z.strictObject({
   // kunden får bekräfta det nya priset i stället för att faktureras tyst.
   expectedTotalOre: z.number().int().min(0).optional(),
   sb_extra: honeypotSchema,
+  turnstileToken: turnstileTokenSchema,
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
@@ -167,6 +171,7 @@ export const subscriptionSchema = z.strictObject({
 
   expectedTotalOre: z.number().int().min(0).optional(),
   sb_extra: honeypotSchema,
+  turnstileToken: turnstileTokenSchema,
 });
 
 export type SubscriptionInput = z.infer<typeof subscriptionSchema>;

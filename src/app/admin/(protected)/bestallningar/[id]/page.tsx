@@ -13,6 +13,7 @@ import {
   PaymentStatusPill,
 } from "@/components/admin/StatusPills";
 import { OrderActions } from "./OrderActions";
+import { remainingByLine } from "@/lib/invoice/credit";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — orderdetalj", robots: { index: false } };
@@ -24,13 +25,24 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     where: { id },
     include: {
       items: true,
-      invoice: { include: { creditNote: true } },
+      invoice: { include: { creditNotes: { orderBy: { createdAt: "asc" } } } },
       deliveryArea: true,
       subscription: true,
       events: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!order) notFound();
+  const creditNotes = order.invoice?.creditNotes ?? [];
+  const creditedOre = creditNotes.reduce((s, c) => s + c.totalOre, 0); // negativt
+  const creditLines = order.invoice
+    ? remainingByLine(order.invoice.snapshotJson, creditNotes).map((r, i) => ({
+        lineIndex: i,
+        productName: r.line.productName,
+        unit: r.line.unit ?? "kg",
+        unitPriceOre: r.line.unitPricePerKgOre,
+        remaining: r.remaining,
+      }))
+    : [];
 
   return (
     <>
@@ -126,15 +138,30 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <a href={`/faktura/${order.invoice.downloadToken}`} target="_blank" rel="noopener">
                 Öppna PDF
               </a>
-              {order.invoice.status === "CREDITED" && order.invoice.creditNote && (
+              {order.invoice.status === "CREDITED" && (
                 <>
                   {" "}
-                  · <strong>Krediterad</strong> — kreditfaktura{" "}
-                  <span className="mono">{order.invoice.creditNote.creditNumber}</span>{" "}
-                  <a href={`/faktura/${order.invoice.creditNote.downloadToken}`} target="_blank" rel="noopener">
-                    Öppna PDF
-                  </a>
+                  · <strong>Krediterad i sin helhet</strong>
                 </>
+              )}
+              {creditNotes.length > 0 && (
+                <div style={{ marginTop: 6, fontSize: 13.5 }}>
+                  {creditNotes.map((c) => (
+                    <div key={c.id}>
+                      {c.kind === "FULL" ? "Kreditfaktura" : "Delkreditfaktura"}{" "}
+                      <span className="mono">{c.creditNumber}</span> · {formatDate(c.issuedDate)} ·{" "}
+                      {formatOre(-c.totalOre)} ·{" "}
+                      <a href={`/faktura/${c.downloadToken}`} target="_blank" rel="noopener">
+                        Öppna PDF
+                      </a>
+                    </div>
+                  ))}
+                  {order.invoice.status !== "CREDITED" && (
+                    <div style={{ fontWeight: 600, marginTop: 4 }}>
+                      Återstår att betala: {formatOre(order.invoice.totalOre + creditedOre)}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -146,7 +173,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         status={order.status}
         paymentStatus={order.paymentStatus}
         deliveryStatus={order.deliveryStatus}
-        needsCreditNote={order.status === "CANCELLED" && !!order.invoice && !order.invoice.creditNote}
+        needsCreditNote={order.status === "CANCELLED" && !!order.invoice && order.invoice.status !== "CREDITED"}
+        creditLines={order.status !== "CANCELLED" && order.invoice && order.invoice.status !== "CREDITED" ? creditLines : []}
       />
 
       <section style={{ marginTop: 32 }}>
