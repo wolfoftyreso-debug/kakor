@@ -57,10 +57,10 @@ async function main() {
       // Hämta produkt-id + giltig leveransdag från publika sidan/sitemapen går inte —
       // vi läser produktsidan för slug och låter servern validera datumet:
       // enklast robusta vägen är att hämta datum ur checkout kräver JS; istället
-      // beräknas nästa tisdag/torsdag minst 3 dagar fram (seedens standard).
+      // beräknas nästa torsdag minst 3 dagar fram (seedens standard: endast torsdag).
       const d = new Date();
       d.setUTCDate(d.getUTCDate() + 3);
-      while (![2, 4].includes(d.getUTCDay())) d.setUTCDate(d.getUTCDate() + 1);
+      while (d.getUTCDay() !== 4) d.setUTCDate(d.getUTCDate() + 1);
       const deliveryDate = d.toISOString().slice(0, 10);
 
       // Produkt-id:n är interna — hämta via order-API:ts felrespons går inte;

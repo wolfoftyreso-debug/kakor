@@ -36,7 +36,7 @@ const STEPS = [
   {
     n: "3",
     title: "Fikat sköter sig självt",
-    text: "Inför varje leverans skapas en vanlig order med faktura som mejlas till er. Ingen bindningstid — pausa eller avsluta när ni vill.",
+    text: "Inför varje leverans skapas en vanlig order med faktura som mejlas till er. Ingen bindningstid — svara på bekräftelsemejlet så pausar eller avslutar vi.",
   },
 ];
 

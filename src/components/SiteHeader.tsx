@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { LogoSigill } from "@/components/Logo";
 import { useCart } from "@/lib/cart";
 
@@ -15,6 +16,21 @@ const NAV = [
 export function SiteHeader() {
   const { totalKg } = useCart();
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Headern överlever klientnavigering — menyn ska inte ligga kvar över
+  // nästa sida efter klick på Beställ/Korg/logotyp. Escape stänger också.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
     <>
@@ -114,6 +130,7 @@ export function SiteHeader() {
           <button
             className="menu-toggle"
             aria-expanded={open}
+            aria-controls="mobilmeny"
             aria-label={open ? "Stäng meny" : "Öppna meny"}
             onClick={() => setOpen((o) => !o)}
             style={{
@@ -134,6 +151,7 @@ export function SiteHeader() {
 
         {open && (
           <nav
+            id="mobilmeny"
             aria-label="Mobilmeny"
             style={{
               position: "absolute",

@@ -8,5 +8,5 @@ export function newIdempotencyKey(): string {
     const bytes = c.getRandomValues(new Uint8Array(16));
     return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
   }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 12).padEnd(10, "0")}`;
 }

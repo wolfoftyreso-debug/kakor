@@ -64,7 +64,7 @@ export function ProductForm({
         />
       </label>
       <label className="field">
-        Snabbval för antal (kommaseparerat)
+        Förvalt antal i antalsväljaren (första värdet används som start)
         <input name="weightOptions" defaultValue={initial.weightOptions} required placeholder="1,2,3" />
       </label>
       <label className="field" style={{ gridColumn: "1 / -1" }}>

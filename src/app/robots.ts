@@ -10,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin", "/api", "/faktura"],
       },
     ],
-    sitemap: `${siteConfig.url}/sitemap.xml`,
+    sitemap: `${siteConfig.url.replace(/\/$/, "")}/sitemap.xml`,
   };
 }

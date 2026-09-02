@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { subscriptionSchema, fieldErrors } from "@/lib/validation";
 import { createSubscription } from "@/lib/subscriptions/service";
+import { prisma } from "@/lib/db";
+import { calculateTotals } from "@/lib/money";
 import { OrderError } from "@/lib/orders/create-order";
 import { sendEmail } from "@/lib/email";
 import { FREQUENCY_LABELS } from "@/lib/status";
@@ -32,10 +34,24 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const requestStartedAt = Date.now();
     const subscription = await createSubscription(parsed.data);
+    // Idempotent replay (retry/dubbelklick) returnerar en redan skapad
+    // prenumeration — då ska bekräftelsen inte mejlas en gång till.
+    const isReplay = subscription.createdAt.getTime() < requestStartedAt - 2000;
+    // Per-leverans-summa räknas på servern från databasens priser — aldrig klientens.
+    const products = await prisma.product.findMany({
+      where: { id: { in: subscription.items.map((i) => i.productId) } },
+    });
+    const totals = calculateTotals(
+      subscription.items.map((i) => {
+        const product = products.find((p) => p.id === i.productId);
+        return { netOre: i.weightKg * (product?.pricePerKgOre ?? 0), vatRateBp: product?.vatRateBp ?? 1200 };
+      })
+    );
 
     // Bekräftelse — prenumerationen är sparad även om mejlet fallerar.
-    await sendEmail({
+    if (!isReplay) await sendEmail({
       to: subscription.email,
       subject: `Fikaprenumeration ${subscription.number} startad — Sockerbagaren`,
       text: `Tack! Er fikaprenumeration är igång.
@@ -55,6 +71,7 @@ Sockerbagaren`,
     return NextResponse.json({
       ok: true,
       subscriptionNumber: subscription.number,
+      totalOre: totals.totalOre,
       nextDeliveryDate: subscription.nextDeliveryDate.toISOString().slice(0, 10),
     });
   } catch (e) {

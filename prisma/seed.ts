@@ -53,7 +53,7 @@ const products = [
     packageWeightGrams: 1500,
     weightOptionsJson: "[1,2]",
     ingredients:
-      "Innehåller alla tre kaksorterna — se respektive sort ovan för fullständig ingrediensförteckning.",
+      "Innehåller alla tre kaksorterna — fullständig ingrediensförteckning per sort finns under Ingredienser & allergener.",
     allergens: "Innehåller vete, mandel, ägg, smör (mjölk).",
     imageRef: "/images/prova-pa-paket.jpg",
     sortOrder: 4,

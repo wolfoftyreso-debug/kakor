@@ -15,7 +15,7 @@ export default async function AdminDashboard() {
   const today = todayInStockholm();
   const weekAhead = addDays(today, 7);
 
-  const [newOrders, upcomingDeliveries, unpaidInvoices, overdueInvoices, activeSubscriptions, ordersToday] =
+  const [newOrders, upcomingDeliveries, unpaidInvoices, overdueInvoices, activeSubscriptions, ordersToday, newOrderCount] =
     await Promise.all([
       prisma.order.findMany({
         where: { status: "NEW" },
@@ -44,10 +44,11 @@ export default async function AdminDashboard() {
       }),
       prisma.subscription.count({ where: { status: "ACTIVE" } }),
       prisma.order.count({ where: { createdAt: { gte: today } } }),
+      prisma.order.count({ where: { status: "NEW" } }),
     ]);
 
   const stats = [
-    { label: "Nya beställningar", value: String(newOrders.length), href: "/admin/bestallningar?filter=nya" },
+    { label: "Nya beställningar", value: String(newOrderCount), href: "/admin/bestallningar?filter=nya" },
     { label: "Beställningar idag", value: String(ordersToday), href: "/admin/bestallningar" },
     {
       label: "Obetalda fakturor",

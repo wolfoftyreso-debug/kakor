@@ -87,6 +87,22 @@ export function isValidDeliveryDate(date: Date, config: DeliveryDayConfig, now =
   return candidates.some((c) => toISODate(c) === iso);
 }
 
+/**
+ * Närmaste datum (samma dag eller senare) som är en giltig leveransveckodag.
+ * Används när ett områdes leveransdagar ändrats efter att en prenumeration
+ * fått sitt nästa datum — ordrar får aldrig hamna på dagar utan leverans.
+ */
+export function snapToDeliveryWeekday(date: Date, config: DeliveryDayConfig): Date {
+  const weekdays = [...new Set(config.weekdays)].filter((w) => w >= 1 && w <= 7);
+  if (weekdays.length === 0) return date;
+  let cursor = date;
+  for (let i = 0; i < 7; i++) {
+    if (weekdays.includes(isoWeekday(cursor))) return cursor;
+    cursor = addDays(cursor, 1);
+  }
+  return date;
+}
+
 /** Nästa leveransdatum för en prenumeration efter ett givet datum. */
 export function nextSubscriptionDate(
   after: Date,

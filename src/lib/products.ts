@@ -62,7 +62,7 @@ export async function getAreasWithDates(dateCount = 4): Promise<AreaWithDates[]>
   });
 }
 
-function safeWeekdays(json: string): number[] {
+export function safeWeekdays(json: string): number[] {
   try {
     const arr = JSON.parse(json);
     if (Array.isArray(arr)) {

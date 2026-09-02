@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { weekdayName } from "@/lib/dates";
 import { saveArea } from "@/app/admin/actions";
 
 export function AreaForm({
@@ -20,13 +21,30 @@ export function AreaForm({
 }) {
   const action = saveArea.bind(null, areaId);
   const [state, formAction, pending] = useActionState(action, null);
+  const [weekdayInput, setWeekdayInput] = useState(weekdays);
+  // Siffror är lätta att skriva fel — visa dagnamnen live så att "4" tydligt betyder torsdag.
+  const weekdayLabels = weekdayInput
+    .split(",")
+    .map((v) => parseInt(v.trim(), 10))
+    .filter((n) => n >= 1 && n <= 7)
+    .map(weekdayName)
+    .join(", ");
 
   return (
     <form action={formAction} className="card" style={{ padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 700 }}>{name}</div>
       <label className="field">
         Leveransdagar (1–7)
-        <input name="weekdays" defaultValue={weekdays} placeholder="2,4" required />
+        <input
+          name="weekdays"
+          value={weekdayInput}
+          onChange={(e) => setWeekdayInput(e.target.value)}
+          placeholder="4"
+          required
+        />
+        <span style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+          {weekdayLabels ? `= ${weekdayLabels}` : "Ange veckodagar som siffror, t.ex. 4 för torsdag"}
+        </span>
       </label>
       <label className="field">
         Framförhållning (dagar)

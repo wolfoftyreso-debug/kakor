@@ -71,3 +71,23 @@ describe("förfallen faktura (härledd, aldrig lagrad)", () => {
     expect(isInvoiceOverdue({ status: "PAID", dueDate: fromISODate("2026-09-01") }, NOW)).toBe(false);
   });
 });
+
+describe("snapToDeliveryWeekday", () => {
+  it("lämnar ett datum som redan är leveransdag orört", async () => {
+    const { snapToDeliveryWeekday, fromISODate, toISODate } = await import("@/lib/dates");
+    // 2026-09-03 är en torsdag
+    const d = snapToDeliveryWeekday(fromISODate("2026-09-03"), { weekdays: [4], leadTimeDays: 2 });
+    expect(toISODate(d)).toBe("2026-09-03");
+  });
+  it("flyttar en tisdag fram till torsdag när området bara levererar torsdagar", async () => {
+    const { snapToDeliveryWeekday, fromISODate, toISODate } = await import("@/lib/dates");
+    // 2026-09-01 är en tisdag
+    const d = snapToDeliveryWeekday(fromISODate("2026-09-01"), { weekdays: [4], leadTimeDays: 2 });
+    expect(toISODate(d)).toBe("2026-09-03");
+  });
+  it("returnerar datumet oförändrat om inga veckodagar är konfigurerade", async () => {
+    const { snapToDeliveryWeekday, fromISODate, toISODate } = await import("@/lib/dates");
+    const d = snapToDeliveryWeekday(fromISODate("2026-09-01"), { weekdays: [], leadTimeDays: 2 });
+    expect(toISODate(d)).toBe("2026-09-01");
+  });
+});

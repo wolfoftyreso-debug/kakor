@@ -68,8 +68,8 @@ export default function VillkorPage() {
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Prenumeration</h2>
           <p style={{ margin: 0 }}>
             Fikaprenumerationen innebär att en vanlig order med faktura skapas inför varje
-            leverans enligt valt intervall. Ingen bindningstid — ni kan pausa eller avsluta när
-            ni vill.
+            leverans enligt valt intervall. Ingen bindningstid — ni pausar eller avslutar när ni
+            vill genom att svara på bekräftelsemejlet.
           </p>
         </section>
         <section>

@@ -121,7 +121,7 @@ describe("prenumeration → order → faktura", () => {
     expect(await prisma.subscription.count({ where: { idempotencyKey: key } })).toBe(1);
   });
 
-  it("passerat leveransdatum genererar ingen bakdaterad order — datumet flyttas fram", async () => {
+  it("passerat leveransdatum ger aldrig en bakdaterad order — framflyttat datum inom horisonten genereras", async () => {
     const sub = await createSubscription(subscriptionInput());
     // Simulera lång paus: nästa leverans ligger långt bak i tiden.
     const stale = addDays(sub.nextDeliveryDate, -60);
@@ -133,16 +133,35 @@ describe("prenumeration → order → faktura", () => {
     const now = addDays(sub.nextDeliveryDate, -2);
     const run = await generateDueSubscriptionOrders({ now, horizonDays: 3, skipEmails: true });
 
+    // Framflyttningen landar 2 dagar fram (inom horisonten) -> ordern skapas nu,
+    // på det framflyttade datumet, aldrig på det passerade.
+    const mine = run.generated.filter((g) => g.subscriptionNumber === sub.number);
+    expect(mine).toHaveLength(1);
+    expect(mine[0].deliveryDate >= toISODate(now)).toBe(true);
+    const orders = await prisma.order.findMany({ where: { subscriptionId: sub.id } });
+    expect(orders).toHaveLength(1);
+    expect(orders[0].deliveryDate.getTime()).toBeGreaterThanOrEqual(now.getTime());
+
+    const reloaded = await prisma.subscription.findUniqueOrThrow({ where: { id: sub.id } });
+    expect(reloaded.nextDeliveryDate.getTime()).toBeGreaterThan(orders[0].deliveryDate.getTime());
+  });
+
+  it("passerat leveransdatum som flyttas fram bortom horisonten hoppas över med förklaring", async () => {
+    const sub = await createSubscription(subscriptionInput());
+    const stale = addDays(sub.nextDeliveryDate, -60);
+    await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: stale } });
+
+    // Horisont 0 dagar: det framflyttade datumet (2 dagar fram) ligger utanför.
+    const now = addDays(sub.nextDeliveryDate, -2);
+    const run = await generateDueSubscriptionOrders({ now, horizonDays: 0, skipEmails: true });
+
     expect(run.generated.filter((g) => g.subscriptionNumber === sub.number)).toHaveLength(0);
     expect(
       run.skipped.some((s) => s.subscriptionNumber === sub.number && /framflyttad/.test(s.reason))
     ).toBe(true);
     expect(await prisma.order.count({ where: { subscriptionId: sub.id } })).toBe(0);
-
     const reloaded = await prisma.subscription.findUniqueOrThrow({ where: { id: sub.id } });
-    expect(reloaded.nextDeliveryDate.getTime()).toBeGreaterThanOrEqual(
-      addDays(now, -1).getTime()
-    );
+    expect(reloaded.nextDeliveryDate.getTime()).toBeGreaterThanOrEqual(now.getTime());
   });
 
   it("avvisar postnummer utanför områdets prefixspärr", async () => {

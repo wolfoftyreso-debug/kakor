@@ -21,11 +21,18 @@ export interface EmailProvider {
   send(msg: EmailMessage): Promise<void>;
 }
 
+/** Maskar en e-postadress för loggning: "k***@domän.se". */
+function maskEmail(address: string): string {
+  const at = address.indexOf("@");
+  if (at <= 0) return "***";
+  return `${address[0]}***${address.slice(at)}`;
+}
+
 class LogProvider implements EmailProvider {
   readonly name = "log";
   async send(msg: EmailMessage): Promise<void> {
     console.log(
-      `[email:log] to=${msg.to} subject="${msg.subject}" attachments=${msg.attachments?.length ?? 0}`
+      `[email:log] to=${maskEmail(msg.to)} subject="${msg.subject}" attachments=${msg.attachments?.length ?? 0}`
     );
   }
 }
@@ -83,7 +90,7 @@ export async function sendEmail(msg: EmailMessage): Promise<boolean> {
   } catch (e) {
     status = "FAILED";
     error = e instanceof Error ? e.message : String(e);
-    console.error(`E-post misslyckades (${msg.type} till ${msg.to}):`, error);
+    console.error(`E-post misslyckades (${msg.type} till ${maskEmail(msg.to)}):`, error);
   }
   try {
     await prisma.emailLog.create({

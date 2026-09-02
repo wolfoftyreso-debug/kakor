@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
+import { safeWeekdays } from "@/lib/products";
 import { prisma } from "@/lib/db";
 import { getAdmin, loginAdmin, logoutAdmin } from "@/lib/auth/session";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
@@ -16,7 +17,7 @@ import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 import { formatOre } from "@/lib/money";
-import { fromISODate, todayInStockholm } from "@/lib/dates";
+import { fromISODate, todayInStockholm, isoWeekday, weekdayName } from "@/lib/dates";
 import { canTransitionOrder } from "@/lib/status";
 
 async function requireAdmin() {
@@ -28,24 +29,27 @@ async function requireAdmin() {
 // ---------- Auth ----------
 
 export async function loginAction(
-  _prev: { error: string } | null,
+  _prev: { error: string; email?: string } | null,
   formData: FormData
-): Promise<{ error: string } | null> {
+): Promise<{ error: string; email?: string } | null> {
   const hdrs = await headers();
   const limit = rateLimit(clientKey(hdrs, "admin-login"), { limit: 5, windowMs: 5 * 60_000 });
   if (!limit.ok) {
-    return { error: `För många inloggningsförsök — vänta ${limit.retryAfterSeconds} sekunder.` };
+    return {
+      error: `För många inloggningsförsök — vänta ${limit.retryAfterSeconds} sekunder.`,
+      email: String(formData.get("email") ?? ""),
+    };
   }
 
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "Ange e-post och lösenord." };
+  if (!email || !password) return { error: "Ange e-post och lösenord.", email };
 
   const ok = await loginAdmin(email, password);
   if (!ok) {
     // JSON-encoda: rå formdata i loggrader möjliggör annars loggforgery via radbrytningar.
     console.warn(`[admin] misslyckad inloggning för ${JSON.stringify(email.slice(0, 200))}`);
-    return { error: "Fel e-post eller lösenord." };
+    return { error: "Fel e-post eller lösenord.", email };
   }
   redirect("/admin");
 }
@@ -182,23 +186,43 @@ export async function resendOrderEmails(orderId: string) {
 
 // ---------- Prenumerationer ----------
 
-export async function setSubscriptionStatus(id: string, status: "ACTIVE" | "PAUSED" | "CANCELLED") {
+export async function setSubscriptionStatus(
+  id: string,
+  status: "ACTIVE" | "PAUSED" | "CANCELLED"
+): Promise<{ error: string } | null> {
   await requireAdmin();
-  await prisma.subscription.update({ where: { id }, data: { status } });
+  // Server actions är publika endpoints — TS-unionen skyddar inte i runtime.
+  const parsed = z.enum(["ACTIVE", "PAUSED", "CANCELLED"]).safeParse(status);
+  if (!parsed.success) return { error: "Ogiltig status" };
+  const current = await prisma.subscription.findUnique({ where: { id }, select: { status: true } });
+  if (!current) return { error: "Prenumerationen finns inte" };
+  if (current.status === "CANCELLED") return { error: "En avslutad prenumeration kan inte återaktiveras" };
+  await prisma.subscription.update({ where: { id }, data: { status: parsed.data } });
   revalidatePath("/admin/prenumerationer");
+  return null;
 }
 
-export async function setSubscriptionNextDate(id: string, isoDate: string) {
+export async function setSubscriptionNextDate(id: string, isoDate: string): Promise<{ error: string } | null> {
   await requireAdmin();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return { error: "Ange datum som ÅÅÅÅ-MM-DD" };
   const date = fromISODate(isoDate);
   // Passerade datum skulle få generatorn att skapa bakdaterade ordrar.
-  if (date.getTime() < todayInStockholm().getTime()) return;
+  if (date.getTime() < todayInStockholm().getTime()) return { error: "Datumet har redan passerat" };
+  // Bara områdets leveransdagar — annars skapar generatorn en order på en dag utan leverans.
+  const sub = await prisma.subscription.findUnique({ where: { id }, include: { deliveryArea: true } });
+  if (!sub) return { error: "Prenumerationen finns inte" };
+  if (sub.deliveryArea) {
+    const weekdays = safeWeekdays(sub.deliveryArea.weekdaysJson);
+    if (weekdays.length > 0 && !weekdays.includes(isoWeekday(date))) {
+      return { error: `${sub.deliveryArea.name} levererar bara ${weekdays.map(weekdayName).join(", ")}` };
+    }
+  }
   await prisma.subscription.update({
     where: { id },
     data: { nextDeliveryDate: date },
   });
   revalidatePath("/admin/prenumerationer");
+  return null;
 }
 
 export async function runSubscriptionGeneration(): Promise<{ generated: number; skipped: number }> {
@@ -229,6 +253,11 @@ const productSchema = z.object({
   imageRef: z.string().trim().max(300).default(""),
   sortOrder: z.coerce.number().int().min(0).max(999).default(0),
   active: z.coerce.boolean().default(false),
+}).superRefine((d, ctx) => {
+  // Styckvara utan paketvikt ger 0 kg i checkoutens viktsummering.
+  if (d.unit === "paket" && d.packageWeightGrams <= 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["packageWeightGrams"], message: "Ange paketvikt i gram för styckvaror" });
+  }
 });
 
 export async function saveProduct(
@@ -293,7 +322,7 @@ export async function setProductActive(productId: string, active: boolean) {
 // ---------- Leveransinställningar ----------
 
 const areaSchema = z.object({
-  weekdays: z.string().regex(/^[1-7](\s*,\s*[1-7])*$/, "Veckodagar: t.ex. 2,4 (1=mån ... 7=sön)"),
+  weekdays: z.string().regex(/^[1-7](\s*,\s*[1-7])*$/, "Veckodagar: t.ex. 4 för torsdag (1=mån ... 7=sön)"),
   leadTimeDays: z.coerce.number().int().min(0).max(30),
   postalPrefixes: z
     .string()

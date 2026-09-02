@@ -10,12 +10,12 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Beställ kakor",
   description:
-    "Snabbeställning för företag: välj kakor per kilo, leveransdag och betala mot faktura. Lokal leverans i Tyresö, Nacka, Haninge och Huddinge.",
+    "Snabbeställning för företag: välj kakor per kilo eller paket, leveransdag och betala mot faktura. Lokal leverans i Tyresö, Nacka, Haninge och Huddinge.",
   alternates: { canonical: "/bestall" },
   ...sharePreview({
     title: "Beställ kakor",
     description:
-      "Snabbeställning för företag: välj kakor per kilo, leveransdag och betala mot faktura. Lokal leverans i Tyresö, Nacka, Haninge och Huddinge.",
+      "Snabbeställning för företag: välj kakor per kilo eller paket, leveransdag och betala mot faktura. Lokal leverans i Tyresö, Nacka, Haninge och Huddinge.",
     path: "/bestall",
   }),
 };

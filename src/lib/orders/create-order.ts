@@ -5,6 +5,7 @@ import { calculateTotals } from "@/lib/money";
 import { nextNumber } from "@/lib/numbering";
 import { invoiceConfig } from "@/lib/config";
 import { addDays, fromISODate, isValidDeliveryDate, toISODate, todayInStockholm } from "@/lib/dates";
+import { safeWeekdays } from "@/lib/products";
 import type { InvoiceSnapshot } from "@/lib/invoice/snapshot";
 import type { CheckoutInput } from "@/lib/validation";
 import { sendOrderEmails } from "@/lib/orders/order-emails";
@@ -62,7 +63,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
 
   const deliveryDate = fromISODate(input.deliveryDate);
   const areaConfig = {
-    weekdays: JSON.parse(area.weekdaysJson) as number[],
+    weekdays: safeWeekdays(area.weekdaysJson),
     leadTimeDays: area.leadTimeDays,
   };
   // Prenumerationsordrar genereras i förväg av motorn och kan ligga närmare i

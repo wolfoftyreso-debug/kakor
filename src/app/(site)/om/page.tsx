@@ -36,7 +36,7 @@ export default function OmPage() {
       </p>
       <div style={{ minHeight: 280, borderRadius: 8, overflow: "hidden", margin: "28px 0" }}>
         <ImageSlot
-          label="Bagare lägger upp chokladsnittar på en plåt"
+          label="Chokladsnittar läggs upp på plåt"
           src="/images/bakning.jpg"
         />
       </div>

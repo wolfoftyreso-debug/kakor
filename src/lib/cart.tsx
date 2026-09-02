@@ -49,6 +49,9 @@ const STORAGE_KEY = "sb_cart_v2";
 
 const INTERVALS: RecurrenceInterval[] = ["WEEKLY", "BIWEEKLY", "MONTHLY"];
 
+/** Serverns tak per orderrad (validation.ts) — korgen får aldrig överskrida det. */
+export const MAX_UNITS = 100;
+
 function sanitizeLines(raw: unknown): CartLine[] {
   if (!Array.isArray(raw)) return [];
   return (raw as CartLine[])
@@ -115,10 +118,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const existing = prev.find((l) => l.productId === product.productId);
         if (existing) {
           return prev.map((l) =>
-            l.productId === product.productId ? { ...l, ...product, kg: l.kg + kg } : l
+            l.productId === product.productId ? { ...l, ...product, kg: Math.min(MAX_UNITS, l.kg + kg) } : l
           );
         }
-        return [...prev, { ...product, kg }];
+        return [...prev, { ...product, kg: Math.min(MAX_UNITS, kg) }];
       });
       showToast(`${product.name} ${qtyLabel(kg, product.unit)} lades i korgen`);
     },
@@ -129,7 +132,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setLines((prev) =>
       kg <= 0
         ? prev.filter((l) => l.productId !== productId)
-        : prev.map((l) => (l.productId === productId ? { ...l, kg } : l))
+        : prev.map((l) => (l.productId === productId ? { ...l, kg: Math.min(MAX_UNITS, kg) } : l))
     );
   }, []);
 

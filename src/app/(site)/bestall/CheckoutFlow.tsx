@@ -13,7 +13,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useCart, type PurchaseMode, type RecurrenceInterval } from "@/lib/cart";
+import { MAX_UNITS, useCart, type PurchaseMode, type RecurrenceInterval } from "@/lib/cart";
 import type { ProductCardData } from "@/components/ProductCard";
 import type { AreaWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
@@ -79,6 +79,9 @@ interface StoredFlow {
   deliveryDate: string | null;
   form: FormState;
   sameEmail: boolean;
+  /** Idempotensnyckel + fingeravtryck av payloaden den gäller för. */
+  idempotencyKey?: string;
+  idempotencyFingerprint?: string;
 }
 
 export function CheckoutFlow({
@@ -96,6 +99,7 @@ export function CheckoutFlow({
   const [sameEmail, setSameEmail] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [flowRestored, setFlowRestored] = useState(false);
@@ -104,6 +108,9 @@ export function CheckoutFlow({
   // och fram igen, så att ett tappat svar + nytt "Skicka" aldrig ger två
   // ordrar/prenumerationer. Nollställs först när ett försök lyckats.
   const idempotencyKey = useRef<string>("");
+  // Nyckeln gäller EN payload: ändras korg/läge/datum/uppgifter roteras den,
+  // annars skulle servern kunna svara med en gammal order för en ny beställning.
+  const idempotencyFingerprint = useRef<string>("");
   const presetApplied = useRef(false);
 
   const mode: PurchaseMode = cart.purchaseMode;
@@ -121,6 +128,9 @@ export function CheckoutFlow({
           setDeliveryDate(typeof s.deliveryDate === "string" ? s.deliveryDate : null);
           if (s.form && typeof s.form === "object") setForm({ ...EMPTY_FORM, ...s.form });
           setSameEmail(s.sameEmail !== false);
+          if (typeof s.idempotencyKey === "string") idempotencyKey.current = s.idempotencyKey;
+          if (typeof s.idempotencyFingerprint === "string")
+            idempotencyFingerprint.current = s.idempotencyFingerprint;
         }
       }
     } catch {
@@ -129,14 +139,26 @@ export function CheckoutFlow({
     setFlowRestored(true);
   }, []);
 
-  useEffect(() => {
-    if (!flowRestored || result) return;
+  const saveFlow = () => {
     try {
-      const stored: StoredFlow = { step, areaSlug, deliveryDate, form, sameEmail };
+      const stored: StoredFlow = {
+        step,
+        areaSlug,
+        deliveryDate,
+        form,
+        sameEmail,
+        idempotencyKey: idempotencyKey.current,
+        idempotencyFingerprint: idempotencyFingerprint.current,
+      };
       sessionStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify(stored));
     } catch {
       // privat läge — flödet funkar ändå under sessionen
     }
+  };
+  useEffect(() => {
+    if (!flowRestored || result) return;
+    saveFlow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flowRestored, result, step, areaSlug, deliveryDate, form, sameEmail]);
 
   // /bestall?typ=aterkommande (från prenumerations-CTA:er) förväljer
@@ -148,7 +170,21 @@ export function CheckoutFlow({
     const typ = new URLSearchParams(window.location.search).get("typ");
     if (typ === "aterkommande") cart.setPurchaseMode("RECURRING");
     if (typ === "engang") cart.setPurchaseMode("ONE_TIME");
+    if (typ) window.history.replaceState(null, "", window.location.pathname);
   }, [cart]);
+
+  // Produkter som inte längre finns i sortimentet (inaktiverade i admin)
+  // rensas ur korgen — annars räknar headerns badge något kunden inte ser.
+  const removeLine = cart.remove;
+  useEffect(() => {
+    if (!cart.hydrated) return;
+    const stale = cart.lines.filter((l) => !products.some((p) => p.id === l.productId));
+    if (stale.length === 0) return;
+    stale.forEach((l) => removeLine(l.productId));
+    setNotice(
+      `${stale.map((l) => l.name).join(", ")} finns inte längre i sortimentet och har tagits bort ur korgen.`
+    );
+  }, [cart.hydrated, cart.lines, products, removeLine]);
 
   const qtyFor = (productId: string) => cart.lines.find((l) => l.productId === productId)?.kg ?? 0;
 
@@ -190,11 +226,17 @@ export function CheckoutFlow({
   const selectedArea = areas.find((a) => a.slug === areaSlug) ?? null;
 
   useEffect(() => {
-    // Rensa valt datum om området byts och datumet inte finns där.
+    // Rensa valt datum om området byts eller datumet inte längre erbjuds
+    // (t.ex. fliken låg öppen över framförhållningsgränsen). Står kunden
+    // längre fram i flödet leds hen tillbaka till dagvalet — aldrig en död Skicka-knapp.
     if (selectedArea && deliveryDate && !selectedArea.upcomingDates.includes(deliveryDate)) {
       setDeliveryDate(null);
+      if (step >= 3) {
+        setStep(2);
+        setGlobalError("Leveransdagen är inte längre tillgänglig — välj en ny dag.");
+      }
     }
-  }, [selectedArea, deliveryDate]);
+  }, [selectedArea, deliveryDate, step]);
 
   // Tomkorgsvakt: hamnar kunden i steg 2–4 utan varor (korgen tömd i en
   // annan flik, eller återställt flöde med utgången korg) renderas en
@@ -209,7 +251,11 @@ export function CheckoutFlow({
     }
     setStep(s);
     setGlobalError(null);
-    requestAnimationFrame(() => headingRef.current?.scrollIntoView({ block: "start" }));
+    setNotice(null);
+    requestAnimationFrame(() => {
+      headingRef.current?.scrollIntoView({ block: "start" });
+      headingRef.current?.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
+    });
   };
 
   const setField = (k: keyof FormState, v: string) => {
@@ -237,13 +283,19 @@ export function CheckoutFlow({
     if (!/^\d{3}\s?\d{2}$/.test(form.deliveryPostalCode.trim()))
       e.deliveryPostalCode = "Ange postnummer i formatet 135 48";
     if (form.deliveryCity.trim().length < 2) e.deliveryCity = "Ange ort";
+    if (form.deliveryInstruction.length > 500) e.deliveryInstruction = "Max 500 tecken";
     setErrors(e);
+    if (Object.keys(e).length > 0) {
+      requestAnimationFrame(() =>
+        headingRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+      );
+    }
     return Object.keys(e).length === 0;
   };
 
   // Servern kan returnera fältfel — visa dem i det steg där felet hör hemma.
   const stepForFields = (fields: Record<string, string>): number => {
-    if (fields.items) return 1;
+    if (Object.keys(fields).some((k) => k === "items" || k.startsWith("items."))) return 1;
     if (fields.areaSlug || fields.deliveryDate || fields.firstDeliveryDate || fields.frequency)
       return 2;
     return 3;
@@ -254,8 +306,22 @@ export function CheckoutFlow({
     setSubmitting(true);
     setGlobalError(null);
     track("order_submitted", { mode });
+    const fingerprint = JSON.stringify({
+      mode,
+      interval: mode === "RECURRING" ? interval : null,
+      areaSlug,
+      deliveryDate,
+      items: activeLines.map((l) => [l.product.id, l.kg]),
+      form,
+      sameEmail,
+    });
+    if (!idempotencyKey.current || idempotencyFingerprint.current !== fingerprint) {
+      idempotencyKey.current = newIdempotencyKey();
+      idempotencyFingerprint.current = fingerprint;
+      saveFlow();
+    }
     const common = {
-      idempotencyKey: idempotencyKey.current || undefined,
+      idempotencyKey: idempotencyKey.current,
       items: activeLines.map((l) => ({ productId: l.product.id, weightKg: l.kg })),
       areaSlug,
       companyName: form.companyName.trim(),
@@ -286,6 +352,7 @@ export function CheckoutFlow({
       const data = await res.json();
       if (data.ok) {
         idempotencyKey.current = "";
+        idempotencyFingerprint.current = "";
         track("order_completed", { mode });
         setResult(
           mode === "RECURRING"
@@ -294,7 +361,7 @@ export function CheckoutFlow({
                 number: data.subscriptionNumber,
                 nextDate: data.nextDeliveryDate,
                 interval,
-                totalOre: totals.totalOre,
+                totalOre: typeof data.totalOre === "number" ? data.totalOre : totals.totalOre,
               }
             : {
                 kind: "order",
@@ -315,8 +382,11 @@ export function CheckoutFlow({
         track("order_failed", { mode, reason: "validation" });
         setGlobalError(data.error ?? "Något gick fel");
         if (data.fields) {
-          setErrors(data.fields);
-          goTo(stepForFields(data.fields));
+          const fields: Record<string, string> = { ...data.fields };
+          const itemKey = Object.keys(fields).find((k) => k.startsWith("items."));
+          if (itemKey && !fields.items) fields.items = fields[itemKey];
+          setErrors(fields);
+          goTo(stepForFields(fields));
         }
       }
     } catch {
@@ -338,13 +408,26 @@ export function CheckoutFlow({
 
   const modeSummary =
     mode === "RECURRING" ? `Återkommande · ${intervalLabel(interval).toLowerCase()}` : undefined;
+  const hasPackageProducts = products.some((p) => p.unit === "paket");
+
 
   return (
-    <div className="container-narrow" style={{ padding: "40px 24px 100px" }} ref={headingRef}>
+    <div
+      className="container-narrow"
+      // Steg 1 SSR-renderas alltid (SEO, utan JS). Ett lagrat flöde återställs
+      // direkt efter hydration — övergången döljs med opacity, HTML:en töms aldrig.
+      style={{ padding: "40px 24px 100px", opacity: flowRestored ? 1 : 0, transition: "opacity 120ms" }}
+      ref={headingRef}
+    >
       {step <= 4 && (
         <div className="progress-steps" role="list" aria-label="Beställningssteg">
           {STEP_LABELS.map((label, i) => (
-            <div key={label} role="listitem" className={`progress-step${step > i ? " done" : ""}`}>
+            <div
+              key={label}
+              role="listitem"
+              aria-current={step === i + 1 ? "step" : undefined}
+              className={`progress-step${step > i ? " done" : ""}`}
+            >
               <div className="progress-bar" />
               <div className="progress-step-label">{label}</div>
             </div>
@@ -368,10 +451,16 @@ export function CheckoutFlow({
           {globalError}
         </div>
       )}
+      {notice && (
+        <div role="status" className="info-box" style={{ marginBottom: 20 }}>
+          {notice}
+        </div>
+      )}
+
       {/* Åtgärdsbar empty state: korgen tömdes mitt i flödet. */}
       {cartEmptiedMidFlow && (
         <div className="card" style={{ padding: "36px 28px", textAlign: "center", display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
-          <h1 style={{ fontSize: 26, margin: 0 }}>Er varukorg är tom.</h1>
+          <h1 tabIndex={-1} style={{ outline: "none", fontSize: 26, margin: 0 }}>Er varukorg är tom.</h1>
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: 0, maxWidth: "44ch" }}>
             Välj era favoriter så ordnar vi resten — allt ni redan fyllt i finns kvar.
           </p>
@@ -384,9 +473,11 @@ export function CheckoutFlow({
       {/* STEG 1: KAKOR */}
       {step === 1 && (
         <>
-          <h1 style={{ fontSize: 32, marginBottom: 6 }}>Välj kakor</h1>
+          <h1 tabIndex={-1} style={{ outline: "none", fontSize: 32, marginBottom: 6 }}>Välj kakor</h1>
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 28px" }}>
-            Sorterna säljs per kilo, prova-på-paketet per paket. Blanda fritt.
+            {hasPackageProducts
+              ? "Lösvikt säljs per kilo och paket per styck. Blanda fritt."
+              : "Sorterna säljs per kilo. Blanda fritt."}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {products.map((p) => (
@@ -417,7 +508,12 @@ export function CheckoutFlow({
                   <div className="stepper-value" aria-live="polite">
                     {qtyLabel(qtyFor(p.id), p.unit)}
                   </div>
-                  <button type="button" aria-label={`Öka ${p.name}`} onClick={() => setQty(p, qtyFor(p.id) + 1)}>
+                  <button
+                    type="button"
+                    aria-label={`Öka ${p.name}`}
+                    disabled={qtyFor(p.id) >= MAX_UNITS}
+                    onClick={() => setQty(p, Math.min(MAX_UNITS, qtyFor(p.id) + 1))}
+                  >
                     +
                   </button>
                 </div>
@@ -462,7 +558,7 @@ export function CheckoutFlow({
       {/* STEG 2: LEVERANS (köpläge -> område -> dag) */}
       {step === 2 && !cartEmptiedMidFlow && (
         <>
-          <h1 style={{ fontSize: 32, marginBottom: 6 }}>Leverans</h1>
+          <h1 tabIndex={-1} style={{ outline: "none", fontSize: 32, marginBottom: 6 }}>Leverans</h1>
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 20px" }}>
             Vi kör själva, på fasta leveransdagar per område.
           </p>
@@ -625,7 +721,7 @@ export function CheckoutFlow({
       {/* STEG 3: UPPGIFTER */}
       {step === 3 && !cartEmptiedMidFlow && (
         <>
-          <h1 style={{ fontSize: 32, marginBottom: 6 }}>Företagsuppgifter</h1>
+          <h1 tabIndex={-1} style={{ outline: "none", fontSize: 32, marginBottom: 6 }}>Företagsuppgifter</h1>
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 20px" }}>
             Vi behöver bara det som krävs för leverans och faktura.
           </p>
@@ -681,11 +777,14 @@ export function CheckoutFlow({
                 Kommentar till leveransen (frivilligt)
                 <textarea
                   rows={2}
+                  maxLength={500}
                   placeholder="T.ex. portkod, lastkaj, våning"
                   value={form.deliveryInstruction}
                   onChange={(e) => setField("deliveryInstruction", e.target.value)}
+                  aria-invalid={!!errors.deliveryInstruction}
                   style={{ resize: "vertical" }}
                 />
+                {errors.deliveryInstruction && <span className="error-text">{errors.deliveryInstruction}</span>}
               </label>
             </div>
             <div className="info-box-muted" style={{ margin: "20px 0 28px" }}>
@@ -707,7 +806,7 @@ export function CheckoutFlow({
       {/* STEG 4: KONTROLLERA */}
       {step === 4 && !cartEmptiedMidFlow && (
         <>
-          <h1 style={{ fontSize: 32, marginBottom: 28 }}>Kontrollera er order</h1>
+          <h1 tabIndex={-1} style={{ outline: "none", fontSize: 32, marginBottom: 28 }}>Kontrollera er order</h1>
           <div className="card" style={{ padding: "24px 26px", display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <div className="section-label">KAKOR</div>
@@ -774,7 +873,12 @@ export function CheckoutFlow({
             <button type="button" className="btn btn-outline" onClick={() => goTo(3)}>
               Tillbaka
             </button>
-            <button type="button" className="btn btn-send btn-lg" disabled={submitting} onClick={submit}>
+            <button
+              type="button"
+              className="btn btn-send btn-lg"
+              disabled={submitting || !areaSlug || !deliveryDate || activeLines.length === 0}
+              onClick={submit}
+            >
               {submitting
                 ? "Skickar…"
                 : mode === "RECURRING"
@@ -792,7 +896,7 @@ export function CheckoutFlow({
             <div style={{ marginBottom: 16, display: "inline-block" }}>
               <LogoSigill size={110} />
             </div>
-            <h1 style={{ fontSize: 34, marginBottom: 10 }}>Tack! Vi har tagit emot er beställning.</h1>
+            <h1 tabIndex={-1} style={{ outline: "none", fontSize: 34, marginBottom: 10 }}>Tack! Vi har tagit emot er beställning.</h1>
             <div className="mono" style={{ fontSize: 13, letterSpacing: 1, color: "var(--text-2)", marginBottom: 28 }}>
               ORDER {result.orderNumber}
             </div>
@@ -835,7 +939,7 @@ export function CheckoutFlow({
             <div style={{ marginBottom: 16, display: "inline-block" }}>
               <LogoSigill size={110} />
             </div>
-            <h1 style={{ fontSize: 34, marginBottom: 10 }}>Tack! Er återkommande leverans är igång.</h1>
+            <h1 tabIndex={-1} style={{ outline: "none", fontSize: 34, marginBottom: 10 }}>Tack! Er återkommande leverans är igång.</h1>
             <div className="mono" style={{ fontSize: 13, letterSpacing: 1, color: "var(--text-2)", marginBottom: 28 }}>
               PRENUMERATION {result.number}
             </div>
@@ -859,7 +963,7 @@ export function CheckoutFlow({
             <br />
             2. Inför varje leverans skapas en order med faktura som mejlas till er.
             <br />
-            3. Ingen bindningstid — ni kan pausa eller avsluta när ni vill.
+            3. Ingen bindningstid — svara på bekräftelsemejlet så pausar eller avslutar vi.
           </div>
           <PreferredSourceCTA placement="subscription_success" />
           <div style={{ textAlign: "center", marginTop: 28 }}>
@@ -890,18 +994,25 @@ function Field({
   type?: string;
   autoComplete?: string;
 }) {
+  const id = "falt-" + label.toLowerCase().replace(/[^a-z0-9åäö]+/g, "-");
   return (
-    <label className={`field${error ? " field-error" : ""}`}>
+    <label className={`field${error ? " field-error" : ""}`} htmlFor={id}>
       {label}
       <input
+        id={id}
         type={type}
         value={value}
         placeholder={placeholder}
         autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
         aria-invalid={!!error}
+        aria-describedby={error ? `${id}-fel` : undefined}
       />
-      {error && <span className="error-text">{error}</span>}
+      {error && (
+        <span id={`${id}-fel`} className="error-text">
+          {error}
+        </span>
+      )}
     </label>
   );
 }

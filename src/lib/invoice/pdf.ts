@@ -3,6 +3,7 @@ import type { InvoiceSnapshot } from "@/lib/invoice/snapshot";
 import { formatOre } from "@/lib/money";
 import { qtyLabel } from "@/lib/units";
 import { SIGILL_PNG_BASE64 } from "@/lib/invoice/sigill-png";
+import { isVerifiedValue } from "@/lib/config";
 
 // PDF-faktura — renderas enbart från fakturans snapshot (historiskt dokument).
 // Diskret varumärkesfärg, standardtypsnitt (Helvetica) för stabil server-side-rendering.
@@ -130,7 +131,15 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
     doc.rect(M, y, CONTENT_W, 66).fill(LIGHT_BG);
     doc.font("Helvetica-Bold").fontSize(8.5).fillColor(MUTED).text("BETALNINGSINFORMATION", M + 12, y + 10);
     doc.font("Helvetica").fontSize(9.5).fillColor(BROWN);
-    doc.text(`Bankgiro: ${snapshot.seller.bankgiro}`, M + 12, y + 24);
+    // Platshållare ("[EJ VERIFIERAT …]") får aldrig hamna på en kundfaktura —
+    // saknas verifierat bankgiro skrivs en neutral rad tills värdet är satt.
+    doc.text(
+      isVerifiedValue(snapshot.seller.bankgiro)
+        ? `Bankgiro: ${snapshot.seller.bankgiro}`
+        : "Betalningsuppgifter meddelas separat.",
+      M + 12,
+      y + 24
+    );
     doc.text(
       `Ange fakturanummer ${invoiceNumber} som referens vid betalning.`,
       M + 12,
@@ -143,13 +152,16 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
     doc.moveTo(M, footY - 10).lineTo(W - M, footY - 10).lineWidth(0.5).stroke(BORDER);
     doc.font("Helvetica").fontSize(7.5).fillColor(MUTED);
     const s = snapshot.seller;
-    doc.text(
-      `${s.companyName} · Org.nr ${s.orgNumber} · ${s.address}, ${s.postalCode} ${s.city} · ${s.email} · ${s.phone}`,
-      M,
-      footY,
-      { width: CONTENT_W, align: "center" }
-    );
-    doc.text(`Momsreg.nr ${s.vatNumber} · ${s.fSkatt}`, M, footY + 11, {
+    const footerParts = [
+      s.companyName,
+      `Org.nr ${s.orgNumber}`,
+      `${s.address}, ${s.postalCode} ${s.city}`,
+      isVerifiedValue(s.email) ? s.email : "",
+      isVerifiedValue(s.phone) ? s.phone : "",
+    ].filter(Boolean);
+    doc.text(footerParts.join(" · "), M, footY, { width: CONTENT_W, align: "center" });
+    const footerParts2 = [isVerifiedValue(s.vatNumber) ? `Momsreg.nr ${s.vatNumber}` : "", s.fSkatt].filter(Boolean);
+    doc.text(footerParts2.join(" · "), M, footY + 11, {
       width: CONTENT_W,
       align: "center",
     });
