@@ -11,7 +11,7 @@ import { ImageSlot } from "@/components/ImageSlot";
 import { IngredientList } from "@/components/IngredientList";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { breadcrumbNode, graph, ids, productNode, webPageNode } from "@/lib/seo/schema";
+import { breadcrumbNode, faqNode, graph, ids, productNode, webPageNode } from "@/lib/seo/schema";
 import { PRODUCT_KNOWLEDGE } from "@/lib/product-content";
 import { allergenChips } from "@/lib/allergens";
 import { formatOre } from "@/lib/money";
@@ -27,10 +27,13 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-function productPageTitle(product: { name: string; unit: string }): string {
-  return product.unit === "paket"
-    ? `${product.name} — beställ till företag`
-    : `${product.name} — beställ per kilo till företag`;
+// Sidtitel ≤ ~45 tecken före " — Sockerbagaren": produktnamn + synonym med
+// egen sökvolym (Semrush: "kolakakor" 33 100, "mandelkubbar" 4 400,
+// "chokladkakor" 6 600) + köpsignalen "per kilo till företag".
+function productPageTitle(product: { name: string; slug: string; unit: string }): string {
+  const aka = knowledgeFor(product.slug)?.titleAka;
+  const name = aka ? `${product.name} (${aka})` : product.name;
+  return product.unit === "paket" ? `${name} — 1,5 kg småkakor till företag` : `${name} per kilo till företag`;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -105,7 +108,8 @@ export default async function ProductPage({ params }: Props) {
       dateModified: product.updatedAt.toISOString().slice(0, 10),
     }),
     breadcrumbNode(path, crumbs),
-    productNode(cardData)
+    productNode(cardData),
+    knowledge?.faqs?.length ? faqNode(path, knowledge.faqs) : null
   );
 
   const chips = allergenChips(product.allergens);
@@ -201,6 +205,20 @@ export default async function ProductPage({ params }: Props) {
               >
                 {p}
               </p>
+            ))}
+          </section>
+        )}
+
+        {knowledge?.faqs && knowledge.faqs.length > 0 && (
+          <section style={{ marginTop: 40, maxWidth: "70ch" }}>
+            <h2 className="h-sub" style={{ marginBottom: 6 }}>
+              Vanliga frågor om {product.name.toLowerCase()}
+            </h2>
+            {knowledge.faqs.map((f) => (
+              <div key={f.q} style={{ borderBottom: "1px solid var(--border)", padding: "14px 4px" }}>
+                <h3 style={{ fontSize: "15.5px", fontWeight: 700, fontFamily: "var(--font-sans)" }}>{f.q}</h3>
+                <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--brown-2)", margin: "6px 0 0" }}>{f.a}</p>
+              </div>
             ))}
           </section>
         )}

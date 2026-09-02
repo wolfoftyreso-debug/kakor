@@ -81,6 +81,7 @@ export async function SiteFooter() {
           <FooterCol
             title="INFORMATION"
             links={[
+              { href: "/fika-till-jobbet", label: "Guide: fika till jobbet" },
               { href: "/ingredienser", label: "Ingredienser & allergener" },
               { href: "/villkor", label: "Leverans- & köpvillkor" },
               { href: "/integritet", label: "Integritetspolicy" },
