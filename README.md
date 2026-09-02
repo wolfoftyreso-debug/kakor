@@ -207,6 +207,10 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
   `INVOICE_EMAIL` som KRITISKA vid uppstart — sätt dem innan första riktiga ordern.
 - **Slutliga priser** — seedade 295 kr/kg är ett startvärde som ska bekräftas
   eller ändras i admin → Produkter (historiska ordrar påverkas inte)
+- **Produktetikett** (`Product.badge`, t.ex. "Bästsäljare") visas på
+  produktkort, produktsida och som flytande kort på startsidans hero — sätts
+  per produkt i admin → Produkter; tom = ingen etikett. Kolasnittar seedas
+  med "Bästsäljare" (verksamhetens uppgift).
 - Leveransdagar: endast TORSDAG just nu (verksamhetens uppgift aug 2026,
   seedad och migrerad); ändras i admin → Inställningar när fler dagar
   tillkommer

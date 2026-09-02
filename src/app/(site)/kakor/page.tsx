@@ -70,8 +70,9 @@ export default async function KakorPage() {
   return (
     <>
       <JsonLd data={pageGraph} />
-      <Breadcrumbs crumbs={CRUMBS} />
-      <div className="container-medium" style={{ padding: "24px 24px 80px" }}>
+      <Breadcrumbs crumbs={CRUMBS} container="container" />
+      {/* Full bredd så att alla fyra sorter ryms på en rad på desktop. */}
+      <div className="container" style={{ padding: "24px 48px 80px" }}>
         <div
           style={{
             display: "flex",
@@ -82,12 +83,12 @@ export default async function KakorPage() {
             gap: 8,
           }}
         >
-          <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)" }}>Våra kakor</h1>
+          <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)" }}>Våra kakor</h1>
           <div style={{ fontSize: 14, color: "var(--text-2)" }}>
             Säljs per kilo · blanda fritt i samma order
           </div>
         </div>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch", margin: "0 0 28px" }}>
+        <p className="lede" style={{ margin: "0 0 28px" }}>
           Klassiska svenska småkakor — fikabröd bakat på riktigt smör, vanligt strösocker och
           kvalitativa traditionella råvaror. Vi levererar till arbetsplatser i Tyresö, Nacka,
           Haninge och Huddinge — betalning sker alltid mot faktura.
@@ -95,7 +96,7 @@ export default async function KakorPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
             gap: 24,
           }}
         >
@@ -114,7 +115,7 @@ export default async function KakorPage() {
 
         {/* FAQ före sidans avslutande CTA-band — sidan ska sluta i handling. */}
         <section style={{ marginTop: 56 }}>
-          <h2 style={{ fontSize: "clamp(22px, 3vw, 28px)", marginBottom: 8 }}>
+          <h2 className="h-sub" style={{ marginBottom: 8 }}>
             Vanliga frågor om småkakor
           </h2>
           <div>
@@ -130,8 +131,8 @@ export default async function KakorPage() {
         </section>
       </div>
 
-      <section style={{ background: "var(--butter)", padding: "56px 24px", textAlign: "center" }}>
-        <h2 style={{ fontSize: "clamp(22px, 3vw, 30px)", marginBottom: 18 }}>
+      <section className="cta-band">
+        <h2 className="h-section" style={{ marginBottom: 20 }}>
           Blanda sorterna fritt — vi levererar till er arbetsplats
         </h2>
         <Link href="/bestall" className="btn btn-primary btn-lg">

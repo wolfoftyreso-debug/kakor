@@ -17,6 +17,7 @@ export async function getActiveProducts(): Promise<ProductCardData[]> {
     weightOptions: safeWeights(p.weightOptionsJson),
     allergens: p.allergens,
     imageRef: p.imageRef,
+    badge: p.badge,
   }));
 }
 

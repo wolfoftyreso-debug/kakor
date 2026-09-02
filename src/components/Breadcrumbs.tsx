@@ -14,7 +14,9 @@ export function Breadcrumbs({
     <nav
       aria-label="Brödsmulor"
       className={container}
-      style={{ padding: "16px 24px 0", fontSize: 13, color: "var(--text-2)" }}
+      // Horisontell padding ärvs från containerklassen — så att brödsmulan
+      // alltid linjerar med sidans innehåll (48/24/20 px beroende på bredd).
+      style={{ paddingTop: 16, paddingBottom: 0, fontSize: 13, color: "var(--text-2)" }}
     >
       {crumbs.map((c, i) =>
         i < crumbs.length - 1 ? (

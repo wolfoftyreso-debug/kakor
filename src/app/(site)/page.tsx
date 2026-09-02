@@ -3,6 +3,11 @@ import Link from "next/link";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { ImageSlot } from "@/components/ImageSlot";
+import { TrustStrip } from "@/components/TrustStrip";
+import { Steps } from "@/components/Steps";
+import { IconCheck } from "@/components/Icons";
+import { formatOre } from "@/lib/money";
+import { priceSuffix } from "@/lib/units";
 import { fromISODate, weekdayName, isoWeekday } from "@/lib/dates";
 import { siteConfig } from "@/lib/config";
 import { JsonLd } from "@/components/JsonLd";
@@ -26,10 +31,10 @@ export const metadata: Metadata = {
 };
 
 const STEPS = [
-  { n: "1", title: "Välj kakor", desc: "Blanda sorter och mängder som det passar er." },
-  { n: "2", title: "Välj leveransdag", desc: "Vi visar tillgängliga leveransdagar för ert område." },
-  { n: "3", title: "Vi kör ut", desc: "Leverans under dagen till er bemannade adress." },
-  { n: "4", title: "Ni får faktura", desc: "Ingen kortbetalning — fakturan kommer efteråt." },
+  { title: "Välj kakor", text: "Blanda sorter och mängder som det passar er." },
+  { title: "Välj leveransdag", text: "Vi visar tillgängliga leveransdagar för ert område." },
+  { title: "Vi kör ut", text: "Leverans under dagen till er bemannade adress." },
+  { title: "Ni får faktura", text: "Ingen kortbetalning — fakturan skapas vid beställningen och mejlas." },
 ];
 
 const INGREDIENTS: { name: string; src?: string }[] = [
@@ -67,6 +72,9 @@ const FAQS = [
 
 export default async function HomePage() {
   const [products, areas] = await Promise.all([getActiveProducts(), getAreasWithDates(1)]);
+  // Flytande kortet på hero-bilden visar produkten med etikett (t.ex. Bästsäljare)
+  // — eller första produkten om ingen etikett satts i admin.
+  const featured = products.find((p) => p.badge) ?? products[0];
 
   // Sidgraf från schema-motorn: WebPage + produktlista + produktentiteter
   // (Organization/WebSite ligger i layouten och refereras via @id).
@@ -85,20 +93,15 @@ export default async function HomePage() {
     <>
       <JsonLd data={pageGraph} />
       {/* HERO */}
-      <section
-        style={{ background: "var(--section-tint)" }}
-        className="hero-grid"
-      >
+      <section style={{ background: "var(--section-tint)" }} className="hero-grid">
         <div className="hero-copy">
           <div className="eyebrow">Bakat med recept från Svenskt konditorlexikon 1957</div>
-          <h1 style={{ fontSize: "clamp(34px, 5vw, 58px)", lineHeight: 1.08, letterSpacing: "-0.5px" }}>
-            Riktigt fika till jobbet.
-          </h1>
-          <p style={{ fontSize: 18, lineHeight: 1.6, margin: 0, maxWidth: "44ch", color: "var(--brown-2)" }}>
-            Klassiska småkakor bakade på riktigt smör och riktiga råvaror — levererade direkt till
-            företag i Tyresö, Nacka, Haninge och Huddinge.
+          <h1 className="h-display">Riktigt fika till jobbet.</h1>
+          <p className="lede" style={{ margin: 0, maxWidth: "46ch" }}>
+            Kolasnittar, mandelkubb och chokladsnittar bakade på riktigt smör — levererade
+            direkt till företag i Tyresö, Nacka, Haninge och Huddinge.
           </p>
-          <div style={{ display: "flex", gap: 14, marginTop: 6, flexWrap: "wrap" }}>
+          <div className="hero-actions">
             <Link href="/bestall" className="btn btn-primary btn-lg">
               Beställ kakor
             </Link>
@@ -106,38 +109,42 @@ export default async function HomePage() {
               Starta fikaprenumeration
             </Link>
           </div>
-          <div style={{ fontSize: "13.5px", color: "var(--text-2)" }}>
-            Betalning mot faktura · Leverans på fasta leveransdagar
-          </div>
+          <TrustStrip />
         </div>
-        <div style={{ minHeight: 320 }}>
+        <div className="hero-media">
           <ImageSlot
             label="Fat med chokladsnittar, mandelkubb och kolasnittar bredvid en kopp kaffe"
             src="/images/hero.jpg"
             priority
           />
+          {featured && (
+            <Link href={`/kakor/${featured.slug}`} className="hero-float">
+              <span className="hero-float-img">
+                <ImageSlot label={featured.name} src={featured.imageRef || undefined} />
+              </span>
+              <span>
+                {featured.badge && <span className="hero-float-badge">{featured.badge}</span>}
+                <span className="hero-float-name" style={{ display: "block" }}>{featured.name}</span>
+                <span className="hero-float-price">
+                  {formatOre(featured.pricePerKgOre)}
+                  {priceSuffix(featured.unit)} exkl. moms
+                </span>
+              </span>
+            </Link>
+          )}
         </div>
       </section>
 
       {/* PRODUKTER */}
-      <section id="kakor" className="container" style={{ padding: "64px 48px" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-            marginBottom: 28,
-            flexWrap: "wrap",
-            gap: 8,
-          }}
-        >
-          <h2 style={{ fontSize: "clamp(24px, 3vw, 34px)" }}>Våra kakor</h2>
-          <div style={{ fontSize: 14, color: "var(--text-2)" }}>
-            Säljs per kilo · blanda fritt i samma order ·{" "}
-            <Link href="/kakor" style={{ fontWeight: 700 }}>
-              Alla kakor →
-            </Link>
+      <section id="kakor" className="container section-y">
+        <div className="section-head">
+          <div>
+            <h2 className="h-section">Våra kakor</h2>
+            <p>Säljs per kilo — blanda fritt i samma order.</p>
           </div>
+          <Link href="/kakor" className="section-link">
+            Alla kakor →
+          </Link>
         </div>
         <div
           style={{
@@ -155,103 +162,69 @@ export default async function HomePage() {
       {/* SMÖR */}
       <section style={{ background: "var(--butter)" }}>
         <div
-          className="container two-col"
-          style={{ padding: "64px 48px", display: "grid", gap: 48, alignItems: "center" }}
+          className="container two-col section-y"
+          style={{ display: "grid", gap: 48, alignItems: "center" }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", lineHeight: 1.15 }}>Smör ska smaka smör.</h2>
+            <div className="eyebrow">Råvarorna</div>
+            <h2 className="h-section">Smör ska smaka smör.</h2>
             <p style={{ fontSize: "16.5px", lineHeight: 1.65, margin: 0, maxWidth: "48ch", color: "var(--brown-2)" }}>
               Våra kakor bakas på riktigt smör, vanligt strösocker och kvalitativa traditionella
               råvaror. Inga onödiga tillsatser, inga genvägar för att få industrikakor att likna
               hembakat.
             </p>
-            <Link href="/ingredienser" style={{ fontWeight: 700, fontSize: 15, color: "var(--text)" }}>
+            <Link href="/ingredienser" className="section-link" style={{ alignSelf: "flex-start", borderColor: "var(--text)" }}>
               Vad finns egentligen i våra kakor? →
             </Link>
           </div>
           <div
             style={{
               display: "grid",
-              // Sex råvaror: fasta 3 kolumner ger jämna 2 rader på alla bredder
-              // (auto-fit gav 5+1 med en ensam ruta på sista raden).
+              // Sex råvaror: fasta 3 kolumner ger jämna 2 rader på alla bredder.
               gridTemplateColumns: "repeat(3, 1fr)",
               gap: 14,
             }}
           >
             {INGREDIENTS.map(({ name, src }) => (
-              <div
-                key={name}
-                style={{
-                  background: "var(--bg)",
-                  borderRadius: 8,
-                  padding: "18px 12px",
-                  textAlign: "center",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                  alignItems: "center",
-                }}
-              >
-                <div style={{ width: 64, height: 64, borderRadius: "50%", overflow: "hidden" }}>
+              <Link key={name} href="/ingredienser" className="ingredient-tile">
+                <span className="tile-img">
                   <ImageSlot label={name} src={src} circle />
-                </div>
-                <div style={{ fontWeight: 700, fontSize: "13.5px" }}>{name}</div>
-              </div>
+                </span>
+                <span className="tile-name">{name}</span>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
       {/* SÅ FUNGERAR DET */}
-      <section className="container" style={{ padding: "64px 48px" }}>
-        <h2 style={{ fontSize: "clamp(24px, 3vw, 34px)", marginBottom: 32 }}>Så fungerar det</h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: 24,
-          }}
-        >
-          {STEPS.map((s) => (
-            <div
-              key={s.n}
-              style={{
-                borderTop: "2px solid var(--text)",
-                paddingTop: 18,
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-            >
-              <div style={{ fontFamily: "var(--font-serif)", fontSize: 30, fontWeight: 700, color: "var(--red)" }}>
-                {s.n}
-              </div>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>{s.title}</div>
-              <div style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.55 }}>{s.desc}</div>
-            </div>
-          ))}
+      <section className="container section-y">
+        <div className="section-head">
+          <div>
+            <h2 className="h-section">Så fungerar det</h2>
+            <p>Fyra steg — inga konton, inga kort.</p>
+          </div>
         </div>
+        <Steps items={STEPS} />
       </section>
 
       {/* PRENUMERATION */}
       <section style={{ background: "var(--text)", color: "var(--bg)" }}>
         <div
-          className="container two-col"
-          style={{ padding: "72px 48px", display: "grid", gap: 48, alignItems: "center" }}
+          className="container two-col section-y"
+          style={{ display: "grid", gap: 48, alignItems: "center" }}
         >
-          <div style={{ minHeight: 300, borderRadius: 8, overflow: "hidden" }}>
+          <div style={{ minHeight: 300, borderRadius: "var(--radius-xl)", overflow: "hidden", boxShadow: "var(--shadow-lg)" }}>
             <ImageSlot
               label="Chokladsnittar med pärlsocker på ett kakfat"
               src="/images/prenumeration.jpg"
             />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-            <div style={{ fontSize: "12.5px", fontWeight: 700, letterSpacing: "2.5px", color: "var(--butter)" }}>
-              FIKAPRENUMERATION
+            <div className="eyebrow" style={{ color: "var(--butter)" }}>
+              Fikaprenumeration
             </div>
-            <h2 style={{ fontSize: "clamp(26px, 3vw, 38px)", lineHeight: 1.12 }}>
-              Fika som bara dyker upp.
-            </h2>
+            <h2 className="h-section">Fika som bara dyker upp.</h2>
             <p style={{ fontSize: "16.5px", lineHeight: 1.65, margin: 0, maxWidth: "46ch", color: "var(--footer-text)" }}>
               Välj kakor, mängd och hur ofta — så står fikat på plats utan att någon behöver komma
               ihåg det. Pausa eller avsluta enkelt.
@@ -267,23 +240,33 @@ export default async function HomePage() {
 
       {/* FÖR ARBETSPLATSER */}
       <section
-        className="container two-col"
-        style={{ padding: "64px 48px", display: "grid", gap: 48, alignItems: "center" }}
+        className="container two-col section-y"
+        style={{ display: "grid", gap: 48, alignItems: "center" }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <h2 style={{ fontSize: "clamp(24px, 3vw, 34px)" }}>Fika för arbetsplatser</h2>
+          <div className="eyebrow">Företagsfika</div>
+          <h2 className="h-section">Fika för arbetsplatser</h2>
           <p style={{ fontSize: 16, lineHeight: 1.65, margin: 0, maxWidth: "50ch", color: "var(--brown-2)" }}>
             Kontor, verkstäder, byggföretag, kliniker och butiker — alla arbetsplatser där personal
             och besökare fikar. Beställ till fredagsfikat, mötet eller personalrummet. Ni får
             faktura, vi sköter resten.
           </p>
-          <ul style={{ margin: 0, paddingLeft: 20, fontSize: 15, lineHeight: 2, color: "var(--brown-2)" }}>
-            <li>Betalning mot faktura — inga kort</li>
-            <li>Snabbeställning för återkommande kunder</li>
-            <li>Leverans under dagen till bemannad adress</li>
+          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10, fontSize: 15, color: "var(--brown-2)" }}>
+            {[
+              "Betalning mot faktura — inga kort",
+              "Snabbeställning för återkommande kunder",
+              "Leverans under dagen till bemannad adress",
+            ].map((t) => (
+              <li key={t} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ color: "var(--red)", display: "inline-flex" }}>
+                  <IconCheck />
+                </span>
+                {t}
+              </li>
+            ))}
           </ul>
         </div>
-        <div style={{ minHeight: 280, maxHeight: 420, borderRadius: 8, overflow: "hidden" }}>
+        <div style={{ minHeight: 280, maxHeight: 420, borderRadius: "var(--radius-xl)", overflow: "hidden", boxShadow: "var(--shadow-md)" }}>
           <ImageSlot
             label="Kollegor fikar med småkakor och kaffe vid ett bord i verkstaden"
             src="/images/arbetsplatsfika.jpg"
@@ -293,13 +276,16 @@ export default async function HomePage() {
 
       {/* OMRÅDEN */}
       <section style={{ background: "var(--section-tint)" }}>
-        <div className="container" style={{ padding: "64px 48px" }}>
-          <h2 style={{ fontSize: "clamp(24px, 3vw, 34px)", marginBottom: 8 }}>
-            Lokal leverans i södra Stockholm
-          </h2>
-          <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 28px" }}>
-            Vi kör själva, på fasta leveransdagar per område.
-          </p>
+        <div className="container section-y">
+          <div className="section-head">
+            <div>
+              <h2 className="h-section">Lokal leverans i södra Stockholm</h2>
+              <p>Vi kör själva, på fasta leveransdagar per område.</p>
+            </div>
+            <Link href="/leverans" className="section-link">
+              Om leveransen →
+            </Link>
+          </div>
           <div
             style={{
               display: "grid",
@@ -308,19 +294,7 @@ export default async function HomePage() {
             }}
           >
             {areas.map((a) => (
-              <Link
-                key={a.slug}
-                href={`/${a.slug}`}
-                className="card"
-                style={{
-                  textDecoration: "none",
-                  color: "var(--text)",
-                  padding: 24,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
-                }}
-              >
+              <Link key={a.slug} href={`/${a.slug}`} className="card card-hover area-card">
                 <div style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 700 }}>{a.name}</div>
                 <div style={{ fontSize: "13.5px", color: "var(--text-2)" }}>
                   Leveransdag:{" "}
@@ -328,9 +302,7 @@ export default async function HomePage() {
                     ? weekdayName(isoWeekday(fromISODate(a.upcomingDates[0])))
                     : a.weekdays.map(weekdayName).join(" & ")}
                 </div>
-                <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--red)", marginTop: 6 }}>
-                  Kakor till företag i {a.name} →
-                </div>
+                <span className="area-cta">Kakor till företag i {a.name}</span>
               </Link>
             ))}
           </div>
@@ -338,8 +310,8 @@ export default async function HomePage() {
       </section>
 
       {/* FAQ */}
-      <section className="container-narrow" style={{ padding: "64px 24px" }}>
-        <h2 style={{ fontSize: "clamp(22px, 3vw, 30px)", marginBottom: 24 }}>Vanliga frågor</h2>
+      <section className="container-narrow section-y">
+        <h2 className="h-section" style={{ marginBottom: 24 }}>Vanliga frågor</h2>
         <div>
           {FAQS.map((f) => (
             <details key={f.q} className="faq-item">
@@ -351,9 +323,9 @@ export default async function HomePage() {
       </section>
 
       {/* CTA */}
-      <section style={{ background: "var(--butter)", padding: "72px 24px", textAlign: "center" }}>
+      <section className="cta-band">
         <div style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "center" }}>
-          <h2 style={{ fontSize: "clamp(26px, 4vw, 40px)" }}>Ska vi ordna nästa fika?</h2>
+          <h2 className="h-section" style={{ fontSize: "clamp(28px, 4vw, 44px)" }}>Ska vi ordna nästa fika?</h2>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center" }}>
             <Link href="/bestall" className="btn btn-primary btn-lg">
               Beställ kakor

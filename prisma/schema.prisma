@@ -42,6 +42,8 @@ model Product {
   ingredients String   @default("")
   allergens   String   @default("")
   imageRef    String   @default("")
+  // Kort etikett på produktkortet, t.ex. "Bästsäljare". Tom = ingen etikett.
+  badge       String   @default("")
   active      Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())

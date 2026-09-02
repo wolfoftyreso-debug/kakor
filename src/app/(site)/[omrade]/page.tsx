@@ -69,7 +69,7 @@ export default async function AreaPage({ params }: Props) {
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="eyebrow">Leveransområde · {content.name}</div>
-          <h1 style={{ fontSize: "clamp(30px, 4.5vw, 42px)", lineHeight: 1.12, letterSpacing: "-0.5px" }}>
+          <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)" }}>
             {content.heroHeading}
           </h1>
           <p style={{ fontSize: "16.5px", lineHeight: 1.65, margin: 0, color: "var(--brown-2)" }}>
@@ -142,19 +142,21 @@ export default async function AreaPage({ params }: Props) {
       </section>
 
       <section className="container-medium" style={{ padding: "56px 24px" }}>
-        <h2 style={{ fontSize: "clamp(24px, 3vw, 30px)", marginBottom: 24 }}>
+        <h2 className="h-sub" style={{ marginBottom: 24 }}>
           Kakorna vi levererar i {content.name}
         </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
+        {/* minmax 205: alla fyra sorter på en rad i container-medium (932 px). */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(205px, 1fr))", gap: 20 }}>
           {products.map((p) => (
             <Link
               key={p.id}
               href={`/kakor/${p.slug}`}
-              className="card"
+              className="card card-hover"
               style={{ overflow: "hidden", textDecoration: "none", color: "var(--text)" }}
             >
-              <div style={{ height: 170 }}>
+              <div className="card-media" style={{ height: 170 }}>
                 <ImageSlot label={`${p.name} — närbild`} src={p.imageRef || undefined} />
+                {p.badge && <span className="product-badge">{p.badge}</span>}
               </div>
               <div style={{ padding: "16px 18px" }}>
                 <div style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 700 }}>{p.name}</div>
@@ -166,7 +168,7 @@ export default async function AreaPage({ params }: Props) {
           ))}
         </div>
         <div style={{ marginTop: 20 }}>
-          <Link href="/bestall" style={{ fontWeight: 700, fontSize: 15 }}>
+          <Link href="/bestall" className="section-link">
             Se priser och beställ →
           </Link>
         </div>

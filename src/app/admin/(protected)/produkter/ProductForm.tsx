@@ -14,6 +14,7 @@ export interface ProductFormValues {
   ingredients: string;
   allergens: string;
   imageRef: string;
+  badge: string;
   sortOrder: number;
   active: boolean;
 }
@@ -78,6 +79,10 @@ export function ProductForm({
       <label className="field">
         Bildreferens (sökväg i /public)
         <input name="imageRef" defaultValue={initial.imageRef} placeholder="/images/kolasnittar.jpg" />
+      </label>
+      <label className="field">
+        Etikett på produktkortet (t.ex. Bästsäljare — tom för ingen)
+        <input name="badge" defaultValue={initial.badge} maxLength={30} placeholder="Bästsäljare" />
       </label>
       <label className="field">
         Sorteringsordning

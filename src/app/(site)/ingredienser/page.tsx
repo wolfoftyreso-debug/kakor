@@ -35,7 +35,7 @@ export default async function IngredienserPage() {
       description={String(metadata.description)}
     />
     <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
-      <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 12 }}>
+      <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)", marginBottom: 14 }}>
         Ingredienser &amp; allergener
       </h1>
       <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>

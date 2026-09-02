@@ -25,7 +25,28 @@
 
   --radius: 6px;
   --radius-lg: 8px;
+  --radius-xl: 14px;
   --shadow: 0 2px 8px rgba(59, 40, 27, 0.08);
+  --shadow-md: 0 6px 20px rgba(59, 40, 27, 0.12);
+  --shadow-lg: 0 18px 48px rgba(59, 40, 27, 0.18);
+  --ring: 0 0 0 3px rgba(239, 190, 76, 0.55);
+  /* Vertikal rytm: en skala i stället för godtyckliga pixelvärden. */
+  --section-y: clamp(52px, 7vw, 92px);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* Synlig fokusring överallt (tangentbord) — aldrig bara outline:none. */
+:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 * {
@@ -102,15 +123,24 @@ button, input, select, textarea {
   text-decoration: none;
   text-align: center;
   font-family: var(--font-sans);
-  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  line-height: 1.2;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s, transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: translateY(0);
 }
 .btn-primary {
   background: var(--text);
   color: var(--bg);
+  box-shadow: 0 1px 2px rgba(59, 40, 27, 0.2);
 }
 .btn-primary:hover {
   background: var(--brown-2);
   color: var(--bg);
+  box-shadow: var(--shadow-md);
 }
 .btn-butter {
   background: var(--butter);
@@ -155,6 +185,8 @@ button, input, select, textarea {
 .btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 .btn-block {
   display: block;
@@ -216,6 +248,27 @@ button, input, select, textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
 }
+/* Klickbara/handlingsbara kort: lyft + skugga vid hover, bildzoom. */
+.card-hover {
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), border-color 0.2s;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: #dccba5;
+}
+.card-media {
+  overflow: hidden;
+  position: relative;
+  background: var(--butter-soft);
+}
+.card-media img {
+  transition: transform 0.6s var(--ease);
+}
+.card-hover:hover .card-media img,
+.product-card:hover .card-media img {
+  transform: scale(1.04);
+}
 
 /* ---------- Metadata / labels ---------- */
 .meta-label {
@@ -263,6 +316,14 @@ button, input, select, textarea {
 }
 .stepper button:hover {
   background: #ebdfc6;
+}
+.stepper button:focus-visible {
+  outline-offset: -3px;
+  border-radius: 0;
+}
+.stepper button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 .stepper .stepper-value {
   width: 64px;
@@ -419,14 +480,21 @@ button, input, select, textarea {
   display: none;
 }
 .faq-item summary::after {
-  content: "+";
-  font-family: var(--font-serif);
-  font-size: 20px;
-  color: var(--red);
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--red);
+  border-bottom: 2px solid var(--red);
+  transform: rotate(45deg);
+  transition: transform 0.2s var(--ease);
   flex-shrink: 0;
+  margin-right: 4px;
+}
+.faq-item summary:hover {
+  color: var(--red);
 }
 .faq-item[open] summary::after {
-  content: "−";
+  transform: rotate(-135deg);
 }
 .faq-item .faq-answer {
   padding: 0 4px 20px;
@@ -574,7 +642,7 @@ button, input, select, textarea {
   grid-template-columns: 1.05fr 1fr;
 }
 .hero-copy {
-  padding: 72px 56px 72px 48px;
+  padding: clamp(48px, 6vw, 88px) 56px clamp(48px, 6vw, 88px) 48px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -684,4 +752,570 @@ button, input, select, textarea {
   .logo-word {
     display: none !important;
   }
+}
+
+
+/* =====================================================================
+   V2-polish — hero, trust strip, produktkort, steg, sticky köpbar
+   ===================================================================== */
+
+/* ---------- Sektioner ---------- */
+.section-y {
+  padding-top: var(--section-y);
+  padding-bottom: var(--section-y);
+}
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px 24px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.section-head p {
+  margin: 4px 0 0;
+  color: var(--text-2);
+  font-size: 15px;
+  max-width: 52ch;
+}
+.section-link {
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 2px solid var(--butter);
+  padding-bottom: 2px;
+  white-space: nowrap;
+}
+.section-link:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+.lede {
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--brown-2);
+  max-width: 58ch;
+}
+.h-display {
+  font-size: clamp(34px, 5vw, 60px);
+  line-height: 1.05;
+  letter-spacing: -0.8px;
+  text-wrap: balance;
+}
+.h-section {
+  font-size: clamp(26px, 3.2vw, 38px);
+  line-height: 1.12;
+  letter-spacing: -0.4px;
+  text-wrap: balance;
+}
+.h-sub {
+  font-size: clamp(22px, 2.6vw, 28px);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+/* ---------- Hero ---------- */
+.hero-media {
+  position: relative;
+  min-height: 360px;
+}
+.hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+@media (min-width: 861px) {
+  .hero-media {
+    margin: 28px 48px 28px 0;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+}
+/* Flytande produktkort på hero-bilden: visar bästsäljaren med riktigt pris. */
+.hero-float {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 12px 16px 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  max-width: calc(100% - 40px);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+.hero-float:hover {
+  transform: translateY(-2px);
+  color: var(--text);
+}
+.hero-float-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.hero-float-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hero-float-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.hero-float-name {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.2;
+}
+.hero-float-price {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+@media (max-width: 480px) {
+  .hero-actions .btn {
+    flex: 1 1 100%;
+  }
+}
+
+/* ---------- Trust strip ---------- */
+.trust-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--brown-2);
+}
+.trust-strip li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.trust-strip svg {
+  width: 18px;
+  height: 18px;
+  color: var(--red);
+  flex-shrink: 0;
+}
+.trust-strip--band {
+  justify-content: center;
+  gap: 14px 40px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* ---------- Produktkort ---------- */
+.product-card {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), border-color 0.2s;
+}
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: #dccba5;
+}
+.product-card .card-media {
+  aspect-ratio: 4 / 3;
+  max-height: 240px;
+}
+.product-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: var(--butter);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(59, 40, 27, 0.18);
+}
+.product-body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.product-title {
+  font-size: 21px;
+  line-height: 1.2;
+}
+.product-title a {
+  color: var(--text);
+  text-decoration: none;
+}
+.product-title a:hover {
+  color: var(--red);
+}
+.product-price {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.product-price small {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.product-desc {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-2);
+  line-height: 1.55;
+  flex: 1;
+}
+.product-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+.product-actions .btn {
+  width: 100%;
+}
+.product-meta {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.product-meta a {
+  color: var(--text-2);
+}
+
+/* ---------- Numrerade steg ---------- */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 28px 24px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: steps;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+}
+.step-num {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--butter);
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.step-num-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.step-num-row::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.step:last-child .step-num-row::after {
+  display: none;
+}
+.step-title {
+  font-weight: 700;
+  font-size: 16.5px;
+}
+.step-text {
+  font-size: 14.5px;
+  color: var(--text-2);
+  line-height: 1.55;
+  margin: 0;
+}
+@media (max-width: 560px) {
+  .steps {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .step {
+    flex-direction: row;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .step-num-row::after {
+    display: none;
+  }
+  .step-num {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
+
+/* ---------- Råvarurutor ---------- */
+.ingredient-tile {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 18px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+.ingredient-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  color: var(--text);
+}
+.ingredient-tile .tile-img {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 3px var(--surface);
+}
+.ingredient-tile .tile-name {
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+/* ---------- Områdeskort ---------- */
+.area-card {
+  text-decoration: none;
+  color: var(--text);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.area-card .area-cta {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--red);
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.area-card .area-cta::after {
+  content: "→";
+  transition: transform 0.2s var(--ease);
+}
+.area-card:hover .area-cta::after {
+  transform: translateX(4px);
+}
+
+/* ---------- Header ---------- */
+.top-banner {
+  background: var(--text);
+  color: var(--bg);
+  text-align: center;
+  padding: 9px 16px;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+.top-banner .banner-short {
+  display: none;
+}
+@media (max-width: 640px) {
+  .top-banner {
+    font-size: 12.5px;
+    padding: 8px 12px;
+  }
+  .top-banner .banner-long {
+    display: none;
+  }
+  .top-banner .banner-short {
+    display: inline;
+  }
+}
+.site-nav a {
+  position: relative;
+  padding: 6px 0;
+}
+.site-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--butter);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s var(--ease);
+}
+.site-nav a:hover::after,
+.site-nav a[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+.site-nav a[aria-current="page"] {
+  color: var(--text);
+}
+header.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  box-shadow: 0 1px 0 var(--border);
+}
+.cart-link:hover {
+  color: var(--red);
+}
+.mobile-nav a:hover {
+  color: var(--red);
+}
+
+/* ---------- Footer ---------- */
+.footer-link {
+  color: var(--footer-text);
+  text-decoration: none;
+  width: max-content;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s, color 0.15s;
+}
+.footer-link:hover {
+  color: var(--bg);
+  border-color: var(--butter);
+}
+
+/* ---------- Sticky köpbar (mobil produktsida) ---------- */
+.sticky-buy {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -8px 24px rgba(59, 40, 27, 0.12);
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transform: translateY(110%);
+  transition: transform 0.25s var(--ease);
+}
+.sticky-buy.visible {
+  transform: translateY(0);
+}
+.sticky-buy .sticky-buy-name {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.15;
+}
+.sticky-buy .sticky-buy-price {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+@media (max-width: 860px) {
+  .sticky-buy {
+    display: flex;
+  }
+  /* Ge plats åt baren så sidfoten inte döljs bakom den. */
+  .has-sticky-buy {
+    padding-bottom: 76px;
+  }
+}
+
+/* ---------- Kassans summeringsrad: sticky i botten på mobil ---------- */
+.checkout-total-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 28px;
+  background: var(--section-tint);
+  border-radius: 8px;
+  padding: 18px 22px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+@media (max-width: 720px) {
+  .checkout-total-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 -8px 24px rgba(59, 40, 27, 0.1);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-radius: 10px 10px 0 0;
+    margin: 28px -4px 0;
+    flex-wrap: nowrap;
+  }
+  .checkout-total-bar .btn {
+    padding: 13px 18px;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .checkout-total-bar .total-amount {
+    font-size: 19px !important;
+  }
+}
+
+/* ---------- Kort-band (CTA i botten av sidor) ---------- */
+.cta-band {
+  background: var(--butter);
+  padding: var(--section-y) 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cta-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.35), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(160, 61, 44, 0.12), transparent 45%);
+  pointer-events: none;
+}
+.cta-band > * {
+  position: relative;
 }

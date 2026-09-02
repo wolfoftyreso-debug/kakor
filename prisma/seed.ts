@@ -27,6 +27,7 @@ const products = [
     ingredients: "Vetemjöl, smör, socker, ljus sirap, vaniljsocker, bikarbonat, keltiskt salt.",
     allergens: "Innehåller vete, smör (mjölk).",
     imageRef: "/images/kolasnittar.jpg",
+    badge: "Bästsäljare",
     sortOrder: 2,
   },
   {
