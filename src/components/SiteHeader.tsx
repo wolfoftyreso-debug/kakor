@@ -194,13 +194,26 @@ export function SiteHeader() {
                   color: "var(--text)",
                   textDecoration: "none",
                   fontWeight: 600,
-                  padding: "12px 0",
+                  padding: "14px 0",
                   borderBottom: "1px solid var(--divider)",
                 }}
               >
                 {item.label}
               </Link>
             ))}
+            {/* Menyn slutar i handling (mönster: lululemon/Etsy-drawers) —
+                primär CTA + korgen, inte bara länkar. */}
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <Link href="/bestall" className="btn btn-primary" style={{ flex: 1, textAlign: "center", padding: 14 }} onClick={() => setOpen(false)}>
+                Beställ kakor
+              </Link>
+              <Link href="/bestall" className="btn btn-outline" style={{ padding: "14px 18px" }} onClick={() => setOpen(false)}>
+                Korg ({totalKg})
+              </Link>
+            </div>
+            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 12 }}>
+              Betalning mot faktura · Tyresö, Nacka, Haninge och Huddinge
+            </div>
           </nav>
         )}
       </header>

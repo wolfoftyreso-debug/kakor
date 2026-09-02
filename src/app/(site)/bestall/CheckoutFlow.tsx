@@ -21,7 +21,6 @@ import { ImageSlot } from "@/components/ImageSlot";
 import { formatOre, calculateTotals } from "@/lib/money";
 import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/units";
 import { capitalizeFirst, formatDeliveryDate, fromISODate, toISODate, upcomingDeliveryDates } from "@/lib/dates";
-import { LogoSigill } from "@/components/Logo";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 import { newIdempotencyKey } from "@/lib/idempotency";
 import { track } from "@/lib/analytics";
@@ -66,9 +65,23 @@ function intervalLabel(value: RecurrenceInterval): string {
   return INTERVALS.find((i) => i.value === value)?.label ?? value;
 }
 
+interface ResultLine {
+  name: string;
+  kg: number;
+  unit: string;
+  ore: number;
+  imageRef: string;
+}
+interface ResultCommon {
+  lines: ResultLine[];
+  email: string;
+  invoiceEmail: string;
+  address: string;
+  areaName: string;
+}
 type SubmitResult =
-  | { kind: "order"; orderNumber: string; invoiceUrl: string; deliveryDate: string; totalOre: number }
-  | { kind: "subscription"; number: string; nextDate: string; interval: RecurrenceInterval; totalOre: number };
+  | ({ kind: "order"; orderNumber: string; invoiceUrl: string; deliveryDate: string; totalOre: number } & ResultCommon)
+  | ({ kind: "subscription"; number: string; nextDate: string; interval: RecurrenceInterval; totalOre: number } & ResultCommon);
 
 // Pågående flödesdata (steg, leveransval, formulär) — sessionStorage så att
 // reload/back/avstickare inte kastar bort något. Korgen bor i localStorage.
@@ -404,6 +417,19 @@ export function CheckoutFlow({
         idempotencyKey.current = "";
         idempotencyFingerprint.current = "";
         track("order_completed", { mode });
+        const resultCommon: ResultCommon = {
+          lines: activeLines.map((l) => ({
+            name: l.product.name,
+            kg: l.kg,
+            unit: l.product.unit,
+            ore: l.kg * l.product.pricePerKgOre,
+            imageRef: l.product.imageRef,
+          })),
+          email: common.email,
+          invoiceEmail: common.invoiceEmail,
+          address: `${common.deliveryAddress}, ${common.deliveryPostalCode} ${common.deliveryCity}`,
+          areaName: selectedArea?.name ?? "",
+        };
         setResult(
           mode === "RECURRING"
             ? {
@@ -412,6 +438,7 @@ export function CheckoutFlow({
                 nextDate: data.nextDeliveryDate,
                 interval,
                 totalOre: typeof data.totalOre === "number" ? data.totalOre : totals.totalOre,
+                ...resultCommon,
               }
             : {
                 kind: "order",
@@ -419,6 +446,7 @@ export function CheckoutFlow({
                 invoiceUrl: data.invoiceUrl,
                 deliveryDate: data.deliveryDate,
                 totalOre: data.totalOre,
+                ...resultCommon,
               }
         );
         try {
@@ -471,6 +499,7 @@ export function CheckoutFlow({
         kg: l.kg,
         unit: l.product.unit,
         ore: l.kg * l.product.pricePerKgOre,
+        imageRef: l.product.imageRef,
       }));
 
   const modeSummary =
@@ -487,19 +516,24 @@ export function CheckoutFlow({
       ref={headingRef}
     >
       {step <= 4 && (
-        <div className="progress-steps" role="list" aria-label="Beställningssteg">
-          {STEP_LABELS.map((label, i) => (
-            <div
-              key={label}
-              role="listitem"
-              aria-current={step === i + 1 ? "step" : undefined}
-              className={`progress-step${step > i ? " done" : ""}`}
-            >
-              <div className="progress-bar" />
-              <div className="progress-step-label">{label}</div>
-            </div>
-          ))}
-        </div>
+        <ol className="progress-steps" aria-label="Beställningssteg">
+          {STEP_LABELS.map((label, i) => {
+            const n = i + 1;
+            const state = step > n ? "done" : step === n ? "current" : "todo";
+            return (
+              <li
+                key={label}
+                aria-current={state === "current" ? "step" : undefined}
+                className={`progress-step ${state}`}
+              >
+                <span className="progress-dot" aria-hidden="true">
+                  {state === "done" ? "✓" : n}
+                </span>
+                <span className="progress-step-label">{label}</span>
+              </li>
+            );
+          })}
+        </ol>
       )}
 
       {globalError && (
@@ -725,14 +759,7 @@ export function CheckoutFlow({
             </p>
           )}
           {selectedArea && (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 10,
-                marginBottom: 16,
-              }}
-            >
+            <div className="date-grid" style={{ marginBottom: 16 }}>
               {upcomingDates.map((d) => (
                 <button
                   key={d}
@@ -891,9 +918,12 @@ export function CheckoutFlow({
               <div
                 key={l.name}
                 className="divider-row"
-                style={{ display: "flex", justifyContent: "space-between", fontSize: 15, paddingBottom: 10 }}
+                style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 15, paddingBottom: 10 }}
               >
-                <span style={{ fontWeight: 600 }}>{l.name}</span>
+                <span className="review-thumb">
+                  <ImageSlot label={l.name} src={l.imageRef || undefined} decorative />
+                </span>
+                <span style={{ fontWeight: 600, flex: 1 }}>{l.name}</span>
                 <span>
                   {qtyLabel(l.kg, l.unit)} · {formatOre(l.ore)}
                 </span>
@@ -968,23 +998,23 @@ export function CheckoutFlow({
       {step === 5 && result?.kind === "order" && (
         <>
           <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
-            <div style={{ marginBottom: 16, display: "inline-block" }}>
-              <LogoSigill size={110} />
-            </div>
+            <div className="success-mark" aria-hidden="true">✓</div>
             <h1 tabIndex={-1} style={{ outline: "none", fontSize: 34, marginBottom: 10 }}>Tack! Vi har tagit emot er beställning.</h1>
-            <div className="mono" style={{ fontSize: 13, letterSpacing: 1, color: "var(--text-2)", marginBottom: 28 }}>
+            <div className="mono" style={{ fontSize: 13, letterSpacing: 1, color: "var(--text-2)", marginBottom: 6 }}>
               ORDER {result.orderNumber}
             </div>
+            <p style={{ fontSize: 14.5, color: "var(--text-2)", margin: "0 0 28px" }}>
+              Orderbekräftelsen skickas till <strong>{result.email}</strong>
+              {result.invoiceEmail !== result.email ? <> och fakturan till <strong>{result.invoiceEmail}</strong></> : null}.
+            </p>
           </div>
-          <div className="card" style={{ padding: "24px 26px", display: "flex", flexDirection: "column", gap: 12, marginBottom: 20, fontSize: "14.5px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700 }}>
-              <span>Totalt</span>
-              <span>{formatOre(result.totalOre)}</span>
-            </div>
-            <div style={{ color: "var(--text-2)" }}>
-              Leverans {formatDeliveryDate(fromISODate(result.deliveryDate))} · under dagen
-            </div>
-          </div>
+          <ResultSummary
+            lines={result.lines}
+            totalOre={result.totalOre}
+            totalLabel="Totalt inkl. moms"
+            delivery={`${result.areaName} · ${capitalizeFirst(formatDeliveryDate(fromISODate(result.deliveryDate)))} · under dagen`}
+            address={result.address}
+          />
           <div className="info-box-muted" style={{ padding: "22px 24px", fontSize: "14.5px", lineHeight: 1.8 }}>
             <strong>Vad händer nu?</strong>
             <br />
@@ -1011,24 +1041,22 @@ export function CheckoutFlow({
       {step === 5 && result?.kind === "subscription" && (
         <>
           <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
-            <div style={{ marginBottom: 16, display: "inline-block" }}>
-              <LogoSigill size={110} />
-            </div>
-            <h1 tabIndex={-1} style={{ outline: "none", fontSize: 34, marginBottom: 10 }}>Tack! Er återkommande leverans är igång.</h1>
-            <div className="mono" style={{ fontSize: 13, letterSpacing: 1, color: "var(--text-2)", marginBottom: 28 }}>
+            <div className="success-mark" aria-hidden="true">✓</div>
+            <h1 tabIndex={-1} style={{ outline: "none", fontSize: 34, marginBottom: 10 }}>Tack! Er fikaprenumeration är igång.</h1>
+            <div className="mono" style={{ fontSize: 13, letterSpacing: 1, color: "var(--text-2)", marginBottom: 6 }}>
               PRENUMERATION {result.number}
             </div>
+            <p style={{ fontSize: 14.5, color: "var(--text-2)", margin: "0 0 28px" }}>
+              Bekräftelsen skickas till <strong>{result.email}</strong>.
+            </p>
           </div>
-          <div className="card" style={{ padding: "24px 26px", display: "flex", flexDirection: "column", gap: 12, marginBottom: 20, fontSize: "14.5px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700 }}>
-              <span>Per leverans</span>
-              <span>{formatOre(result.totalOre)}</span>
-            </div>
-            <div style={{ color: "var(--text-2)" }}>
-              {intervalLabel(result.interval)} ·{" "}
-              <span>första leverans {formatDeliveryDate(fromISODate(result.nextDate))}</span>
-            </div>
-          </div>
+          <ResultSummary
+            lines={result.lines}
+            totalOre={result.totalOre}
+            totalLabel="Per leverans inkl. moms"
+            delivery={`${result.areaName} · ${intervalLabel(result.interval)} · första leverans ${formatDeliveryDate(fromISODate(result.nextDate))}`}
+            address={result.address}
+          />
           <div className="info-box-muted" style={{ padding: "22px 24px", fontSize: "14.5px", lineHeight: 1.8 }}>
             <strong>Vad händer nu?</strong>
             <br />
@@ -1087,6 +1115,51 @@ function Field({
         </span>
       )}
     </label>
+  );
+}
+
+// Tack-sidans sammanfattning (mönster: Shopify/adidas orderbekräftelse —
+// rader med bild, leverans, adress; kunden ska kunna kontrollera allt utan mejlet).
+function ResultSummary({
+  lines,
+  totalOre,
+  totalLabel,
+  delivery,
+  address,
+}: {
+  lines: ResultLine[];
+  totalOre: number;
+  totalLabel: string;
+  delivery: string;
+  address: string;
+}) {
+  return (
+    <div className="card" style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 12, marginBottom: 20, fontSize: "14.5px" }}>
+      {lines.map((l) => (
+        <div key={l.name} className="divider-row" style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 10 }}>
+          <span className="review-thumb">
+            <ImageSlot label={l.name} src={l.imageRef || undefined} decorative />
+          </span>
+          <span style={{ fontWeight: 600, flex: 1 }}>{l.name}</span>
+          <span>
+            {qtyLabel(l.kg, l.unit)} · {formatOre(l.ore)}
+          </span>
+        </div>
+      ))}
+      <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 16 }}>
+        <span>{totalLabel}</span>
+        <span>{formatOre(totalOre)}</span>
+      </div>
+      <div style={{ borderTop: "1px solid var(--divider)", paddingTop: 12, display: "grid", gap: 4, color: "var(--text-2)" }}>
+        <div>
+          <strong style={{ color: "var(--text)" }}>Leverans:</strong> {delivery}
+        </div>
+        <div>
+          <strong style={{ color: "var(--text)" }}>Adress:</strong> {address}
+        </div>
+        <div>Betalning mot faktura.</div>
+      </div>
+    </div>
   );
 }
 
