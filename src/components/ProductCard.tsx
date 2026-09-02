@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useCart } from "@/lib/cart";
+import { useCart, MAX_UNITS } from "@/lib/cart";
 import { ImageSlot } from "@/components/ImageSlot";
 import { formatOre } from "@/lib/money";
 import { priceSuffix, qtyLabel } from "@/lib/units";
@@ -18,6 +18,8 @@ export interface ProductCardData {
   weightOptions: number[];
   allergens: string;
   imageRef: string;
+  /** Kort etikett från admin, t.ex. "Bästsäljare". Tom sträng = ingen. */
+  badge: string;
 }
 
 export function ProductCard({
@@ -33,83 +35,87 @@ export function ProductCard({
   const Heading = headingLevel;
 
   return (
-    <div
-      className="card"
-      style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}
-    >
-      <div style={{ height: 220 }}>
+    <article className="card product-card">
+      <Link
+        href={`/kakor/${product.slug}`}
+        className="card-media"
+        aria-label={`${product.name} — läs mer`}
+        tabIndex={-1}
+      >
         <ImageSlot label={`${product.name} — närbild`} src={product.imageRef || undefined} />
-      </div>
-      <div style={{ padding: "20px 22px 22px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-          <Heading style={{ fontSize: 21 }}>
-            <Link href={`/kakor/${product.slug}`} style={{ color: "var(--text)", textDecoration: "none" }}>
-              {product.name}
-            </Link>
+        {product.badge && <span className="product-badge">{product.badge}</span>}
+      </Link>
+      <div className="product-body">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "4px 12px", flexWrap: "wrap" }}>
+          <Heading className="product-title">
+            <Link href={`/kakor/${product.slug}`}>{product.name}</Link>
           </Heading>
           {/* Priset följer valt antal — á-priset visas som hint när fler än en valts. */}
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: 15, color: "var(--text-2)", whiteSpace: "nowrap" }}>
-            {formatOre(kg * product.pricePerKgOre)}
-            {kg === 1 ? priceSuffix(product.unit) : ""}{" "}
-            {kg > 1 && (
-              <span style={{ fontSize: 11.5, fontFamily: "var(--font-sans)" }}>
-                ({formatOre(product.pricePerKgOre)}
-                {priceSuffix(product.unit)}){" "}
-              </span>
-            )}
-            <span style={{ fontSize: 11.5, fontFamily: "var(--font-sans)" }}>exkl. moms</span>
+          <div className="product-price">
+            <span>
+              {formatOre(kg * product.pricePerKgOre)}
+              {kg === 1 ? priceSuffix(product.unit) : ""}
+            </span>
+            <small>
+              {kg > 1 ? `(${formatOre(product.pricePerKgOre)}${priceSuffix(product.unit)}) ` : ""}
+              exkl. moms
+            </small>
           </div>
         </div>
-        <p style={{ margin: 0, fontSize: 14, color: "var(--text-2)", lineHeight: 1.5, flex: 1 }}>
-          {product.description}
-        </p>
-        {/* Fritt antal — riktig stepper i stället för fasta förval. */}
-        <div
-          className="stepper"
-          role="group"
-          aria-label={`Välj ${product.unit === "paket" ? "antal" : "vikt"} för ${product.name}`}
-        >
-          <button
-            type="button"
-            aria-label={`Minska ${product.name}`}
-            onClick={() => setSelectedKg(Math.max(1, kg - 1))}
-          >
-            −
-          </button>
-          <div className="stepper-value" aria-live="polite">
-            {qtyLabel(kg, product.unit)}
-          </div>
-          <button
-            type="button"
-            aria-label={`Öka ${product.name}`}
-            onClick={() => setSelectedKg(Math.min(100, kg + 1))}
-          >
-            +
-          </button>
-        </div>
-        <button
-          type="button"
-          className="btn btn-primary"
-          style={{ padding: 14, fontSize: "14.5px" }}
-          onClick={() =>
-            addKg(
-              {
-                productId: product.id,
-                slug: product.slug,
-                name: product.name,
-                pricePerKgOre: product.pricePerKgOre,
-                unit: product.unit,
-              },
-              kg
-            )
-          }
-        >
-          Lägg i korgen
-        </button>
-        <div style={{ fontSize: "11.5px", color: "var(--text-2)" }}>
+        <p className="product-desc">{product.description}</p>
+        {/* Allergener ovanför knapparna: då hamnar stepper + "Lägg i korgen"
+            alltid på samma höjd i alla kort oavsett textlängd. */}
+        <div className="product-meta">
           {product.allergens} <Link href="/ingredienser">Alla ingredienser</Link>
         </div>
+        <div className="product-actions">
+          {/* Fritt antal — riktig stepper i stället för fasta förval. */}
+          <div
+            className="stepper"
+            role="group"
+            aria-label={`Välj ${product.unit === "paket" ? "antal" : "vikt"} för ${product.name}`}
+          >
+            <button
+              type="button"
+              aria-label={`Minska ${product.name}`}
+              disabled={kg <= 1}
+              onClick={() => setSelectedKg(Math.max(1, kg - 1))}
+            >
+              −
+            </button>
+            <div className="stepper-value" aria-live="polite">
+              {qtyLabel(kg, product.unit)}
+            </div>
+            <button
+              type="button"
+              aria-label={`Öka ${product.name}`}
+              disabled={kg >= MAX_UNITS}
+              onClick={() => setSelectedKg(Math.min(MAX_UNITS, kg + 1))}
+            >
+              +
+            </button>
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ padding: 14, fontSize: "14.5px" }}
+            onClick={() =>
+              addKg(
+                {
+                  productId: product.id,
+                  slug: product.slug,
+                  name: product.name,
+                  pricePerKgOre: product.pricePerKgOre,
+                  unit: product.unit,
+                },
+                kg
+              )
+            }
+          >
+            Lägg i korgen
+          </button>
+        </div>
       </div>
-    </div>
+    </article>
   );
 }

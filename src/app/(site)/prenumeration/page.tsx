@@ -3,6 +3,8 @@ import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { JsonLd } from "@/components/JsonLd";
 import { graph, webPageNode } from "@/lib/seo/schema";
+import { Steps } from "@/components/Steps";
+import { TrustStrip } from "@/components/TrustStrip";
 
 // Fikaprenumerationen är INTE en egen butik eller checkout — det är ett
 // köpläge i sajtens enda beställningsflöde (/bestall). Den här sidan
@@ -24,23 +26,20 @@ export const metadata: Metadata = {
 
 const STEPS = [
   {
-    n: "1",
     title: "Välj kakor och mängd",
     text: "Samma sortiment och samma varukorg som vanliga beställningar — blanda fritt.",
   },
   {
-    n: "2",
     title: "Välj hur ofta",
     text: "Varje vecka, varannan vecka eller var fjärde vecka. Ni väljer också första leveransdag.",
   },
   {
-    n: "3",
     title: "Fikat sköter sig självt",
     text: "Inför varje leverans skapas en vanlig order med faktura som mejlas till er. Ingen bindningstid — svara på bekräftelsemejlet så pausar eller avslutar vi.",
   },
 ];
 
-export default function PrenumerationPage() {
+export default async function PrenumerationPage() {
   return (
     <>
       <JsonLd
@@ -52,14 +51,14 @@ export default function PrenumerationPage() {
           })
         )}
       />
-      <section style={{ background: "var(--section-tint)", padding: "56px 24px", textAlign: "center" }}>
+      <section className="section-y" style={{ background: "var(--section-tint)", padding: "var(--section-y) 24px", textAlign: "center" }}>
         <div className="eyebrow" style={{ marginBottom: 12 }}>
           Fikaprenumeration
         </div>
-        <h1 style={{ fontSize: "clamp(30px, 5vw, 46px)", letterSpacing: "-0.5px", marginBottom: 12 }}>
+        <h1 className="h-display" style={{ marginBottom: 14 }}>
           Fika som bara dyker upp.
         </h1>
-        <p style={{ fontSize: 17, color: "var(--brown-2)", margin: "0 auto", maxWidth: "52ch", lineHeight: 1.6 }}>
+        <p className="lede" style={{ margin: "0 auto", maxWidth: "52ch" }}>
           Välj kakor, mängd och hur ofta — så står fikat på plats utan att någon behöver komma ihåg
           det. Det är en vanlig beställning som kommer igen automatiskt, inget mer.
         </p>
@@ -74,35 +73,11 @@ export default function PrenumerationPage() {
           </Link>
         </p>
       </section>
+      <TrustStrip band />
 
       <section className="container-medium" style={{ padding: "56px 24px 72px" }}>
-        <h2 style={{ fontSize: "clamp(22px, 3vw, 30px)", marginBottom: 28 }}>Så funkar det</h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 24,
-          }}
-        >
-          {STEPS.map((s) => (
-            <div
-              key={s.n}
-              style={{
-                borderTop: "2px solid var(--text)",
-                paddingTop: 18,
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-            >
-              <div style={{ fontFamily: "var(--font-serif)", fontSize: 30, fontWeight: 700, color: "var(--red)" }}>
-                {s.n}
-              </div>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>{s.title}</div>
-              <div style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.55 }}>{s.text}</div>
-            </div>
-          ))}
-        </div>
+        <h2 className="h-section" style={{ marginBottom: 28 }}>Så funkar det</h2>
+        <Steps items={STEPS} />
         <div className="info-box-muted" style={{ marginTop: 36, fontSize: "14.5px", lineHeight: 1.7 }}>
           <strong>Betalning mot faktura, precis som vanligt.</strong> Ingen kortdebitering och inget
           konto — varje leverans faktureras för sig, till den fakturaadress ni anger.

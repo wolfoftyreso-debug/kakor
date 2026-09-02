@@ -13,6 +13,12 @@ const NAV = [
   { href: "/om", label: "Om Sockerbagaren" },
 ];
 
+// Aktiv menypunkt: exakt träff eller undersida (t.ex. /kakor/kolasnittar → Kakor).
+function isActive(pathname: string | null, href: string): boolean {
+  if (!pathname) return false;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function SiteHeader() {
   const { totalKg } = useCart();
   const [open, setOpen] = useState(false);
@@ -37,17 +43,15 @@ export function SiteHeader() {
       <a href="#innehall" className="skip-link">
         Hoppa till innehåll
       </a>
-      <div
-        style={{
-          background: "var(--text)",
-          color: "var(--bg)",
-          textAlign: "center",
-          padding: "9px 16px",
-          fontSize: "13.5px",
-        }}
-      >
-        Vi levererar företagsfika i <strong>Tyresö, Nacka, Haninge och Huddinge</strong> — betalning
-        mot faktura.
+      <div className="top-banner">
+        {/* Lång text på desktop, kort på mobil — samma fakta, inga radbrytningar. */}
+        <span className="banner-long">
+          Vi levererar företagsfika i <strong>Tyresö, Nacka, Haninge och Huddinge</strong> — betalning
+          mot faktura.
+        </span>
+        <span className="banner-short">
+          Företagsfika i södra Stockholm · <strong>Betalning mot faktura</strong>
+        </span>
       </div>
       <header
         style={{
@@ -87,7 +91,12 @@ export function SiteHeader() {
           style={{ display: "flex", gap: 28, fontSize: "14.5px", fontWeight: 600 }}
         >
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} style={{ color: "var(--text)", textDecoration: "none" }}>
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive(pathname, item.href) ? "page" : undefined}
+              style={{ color: "var(--text)", textDecoration: "none" }}
+            >
               {item.label}
             </Link>
           ))}
@@ -99,6 +108,7 @@ export function SiteHeader() {
           </Link>
           <Link
             href="/bestall"
+            className="cart-link"
             style={{
               // Inline-badge bredvid texten — aldrig absolut positionerad,
               // så den kan varken täcka bokstäverna eller grannelementen.
@@ -153,6 +163,7 @@ export function SiteHeader() {
           <nav
             id="mobilmeny"
             aria-label="Mobilmeny"
+            className="mobile-nav"
             style={{
               position: "absolute",
               top: "100%",
@@ -171,6 +182,7 @@ export function SiteHeader() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
+                aria-current={isActive(pathname, item.href) ? "page" : undefined}
                 style={{
                   color: "var(--text)",
                   textDecoration: "none",

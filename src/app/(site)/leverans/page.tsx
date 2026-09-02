@@ -45,16 +45,16 @@ export default async function LeveransPage() {
     />
     <Breadcrumbs crumbs={CRUMBS} container="container-narrow" />
     <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
-      <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 12 }}>
+      <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)", marginBottom: 14 }}>
         Fikaleverans i södra Stockholm
       </h1>
-      <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
+      <p className="lede">
         Vi kör själva, på fasta leveransdagar per område. Leveransen kommer under dagen — vi kan
         inte lova exakt klockslag, så någon behöver finnas på plats för att ta emot den: reception,
         personalrum eller lastkaj.
       </p>
 
-      <div style={{ height: 340, borderRadius: 8, overflow: "hidden", margin: "28px 0 4px" }}>
+      <div style={{ height: 340, borderRadius: "var(--radius-xl)", overflow: "hidden", margin: "28px 0 4px", boxShadow: "var(--shadow-md)" }}>
         <ImageSlot
           label="Sockerbagarens bud bär en kartong med kakor till leveransbilen"
           src="/images/leverans.jpg"

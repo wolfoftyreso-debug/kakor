@@ -5,7 +5,7 @@ import { join } from "node:path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getActiveProducts } from "@/lib/products";
+import { getActiveProducts, getDeliveryDaysLabel } from "@/lib/products";
 import { ProductBuyBox } from "@/components/ProductBuyBox";
 import { ImageSlot } from "@/components/ImageSlot";
 import { JsonLd } from "@/components/JsonLd";
@@ -70,7 +70,7 @@ export default async function ProductPage({ params }: Props) {
   const product = await prisma.product.findUnique({ where: { slug } });
   if (!product || !product.active) notFound();
 
-  const allProducts = await getActiveProducts();
+  const [allProducts, deliveryDays] = await Promise.all([getActiveProducts(), getDeliveryDaysLabel()]);
   const cardData = allProducts.find((p) => p.id === product.id);
   if (!cardData) notFound();
   const related = allProducts.filter((p) => p.id !== product.id);
@@ -101,24 +101,25 @@ export default async function ProductPage({ params }: Props) {
     <>
       <JsonLd data={pageGraph} />
       <Breadcrumbs crumbs={crumbs} />
-      <div className="container-medium" style={{ padding: "24px 24px 64px" }}>
+      <div className="container-medium has-sticky-buy" style={{ padding: "24px 24px 64px" }}>
         <div className="two-col" style={{ display: "grid", gap: 40, alignItems: "start" }}>
-          <div style={{ minHeight: 340, borderRadius: 8, overflow: "hidden" }}>
+          <div className="card-media" style={{ minHeight: 340, borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-md)" }}>
             <ImageSlot label={`${product.name} — närbild`} src={product.imageRef || undefined} priority />
+            {product.badge && <span className="product-badge">{product.badge}</span>}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div>
               <div className="eyebrow" style={{ marginBottom: 10 }}>
                 Bakat på riktigt smör
               </div>
-              <h1 style={{ fontSize: "clamp(30px, 4.5vw, 42px)", lineHeight: 1.12, letterSpacing: "-0.5px" }}>
+              <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)" }}>
                 {product.name}
               </h1>
-              <p style={{ fontSize: "16.5px", lineHeight: 1.65, margin: "12px 0 0", color: "var(--brown-2)" }}>
+              <p className="lede" style={{ margin: "12px 0 0" }}>
                 {product.description}
               </p>
             </div>
-            <ProductBuyBox product={cardData} />
+            <ProductBuyBox product={cardData} deliveryDays={deliveryDays} />
           </div>
         </div>
 
@@ -164,7 +165,7 @@ export default async function ProductPage({ params }: Props) {
 
         {PRODUCT_KNOWLEDGE[product.slug] && (
           <section style={{ marginTop: 48, maxWidth: "70ch" }}>
-            <h2 style={{ fontSize: "clamp(20px, 3vw, 26px)", marginBottom: 14 }}>
+            <h2 className="h-sub" style={{ marginBottom: 14 }}>
               {PRODUCT_KNOWLEDGE[product.slug].heading}
             </h2>
             {PRODUCT_KNOWLEDGE[product.slug].paragraphs.map((p) => (
@@ -180,7 +181,7 @@ export default async function ProductPage({ params }: Props) {
 
         {related.length > 0 && (
           <section style={{ marginTop: 48 }}>
-            <h2 style={{ fontSize: "clamp(20px, 3vw, 26px)", marginBottom: 18 }}>
+            <h2 className="h-sub" style={{ marginBottom: 18 }}>
               Blanda gärna med
             </h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
@@ -188,11 +189,12 @@ export default async function ProductPage({ params }: Props) {
                 <Link
                   key={p.id}
                   href={`/kakor/${p.slug}`}
-                  className="card"
+                  className="card card-hover"
                   style={{ overflow: "hidden", textDecoration: "none", color: "var(--text)" }}
                 >
-                  <div style={{ height: 150 }}>
+                  <div className="card-media" style={{ height: 150 }}>
                     <ImageSlot label={`${p.name} — närbild`} src={p.imageRef || undefined} />
+                    {p.badge && <span className="product-badge">{p.badge}</span>}
                   </div>
                   <div style={{ padding: "14px 16px" }}>
                     <div style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 700 }}>{p.name}</div>
@@ -208,8 +210,8 @@ export default async function ProductPage({ params }: Props) {
         )}
       </div>
 
-      <section style={{ background: "var(--butter)", padding: "56px 24px", textAlign: "center" }}>
-        <h2 style={{ fontSize: "clamp(24px, 3.5vw, 32px)", marginBottom: 18 }}>
+      <section className="cta-band">
+        <h2 className="h-section" style={{ marginBottom: 20 }}>
           Dags för riktigt fika på jobbet?
         </h2>
         <Link href="/bestall" className="btn btn-primary btn-lg">

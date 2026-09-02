@@ -521,22 +521,11 @@ export function CheckoutFlow({
             ))}
           </div>
           {errors.items && <p className="error-text" style={{ marginTop: 12 }}>{errors.items}</p>}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: 28,
-              background: "var(--section-tint)",
-              borderRadius: 8,
-              padding: "18px 22px",
-              gap: 16,
-              flexWrap: "wrap",
-            }}
-          >
+          {/* Sticky i botten på mobil — nästa steg är alltid ett tumtryck bort. */}
+          <div className="checkout-total-bar">
             <div>
               <div style={{ fontSize: 13, color: "var(--text-2)" }}>Totalt inkl. moms</div>
-              <div style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 700 }}>
+              <div className="total-amount" style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 700 }}>
                 {formatWeightKg(totalWeightGrams)} · {formatOre(totals.totalOre)}
               </div>
             </div>

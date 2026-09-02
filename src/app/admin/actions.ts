@@ -251,6 +251,7 @@ const productSchema = z.object({
   ingredients: z.string().trim().max(1000).default(""),
   allergens: z.string().trim().max(500).default(""),
   imageRef: z.string().trim().max(300).default(""),
+  badge: z.string().trim().max(30).default(""),
   sortOrder: z.coerce.number().int().min(0).max(999).default(0),
   active: z.coerce.boolean().default(false),
 }).superRefine((d, ctx) => {
@@ -277,6 +278,7 @@ export async function saveProduct(
     ingredients: formData.get("ingredients") ?? "",
     allergens: formData.get("allergens") ?? "",
     imageRef: formData.get("imageRef") ?? "",
+    badge: formData.get("badge") ?? "",
     sortOrder: formData.get("sortOrder") ?? 0,
     active: formData.get("active") === "on",
   });
@@ -297,6 +299,7 @@ export async function saveProduct(
     ingredients: d.ingredients,
     allergens: d.allergens,
     imageRef: d.imageRef,
+    badge: d.badge,
     sortOrder: d.sortOrder,
     active: d.active,
   };

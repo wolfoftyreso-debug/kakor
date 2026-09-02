@@ -28,7 +28,7 @@ export default function OmPage() {
       description={String(metadata.description)}
     />
     <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
-      <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 12 }}>Om Sockerbagaren</h1>
+      <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)", marginBottom: 14 }}>Om Sockerbagaren</h1>
       <p style={{ fontSize: 17, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
         Sockerbagaren bakar klassiska svenska småkakor — mandelkubb, kolasnittar och
         chokladsnittar — på riktigt smör, vanligt strösocker och kvalitativa traditionella

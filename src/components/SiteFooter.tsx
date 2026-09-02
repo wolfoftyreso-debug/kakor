@@ -101,7 +101,7 @@ function FooterCol({ title, links }: { title: string; links: { href: string; lab
     <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: "13.5px" }}>
       <div style={{ fontWeight: 700, color: "var(--bg)", fontSize: 12, letterSpacing: 2 }}>{title}</div>
       {links.map((l) => (
-        <Link key={l.href} href={l.href} style={{ color: "var(--footer-text)" }}>
+        <Link key={l.href} href={l.href} className="footer-link">
           {l.label}
         </Link>
       ))}
