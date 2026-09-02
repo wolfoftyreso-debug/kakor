@@ -41,7 +41,7 @@ export interface AreaWithDates {
   upcomingDates: string[]; // ISO-datum
 }
 
-import { toISODate, upcomingDeliveryDates } from "@/lib/dates";
+import { toISODate, upcomingDeliveryDates, weekdayName } from "@/lib/dates";
 
 export async function getAreasWithDates(dateCount = 4): Promise<AreaWithDates[]> {
   const areas = await prisma.deliveryArea.findMany({
@@ -73,4 +73,19 @@ export function safeWeekdays(json: string): number[] {
     // fall igenom
   }
   return [4];
+}
+
+/**
+ * "torsdagar" / "tisdagar och torsdagar" — unionen av alla aktiva områdens
+ * leveransveckodagar, för publik copy (t.ex. footern). Tom sträng om
+ * inget område har dagar konfigurerade. Leveransdagar är data, aldrig
+ * hårdkodad text.
+ */
+export async function getDeliveryDaysLabel(): Promise<string> {
+  const areas = await prisma.deliveryArea.findMany({ where: { active: true }, select: { weekdaysJson: true } });
+  const days = [...new Set(areas.flatMap((a) => safeWeekdays(a.weekdaysJson)))].sort((a, b) => a - b);
+  const plural = days.map((d) => `${weekdayName(d)}ar`).filter((n) => n !== "ar");
+  if (plural.length === 0) return "";
+  if (plural.length === 1) return plural[0];
+  return `${plural.slice(0, -1).join(", ")} och ${plural[plural.length - 1]}`;
 }

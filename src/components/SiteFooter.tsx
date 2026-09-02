@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogoSigill } from "@/components/Logo";
 import { invoiceConfig, isVerifiedValue } from "@/lib/config";
+import { getDeliveryDaysLabel } from "@/lib/products";
 
 const AREAS = [
   { slug: "tyreso", name: "Tyresö" },
@@ -9,7 +10,8 @@ const AREAS = [
   { slug: "huddinge", name: "Huddinge" },
 ];
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const deliveryDays = await getDeliveryDaysLabel();
   return (
     <footer style={{ background: "var(--text)", color: "var(--footer-text)", padding: "56px 0 40px" }}>
       <div className="container">
@@ -87,8 +89,7 @@ export function SiteFooter() {
           />
         </div>
         <div style={{ paddingTop: 20, fontSize: "12.5px", color: "var(--footer-muted)" }}>
-          © {invoiceConfig.companyName} · Betalning sker mot faktura · Vi levererar under dagen till
-          bemannade företagsadresser
+          © {invoiceConfig.companyName} · Betalning sker mot faktura · Leverans{deliveryDays ? ` ${deliveryDays}` : ""} i södra Stockholm
         </div>
       </div>
     </footer>
