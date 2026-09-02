@@ -18,7 +18,8 @@
     "db:reset": "prisma migrate reset --force",
     "admin:create": "tsx scripts/create-admin.ts",
     "subscriptions:generate": "tsx scripts/generate-subscription-orders.ts",
-    "smoke": "tsx scripts/smoke.ts"
+    "smoke": "tsx scripts/smoke.ts",
+    "build:vercel": "node scripts/vercel-build.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -44,5 +45,8 @@
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=22 <23"
   }
 }

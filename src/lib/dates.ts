@@ -52,6 +52,26 @@ export function formatDeliveryDate(date: Date): string {
   }).format(date);
 }
 
+/** Som formatDeliveryDate men med år — för mejl och dokument som läses långt senare. */
+export function formatDeliveryDateWithYear(date: Date): string {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "UTC",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
+
+/** Verklig tidpunkt då dagens svenska dygn började (för createdAt-filter). */
+export function startOfStockholmDay(now = new Date()): Date {
+  const utcMidnight = todayInStockholm(now);
+  const inStockholm = new Date(utcMidnight.toLocaleString("en-US", { timeZone: "Europe/Stockholm" }));
+  const inUtc = new Date(utcMidnight.toLocaleString("en-US", { timeZone: "UTC" }));
+  const offsetMs = inStockholm.getTime() - inUtc.getTime();
+  return new Date(utcMidnight.getTime() - offsetMs);
+}
+
 export function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("sv-SE", { timeZone: "UTC", dateStyle: "medium" }).format(date);
 }

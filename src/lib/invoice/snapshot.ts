@@ -48,7 +48,9 @@ export interface InvoiceSnapshot {
 
 // Validerat vid läsning: skyddar PDF-renderingen mot schemadrift och
 // korrupt lagrad JSON (fel upptäcks som ett tydligt fel, inte en trasig PDF).
-const str = z.string().catch("");
+// Parternas identitet ska aldrig tyst bli tom sträng — korrupt data ska ge ett fel.
+const str = z.string();
+const opt = z.string().catch("");
 const snapshotSchema = z.object({
   seller: z.object({
     companyName: str,
@@ -56,19 +58,19 @@ const snapshotSchema = z.object({
     address: str,
     postalCode: str,
     city: str,
-    email: str,
-    phone: str,
-    bankgiro: str,
-    vatNumber: str,
-    fSkatt: str,
+    email: opt,
+    phone: opt,
+    bankgiro: opt,
+    vatNumber: opt,
+    fSkatt: opt,
   }),
   buyer: z.object({
     companyName: str,
     orgNumber: str,
-    contactName: str,
-    invoiceEmail: str,
+    contactName: opt,
+    invoiceEmail: opt,
     billingAddress: str,
-    reference: str,
+    reference: opt,
   }),
   orderNumber: str,
   deliveryDate: str,

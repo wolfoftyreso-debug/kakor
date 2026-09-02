@@ -1,6 +1,9 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
+import { pruneEmailLogs } from "@/lib/email";
+import { describeError } from "@/lib/log";
 import { sweepRateLimitBuckets } from "@/lib/rate-limit";
 
 // Prenumerations-cron. Körs av Vercel Cron (GET, schema i vercel.json) —
@@ -24,16 +27,19 @@ async function runCron(req: NextRequest): Promise<NextResponse> {
   if (!timingSafeEqual(digest(auth), digest(`Bearer ${secret}`))) {
     return NextResponse.json({ ok: false, error: "Obehörig" }, { status: 401 });
   }
+  // Städning först och oberoende av generatorn — kastar generatorn ska
+  // rate limit-tabellen och e-postloggen ändå inte växa.
+  const swept = await sweepRateLimitBuckets().catch(() => 0);
+  const prunedEmailLogs = await pruneEmailLogs().catch(() => 0);
   try {
     const result = await generateDueSubscriptionOrders();
-    // Städning av utgångna rate limit-räknare piggybackar på dagliga cronen.
-    await sweepRateLimitBuckets().catch(() => 0);
     console.log(
       `[cron] prenumerationsgenerering: ${result.generated.length} genererade, ${result.skipped.length} överhoppade`
     );
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json({ ok: true, ...result, sweptRateLimitBuckets: swept, prunedEmailLogs });
   } catch (e) {
-    console.error("[cron] prenumerationsgenerering misslyckades:", e);
+    console.error("[cron] prenumerationsgenerering misslyckades:", describeError(e));
+    Sentry.captureException(e, { tags: { flow: "cron" } });
     return NextResponse.json({ ok: false, error: "Cron-körningen misslyckades" }, { status: 500 });
   }
 }

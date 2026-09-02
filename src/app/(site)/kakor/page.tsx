@@ -40,7 +40,7 @@ const KAKOR_FAQS = [
   },
   {
     q: "Hur mycket kakor går det åt per person?",
-    a: "Räkna ungefär 3–5 småkakor per person till en fika. Ett kilo räcker i regel till 15–25 personer beroende på sort och hur hungrigt sällskapet är.",
+    a: "Räkna ungefär 3–5 småkakor per person till en fika. Hur många kakor ett kilo ger beror på sorten — snittar är lätta och mandelkubb tyngre — så välj gärna prova-på-paketet första gången och se hur långt det räcker hos er.",
   },
 ];
 
@@ -72,7 +72,7 @@ export default async function KakorPage() {
       <JsonLd data={pageGraph} />
       <Breadcrumbs crumbs={CRUMBS} container="container" />
       {/* Full bredd så att alla fyra sorter ryms på en rad på desktop. */}
-      <div className="container" style={{ padding: "24px 48px 80px" }}>
+      <div className="container" style={{ paddingTop: 24, paddingBottom: 80 }}>
         <div
           style={{
             display: "flex",

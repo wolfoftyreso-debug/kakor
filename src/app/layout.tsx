@@ -5,14 +5,13 @@ import "./globals.css";
 
 const caslon = Libre_Caslon_Text({
   weight: ["400", "700"],
-  style: ["normal", "italic"],
   subsets: ["latin"],
   variable: "--font-caslon",
   display: "swap",
 });
 
 const publicSans = Public_Sans({
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600", "700"],
   subsets: ["latin"],
   variable: "--font-public-sans",
   display: "swap",

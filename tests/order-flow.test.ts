@@ -5,6 +5,7 @@ import { toISODate, upcomingDeliveryDates } from "@/lib/dates";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import type { CheckoutInput } from "@/lib/validation";
+import { orgNumber } from "./helpers";
 
 // Golden path (integration): riktig databas, riktig ordermotor, riktig PDF.
 
@@ -24,7 +25,7 @@ function checkoutInput(overrides: Partial<CheckoutInput> = {}): CheckoutInput {
     areaSlug: "tyreso",
     deliveryDate: validDate,
     companyName: "Testföretaget AB",
-    orgNumber: `${556000 + seq}-8899`,
+    orgNumber: orgNumber(`${556000 + seq}889`),
     contactName: "Test Person",
     email: `kontakt${seq}@testforetaget.se`,
     phone: "070-123 45 67",

@@ -32,7 +32,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     faqs: [
       {
         q: "Vilka delar av Tyresö levererar ni till?",
-        a: "Hela kommunen — Bollmora, Trollbäcken, Tyresö strand, Lindalen och övriga områden med företagsadresser.",
+        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) — Bollmora, Trollbäcken, Tyresö strand, Lindalen och övriga områden med företagsadresser.",
       },
       {
         q: "När kommer leveransen?",
@@ -63,7 +63,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     faqs: [
       {
         q: "Vilka delar av Nacka levererar ni till?",
-        a: "Hela kommunen — Sickla, Nacka strand, Saltsjöbaden, Orminge, Älta och övriga områden med företagsadresser.",
+        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) — Sickla, Nacka strand, Saltsjöbaden, Orminge, Älta och övriga områden med företagsadresser.",
       },
       {
         q: "När kommer leveransen?",
@@ -94,7 +94,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     faqs: [
       {
         q: "Vilka delar av Haninge levererar ni till?",
-        a: "Hela kommunen — Handen, Vega, Brandbergen, Jordbro, Västerhaninge och övriga områden med företagsadresser.",
+        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) — Handen, Vega, Brandbergen, Jordbro, Västerhaninge och övriga områden med företagsadresser.",
       },
       {
         q: "När kommer leveransen?",
@@ -125,7 +125,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     faqs: [
       {
         q: "Vilka delar av Huddinge levererar ni till?",
-        a: "Hela kommunen — Huddinge centrum, Kungens kurva, Flemingsberg, Skogås, Trångsund och övriga områden med företagsadresser.",
+        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) — Huddinge centrum, Kungens kurva, Flemingsberg, Skogås, Trångsund och övriga områden med företagsadresser.",
       },
       {
         q: "När kommer leveransen?",

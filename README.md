@@ -144,12 +144,12 @@ med återkommande förvalt (`/bestall?typ=aterkommande`). Generering:
 - **Rate limiting i två lager** (`src/lib/rate-limit.ts`): in-memory per
   instans + delad räknare i databasen (`RateLimitBucket`) som håller över
   serverless-instanser och cold starts. Utgångna räknare städas av cronen.
-- **Missbruksspärrar i ordermotorn** (`assertNotAbusive`): max 5 ordrar per
-  e-post och dygn, 10 per org.nr och dygn, 2 prenumerationsstarter per e-post
-  och dygn — en publik endpoint som utfärdar löpnumrerade fakturor får inte
+- **Missbruksspärrar i ordermotorn** (`assertNotAbusive`): max 10 ordrar per
+  kontakt-e-post och dygn, 30 per org.nr och dygn, 3 prenumerationsstarter per
+  e-post och dygn (avbrutna räknas inte; env-styrt) — en publik endpoint som utfärdar löpnumrerade fakturor får inte
   kunna användas som spam-/nätfiskerelä. Riktiga kunder når aldrig taken;
   felmeddelandet hänvisar till att svara på senaste orderbekräftelsen.
-- **Honeypot-fält** (`website`) i checkouten: ifyllt värde avvisas som
+- **Honeypot-fält** (`sb_extra`) i checkouten: ifyllt värde avvisas som
   valideringsfel.
 - **Idempotens med payload-kontroll:** samma nyckel med annan beställning ger
   409 `IDEMPOTENCY_MISMATCH` i stället för att returnera en främmande order.
@@ -175,6 +175,11 @@ Se [`.env.example`](.env.example). Sammanfattning:
 | `EMAIL_PROVIDER` / `RESEND_API_KEY` / `EMAIL_FROM` / `EMAIL_REPLY_TO` | e-post (reply-to = bevakad låda) |
 | `INVOICE_*` | juridiska fakturauppgifter (se nedan) |
 | `CRON_SECRET` | skyddar cron-endpointen |
+| `ADMIN_NOTIFY_EMAIL` | intern avisering vid ny order |
+| `ABUSE_LIMIT_PER_EMAIL` / `ABUSE_LIMIT_PER_ORG` | missbrukstak per dygn (default 10 / 30) |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | felövervakning (tom sträng stänger av) |
+| `NEXT_PUBLIC_GA4_ID` | GA4 (kräver samtyckesbanner) |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Search Console-verifiering |
 
 ## Deployment (GitHub → Vercel → Neon)
 
@@ -197,7 +202,7 @@ rollback, smoke tests: **[DEPLOYMENT.md](DEPLOYMENT.md)**.
 - **Brödsmulor**: synlig rad och `BreadcrumbList` byggs från samma datalista
   (`InfoPageSeo`/`Breadcrumbs`) så att de aldrig divergerar.
 - **Metadata**: canonical på alla indexerbara sidor, OG/Twitter-defaults med
-  varumärkes-OG-bild (`public/og.png` — genererad brand-grafik, inget
+  varumärkes-OG-bild (`public/og.jpg` — genererad brand-grafik, inget
   fejkfoto). Admin och fakturor är noindexade; `/faktura` blockeras i robots.
 - **dateModified** sätts endast vid verklig innehållsändring (manuell
   konstant på villkor/integritet) — aldrig per deploy.

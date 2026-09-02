@@ -8,6 +8,11 @@ on:
     branches: ["**"]
   pull_request:
 
+# En körning per gren: nya pushar avbryter den föregående.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest

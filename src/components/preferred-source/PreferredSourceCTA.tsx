@@ -75,10 +75,10 @@ export function PreferredSourceCTA({ placement }: { placement: PreferredSourcePl
         strategy="lazyOnload"
       />
       <div style={{ fontWeight: 700, fontSize: 15 }}>
-        Vill du hitta fler av våra guider och nyheter via Google?
+        Vill ni se mer från Sockerbagaren i era Google-sökningar?
       </div>
       <div style={{ fontSize: "13.5px", color: "var(--text-2)", maxWidth: "44ch" }}>
-        Lägg till Sockerbagaren som föredragen källa på Google så ser du mer från oss i dina
+        Lägg till Sockerbagaren som föredragen källa på Google så visas våra sidor oftare i era
         sökresultat.
       </div>
       <div

@@ -14,12 +14,12 @@ import { TrustStrip } from "@/components/TrustStrip";
 export const metadata: Metadata = {
   title: "Fikaprenumeration",
   description:
-    "Fika som bara dyker upp: välj kakor, mängd och hur ofta — vi levererar på er leveransdag och fakturerar efteråt. Pausa eller avsluta enkelt.",
+    "Fika som bara dyker upp: välj kakor, mängd och hur ofta — en order med faktura skapas inför varje leverans. Pausa eller avsluta enkelt.",
   alternates: { canonical: "/prenumeration" },
   ...sharePreview({
     title: "Fikaprenumeration",
     description:
-      "Fika som bara dyker upp: välj kakor, mängd och hur ofta — vi levererar på er leveransdag och fakturerar efteråt. Pausa eller avsluta enkelt.",
+      "Fika som bara dyker upp: välj kakor, mängd och hur ofta — en order med faktura skapas inför varje leverans. Pausa eller avsluta enkelt.",
     path: "/prenumeration",
   }),
 };

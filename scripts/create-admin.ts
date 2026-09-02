@@ -12,8 +12,14 @@ async function main() {
     console.error("Sätt ADMIN_EMAIL och ADMIN_PASSWORD i miljön.");
     process.exit(1);
   }
-  if (password.length < 10) {
-    console.error("Lösenordet måste vara minst 10 tecken.");
+  if (password.length < 12 || /byt-mig|example\.com|losenord/i.test(password) || /example\.com$/i.test(email)) {
+    console.error("Lösenordet måste vara minst 12 tecken och får inte vara exempelvärdet från .env.example; e-posten får inte vara example.com.");
+    process.exit(1);
+  }
+  // Vakt mot att skriva över produktionsadmin av misstag (skriptet loggar ut alla sessioner).
+  const dbUrl = process.env.DATABASE_URL ?? "";
+  if (!/localhost|127\.0\.0\.1/.test(dbUrl) && process.env.I_KNOW_THIS_IS_PROD !== "1") {
+    console.error("DATABASE_URL pekar inte på localhost. Kör med I_KNOW_THIS_IS_PROD=1 om det är avsiktligt.");
     process.exit(1);
   }
   const passwordHash = await hashPassword(password);

@@ -69,10 +69,11 @@ export async function createSubscription(input: SubscriptionInput) {
   const recentSubs = await prisma.subscription.count({
     where: {
       createdAt: { gte: new Date(Date.now() - SUBSCRIPTION_ABUSE_WINDOW_MS) },
-      OR: [{ email: input.email.toLowerCase() }, { invoiceEmail: input.invoiceEmail.toLowerCase() }],
+      status: { not: "CANCELLED" },
+      email: input.email.toLowerCase(),
     },
   });
-  if (recentSubs >= 2) {
+  if (recentSubs >= 3) {
     throw new OrderError(
       "Ni har redan startat en fikaprenumeration det senaste dygnet — svara på bekräftelsemejlet om ni vill ändra den.",
       undefined,
@@ -217,11 +218,14 @@ export async function generateDueSubscriptionOrders(
       leadTimeDays: area.leadTimeDays,
     };
 
-    // 1) Passerat datum (t.ex. paus som släppts efter lång tid): skapa ingen
-    //    bakdaterad order — flytta fram enligt intervallet.
+    // 1) Passerat datum eller "idag" (t.ex. paus som släppts sent): skapa
+    //    aldrig en order för leverans samma dag — den hinner inte packas.
+    //    Gränsen är i morgon, inte kundens framförhållning: en missad
+    //    cron-körning ska inte skjuta en redan planerad leverans en hel period.
+    const earliest = addDays(today, 1);
     let deliveryDate = sub.nextDeliveryDate;
     let moved = false;
-    for (let i = 0; i < 60 && deliveryDate.getTime() < today.getTime(); i++) {
+    for (let i = 0; i < 60 && deliveryDate.getTime() < earliest.getTime(); i++) {
       deliveryDate = nextSubscriptionDate(deliveryDate, frequency, areaConfig);
       moved = true;
     }
@@ -235,7 +239,7 @@ export async function generateDueSubscriptionOrders(
     // Vakt: har prenumerationen legat pausad längre än loopen når (60 × intervall)
     // får ALDRIG en bakdaterad order skapas — hoppa över och låt nästa körning
     // fortsätta framflyttningen från det sparade datumet.
-    if (deliveryDate.getTime() < today.getTime()) {
+    if (deliveryDate.getTime() < earliest.getTime()) {
       await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: deliveryDate } });
       result.skipped.push({
         subscriptionNumber: sub.number,

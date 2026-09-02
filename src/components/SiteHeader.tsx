@@ -30,8 +30,14 @@ export function SiteHeader() {
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+  const headerRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!open) return;
+    // Klick/tryck utanför headern stänger menyn (overlay-mönster).
+    const onPointer = (e: PointerEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointer);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpen(false);
@@ -40,7 +46,10 @@ export function SiteHeader() {
       }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+    };
   }, [open]);
 
   return (
@@ -59,6 +68,7 @@ export function SiteHeader() {
         </span>
       </div>
       <header
+        ref={headerRef}
         style={{
           display: "flex",
           alignItems: "center",

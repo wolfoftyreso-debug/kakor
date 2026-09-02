@@ -13,6 +13,7 @@ export async function register() {
 
   if (SENTRY_ENABLED) {
     Sentry.init({
+      release: process.env.VERCEL_GIT_COMMIT_SHA,
       dsn: SENTRY_DSN,
       environment: process.env.VERCEL_ENV ?? "development",
       tracesSampleRate: 0, // endast fel, ingen performance-tracing
