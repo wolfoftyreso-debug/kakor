@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
-import { formatDate, formatDeliveryDate } from "@/lib/dates";
+import { formatDate, formatDeliveryDate, capitalizeFirst, formatTimestamp } from "@/lib/dates";
 import { priceSuffix, qtyLabel } from "@/lib/units";
 import { isOrderOverdue } from "@/lib/status";
 import {
@@ -24,7 +24,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     where: { id },
     include: {
       items: true,
-      invoice: true,
+      invoice: { include: { creditNote: true } },
       deliveryArea: true,
       subscription: true,
       events: { orderBy: { createdAt: "desc" } },
@@ -87,12 +87,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <strong>{order.companyName}</strong> · {order.orgNumber}
           <br />
           {order.contactName} · <a href={`mailto:${order.email}`}>{order.email}</a> ·{" "}
-          <a href={`tel:${order.phone}`}>{order.phone}</a>
+          {order.phone ? <a href={`tel:${order.phone}`}>{order.phone}</a> : "telefon saknas"}
           <div className="section-label" style={{ margin: "14px 0 6px" }}>LEVERANS</div>
           {order.deliveryAddress}, {order.deliveryPostalCode} {order.deliveryCity}
           {order.deliveryArea ? ` (${order.deliveryArea.name})` : ""}
           <br />
-          <span style={{ textTransform: "capitalize" }}>{formatDeliveryDate(order.deliveryDate)}</span> ·
+          {capitalizeFirst(formatDeliveryDate(order.deliveryDate))} ·
           leverans under dagen
           {order.deliveryInstruction && (
             <div style={{ background: "var(--butter-soft)", borderRadius: 6, padding: "8px 12px", marginTop: 8, fontSize: 13.5 }}>
@@ -101,7 +101,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           )}
           {order.deliveredAt && (
             <div style={{ marginTop: 8, fontSize: 13.5 }}>
-              Levererad {formatDate(order.deliveredAt)}
+              Levererad {formatTimestamp(order.deliveredAt)}
               {order.deliveryNote ? ` — ${order.deliveryNote}` : ""}
             </div>
           )}
@@ -126,6 +126,16 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <a href={`/faktura/${order.invoice.downloadToken}`} target="_blank" rel="noopener">
                 Öppna PDF
               </a>
+              {order.invoice.status === "CREDITED" && order.invoice.creditNote && (
+                <>
+                  {" "}
+                  · <strong>Krediterad</strong> — kreditfaktura{" "}
+                  <span className="mono">{order.invoice.creditNote.creditNumber}</span>{" "}
+                  <a href={`/faktura/${order.invoice.creditNote.downloadToken}`} target="_blank" rel="noopener">
+                    Öppna PDF
+                  </a>
+                </>
+              )}
             </div>
           )}
         </section>

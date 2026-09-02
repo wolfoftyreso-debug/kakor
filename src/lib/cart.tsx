@@ -52,11 +52,29 @@ const INTERVALS: RecurrenceInterval[] = ["WEEKLY", "BIWEEKLY", "MONTHLY"];
 /** Serverns tak per orderrad (validation.ts) — korgen får aldrig överskrida det. */
 export const MAX_UNITS = 100;
 
+// localStorage är opålitlig input (manipulerad/korrupt): varje fält
+// typkontrolleras och antalet klampas till serverns tak, annars kan
+// headerns badge visa 1,5 eller 500 och delsumman bli NaN.
 function sanitizeLines(raw: unknown): CartLine[] {
   if (!Array.isArray(raw)) return [];
-  return (raw as CartLine[])
-    .filter((l) => l && typeof l.productId === "string" && typeof l.kg === "number" && l.kg > 0)
-    .map((l) => ({ ...l, unit: l.unit ?? "kg" }));
+  const out: CartLine[] = [];
+  for (const l of raw as Partial<CartLine>[]) {
+    if (!l || typeof l !== "object") continue;
+    if (typeof l.productId !== "string" || !l.productId) continue;
+    if (typeof l.slug !== "string" || typeof l.name !== "string") continue;
+    if (typeof l.pricePerKgOre !== "number" || !Number.isFinite(l.pricePerKgOre) || l.pricePerKgOre < 0) continue;
+    if (typeof l.kg !== "number" || !Number.isInteger(l.kg) || l.kg < 1) continue;
+    if (out.some((o) => o.productId === l.productId)) continue;
+    out.push({
+      productId: l.productId,
+      slug: l.slug,
+      name: l.name.slice(0, 80),
+      pricePerKgOre: Math.round(l.pricePerKgOre),
+      kg: Math.min(MAX_UNITS, l.kg),
+      unit: l.unit === "paket" ? "paket" : "kg",
+    });
+  }
+  return out;
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -92,6 +110,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // korrupt lagring — börja om med tom korg
     }
     setHydrated(true);
+
+    // Två flikar: korgen ändrad i en annan flik slår igenom här också
+    // (annars vinner den flik som råkar spara sist).
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== STORAGE_KEY) return;
+      try {
+        const parsed = e.newValue ? (JSON.parse(e.newValue) as { lines?: unknown; purchaseMode?: unknown; recurrenceInterval?: unknown }) : {};
+        setLines(sanitizeLines(parsed.lines));
+        setPurchaseModeState(parsed.purchaseMode === "RECURRING" ? "RECURRING" : "ONE_TIME");
+        if (INTERVALS.includes(parsed.recurrenceInterval as RecurrenceInterval))
+          setRecurrenceIntervalState(parsed.recurrenceInterval as RecurrenceInterval);
+      } catch {
+        // korrupt — behåll nuvarande
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   useEffect(() => {

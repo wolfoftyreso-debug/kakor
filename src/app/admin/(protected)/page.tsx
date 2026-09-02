@@ -3,7 +3,7 @@ import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
-import { addDays, formatDeliveryDate, todayInStockholm } from "@/lib/dates";
+import { addDays, formatDeliveryDate, todayInStockholm, capitalizeFirst } from "@/lib/dates";
 import { OrderStatusPill, PaymentStatusPill } from "@/components/admin/StatusPills";
 
 export const dynamic = "force-dynamic";
@@ -108,7 +108,7 @@ export default async function AdminDashboard() {
                   <div>
                     <span className="mono" style={{ fontSize: 12 }}>{o.orderNumber}</span>{" "}
                     <strong>{o.companyName}</strong>
-                    <div style={{ fontSize: 12.5, color: "var(--text-2)", textTransform: "capitalize" }}>
+                    <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
                       Leverans {formatDeliveryDate(o.deliveryDate)}
                     </div>
                   </div>
@@ -137,7 +137,7 @@ export default async function AdminDashboard() {
                   style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text)", display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}
                 >
                   <div>
-                    <strong style={{ textTransform: "capitalize" }}>{formatDeliveryDate(o.deliveryDate)}</strong>
+                    <strong>{capitalizeFirst(formatDeliveryDate(o.deliveryDate))}</strong>
                     <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
                       {o.companyName} · {o.deliveryArea?.name ?? o.deliveryCity}
                     </div>

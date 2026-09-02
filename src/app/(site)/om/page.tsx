@@ -45,7 +45,7 @@ export default function OmPage() {
         sker alltid mot faktura, och leveransen kommer på fasta leveransdagar per område — Tyresö,
         Nacka, Haninge och Huddinge.
       </p>
-      <h2 style={{ fontSize: 22, margin: "32px 0 12px" }}>Kontakt</h2>
+      <h2 style={{ fontSize: 22, margin: "32px 0 12px" }}>Företagsuppgifter</h2>
       <p style={{ fontSize: 15, lineHeight: 1.8, color: "var(--brown-2)" }}>
         {invoiceConfig.companyName}
         <br />
@@ -53,7 +53,7 @@ export default function OmPage() {
         <br />
         Kontor: {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}
         <br />
-        Lager: Radiovägen 19, Tyresö
+        Lager: Radiovägen 19, Tyresö (c/o Mewab)
         {/* Kontaktvägar visas när verksamheten verifierat dem — platshållare
             renderas aldrig publikt. */}
         {isVerifiedValue(invoiceConfig.email) && (

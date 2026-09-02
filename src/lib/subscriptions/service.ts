@@ -13,11 +13,41 @@ import {
 import type { SubscriptionInput } from "@/lib/validation";
 import type { SubscriptionFrequency } from "@/lib/status";
 import { safeWeekdays } from "@/lib/products";
-import { createOrder, OrderError } from "@/lib/orders/create-order";
+import { assertNotAbusive, createOrder, OrderError } from "@/lib/orders/create-order";
 
 // Prenumeration = återkommande order/fakturering — INTE kortdebitering.
 // Motorn genererar vanliga ordrar via samma ordermotor som engångsköp.
 
+/** Samma nyckel måste bära samma prenumeration — annars är det inte en retry. */
+function sameSubscriptionPayload(
+  existing: { items: { productId: string; weightKg: number }[]; frequency: string; companyName: string; orgNumber: string; email: string; deliveryAddress: string },
+  input: SubscriptionInput
+): boolean {
+  const key = (items: { productId: string; weightKg: number }[]) =>
+    items.map((i) => `${i.productId}:${i.weightKg}`).sort().join("|");
+  return (
+    key(existing.items) === key(input.items) &&
+    existing.frequency === input.frequency &&
+    existing.companyName === input.companyName &&
+    existing.orgNumber === input.orgNumber &&
+    existing.email.toLowerCase() === input.email.toLowerCase() &&
+    existing.deliveryAddress === input.deliveryAddress
+  );
+}
+
+const IDEMPOTENCY_MISMATCH = () =>
+  new OrderError(
+    "Den här prenumerationen har redan skickats med andra uppgifter — ladda om sidan och försök igen.",
+    undefined,
+    "IDEMPOTENCY_MISMATCH"
+  );
+
+const SUBSCRIPTION_ABUSE_WINDOW_MS = 24 * 3600_000;
+
+/**
+ * Startar en prenumeration. `duplicate` = true när en befintlig prenumeration
+ * returnerades för samma idempotensnyckel (då ska ingen ny bekräftelse mejlas).
+ */
 export async function createSubscription(input: SubscriptionInput) {
   // Idempotens: dubbelklick/nätverksretry returnerar den befintliga
   // prenumerationen istället för att starta en till (unikt villkor i DB).
@@ -26,7 +56,28 @@ export async function createSubscription(input: SubscriptionInput) {
       where: { idempotencyKey: input.idempotencyKey },
       include: { items: true },
     });
-    if (existing) return existing;
+    if (existing) {
+      if (!sameSubscriptionPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
+      return { subscription: existing, duplicate: true as const };
+    }
+  }
+
+  // Missbruksspärrar: samma dygnsgränser som checkouten, plus max två
+  // prenumerationsstarter per e-post — cronen skulle annars generera
+  // riktiga ordrar/fakturor för spam-prenumerationer tills admin stoppar dem.
+  await assertNotAbusive(input);
+  const recentSubs = await prisma.subscription.count({
+    where: {
+      createdAt: { gte: new Date(Date.now() - SUBSCRIPTION_ABUSE_WINDOW_MS) },
+      OR: [{ email: input.email.toLowerCase() }, { invoiceEmail: input.invoiceEmail.toLowerCase() }],
+    },
+  });
+  if (recentSubs >= 2) {
+    throw new OrderError(
+      "Ni har redan startat en fikaprenumeration det senaste dygnet — svara på bekräftelsemejlet om ni vill ändra den.",
+      undefined,
+      "TOO_MANY"
+    );
   }
 
   const area = await prisma.deliveryArea.findUnique({ where: { slug: input.areaSlug } });
@@ -63,7 +114,7 @@ export async function createSubscription(input: SubscriptionInput) {
   }
 
   try {
-    return await runCreate();
+    return { subscription: await runCreate(), duplicate: false as const };
   } catch (e) {
     // Kapplöpning på idempotensnyckeln: parallell förfrågan hann först.
     if (
@@ -76,7 +127,10 @@ export async function createSubscription(input: SubscriptionInput) {
         where: { idempotencyKey: input.idempotencyKey },
         include: { items: true },
       });
-      if (existing) return existing;
+      if (existing) {
+        if (!sameSubscriptionPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
+        return { subscription: existing, duplicate: true as const };
+      }
     }
     throw e;
   }
@@ -148,8 +202,13 @@ export async function generateDueSubscriptionOrders(
 
   for (const sub of due) {
     const area = sub.deliveryArea;
-    if (!area) {
-      result.skipped.push({ subscriptionNumber: sub.number, reason: "Leveransområde saknas" });
+    if (!area || !area.active) {
+      // Inaktiverat område: hoppa över med tydlig orsak i stället för att
+      // låta createOrder kasta samma fel varje dag.
+      result.skipped.push({
+        subscriptionNumber: sub.number,
+        reason: area ? `Leveransområdet ${area.name} är inaktiverat — prenumerationen behöver ses över i admin` : "Leveransområde saknas",
+      });
       continue;
     }
     const frequency = sub.frequency as SubscriptionFrequency;
@@ -173,6 +232,17 @@ export async function generateDueSubscriptionOrders(
       deliveryDate = snapped;
       moved = true;
     }
+    // Vakt: har prenumerationen legat pausad längre än loopen når (60 × intervall)
+    // får ALDRIG en bakdaterad order skapas — hoppa över och låt nästa körning
+    // fortsätta framflyttningen från det sparade datumet.
+    if (deliveryDate.getTime() < today.getTime()) {
+      await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: deliveryDate } });
+      result.skipped.push({
+        subscriptionNumber: sub.number,
+        reason: `Passerat datum ${toISODate(sub.nextDeliveryDate)} — flyttas fram stegvis (nu ${toISODate(deliveryDate)})`,
+      });
+      continue;
+    }
     if (moved) {
       await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: deliveryDate } });
     }
@@ -189,6 +259,7 @@ export async function generateDueSubscriptionOrders(
     const period = toISODate(deliveryDate);
 
     const activeItems = sub.items.filter((i) => i.product.active && i.weightKg > 0);
+    const droppedItems = sub.items.filter((i) => !i.product.active && i.weightKg > 0);
     if (activeItems.length === 0) {
       result.skipped.push({ subscriptionNumber: sub.number, reason: "Inga aktiva produkter" });
       continue;
@@ -204,7 +275,7 @@ export async function generateDueSubscriptionOrders(
           orgNumber: sub.orgNumber,
           contactName: sub.contactName,
           email: sub.email,
-          phone: sub.phone || "-",
+          phone: sub.phone,
           deliveryAddress: sub.deliveryAddress,
           deliveryPostalCode: sub.deliveryPostalCode,
           deliveryCity: sub.deliveryCity,
@@ -220,6 +291,18 @@ export async function generateDueSubscriptionOrders(
         orderNumber: order.orderNumber,
         deliveryDate: period,
       });
+      if (droppedItems.length > 0) {
+        // Kunden faktureras för färre varor än avtalat — synligt i orderns
+        // historik så att verksamheten kan meddela kunden.
+        await prisma.orderEvent.create({
+          data: {
+            orderId: order.id,
+            type: "NOTE",
+            message: `OBS: ${droppedItems.map((i) => i.product.name).join(", ")} ingår inte i leveransen — produkten är inaktiverad. Meddela kunden.`,
+            actor: "system",
+          },
+        });
+      }
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&

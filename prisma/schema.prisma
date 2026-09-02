@@ -71,9 +71,39 @@ model DeliveryArea {
 }
 
 // Nummerserier (order- och fakturanummer). Uppräkning sker i transaktion.
+// Kreditfaktura: en utfärdad faktura får aldrig bara "gömmas" när ordern
+// avbryts — den krediteras med ett eget nummer i fakturaserien och ett eget
+// dokument (negativa belopp) som mejlas till kunden.
+model CreditNote {
+  id           String  @id @default(cuid())
+  creditNumber String  @unique // nästa nummer i fakturaserien
+  invoiceId    String  @unique
+  invoice      Invoice @relation(fields: [invoiceId], references: [id])
+
+  issuedDate   DateTime @default(now())
+  snapshotJson String // fakturans snapshot + creditsInvoiceNumber, belopp negerade i PDF
+
+  subtotalOre Int
+  vatOre      Int
+  totalOre    Int
+
+  downloadToken String @unique
+  createdAt     DateTime @default(now())
+}
+
 model Counter {
   name  String @id
   value Int
+}
+
+// Delad rate limit-räknare per nyckel (t.ex. "checkout:1.2.3.4",
+// "admin-login:mail"). Fast fönster: count nollställs när resetAt passerats.
+model RateLimitBucket {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+
+  @@index([resetAt])
 }
 
 model Order {
@@ -179,11 +209,13 @@ model Invoice {
   totalOre    Int
   currency    String @default("SEK")
 
-  status String    @default("UNPAID") // UNPAID | PAID (OVERDUE beräknas från dueDate)
+  status String    @default("UNPAID") // UNPAID | PAID | CREDITED (OVERDUE beräknas från dueDate)
   paidAt DateTime?
 
   // Slumpad token för säker nedladdningslänk utan inloggning.
   downloadToken String @unique
+
+  creditNote CreditNote?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

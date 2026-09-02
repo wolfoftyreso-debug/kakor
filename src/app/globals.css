@@ -1319,3 +1319,48 @@ header.site-header {
 .cta-band > * {
   position: relative;
 }
+
+
+/* ---------- Tillgänglighet & träffytor ---------- */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* Honeypot: utanför skärmen, aldrig display:none (då fyller vissa botar inte i det). */
+.hp-field {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+/* Eyebrow på smörgul bakgrund: rött ger 3,8:1 — brunt ger 8:1. */
+.on-butter .eyebrow {
+  color: var(--text);
+}
+/* Minst 44 px träffyta på mobil för header-länkar och menyknapp. */
+.cart-link {
+  min-height: 44px;
+  display: inline-flex !important;
+  align-items: center;
+}
+@media (max-width: 860px) {
+  .menu-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+.site-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

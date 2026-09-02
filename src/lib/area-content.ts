@@ -118,7 +118,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       "Företagsfika i Huddinge: klassiska småkakor på riktigt smör, levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Huddinge",
     heroText:
-      "Vi levererar fika direkt till arbetsplatser i Huddinge — kontor, verkstäder, butiker och kliniker. Vi utgår från vårt lager i Tyresö på andra sidan kommungränsen, så leveransen kommer från närområdet.",
+      "Vi levererar fika direkt till arbetsplatser i Huddinge — kontor, verkstäder, butiker och kliniker. Vi utgår från vårt lager i Tyresö i södra Stockholm, så leveransen kommer från närområdet.",
     midHeading: "Företagsfika i Huddinge",
     midText:
       "Fredagsfika på kontoret i Kungens kurva, kundmöte i Flemingsberg eller personalrum i Skogås — vi kör ut samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",

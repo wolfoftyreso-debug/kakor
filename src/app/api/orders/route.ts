@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkoutSchema, fieldErrors } from "@/lib/validation";
 import { createOrder, OrderError } from "@/lib/orders/create-order";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { describeError } from "@/lib/log";
 
 export async function POST(req: NextRequest) {
-  const limit = rateLimit(clientKey(req.headers, "checkout"), { limit: 10, windowMs: 60_000 });
+  const limit = await rateLimit(clientKey(req.headers, "checkout"), { limit: 10, windowMs: 60_000 });
   if (!limit.ok) {
     return NextResponse.json(
       { ok: false, error: "För många försök — vänta en stund och försök igen" },
@@ -40,14 +41,14 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     if (e instanceof OrderError) {
       return NextResponse.json(
-        { ok: false, error: e.message, fields: e.field ? { [e.field]: e.message } : undefined },
-        { status: 400 }
+        { ok: false, error: e.message, code: e.code, fields: e.field ? { [e.field]: e.message } : undefined },
+        { status: e.code === "IDEMPOTENCY_MISMATCH" || e.code === "PRICE_CHANGED" ? 409 : e.code === "TOO_MANY" ? 429 : 400 }
       );
     }
     // Felreferens: gör produktionsfel sökbara i Vercel-loggarna utan att
     // exponera stack traces för kunden. Ordern har INTE skapats här.
     const ref = Math.random().toString(36).slice(2, 10).toUpperCase();
-    console.error(`Orderfel [ref ${ref}]:`, e);
+    console.error(`Orderfel [ref ${ref}]:`, describeError(e));
     return NextResponse.json(
       {
         ok: false,

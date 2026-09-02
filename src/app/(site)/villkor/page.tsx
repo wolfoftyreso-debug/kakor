@@ -76,7 +76,7 @@ export default function VillkorPage() {
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Avbokning &amp; ändringar</h2>
           <p style={{ margin: 0 }}>
             Ändringar och avbokningar hanteras så långt det är möjligt — ju tidigare besked,
-            desto bättre. Eftersom leveranserna packas och planeras per leveransdag kan
+            desto bättre: svara på orderbekräftelsen med ordernumret. Eftersom leveranserna packas och planeras per leveransdag kan
             ändringar nära inpå leveransdagen vara svåra att tillgodose.
           </p>
         </section>

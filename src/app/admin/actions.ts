@@ -11,7 +11,9 @@ import { safeWeekdays } from "@/lib/products";
 import { prisma } from "@/lib/db";
 import { getAdmin, loginAdmin, logoutAdmin } from "@/lib/auth/session";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { maskEmail } from "@/lib/log";
 import { sendOrderEmails } from "@/lib/orders/order-emails";
+import { issueCreditNote } from "@/lib/invoice/credit";
 import { sendEmail } from "@/lib/email";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
@@ -33,22 +35,29 @@ export async function loginAction(
   formData: FormData
 ): Promise<{ error: string; email?: string } | null> {
   const hdrs = await headers();
-  const limit = rateLimit(clientKey(hdrs, "admin-login"), { limit: 5, windowMs: 5 * 60_000 });
-  if (!limit.ok) {
-    return {
-      error: `För många inloggningsförsök — vänta ${limit.retryAfterSeconds} sekunder.`,
-      email: String(formData.get("email") ?? ""),
-    };
+  const rawEmail = String(formData.get("email") ?? "").slice(0, 200);
+  // Per IP OCH per konto (delad räknare): distribuerat brute force mot ett
+  // känt adminmejl begränsas annars bara av scrypt-kostnaden.
+  const ipLimit = await rateLimit(clientKey(hdrs, "admin-login"), { limit: 5, windowMs: 5 * 60_000 });
+  const accountLimit = await rateLimit(`admin-login-account:${rawEmail.toLowerCase().trim()}`, {
+    limit: 10,
+    windowMs: 15 * 60_000,
+  });
+  if (!ipLimit.ok || !accountLimit.ok) {
+    const retry = Math.max(ipLimit.retryAfterSeconds, accountLimit.retryAfterSeconds);
+    return { error: `För många inloggningsförsök — vänta ${retry} sekunder.`, email: rawEmail };
   }
 
-  const email = String(formData.get("email") ?? "");
-  const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "Ange e-post och lösenord.", email };
+  // Längdgränser innan scrypt: obegränsat lösenord = gratis CPU-förstärkning.
+  const parsedLogin = z
+    .object({ email: z.string().trim().email().max(200), password: z.string().min(1).max(256) })
+    .safeParse({ email: rawEmail, password: formData.get("password") ?? "" });
+  if (!parsedLogin.success) return { error: "Ange e-post och lösenord.", email: rawEmail };
+  const { email, password } = parsedLogin.data;
 
   const ok = await loginAdmin(email, password);
   if (!ok) {
-    // JSON-encoda: rå formdata i loggrader möjliggör annars loggforgery via radbrytningar.
-    console.warn(`[admin] misslyckad inloggning för ${JSON.stringify(email.slice(0, 200))}`);
+    console.warn(`[admin] misslyckad inloggning för ${maskEmail(email)}`);
     return { error: "Fel e-post eller lösenord.", email };
   }
   redirect("/admin");
@@ -65,25 +74,35 @@ async function logEvent(orderId: string, type: string, message: string, actor: s
   await prisma.orderEvent.create({ data: { orderId, type, message, actor } });
 }
 
-export async function markOrderPaid(orderId: string, note: string) {
+export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
+
+const noteSchema = z.string().max(500, "Noteringen är för lång (max 500 tecken)").default("");
+const idSchema = z.string().cuid();
+
+export async function markOrderPaid(orderId: string, note: string): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
+  const parsedNote = noteSchema.safeParse(note);
+  if (!parsedNote.success) return { ok: false, error: parsedNote.error.issues[0].message };
+  note = parsedNote.data;
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
-  if (!order || !canTransitionOrder(order, "pay")) return;
+  if (!order) return { ok: false, error: "Ordern finns inte" };
+  if (!canTransitionOrder(order, "pay")) return { ok: false, error: "Ordern kan inte markeras som betald i nuvarande status" };
   const now = new Date();
-  await prisma.$transaction([
-    prisma.order.update({
-      where: { id: orderId },
+  // Villkorad uppdatering: två flikar (betala + avbryt samtidigt) får aldrig
+  // ge PAID + CANCELLED — övergången gäller bara om tillståndet är oförändrat.
+  const changed = await prisma.$transaction(async (tx) => {
+    const res = await tx.order.updateMany({
+      where: { id: orderId, status: { not: "CANCELLED" }, paymentStatus: "UNPAID" },
       data: { paymentStatus: "PAID", status: order.status === "NEW" ? "CONFIRMED" : order.status },
-    }),
-    ...(order.invoice
-      ? [
-          prisma.invoice.update({
-            where: { id: order.invoice.id },
-            data: { status: "PAID", paidAt: now },
-          }),
-        ]
-      : []),
-  ]);
+    });
+    if (res.count !== 1) return false;
+    if (order.invoice) {
+      await tx.invoice.update({ where: { id: order.invoice.id }, data: { status: "PAID", paidAt: now } });
+    }
+    return true;
+  });
+  if (!changed) return { ok: false, error: "Ordern ändrades samtidigt av någon annan — ladda om sidan" };
   await logEvent(
     orderId,
     "PAID",
@@ -91,14 +110,20 @@ export async function markOrderPaid(orderId: string, note: string) {
     admin.email
   );
   revalidatePath("/admin", "layout");
+  return { ok: true, message: "Markerad som betald" };
 }
 
-export async function markOrderDelivered(orderId: string, note: string) {
+export async function markOrderDelivered(orderId: string, note: string): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
+  const parsedNote = noteSchema.safeParse(note);
+  if (!parsedNote.success) return { ok: false, error: parsedNote.error.issues[0].message };
+  note = parsedNote.data;
   const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order || !canTransitionOrder(order, "deliver")) return;
-  await prisma.order.update({
-    where: { id: orderId },
+  if (!order) return { ok: false, error: "Ordern finns inte" };
+  if (!canTransitionOrder(order, "deliver")) return { ok: false, error: "Ordern kan inte markeras som levererad i nuvarande status" };
+  const res = await prisma.order.updateMany({
+    where: { id: orderId, status: { not: "CANCELLED" }, deliveryStatus: "PENDING" },
     data: {
       deliveryStatus: "DELIVERED",
       deliveredAt: new Date(),
@@ -106,39 +131,68 @@ export async function markOrderDelivered(orderId: string, note: string) {
       status: order.status === "NEW" ? "CONFIRMED" : order.status,
     },
   });
+  if (res.count !== 1) return { ok: false, error: "Ordern ändrades samtidigt av någon annan — ladda om sidan" };
   await logEvent(orderId, "DELIVERED", `Markerad som levererad${note ? ` — ${note}` : ""}`, admin.email);
   revalidatePath("/admin", "layout");
+  return { ok: true, message: "Markerad som levererad" };
 }
 
-export async function confirmOrder(orderId: string) {
+export async function confirmOrder(orderId: string): Promise<ActionResult> {
   const admin = await requireAdmin();
+  if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
   const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order || !canTransitionOrder(order, "confirm")) return;
-  await prisma.order.update({ where: { id: orderId }, data: { status: "CONFIRMED" } });
+  if (!order) return { ok: false, error: "Ordern finns inte" };
+  if (!canTransitionOrder(order, "confirm")) return { ok: false, error: "Ordern kan inte bekräftas i nuvarande status" };
+  const res = await prisma.order.updateMany({
+    where: { id: orderId, status: "NEW" },
+    data: { status: "CONFIRMED" },
+  });
+  if (res.count !== 1) return { ok: false, error: "Ordern är redan bekräftad" };
   await logEvent(orderId, "CONFIRMED", "Order bekräftad", admin.email);
   revalidatePath("/admin", "layout");
+  return { ok: true, message: "Order bekräftad" };
 }
 
-export async function cancelOrder(orderId: string, note: string) {
+export async function cancelOrder(orderId: string, note: string): Promise<ActionResult> {
   const admin = await requireAdmin();
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order || !canTransitionOrder(order, "cancel")) return;
-  await prisma.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } });
-  await logEvent(orderId, "CANCELLED", `Order avbruten${note ? ` — ${note}` : ""}`, admin.email);
-  revalidatePath("/admin", "layout");
-}
-
-export async function addOrderNote(orderId: string, note: string) {
-  const admin = await requireAdmin();
-  if (!note.trim()) return;
-  await logEvent(orderId, "NOTE", note.trim(), admin.email);
-  revalidatePath(`/admin/bestallningar/${orderId}`);
-}
-
-export async function resendInvoiceEmail(orderId: string) {
-  const admin = await requireAdmin();
+  if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
+  const parsedNote = noteSchema.safeParse(note);
+  if (!parsedNote.success) return { ok: false, error: parsedNote.error.issues[0].message };
+  note = parsedNote.data;
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
-  if (!order?.invoice) return;
+  if (!order) return { ok: false, error: "Ordern finns inte" };
+  if (!canTransitionOrder(order, "cancel")) return { ok: false, error: "Betald eller levererad order kan inte avbrytas — kreditera manuellt" };
+  const res = await prisma.order.updateMany({
+    where: { id: orderId, status: { not: "CANCELLED" }, paymentStatus: "UNPAID", deliveryStatus: "PENDING" },
+    data: { status: "CANCELLED" },
+  });
+  if (res.count !== 1) return { ok: false, error: "Ordern ändrades samtidigt av någon annan — ladda om sidan" };
+  await logEvent(orderId, "CANCELLED", `Order avbruten${note ? ` — ${note}` : ""}`, admin.email);
+  // En utfärdad faktura kan inte bara gömmas — den krediteras (bokföringskrav).
+  let creditMessage = "";
+  if (order.invoice) {
+    const credit = await issueCreditNote(order.invoice.id, admin.email);
+    creditMessage = credit ? ` Kreditfaktura ${credit.creditNumber} utfärdad och mejlad.` : "";
+  }
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: `Order avbruten.${creditMessage}` };
+}
+
+export async function addOrderNote(orderId: string, note: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
+  const parsedNote = z.string().trim().min(1).max(1000, "Noteringen är för lång (max 1000 tecken)").safeParse(note);
+  if (!parsedNote.success) return { ok: false, error: parsedNote.error.issues[0]?.message ?? "Skriv en notering" };
+  await logEvent(orderId, "NOTE", parsedNote.data, admin.email);
+  revalidatePath(`/admin/bestallningar/${orderId}`);
+  return { ok: true, message: "Notering sparad" };
+}
+
+export async function resendInvoiceEmail(orderId: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
+  if (!order?.invoice) return { ok: false, error: "Ordern saknar faktura" };
 
   let attachments: { filename: string; content: Buffer; contentType: string }[] | undefined;
   try {
@@ -175,13 +229,25 @@ Sockerbagaren`,
     admin.email
   );
   revalidatePath(`/admin/bestallningar/${orderId}`);
+  return sent
+    ? { ok: true, message: `Faktura skickad till ${order.invoiceEmail}` }
+    : { ok: false, error: "Mejlet kunde inte skickas — se e-postloggen" };
 }
 
-export async function resendOrderEmails(orderId: string) {
+export async function resendOrderEmails(orderId: string): Promise<ActionResult> {
   const admin = await requireAdmin();
-  await sendOrderEmails(orderId);
-  await logEvent(orderId, "EMAIL", "Orderbekräftelse och faktura skickade igen", admin.email);
+  if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
+  const sent = await sendOrderEmails(orderId);
+  await logEvent(
+    orderId,
+    "EMAIL",
+    sent ? "Orderbekräftelse och faktura skickade igen" : "Omskick av bekräftelse/faktura misslyckades",
+    admin.email
+  );
   revalidatePath(`/admin/bestallningar/${orderId}`);
+  return sent
+    ? { ok: true, message: "Orderbekräftelse och faktura skickade igen" }
+    : { ok: false, error: "Minst ett mejl kunde inte skickas — se e-postloggen" };
 }
 
 // ---------- Prenumerationer ----------
@@ -239,9 +305,10 @@ const productSchema = z.object({
   slug: z
     .string()
     .trim()
-    .regex(/^[a-z0-9-]{2,60}$/, "Slug: små bokstäver, siffror och bindestreck"),
+    .regex(/^[a-z0-9-]{2,60}$/, "Slug: små bokstäver, siffror och bindestreck")
+    .refine((v) => !["constructor", "prototype", "__proto__", "tostring", "valueof"].includes(v), "Slug är reserverad"),
   description: z.string().trim().min(2).max(500),
-  priceKr: z.coerce.number().min(0).max(100000),
+  priceKr: z.coerce.number().min(0.01, "Ange ett pris över 0 kr").max(100000),
   unit: z.enum(["kg", "paket"]).default("kg"),
   packageWeightGrams: z.coerce.number().int().min(0).max(100000).default(0),
   weightOptions: z
@@ -250,7 +317,14 @@ const productSchema = z.object({
     .regex(/^\d+(\s*,\s*\d+)*$/, "Ange viktalternativ som t.ex. 1,2,3"),
   ingredients: z.string().trim().max(1000).default(""),
   allergens: z.string().trim().max(500).default(""),
-  imageRef: z.string().trim().max(300).default(""),
+  // Endast bilder under /public/images — fri sträng gav en existens-orakel
+  // för filsystemet (../-traversal i produktsidans existsSync) och externa URL:er.
+  imageRef: z
+    .string()
+    .trim()
+    .regex(/^\/images\/[a-z0-9-]+\.(jpe?g|png|webp)$/, "Bildreferens: /images/namn.jpg")
+    .or(z.literal(""))
+    .default(""),
   badge: z.string().trim().max(30).default(""),
   sortOrder: z.coerce.number().int().min(0).max(999).default(0),
   active: z.coerce.boolean().default(false),
@@ -293,8 +367,12 @@ export async function saveProduct(
     pricePerKgOre: Math.round(d.priceKr * 100),
     unit: d.unit,
     packageWeightGrams: d.packageWeightGrams,
+    // Förval över serverns tak (100) skulle bara klampas i korgen — filtrera bort.
     weightOptionsJson: JSON.stringify(
-      d.weightOptions.split(",").map((s) => parseInt(s.trim(), 10)).filter((n) => n > 0)
+      d.weightOptions
+        .split(",")
+        .map((s) => parseInt(s.trim(), 10))
+        .filter((n) => n > 0 && n <= 100)
     ),
     ingredients: d.ingredients,
     allergens: d.allergens,
@@ -336,9 +414,9 @@ const areaSchema = z.object({
 
 export async function saveArea(
   areaId: string,
-  _prev: { error: string } | null,
+  _prev: { error?: string; saved?: string } | null,
   formData: FormData
-): Promise<{ error: string } | null> {
+): Promise<{ error?: string; saved?: string } | null> {
   await requireAdmin();
   const parsed = areaSchema.safeParse({
     weekdays: formData.get("weekdays"),
@@ -360,5 +438,6 @@ export async function saveArea(
     },
   });
   revalidatePath("/admin/installningar");
-  return null;
+  const days = [...new Set(d.weekdays.split(",").map((s) => parseInt(s.trim(), 10)))].map(weekdayName).join(", ");
+  return { saved: `Sparat — leveransdagar: ${days}${d.active ? "" : " (området är inaktivt)"}` };
 }

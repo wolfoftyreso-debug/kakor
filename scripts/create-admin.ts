@@ -20,7 +20,7 @@ async function main() {
   await prisma.adminUser.upsert({
     where: { email },
     create: { email, passwordHash, name: "Admin" },
-    update: { passwordHash },
+    update: { passwordHash, sessions: { deleteMany: {} } }, // lösenordsbyte loggar ut alla sessioner
   });
   console.log(`Admin ${email} skapad/uppdaterad.`);
 }

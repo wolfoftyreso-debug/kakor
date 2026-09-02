@@ -57,7 +57,7 @@ export function SubscriptionActions({
           >
             Avsluta
           </button>
-          <span style={{ display: "inline-flex", gap: 6, alignItems: "center", fontSize: 13 }}>
+          <label style={{ display: "inline-flex", gap: 6, alignItems: "center", fontSize: 13 }}>
             Nästa leverans:
             <input
               type="date"
@@ -73,7 +73,7 @@ export function SubscriptionActions({
             >
               Spara
             </button>
-          </span>
+          </label>
         </>
       )}
     </div>

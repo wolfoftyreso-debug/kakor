@@ -11,12 +11,13 @@ import { renderInvoicePdf } from "@/lib/invoice/pdf";
 // faktura (med PDF-bilaga + nedladdningslänk) till faktura-e-post.
 // Anropas EFTER att ordern är sparad. Fel loggas men kastas aldrig vidare.
 
-export async function sendOrderEmails(orderId: string): Promise<void> {
+/** Skickar orderbekräftelse + faktura. Returnerar true bara när båda gick iväg. */
+export async function sendOrderEmails(orderId: string): Promise<boolean> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { items: true, invoice: true, deliveryArea: true },
   });
-  if (!order || !order.invoice) return;
+  if (!order || !order.invoice) return false;
 
   const lines = order.items
     .map(
@@ -52,7 +53,7 @@ Frågor? Svara på det här mejlet.
 Vänliga hälsningar
 Sockerbagaren`;
 
-  await sendEmail({
+  const confirmationSent = await sendEmail({
     to: order.email,
     subject: `Orderbekräftelse ${order.orderNumber} — Sockerbagaren`,
     text: confirmationText,
@@ -88,7 +89,7 @@ Ladda ner fakturan: ${invoiceUrl}
 Vänliga hälsningar
 Sockerbagaren`;
 
-  await sendEmail({
+  const invoiceSent = await sendEmail({
     to: order.invoiceEmail,
     subject: `Faktura ${order.invoice.invoiceNumber} — Sockerbagaren`,
     text: invoiceText,
@@ -96,4 +97,5 @@ Sockerbagaren`;
     type: "INVOICE",
     orderId: order.id,
   });
+  return confirmationSent && invoiceSent;
 }

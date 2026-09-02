@@ -14,7 +14,7 @@ export default async function AdminLoginPage() {
   if (admin) redirect("/admin");
 
   return (
-    <div
+    <main
       style={{
         minHeight: "100vh",
         display: "flex",
@@ -33,6 +33,6 @@ export default async function AdminLoginPage() {
         </div>
         <LoginForm />
       </div>
-    </div>
+    </main>
   );
 }

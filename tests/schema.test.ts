@@ -25,6 +25,7 @@ const product: ProductCardData = {
   allergens: "Innehåller vete, smör (mjölk).",
   imageRef: "/images/kolasnittar.jpg",
   badge: "Bästsäljare",
+  vatRateBp: 1200,
 };
 
 describe("schema-motorn", () => {

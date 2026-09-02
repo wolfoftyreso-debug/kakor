@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LogoSigill } from "@/components/Logo";
 import { useCart } from "@/lib/cart";
@@ -22,6 +22,7 @@ function isActive(pathname: string | null, href: string): boolean {
 export function SiteHeader() {
   const { totalKg } = useCart();
   const [open, setOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
 
   // Headern överlever klientnavigering — menyn ska inte ligga kvar över
@@ -32,7 +33,11 @@ export function SiteHeader() {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        // Fokus tillbaka till knappen som öppnade menyn (WAI-ARIA-mönster).
+        toggleRef.current?.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -43,7 +48,7 @@ export function SiteHeader() {
       <a href="#innehall" className="skip-link">
         Hoppa till innehåll
       </a>
-      <div className="top-banner">
+      <div className="top-banner" role="region" aria-label="Leveransområden och betalning">
         {/* Lång text på desktop, kort på mobil — samma fakta, inga radbrytningar. */}
         <span className="banner-long">
           Vi levererar företagsfika i <strong>Tyresö, Nacka, Haninge och Huddinge</strong> — betalning
@@ -69,6 +74,7 @@ export function SiteHeader() {
         <Link
           href="/"
           className="logo-link"
+          aria-label="Sockerbagaren – till startsidan"
           style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "var(--text)" }}
         >
           <LogoSigill size={88} />
@@ -138,6 +144,7 @@ export function SiteHeader() {
             </span>
           </Link>
           <button
+            ref={toggleRef}
             className="menu-toggle"
             aria-expanded={open}
             aria-controls="mobilmeny"

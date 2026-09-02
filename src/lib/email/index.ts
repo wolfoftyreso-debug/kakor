@@ -21,12 +21,7 @@ export interface EmailProvider {
   send(msg: EmailMessage): Promise<void>;
 }
 
-/** Maskar en e-postadress för loggning: "k***@domän.se". */
-function maskEmail(address: string): string {
-  const at = address.indexOf("@");
-  if (at <= 0) return "***";
-  return `${address[0]}***${address.slice(at)}`;
-}
+import { maskEmail } from "@/lib/log";
 
 class LogProvider implements EmailProvider {
   readonly name = "log";
@@ -48,6 +43,7 @@ class ResendProvider implements EmailProvider {
       },
       body: JSON.stringify({
         from: emailConfig.from,
+        reply_to: emailConfig.replyTo || undefined,
         to: [msg.to],
         subject: msg.subject,
         text: msg.text,

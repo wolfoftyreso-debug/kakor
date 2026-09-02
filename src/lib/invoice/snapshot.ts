@@ -1,3 +1,4 @@
+import { z } from "zod";
 // Fakturans ekonomiska snapshot. En utfärdad faktura är ett historiskt
 // dokument: allt som behövs för att återge den lagras här vid utfärdandet.
 // PDF och vyer renderas ENBART från denna struktur.
@@ -41,8 +42,56 @@ export interface InvoiceSnapshot {
   invoiceDate: string; // ISO-datum
   dueDate: string; // ISO-datum
   paymentTermsDays: number;
+  /** Endast på kreditfakturor: numret på fakturan som krediteras. */
+  creditsInvoiceNumber?: string;
 }
 
+// Validerat vid läsning: skyddar PDF-renderingen mot schemadrift och
+// korrupt lagrad JSON (fel upptäcks som ett tydligt fel, inte en trasig PDF).
+const str = z.string().catch("");
+const snapshotSchema = z.object({
+  seller: z.object({
+    companyName: str,
+    orgNumber: str,
+    address: str,
+    postalCode: str,
+    city: str,
+    email: str,
+    phone: str,
+    bankgiro: str,
+    vatNumber: str,
+    fSkatt: str,
+  }),
+  buyer: z.object({
+    companyName: str,
+    orgNumber: str,
+    contactName: str,
+    invoiceEmail: str,
+    billingAddress: str,
+    reference: str,
+  }),
+  orderNumber: str,
+  deliveryDate: str,
+  lines: z.array(
+    z.object({
+      productName: str,
+      weightKg: z.number(),
+      unit: z.string().optional(),
+      unitPricePerKgOre: z.number().int(),
+      vatRateBp: z.number().int(),
+      lineTotalOre: z.number().int(),
+    })
+  ),
+  subtotalOre: z.number().int(),
+  vatOre: z.number().int(),
+  totalOre: z.number().int(),
+  currency: str,
+  invoiceDate: str,
+  dueDate: str,
+  paymentTermsDays: z.number().int(),
+  creditsInvoiceNumber: z.string().optional(),
+});
+
 export function parseSnapshot(json: string): InvoiceSnapshot {
-  return JSON.parse(json) as InvoiceSnapshot;
+  return snapshotSchema.parse(JSON.parse(json));
 }

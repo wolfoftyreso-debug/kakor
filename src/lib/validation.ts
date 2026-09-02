@@ -1,7 +1,57 @@
 import { z } from "zod";
 import { SUBSCRIPTION_FREQUENCY } from "@/lib/status";
+import { fromISODate, toISODate } from "@/lib/dates";
+
+// Kalenderriktigt datum: "2026-13-45" (Invalid Date → RangeError → 500) och
+// "2026-02-30" (V8 tolkar som 2 mars → ordern hamnar på ett annat datum än
+// kunden skickade) avvisas båda med ett vanligt fältfel.
+const isoDateSchema = (message: string) =>
+  z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, message)
+    .refine((s) => {
+      const d = fromISODate(s);
+      return !Number.isNaN(d.getTime()) && toISODate(d) === s;
+    }, "Ogiltigt datum");
 
 // Server-side validering — frontendvalidering är UX, inte säkerhet.
+
+// Enradsfält: radbrytningar/tabbar/kontrolltecken kollapsas till mellanslag
+// INNAN längdkontrollen — annars bryter "Bolag\n".repeat(20) faktura-PDF:en,
+// e-posten och adminlistorna (verifierat: 3-sidig PDF av en enradsfaktura).
+const singleLine = (min: number, minMessage: string, max: number) =>
+  z
+    .string()
+    .transform((s) => s.replace(/[\p{Cc}\s]+/gu, " ").trim())
+    .pipe(z.string().min(min, minMessage).max(max));
+
+// Flerradsfält: radbrytningar tillåts men övriga kontrolltecken tas bort och
+// antalet rader begränsas (fakturans adressblock har fast höjd).
+const multiLine = (max: number, maxLines: number) =>
+  z
+    .string()
+    .transform((s) =>
+      s
+        .replace(/\r\n?/g, "\n")
+        .replace(/[^\P{Cc}\n]/gu, "")
+        .split("\n")
+        .map((l) => l.trim())
+        .filter((l, i, arr) => l.length > 0 || i === arr.length - 1)
+        .slice(0, maxLines)
+        .join("\n")
+        .trim()
+    )
+    .pipe(z.string().max(max))
+    .default("");
+
+// E-post normaliseras till gemener vid lagring — då fungerar dygnsspärrar och
+// uppslag med vanlig likhet i alla databaser (SQLite i demo, Postgres i prod).
+const emailSchema = (message: string) =>
+  z.string().trim().email(message).max(200).transform((s) => s.toLowerCase());
+
+// Honeypot: fältet är dolt i formuläret och ska alltid vara tomt. Ifyllt
+// värde = bot; avvisas med ett vanligt valideringsfel utan att avslöja varför.
+const honeypotSchema = z.string().max(0, "Kontrollera uppgifterna").optional();
 
 const orgNumberSchema = z
   .string()
@@ -45,22 +95,28 @@ export const checkoutSchema = z.strictObject({
   idempotencyKey: idempotencyKeySchema.optional(),
   items: itemsSchema,
   areaSlug: z.string().min(1, "Välj leveransområde"),
-  deliveryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Välj leveransdag"),
+  deliveryDate: isoDateSchema("Välj leveransdag"),
 
-  companyName: z.string().trim().min(2, "Ange företagsnamn").max(120),
+  companyName: singleLine(2, "Ange företagsnamn", 120),
   orgNumber: orgNumberSchema,
-  contactName: z.string().trim().min(2, "Ange kontaktperson").max(120),
-  email: z.string().trim().email("Ange en giltig e-postadress").max(200),
+  contactName: singleLine(2, "Ange kontaktperson", 120),
+  email: emailSchema("Ange en giltig e-postadress"),
   phone: phoneSchema,
 
-  deliveryAddress: z.string().trim().min(3, "Ange leveransadress").max(200),
+  deliveryAddress: singleLine(3, "Ange leveransadress", 200),
   deliveryPostalCode: postalCodeSchema,
-  deliveryCity: z.string().trim().min(2, "Ange ort").max(80),
-  deliveryInstruction: z.string().trim().max(500).default(""),
+  deliveryCity: singleLine(2, "Ange ort", 80),
+  deliveryInstruction: multiLine(500, 6),
 
-  invoiceEmail: z.string().trim().email("Ange en giltig faktura-e-post").max(200),
-  reference: z.string().trim().max(120).default(""),
-  billingAddress: z.string().trim().max(300).default(""),
+  invoiceEmail: emailSchema("Ange en giltig faktura-e-post"),
+  reference: singleLine(0, "", 120).default(""),
+  billingAddress: multiLine(300, 4),
+
+  // Belopp kunden såg när hen bekräftade — servern räknar alltid själv, men
+  // avviker summorna (pris ändrat i admin under tiden) avvisas ordern så att
+  // kunden får bekräfta det nya priset i stället för att faktureras tyst.
+  expectedTotalOre: z.number().int().min(0).optional(),
+  website: honeypotSchema,
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
@@ -71,21 +127,24 @@ export const subscriptionSchema = z.strictObject({
   items: itemsSchema,
   frequency: z.enum(SUBSCRIPTION_FREQUENCY),
   areaSlug: z.string().min(1, "Välj leveransområde"),
-  firstDeliveryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Välj första leveransdag"),
+  firstDeliveryDate: isoDateSchema("Välj första leveransdag"),
 
-  companyName: z.string().trim().min(2, "Ange företagsnamn").max(120),
+  companyName: singleLine(2, "Ange företagsnamn", 120),
   orgNumber: orgNumberSchema,
-  contactName: z.string().trim().min(2, "Ange kontaktperson").max(120),
-  email: z.string().trim().email("Ange en giltig e-postadress").max(200),
+  contactName: singleLine(2, "Ange kontaktperson", 120),
+  email: emailSchema("Ange en giltig e-postadress"),
   phone: phoneSchema.or(z.literal("")).default(""),
 
-  deliveryAddress: z.string().trim().min(3, "Ange leveransadress").max(200),
+  deliveryAddress: singleLine(3, "Ange leveransadress", 200),
   deliveryPostalCode: postalCodeSchema,
-  deliveryCity: z.string().trim().min(2, "Ange ort").max(80),
-  deliveryInstruction: z.string().trim().max(500).default(""),
+  deliveryCity: singleLine(2, "Ange ort", 80),
+  deliveryInstruction: multiLine(500, 6),
 
-  invoiceEmail: z.string().trim().email("Ange en giltig faktura-e-post").max(200),
-  reference: z.string().trim().max(120).default(""),
+  invoiceEmail: emailSchema("Ange en giltig faktura-e-post"),
+  reference: singleLine(0, "", 120).default(""),
+
+  expectedTotalOre: z.number().int().min(0).optional(),
+  website: honeypotSchema,
 });
 
 export type SubscriptionInput = z.infer<typeof subscriptionSchema>;

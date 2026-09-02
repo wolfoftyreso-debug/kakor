@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { addDays, formatDeliveryDate, toISODate, todayInStockholm } from "@/lib/dates";
+import { formatDeliveryDate, toISODate, todayInStockholm, capitalizeFirst } from "@/lib/dates";
 import { qtyLabel } from "@/lib/units";
 import { MarkDeliveredInline } from "./MarkDeliveredInline";
 
@@ -25,9 +25,10 @@ export default async function DeliveriesPage({
       visa === "levererade"
         ? { deliveryStatus: "DELIVERED", status: { not: "CANCELLED" } }
         : {
+            // Alla olevererade — även äldre än en vecka, annars försvinner
+            // glömda ordrar ur den enda vy verksamheten packar från.
             deliveryStatus: "PENDING",
             status: { not: "CANCELLED" },
-            deliveryDate: { gte: addDays(today, -7) },
           },
     orderBy: [{ deliveryDate: "asc" }, { createdAt: "asc" }],
     take: 300,
@@ -90,12 +91,13 @@ export default async function DeliveriesPage({
               style={{
                 fontSize: 20,
                 marginBottom: 4,
-                textTransform: "capitalize",
                 borderBottom: "2px solid var(--text)",
                 paddingBottom: 8,
+                color: visa !== "levererade" && dateKey < toISODate(today) ? "var(--red)" : undefined,
               }}
             >
-              {formatDeliveryDate(dayOrders[0].deliveryDate)}
+              {capitalizeFirst(formatDeliveryDate(dayOrders[0].deliveryDate))} {dateKey.slice(0, 4)}
+              {visa !== "levererade" && dateKey < toISODate(today) ? " — FÖRSENAD, ej markerad levererad" : ""}
             </h2>
             <div style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 14 }}>
               {dayOrders.length} leverans{dayOrders.length === 1 ? "" : "er"} · {dayTotal} totalt
@@ -114,7 +116,8 @@ export default async function DeliveriesPage({
                         {o.deliveryArea ? ` · ${o.deliveryArea.name}` : ""}
                       </div>
                       <div style={{ fontSize: 13, color: "var(--text-2)" }}>
-                        {o.contactName} · <a href={`tel:${o.phone}`}>{o.phone}</a>
+                        {o.contactName}
+                        {o.phone ? <> · <a href={`tel:${o.phone}`}>{o.phone}</a></> : null}
                       </div>
                     </div>
                     <div style={{ fontSize: 14, textAlign: "right", minWidth: 140 }}>

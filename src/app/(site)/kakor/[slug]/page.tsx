@@ -16,6 +16,10 @@ import { allergenChips } from "@/lib/allergens";
 import { formatOre } from "@/lib/money";
 import { priceSuffix } from "@/lib/units";
 
+// Object.hasOwn: en admin-skapad slug som "constructor" får aldrig nå prototypkedjan.
+const knowledgeFor = (slug: string) =>
+  Object.hasOwn(PRODUCT_KNOWLEDGE, slug) ? PRODUCT_KNOWLEDGE[slug] : undefined;
+
 export const dynamic = "force-dynamic";
 
 interface Props {
@@ -33,10 +37,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await prisma.product.findUnique({ where: { slug } });
   if (!product || !product.active) return {};
   const title = productPageTitle(product);
-  const aka = PRODUCT_KNOWLEDGE[product.slug]?.aka;
-  // Meta description ska vara kort (~155 tecken): första meningen av beskrivningen räcker.
-  const shortDescription = product.description.split(/(?<=[.!?])\s/)[0].slice(0, 110);
-  const description = `${shortDescription}${aka ? ` (${aka})` : ""} ${formatOre(product.pricePerKgOre)}${priceSuffix(product.unit)} exkl. moms. Levereras till företag i Tyresö, Nacka, Haninge och Huddinge — betalning mot faktura.`;
+  const aka = knowledgeFor(product.slug)?.aka;
+  // Meta description ≤ ~155 tecken (trunkeras annars i sökresultaten).
+  const description = `${product.name}${aka ? ` (${aka})` : ""} — ${formatOre(product.pricePerKgOre)}${priceSuffix(product.unit)} exkl. moms. Levereras till företag i Tyresö, Nacka, Haninge och Huddinge, betalning mot faktura.`;
   return {
     title,
     description,
@@ -73,6 +76,7 @@ export default async function ProductPage({ params }: Props) {
   const [allProducts, deliveryDays] = await Promise.all([getActiveProducts(), getDeliveryDaysLabel()]);
   const cardData = allProducts.find((p) => p.id === product.id);
   if (!cardData) notFound();
+  const knowledge = knowledgeFor(product.slug);
   const related = allProducts.filter((p) => p.id !== product.id);
 
   const path = `/kakor/${product.slug}`;
@@ -163,12 +167,12 @@ export default async function ProductPage({ params }: Props) {
           </section>
         </div>
 
-        {PRODUCT_KNOWLEDGE[product.slug] && (
+        {knowledge && (
           <section style={{ marginTop: 48, maxWidth: "70ch" }}>
             <h2 className="h-sub" style={{ marginBottom: 14 }}>
-              {PRODUCT_KNOWLEDGE[product.slug].heading}
+              {knowledge.heading}
             </h2>
-            {PRODUCT_KNOWLEDGE[product.slug].paragraphs.map((p) => (
+            {knowledge.paragraphs.map((p) => (
               <p
                 key={p.slice(0, 24)}
                 style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", margin: "0 0 14px" }}

@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
+import { sweepRateLimitBuckets } from "@/lib/rate-limit";
 
 // Prenumerations-cron. Körs av Vercel Cron (GET, schema i vercel.json) —
 // Vercel skickar automatiskt "Authorization: Bearer <CRON_SECRET>" när
@@ -25,6 +26,8 @@ async function runCron(req: NextRequest): Promise<NextResponse> {
   }
   try {
     const result = await generateDueSubscriptionOrders();
+    // Städning av utgångna rate limit-räknare piggybackar på dagliga cronen.
+    await sweepRateLimitBuckets().catch(() => 0);
     console.log(
       `[cron] prenumerationsgenerering: ${result.generated.length} genererade, ${result.skipped.length} överhoppade`
     );

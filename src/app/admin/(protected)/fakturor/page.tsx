@@ -17,6 +17,7 @@ const FILTERS = [
   { key: "obetalda", label: "Obetalda" },
   { key: "forfallna", label: "Förfallna" },
   { key: "betalda", label: "Betalda" },
+  { key: "krediterade", label: "Krediterade" },
 ];
 
 const PAGE_SIZE = 50;
@@ -46,6 +47,9 @@ export default async function InvoicesPage({
     case "betalda":
       where.status = "PAID";
       break;
+    case "krediterade":
+      where.status = "CREDITED";
+      break;
   }
 
   const [invoices, totalCount] = await Promise.all([
@@ -54,7 +58,7 @@ export default async function InvoicesPage({
       orderBy: { invoiceDate: "desc" },
       take: PAGE_SIZE,
       skip: (page - 1) * PAGE_SIZE,
-      include: { order: true },
+      include: { order: true, creditNote: true },
     }),
     prisma.invoice.count({ where }),
   ]);
@@ -132,8 +136,23 @@ export default async function InvoicesPage({
                     </td>
                     <td style={{ fontWeight: 700 }}>{formatOre(inv.totalOre)}</td>
                     <td>
-                      <PaymentStatusPill status={inv.status} overdue={overdue} />
-                      {inv.order.status === "CANCELLED" && (
+                      {inv.status === "CREDITED" ? (
+                        <span className="pill pill-neutral">Krediterad</span>
+                      ) : (
+                        <PaymentStatusPill status={inv.status} overdue={overdue} />
+                      )}
+                      {inv.creditNote && (
+                        <a
+                          href={`/faktura/${inv.creditNote.downloadToken}`}
+                          target="_blank"
+                          rel="noopener"
+                          className="mono"
+                          style={{ marginLeft: 6, fontSize: 12 }}
+                        >
+                          Kredit {inv.creditNote.creditNumber}
+                        </a>
+                      )}
+                      {inv.order.status === "CANCELLED" && !inv.creditNote && (
                         <span className="pill pill-neutral" style={{ marginLeft: 6 }}>
                           Order avbruten
                         </span>

@@ -11,7 +11,7 @@ export type PaymentStatus = (typeof PAYMENT_STATUS)[number];
 export const DELIVERY_STATUS = ["PENDING", "DELIVERED"] as const;
 export type DeliveryStatus = (typeof DELIVERY_STATUS)[number];
 
-export const INVOICE_STATUS = ["UNPAID", "PAID"] as const;
+export const INVOICE_STATUS = ["UNPAID", "PAID", "CREDITED"] as const;
 export type InvoiceStatus = (typeof INVOICE_STATUS)[number];
 
 export const SUBSCRIPTION_STATUS = ["ACTIVE", "PAUSED", "CANCELLED"] as const;
@@ -36,6 +36,12 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   UNPAID: "Obetald",
   PAID: "Betald",
+};
+
+export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
+  UNPAID: "Obetald",
+  PAID: "Betald",
+  CREDITED: "Krediterad",
 };
 
 export const DELIVERY_STATUS_LABELS: Record<DeliveryStatus, string> = {

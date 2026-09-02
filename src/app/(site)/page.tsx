@@ -53,7 +53,7 @@ const FAQS = [
   },
   {
     q: "Vart levererar ni?",
-    a: "Vi kör lokal leverans till företag i Tyresö, Nacka, Haninge och Huddinge — fler områden tillkommer.",
+    a: "Vi kör lokal leverans till företag i Tyresö, Nacka, Haninge och Huddinge.",
   },
   {
     q: "När kommer leveransen?",
@@ -140,7 +140,7 @@ export default async function HomePage() {
         <div className="section-head">
           <div>
             <h2 className="h-section">Våra kakor</h2>
-            <p>Säljs per kilo — blanda fritt i samma order.</p>
+            <p>Säljs per kilo eller paket — blanda fritt i samma order.</p>
           </div>
           <Link href="/kakor" className="section-link">
             Alla kakor →
@@ -160,7 +160,7 @@ export default async function HomePage() {
       </section>
 
       {/* SMÖR */}
-      <section style={{ background: "var(--butter)" }}>
+      <section style={{ background: "var(--butter)" }} className="on-butter">
         <div
           className="container two-col section-y"
           style={{ display: "grid", gap: 48, alignItems: "center" }}
@@ -188,7 +188,8 @@ export default async function HomePage() {
             {INGREDIENTS.map(({ name, src }) => (
               <Link key={name} href="/ingredienser" className="ingredient-tile">
                 <span className="tile-img">
-                  <ImageSlot label={name} src={src} circle />
+                  {/* Namnet står under bilden — bilden är dekorativ för skärmläsare. */}
+                  <ImageSlot label={name} src={src} circle decorative />
                 </span>
                 <span className="tile-name">{name}</span>
               </Link>
@@ -254,7 +255,7 @@ export default async function HomePage() {
           <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10, fontSize: 15, color: "var(--brown-2)" }}>
             {[
               "Betalning mot faktura — inga kort",
-              "Snabbeställning för återkommande kunder",
+              "Fikaprenumeration när ni vill slippa komma ihåg",
               "Leverans under dagen till bemannad adress",
             ].map((t) => (
               <li key={t} style={{ display: "flex", alignItems: "center", gap: 10 }}>

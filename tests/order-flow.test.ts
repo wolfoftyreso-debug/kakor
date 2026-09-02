@@ -10,8 +10,12 @@ import type { CheckoutInput } from "@/lib/validation";
 
 let products: { id: string; name: string; pricePerKgOre: number }[] = [];
 let validDate = "";
+// Unik kund per anrop — missbruksspärren (max ordrar per e-post/org.nr och
+// dygn) ska inte slå till i testsviten.
+let seq = 0;
 
 function checkoutInput(overrides: Partial<CheckoutInput> = {}): CheckoutInput {
+  seq++;
   return {
     items: [
       { productId: products[0].id, weightKg: 2 },
@@ -20,15 +24,15 @@ function checkoutInput(overrides: Partial<CheckoutInput> = {}): CheckoutInput {
     areaSlug: "tyreso",
     deliveryDate: validDate,
     companyName: "Testföretaget AB",
-    orgNumber: "556677-8899",
+    orgNumber: `${556000 + seq}-8899`,
     contactName: "Test Person",
-    email: "kontakt@testforetaget.se",
+    email: `kontakt${seq}@testforetaget.se`,
     phone: "070-123 45 67",
     deliveryAddress: "Testgatan 1",
     deliveryPostalCode: "135 48",
     deliveryCity: "Tyresö",
     deliveryInstruction: "Porten vid lastkajen",
-    invoiceEmail: "faktura@testforetaget.se",
+    invoiceEmail: `faktura${seq}@testforetaget.se`,
     reference: "Kostnadsställe 42",
     billingAddress: "",
     ...overrides,
@@ -112,8 +116,9 @@ describe("order + faktura (golden path)", () => {
 
   it("dubbelklick/retry med samma idempotensnyckel ger EN order", async () => {
     const key = "test-idempotency-key-0001";
-    const first = await createOrder(checkoutInput({ idempotencyKey: key }), { skipEmails: true });
-    const second = await createOrder(checkoutInput({ idempotencyKey: key }), { skipEmails: true });
+    const same = { idempotencyKey: key, orgNumber: "556677-8899", email: "idem@testforetaget.se", invoiceEmail: "idem@testforetaget.se" };
+    const first = await createOrder(checkoutInput(same), { skipEmails: true });
+    const second = await createOrder(checkoutInput(same), { skipEmails: true });
     expect(second.duplicate).toBe(true);
     expect(second.order.id).toBe(first.order.id);
     expect(second.invoice.invoiceNumber).toBe(first.invoice.invoiceNumber);

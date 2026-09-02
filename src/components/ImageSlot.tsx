@@ -12,6 +12,7 @@ export function ImageSlot({
   src,
   circle = false,
   priority = false,
+  decorative = false,
 }: {
   /** Beskrivning för skärmläsare/alt-text, t.ex. "Kolasnittar — närbild". */
   label: string;
@@ -20,6 +21,8 @@ export function ImageSlot({
   circle?: boolean;
   /** true för sidans LCP-bild (hero): eager + hög fetch-prioritet. Övriga lazy-laddas. */
   priority?: boolean;
+  /** Bilden upprepar synlig text (t.ex. råvaruruta med namn under) — tom alt för skärmläsare. */
+  decorative?: boolean;
 }) {
   const [broken, setBroken] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -39,7 +42,7 @@ export function ImageSlot({
       <img
         ref={imgRef}
         src={src}
-        alt={label}
+        alt={decorative ? "" : label}
         loading={priority ? "eager" : "lazy"}
         decoding="async"
         fetchPriority={priority ? "high" : undefined}
@@ -58,8 +61,9 @@ export function ImageSlot({
   return (
     <div
       className="img-slot"
-      role="img"
-      aria-label={label}
+      role={decorative ? undefined : "img"}
+      aria-label={decorative ? undefined : label}
+      aria-hidden={decorative || undefined}
       style={circle ? { borderRadius: "50%" } : undefined}
     >
       <span className="img-slot-mark" aria-hidden="true">

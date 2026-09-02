@@ -46,6 +46,7 @@ export function organizationNode(): JsonLdNode {
     legalName: invoiceConfig.companyName,
     url: `${SITE()}/`,
     description: siteConfig.description,
+    logo: `${SITE()}/images/icon-512.png`,
     address: {
       "@type": "PostalAddress",
       streetAddress: invoiceConfig.address,
