@@ -1,0 +1,205 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { sharePreview } from "@/lib/seo/meta";
+import { getActiveProducts, getDeliveryDaysLabel } from "@/lib/products";
+import { JsonLd } from "@/components/JsonLd";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { breadcrumbNode, faqNode, graph, webPageNode } from "@/lib/seo/schema";
+import { formatOre } from "@/lib/money";
+import { priceSuffix } from "@/lib/units";
+
+// Guide-sida för det informativa sökbeteendet kring fika på arbetsplatsen.
+// Semrush (se, 2026-09): "fika till jobbet" 320 (KD 22), "fredagsfika" 320,
+// "fika på jobbet" 210, "fredagsfika på jobbet" 110, "fika att bjuda på
+// jobbet" 170, "konferensfika" 30, "julfika" 1 600, "påskfika" 720.
+// Innehållet är rådgivande och bygger på sortimentet — inga verksamhets-
+// löften utöver det som gäller i kassan (leveransdagar hämtas ur admin).
+
+export const dynamic = "force-dynamic";
+
+const TITLE = "Fika till jobbet — hur mycket per person?";
+const DESCRIPTION =
+  "Guide till fika på jobbet: hur många småkakor per person, fredagsfika, mötes- och konferensfika, och hur ni beställer med leverans och faktura.";
+
+export const metadata: Metadata = {
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/fika-till-jobbet" },
+  ...sharePreview({ title: TITLE, description: DESCRIPTION, path: "/fika-till-jobbet" }),
+};
+
+const CRUMBS = [
+  { name: "Sockerbagaren", path: "/" },
+  { name: "Fika till jobbet", path: "/fika-till-jobbet" },
+];
+
+const FAQS = [
+  {
+    q: "Hur många kakor per person ska man räkna med till fika på jobbet?",
+    a: "Räkna med 3–5 småkakor per person till en vanlig fika. Är kakorna det enda tilltugget, eller fikat längre (till exempel en eftermiddagskonferens), räkna på 5. Kompletteras fikat med frukt eller smörgås räcker 3.",
+  },
+  {
+    q: "Hur mycket är ett kilo småkakor?",
+    a: "Det beror på sorten: snittar (kolasnittar och chokladsnittar) är lätta och ger många kakor per kilo, medan mandelkubb är en tyngre kaka som ger färre men mer mättande bitar. Prova-på-paketet med 0,5 kg av varje sort är ett bra sätt att se hur långt ett kilo räcker hos er.",
+  },
+  {
+    q: "Vad passar bäst till fredagsfika på jobbet?",
+    a: "En blandning av en ljus och en mörk sort brukar gå hem hos flest — till exempel kolasnittar och chokladsnittar — och mandelkubb för dem som vill ha något mer mättande till kaffet. Med en fikaprenumeration kommer samma blandning automatiskt varje eller varannan fredag.",
+  },
+  {
+    q: "Kan man beställa fika till jobbet mot faktura?",
+    a: "Ja. Hos oss betalar företag alltid mot faktura: fakturan skapas när ni beställer, mejlas till er faktura-e-post och förfaller först efter leveransen. Inga kort och inga konton.",
+  },
+  {
+    q: "Hur långt i förväg behöver vi beställa fika?",
+    a: "Leveransen kommer på ert områdes fasta leveransdag. Kassan visar nästa tillgängliga leveransdag för Tyresö, Nacka, Haninge och Huddinge direkt när ni väljer datum.",
+  },
+  {
+    q: "Håller kakorna till nästa dag?",
+    a: "Ja. Småkakor på riktigt smör håller sig fina i flera veckor i en tät burk i rumstemperatur, och tål frysning i flera månader. Det som blir över på fredagen kan alltså sparas till måndagsmötet.",
+  },
+];
+
+// Per-person-räknaren: 3–5 kakor per person (samma tumregel som FAQ:n).
+const GROUPS = [10, 20, 30, 50];
+
+export default async function FikaTillJobbetPage() {
+  const [products, deliveryDays] = await Promise.all([getActiveProducts(), getDeliveryDaysLabel()]);
+  const kgProducts = products.filter((p) => p.unit === "kg");
+  const paket = products.find((p) => p.unit === "paket");
+
+  return (
+    <>
+      <JsonLd
+        data={graph(
+          webPageNode({ path: "/fika-till-jobbet", title: TITLE, description: DESCRIPTION, breadcrumbs: CRUMBS }),
+          breadcrumbNode("/fika-till-jobbet", CRUMBS),
+          faqNode("/fika-till-jobbet", FAQS)
+        )}
+      />
+      <Breadcrumbs crumbs={CRUMBS} container="container-narrow" />
+      <article className="container-narrow" style={{ padding: "24px 24px 80px" }}>
+        <div className="eyebrow" style={{ marginBottom: 10 }}>
+          Guide
+        </div>
+        <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)", marginBottom: 14 }}>
+          Fika till jobbet — så ordnar ni det utan krångel
+        </h1>
+        <p className="lede">
+          Fika på jobbet är enkelt när någon annan har tänkt på mängder, sorter och leverans. Här
+          är tumreglerna vi använder själva: hur mycket som går åt per person, vad som passar till
+          fredagsfika, möten och konferenser, och hur beställningen fungerar med leverans
+          {deliveryDays ? ` ${deliveryDays}` : ""} och betalning mot faktura.
+        </p>
+
+        <h2 style={{ fontSize: 24, margin: "36px 0 10px" }}>Hur mycket fika per person?</h2>
+        <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch" }}>
+          Tumregeln är <strong>3–5 småkakor per person</strong>. Tre räcker när fikat har annat
+          tilltugg också, fem när kakorna är det enda som bjuds eller när fikat drar ut på tiden.
+          Hur många kakor ett kilo ger beror på sorten — snittar är lätta, mandelkubb tyngre — så
+          första gången är prova-på-paketet det säkraste sättet att se vad som går åt hos er.
+        </p>
+        <div className="card" style={{ padding: "18px 22px", margin: "18px 0 8px", maxWidth: "65ch" }}>
+          <div className="section-label" style={{ marginBottom: 10 }}>KAKOR ATT RÄKNA MED</div>
+          <table style={{ width: "100%", fontSize: 14.5, borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ textAlign: "left", color: "var(--text-2)" }}>
+                <th style={{ padding: "6px 0", fontWeight: 600 }}>Antal personer</th>
+                <th style={{ padding: "6px 0", fontWeight: 600 }}>Lätt fika (3 st)</th>
+                <th style={{ padding: "6px 0", fontWeight: 600 }}>Rejäl fika (5 st)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {GROUPS.map((n) => (
+                <tr key={n} style={{ borderTop: "1px solid var(--divider)" }}>
+                  <td style={{ padding: "8px 0", fontWeight: 700 }}>{n} personer</td>
+                  <td style={{ padding: "8px 0" }}>{n * 3} kakor</td>
+                  <td style={{ padding: "8px 0" }}>{n * 5} kakor</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <h2 style={{ fontSize: 24, margin: "36px 0 10px" }}>Fredagsfika på jobbet</h2>
+        <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch" }}>
+          Fredagsfikat är den fika som oftast blir av — och oftast glöms bort att beställa. En
+          blandning av en ljus och en mörk sort går hem hos flest: kolasnittar för den sega
+          kolasmaken, chokladsnittar för chokladen och mandelkubb för dem som vill ha en rejäl
+          kaka till kaffet. Vill ni slippa komma ihåg det varje vecka gör{" "}
+          <Link href="/prenumeration">fikaprenumerationen</Link> om samma beställning automatiskt,
+          varje eller varannan vecka, utan bindningstid.
+        </p>
+
+        <h2 style={{ fontSize: 24, margin: "36px 0 10px" }}>Mötesfika och konferensfika</h2>
+        <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch" }}>
+          Till ett kundmöte eller en halvdagskonferens fungerar småkakor bättre än bakelser: de
+          kräver ingen tallrik, håller sig fräscha hela dagen och kan stå framme på ett fat vid
+          kaffet. Räkna med den rejäla mängden (5 per person) när fikat är dagens enda paus, och
+          beställ till en bemannad adress — reception eller konferensvärd — så att leveransen kan
+          tas emot under dagen.
+        </p>
+
+        <h2 style={{ fontSize: 24, margin: "36px 0 10px" }}>Julfika, påskfika och sommaravslutning</h2>
+        <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch" }}>
+          Klassiska småkakor passar året runt: mandelkubb och kolasnittar hör hemma på julfikat
+          lika självklart som på påskens kaffebord eller sommaravslutningen. Beställ i god tid
+          inför storhelger — leveransdagarna är fasta per område och kassan visar vilka datum som
+          är lediga.
+        </p>
+
+        <h2 style={{ fontSize: 24, margin: "36px 0 10px" }}>Sorterna och vad de kostar</h2>
+        <ul style={{ margin: "0 0 12px", paddingLeft: 20, fontSize: 15, lineHeight: 1.8, color: "var(--brown-2)" }}>
+          {kgProducts.map((p) => (
+            <li key={p.id}>
+              <Link href={`/kakor/${p.slug}`} style={{ fontWeight: 600 }}>
+                {p.name}
+              </Link>{" "}
+              — {formatOre(p.pricePerKgOre)}
+              {priceSuffix(p.unit)} exkl. moms
+            </li>
+          ))}
+          {paket && (
+            <li>
+              <Link href={`/kakor/${paket.slug}`} style={{ fontWeight: 600 }}>
+                {paket.name}
+              </Link>{" "}
+              — {formatOre(paket.pricePerKgOre)}
+              {priceSuffix(paket.unit)} exkl. moms, 0,5 kg av varje sort
+            </li>
+          )}
+        </ul>
+        <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch" }}>
+          Alla sorter bakas på riktigt smör efter recept ur Svenskt konditorlexikon 1957. Fullständiga{" "}
+          <Link href="/ingredienser">ingredienser och allergener</Link> finns för varje sort — bra
+          att ha till hands när kollegor frågar om mandel, ägg eller mjölk.
+        </p>
+
+        <h2 style={{ fontSize: 24, margin: "36px 0 10px" }}>Så beställer ni</h2>
+        <ol style={{ margin: "0 0 12px", paddingLeft: 20, fontSize: 15, lineHeight: 1.8, color: "var(--brown-2)" }}>
+          <li>Välj sorter och mängd per kilo, eller prova-på-paketet.</li>
+          <li>Välj leveransdag för ert område — Tyresö, Nacka, Haninge eller Huddinge.</li>
+          <li>Ange företagsuppgifter och faktura-e-post. Fakturan förfaller efter leveransen.</li>
+        </ol>
+        <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <Link href="/bestall" className="btn btn-primary btn-lg">
+            Beställ kakor
+          </Link>
+          <Link href="/bestall?typ=aterkommande" className="btn btn-butter btn-lg">
+            Starta fikaprenumeration
+          </Link>
+        </div>
+
+        <h2 style={{ fontSize: 24, margin: "44px 0 6px" }}>Vanliga frågor om fika på jobbet</h2>
+        <div>
+          {FAQS.map((f) => (
+            <div key={f.q} style={{ borderBottom: "1px solid var(--border)", padding: "14px 4px" }}>
+              <h3 style={{ fontSize: "15.5px", fontWeight: 700, fontFamily: "var(--font-sans)" }}>{f.q}</h3>
+              <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--brown-2)", margin: "6px 0 0", maxWidth: "65ch" }}>{f.a}</p>
+            </div>
+          ))}
+        </div>
+      </article>
+    </>
+  );
+}

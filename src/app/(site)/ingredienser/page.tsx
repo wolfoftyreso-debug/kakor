@@ -55,7 +55,9 @@ export default async function IngredienserPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {products.map((p) => (
           <div key={p.id} className="card" style={{ padding: "24px 26px" }}>
-            <h2 style={{ fontSize: 22, marginBottom: 6 }}>{p.name}</h2>
+            <h2 style={{ fontSize: 22, marginBottom: 6 }}>
+              <Link href={`/kakor/${p.slug}`} style={{ color: "inherit" }}>{p.name}</Link>
+            </h2>
             <p style={{ fontSize: 14, color: "var(--text-2)", margin: "0 0 14px" }}>{p.description}</p>
             {p.unit === "paket" ? (
               <>

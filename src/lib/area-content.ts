@@ -22,7 +22,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     name: "Tyresö",
     title: "Kakor till företag i Tyresö",
     metaDescription:
-      "Företagsfika i Tyresö: klassiska småkakor på riktigt smör, levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura och fasta leveransdagar.",
+      "Företagsfika i Tyresö: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Tyresö",
     heroText:
       "Vi levererar fika direkt till arbetsplatser i Tyresö — kontor, verkstäder, butiker och kliniker. Vi utgår från lagret på Radiovägen i Tyresö, så leveransen kommer från grannskapet.",
@@ -53,7 +53,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     name: "Nacka",
     title: "Kakor till företag i Nacka",
     metaDescription:
-      "Företagsfika i Nacka: klassiska småkakor på riktigt smör, levererade till kontor, butiker och verkstäder i hela kommunen. Betalning mot faktura och fasta leveransdagar.",
+      "Företagsfika i Nacka: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Nacka",
     heroText:
       "Vi levererar fika direkt till arbetsplatser i Nacka — kontor, verkstäder, butiker och kliniker. Vi utgår från lagret i grannkommunen Tyresö, så leveransen kommer från närområdet.",
@@ -84,7 +84,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     name: "Haninge",
     title: "Kakor till företag i Haninge",
     metaDescription:
-      "Företagsfika i Haninge: klassiska småkakor på riktigt smör, levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura och fasta leveransdagar.",
+      "Företagsfika i Haninge: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Haninge",
     heroText:
       "Vi levererar fika direkt till arbetsplatser i Haninge — kontor, verkstäder, butiker och kliniker. Vi utgår från lagret i grannkommunen Tyresö, så leveransen kommer från närområdet.",
@@ -115,7 +115,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
     name: "Huddinge",
     title: "Kakor till företag i Huddinge",
     metaDescription:
-      "Företagsfika i Huddinge: klassiska småkakor på riktigt smör, levererade till kontor, verkstäder och butiker i hela kommunen. Betalning mot faktura och fasta leveransdagar.",
+      "Företagsfika i Huddinge: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Huddinge",
     heroText:
       "Vi levererar fika direkt till arbetsplatser i Huddinge — kontor, verkstäder, butiker och kliniker. Vi utgår från lagret i Tyresö i södra Stockholm, så leveransen kommer från närområdet.",

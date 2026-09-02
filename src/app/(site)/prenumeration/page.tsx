@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { JsonLd } from "@/components/JsonLd";
-import { graph, webPageNode } from "@/lib/seo/schema";
+import { faqNode, graph, webPageNode } from "@/lib/seo/schema";
 import { Steps } from "@/components/Steps";
 import { TrustStrip } from "@/components/TrustStrip";
 
@@ -12,14 +12,14 @@ import { TrustStrip } from "@/components/TrustStrip";
 // återkommande leverans förvald.
 
 export const metadata: Metadata = {
-  title: "Fikaprenumeration",
+  title: "Fikaprenumeration till jobbet, varje vecka",
   description:
-    "Fika som bara dyker upp: välj kakor, mängd och hur ofta — en order med faktura skapas inför varje leverans. Pausa eller avsluta enkelt.",
+    "Fikaprenumeration för företag: kolasnittar, mandelkubb och chokladsnittar varje, varannan eller var fjärde vecka. Faktura per leverans, ingen bindningstid.",
   alternates: { canonical: "/prenumeration" },
   ...sharePreview({
-    title: "Fikaprenumeration",
+    title: "Fikaprenumeration till jobbet, varje vecka",
     description:
-      "Fika som bara dyker upp: välj kakor, mängd och hur ofta — en order med faktura skapas inför varje leverans. Pausa eller avsluta enkelt.",
+      "Fikaprenumeration för företag: kolasnittar, mandelkubb och chokladsnittar varje, varannan eller var fjärde vecka. Faktura per leverans, ingen bindningstid.",
     path: "/prenumeration",
   }),
 };
@@ -39,6 +39,26 @@ const STEPS = [
   },
 ];
 
+// Semrush (se): "fredagsfika" 320, "fredagsfika på jobbet" 110, "fika på jobbet" 210.
+const PREN_FAQS = [
+  {
+    q: "Hur ofta kan vi få leverans?",
+    a: "Varje vecka, varannan vecka eller var fjärde vecka, på ert områdes leveransdag. Ni väljer första leveransdag i kassan.",
+  },
+  {
+    q: "Finns det bindningstid?",
+    a: "Nej. Prenumerationen löper tills vidare och ni pausar, ändrar eller avslutar när ni vill genom att svara på bekräftelsemejlet. En ändring som meddelas efter att nästa order redan skapats gäller från leveransen därpå.",
+  },
+  {
+    q: "Hur faktureras en fikaprenumeration?",
+    a: "Inför varje leverans skapas en vanlig order med faktura som mejlas till er faktura-e-post. Förfallodagen räknas från leveransdagen. Inga kort, inga konton.",
+  },
+  {
+    q: "Passar prenumerationen för fredagsfika?",
+    a: "Ja — det är det vanligaste upplägget: en fast mängd varje eller varannan vecka så att fredagsfikat alltid finns på plats. Beställ gärna prova-på-paketet först för att se hur mycket som går åt hos er.",
+  },
+];
+
 export default async function PrenumerationPage() {
   return (
     <>
@@ -46,9 +66,10 @@ export default async function PrenumerationPage() {
         data={graph(
           webPageNode({
             path: "/prenumeration",
-            title: "Fikaprenumeration",
+            title: "Fikaprenumeration till jobbet, varje vecka",
             description: String(metadata.description),
-          })
+          }),
+          faqNode("/prenumeration", PREN_FAQS)
         )}
       />
       <section className="section-y" style={{ background: "var(--section-tint)", padding: "var(--section-y) 24px", textAlign: "center" }}>
@@ -82,6 +103,18 @@ export default async function PrenumerationPage() {
           <strong>Betalning mot faktura, precis som vanligt.</strong> Ingen kortdebitering och inget
           konto — varje leverans faktureras för sig, till den fakturaadress ni anger.
         </div>
+        <h2 className="h-sub" style={{ margin: "48px 0 6px" }}>Vanliga frågor om fikaprenumerationen</h2>
+        <div>
+          {PREN_FAQS.map((f) => (
+            <div key={f.q} style={{ borderBottom: "1px solid var(--border)", padding: "14px 4px" }}>
+              <h3 style={{ fontSize: "15.5px", fontWeight: 700, fontFamily: "var(--font-sans)" }}>{f.q}</h3>
+              <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--brown-2)", margin: "6px 0 0", maxWidth: "65ch" }}>{f.a}</p>
+            </div>
+          ))}
+        </div>
+        <p style={{ marginTop: 20, fontSize: 14.5 }}>
+          Hur mycket ska ni beställa? <Link href="/fika-till-jobbet" style={{ fontWeight: 600 }}>Guide: fika till jobbet</Link>
+        </p>
         <div style={{ marginTop: 32, textAlign: "center" }}>
           <Link href="/bestall?typ=aterkommande" className="btn btn-primary btn-lg">
             Välj kakor

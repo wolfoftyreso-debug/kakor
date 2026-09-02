@@ -12,17 +12,22 @@ import { priceSuffix } from "@/lib/units";
 import { fromISODate, weekdayName, isoWeekday } from "@/lib/dates";
 import { siteConfig } from "@/lib/config";
 import { JsonLd } from "@/components/JsonLd";
-import { graph, productListNode, productNode, webPageNode } from "@/lib/seo/schema";
+import { faqNode, graph, productListNode, productNode, webPageNode } from "@/lib/seo/schema";
 
 export const dynamic = "force-dynamic";
 
+// Semrush (se): "fika till jobbet" 320, "fredagsfika" 320, "fika på jobbet" 210,
+// "kolasnittar" 22 200, "mandelkubb" 4 400, "chokladsnittar" 8 100.
+const HOME_DESCRIPTION =
+  "Fika till jobbet: kolasnittar, mandelkubb och chokladsnittar på riktigt smör, levererade till företag i Tyresö, Nacka, Haninge och Huddinge. Mot faktura.";
+
 export const metadata: Metadata = {
-  title: { absolute: "Sockerbagaren — Riktigt fika till jobbet" },
-  description: siteConfig.description,
+  title: { absolute: "Sockerbagaren — Fika till jobbet i södra Stockholm" },
+  description: HOME_DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Sockerbagaren — Riktigt fika till jobbet",
-    description: siteConfig.description,
+    title: "Sockerbagaren — Fika till jobbet i södra Stockholm",
+    description: HOME_DESCRIPTION,
     url: "/",
     siteName: "Sockerbagaren",
     locale: "sv_SE",
@@ -87,7 +92,8 @@ export default async function HomePage() {
       mainEntityId: `${siteConfig.url.replace(/\/$/, "")}/#products`,
     }),
     productListNode("/", products),
-    ...products.map(productNode)
+    ...products.map(productNode),
+    faqNode("/", FAQS)
   );
 
   return (
@@ -253,6 +259,9 @@ export default async function HomePage() {
             och besökare fikar. Beställ till fredagsfikat, mötet eller personalrummet. Ni får
             faktura, vi sköter resten.
           </p>
+          <Link href="/fika-till-jobbet" className="section-link" style={{ alignSelf: "flex-start" }}>
+            Guide: så mycket fika behöver ni per person →
+          </Link>
           <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10, fontSize: 15, color: "var(--brown-2)" }}>
             {[
               "Betalning mot faktura — inga kort",

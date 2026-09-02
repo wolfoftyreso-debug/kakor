@@ -6,7 +6,7 @@ import { invoiceConfig, isVerifiedValue } from "@/lib/config";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 
 export const metadata: Metadata = {
-  title: "Om Sockerbagaren",
+  title: { absolute: "Om Sockerbagaren — småkakor på recept från 1957" },
   description:
     "Sockerbagaren bakar klassiska svenska småkakor på riktiga råvaror och levererar till arbetsplatser i södra Stockholm. Betalning mot faktura.",
   alternates: { canonical: "/om" },
@@ -44,6 +44,21 @@ export default function OmPage() {
         Vi säljer till företag: kontor, verkstäder, byggföretag, kliniker och butiker. Betalningen
         sker alltid mot faktura, och leveransen kommer på fasta leveransdagar per område — Tyresö,
         Nacka, Haninge och Huddinge.
+      </p>
+      <h2 style={{ fontSize: 22, margin: "32px 0 12px" }}>Recept från 1957</h2>
+      <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
+        Våra recept kommer från Svenskt konditorlexikon från 1957 — den tidens handbok för
+        yrkeskonditorer. Det betyder gammaldags småkakor så som de bakades innan margarin och
+        tillsatser blev standard: smör, socker, vetemjöl, ägg, mandel, choklad och sirap. Kakorna
+        bakas i omgångar och levereras från lagret på Radiovägen i Tyresö.
+      </p>
+      <h2 style={{ fontSize: 22, margin: "32px 0 12px" }}>Så beställer ni</h2>
+      <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
+        Välj sorter och mängd per kilo (eller prova-på-paketet på 1,5 kg), välj leveransdag för ert
+        område och ange faktureringsuppgifter — fakturan skapas direkt och förfaller först efter
+        leveransen. Återkommande fika? <Link href="/prenumeration">Fikaprenumerationen</Link> gör
+        om samma beställning automatiskt. Läs mer i vår{" "}
+        <Link href="/fika-till-jobbet">guide till fika på jobbet</Link>.
       </p>
       <h2 style={{ fontSize: 22, margin: "32px 0 12px" }}>Företagsuppgifter</h2>
       <p style={{ fontSize: 15, lineHeight: 1.8, color: "var(--brown-2)" }}>

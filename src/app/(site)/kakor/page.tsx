@@ -12,9 +12,11 @@ export const dynamic = "force-dynamic";
 
 // Titel/description breddade mot kategorins verkliga sökfält (Semrush se):
 // "småkakor" 8 100 sök/mån, "fikabröd" 1 600, "kaffebröd" 590.
-const PAGE_TITLE = "Småkakor & fikabröd — beställ per kilo";
+// Semrush (se): "gammaldags småkakor" 1 600 (KD 19), "smörkakor" 1 900 (KD 18),
+// "småkakor" 8 100, "fikabröd" 1 600, "kaffebröd" 590, "kakor" 14 800.
+const PAGE_TITLE = "Gammaldags småkakor på riktigt smör";
 const PAGE_DESCRIPTION =
-  "Klassiska svenska småkakor — mandelkubb, kolasnittar och chokladsnittar bakade på riktigt smör. Fikabröd per kilo till företag i södra Stockholm: blanda fritt i samma order, betalning mot faktura.";
+  "Gammaldags småkakor på recept från 1957: kolasnittar, mandelkubb och chokladsnittar på riktigt smör. Per kilo till företag i södra Stockholm, mot faktura.";
 
 export const metadata: Metadata = {
   title: PAGE_TITLE,
@@ -37,6 +39,10 @@ const KAKOR_FAQS = [
   {
     q: "Vilka är sju sorters kakor?",
     a: "En klassisk svensk kaffebjudningstradition: minst sju olika småkakor på bordet. Mandelkubb, kolasnittar och chokladsnittar är tre av klassikerna som ofta ingår.",
+  },
+  {
+    q: "Vad är gammaldags småkakor?",
+    a: "Småkakor bakade som förr: på riktigt smör, socker, vetemjöl och ägg, utan margarin eller onödiga tillsatser. Våra tre sorter bakas efter recept ur Svenskt konditorlexikon från 1957.",
   },
   {
     q: "Hur mycket kakor går det åt per person?",
@@ -83,15 +89,16 @@ export default async function KakorPage() {
             gap: 8,
           }}
         >
-          <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)" }}>Våra kakor</h1>
+          <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)" }}>Gammaldags småkakor på riktigt smör</h1>
           <div style={{ fontSize: 14, color: "var(--text-2)" }}>
             Säljs per kilo eller paket · blanda fritt i samma order
           </div>
         </div>
         <p className="lede" style={{ margin: "0 0 28px" }}>
-          Klassiska svenska småkakor — fikabröd bakat på riktigt smör, vanligt strösocker och
-          kvalitativa traditionella råvaror. Vi levererar till arbetsplatser i Tyresö, Nacka,
-          Haninge och Huddinge — betalning sker alltid mot faktura.
+          Klassiska svenska smörkakor efter recept från Svenskt konditorlexikon 1957 — kolasnittar,
+          mandelkubb och chokladsnittar bakade på riktigt smör, vanligt strösocker och kvalitativa
+          traditionella råvaror. Fikabröd per kilo till arbetsplatser i Tyresö, Nacka, Haninge och
+          Huddinge — betalning sker alltid mot faktura.
         </p>
         <div
           style={{
@@ -112,6 +119,13 @@ export default async function KakorPage() {
             Starta fikaprenumeration
           </Link>
         </div>
+
+        <p style={{ margin: "20px 0 0", fontSize: 14.5 }}>
+          Osäkra på hur mycket ni behöver?{" "}
+          <Link href="/fika-till-jobbet" style={{ fontWeight: 600 }}>
+            Guide: fika till jobbet — mängder per person, fredagsfika och möten
+          </Link>
+        </p>
 
         {/* FAQ före sidans avslutande CTA-band — sidan ska sluta i handling. */}
         <section style={{ marginTop: 56 }}>
