@@ -119,6 +119,11 @@ export default async function AdminDashboard() {
                   </div>
                 </Link>
               ))}
+              {newOrderCount > newOrders.length && (
+                <Link href="/admin/bestallningar?filter=nya" style={{ fontWeight: 700, fontSize: 14, marginTop: 4 }}>
+                  Visa alla {newOrderCount} nya beställningar →
+                </Link>
+              )}
             </div>
           )}
         </section>
