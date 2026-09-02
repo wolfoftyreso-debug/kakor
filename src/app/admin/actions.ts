@@ -13,7 +13,7 @@ import { getAdmin, loginAdmin, logoutAdmin } from "@/lib/auth/session";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { maskEmail } from "@/lib/log";
 import { sendOrderEmails } from "@/lib/orders/order-emails";
-import { issueCreditNoteInTx, sendCreditNoteEmail } from "@/lib/invoice/credit";
+import { issueCreditNoteInTx, sendCreditNoteEmail, CreditError } from "@/lib/invoice/credit";
 import { isoDateSchema } from "@/lib/validation";
 import { createHash } from "node:crypto";
 import { addDays } from "@/lib/dates";
@@ -212,15 +212,61 @@ export async function cancelOrder(orderId: string, note: string): Promise<Action
 export async function issueCreditNoteForOrder(orderId: string): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
-  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: { include: { creditNote: true } } } });
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
   if (!order?.invoice) return { ok: false, error: "Ordern saknar faktura" };
   if (order.status !== "CANCELLED") return { ok: false, error: "Bara avbrutna ordrar krediteras här" };
-  if (order.invoice.creditNote) return { ok: false, error: `Kreditfaktura ${order.invoice.creditNote.creditNumber} finns redan` };
+  if (order.invoice.status === "CREDITED") return { ok: false, error: "Fakturan är redan krediterad" };
   const credit = await prisma.$transaction((tx) => issueCreditNoteInTx(tx, order.invoice!.id, admin.email), { timeout: 15000 });
   if (!credit) return { ok: false, error: "Krediteringen misslyckades" };
   const mailed = await sendCreditNoteEmail(credit.id);
   revalidatePath("/admin", "layout");
   return { ok: true, message: `Kreditfaktura ${credit.creditNumber} utfärdad${mailed ? " och mejlad" : ""}.` };
+}
+
+const partialCreditSchema = z.object({
+  lines: z
+    .array(z.object({ lineIndex: z.number().int().min(0).max(99), qty: z.number().int().min(1).max(100) }))
+    .min(1, "Välj minst en rad att kreditera")
+    .max(30),
+  reason: z.string().trim().max(200, "Anledningen är för lång (max 200 tecken)").default(""),
+});
+
+/**
+ * Delkreditering: valda rader/mängder på en levererad (eller pågående) order —
+ * fel sort, saknad vikt, reklamation. Fakturan står kvar; blir allt krediterat
+ * stängs den som CREDITED. Kreditfakturan mejlas till fakturamottagaren.
+ */
+export async function issuePartialCreditNote(
+  orderId: string,
+  lines: { lineIndex: number; qty: number }[],
+  reason: string
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
+  const parsed = partialCreditSchema.safeParse({ lines, reason });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Ogiltiga uppgifter" };
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
+  if (!order?.invoice) return { ok: false, error: "Ordern saknar faktura" };
+  if (order.status === "CANCELLED") return { ok: false, error: "Avbrutna ordrar krediteras i sin helhet — använd Avbryt order" };
+  if (order.invoice.status === "CREDITED") return { ok: false, error: "Fakturan är redan krediterad i sin helhet" };
+  let credit: Awaited<ReturnType<typeof issueCreditNoteInTx>>;
+  try {
+    credit = await prisma.$transaction(
+      (tx) => issueCreditNoteInTx(tx, order.invoice!.id, admin.email, { lines: parsed.data.lines, reason: parsed.data.reason }),
+      { timeout: 15000 }
+    );
+  } catch (e) {
+    if (e instanceof CreditError) return { ok: false, error: e.message };
+    console.error("Delkreditering misslyckades:", e instanceof Error ? e.message.slice(0, 300) : e);
+    return { ok: false, error: "Krediteringen misslyckades — ingenting har ändrats" };
+  }
+  if (!credit) return { ok: false, error: "Inget återstår att kreditera" };
+  const mailed = await sendCreditNoteEmail(credit.id);
+  revalidatePath("/admin", "layout");
+  return {
+    ok: true,
+    message: `Kreditfaktura ${credit.creditNumber} (${formatOre(-credit.totalOre)}) utfärdad${mailed ? " och mejlad" : " — mejlet kunde inte skickas"}.${credit.kind === "FULL" ? " Hela fakturan är nu krediterad." : ""}`,
+  };
 }
 
 export async function addOrderNote(orderId: string, note: string): Promise<ActionResult> {
@@ -360,9 +406,9 @@ const productSchema = z.object({
     .refine((v) => !["constructor", "prototype", "__proto__", "tostring", "valueof"].includes(v), "Slug är reserverad"),
   description: z.string().trim().min(2).max(500),
   priceKr: z.coerce.number().min(0.01, "Ange ett pris över 0 kr").max(100000),
-  // Momssats i baspunkter. Livsmedel 12 % (eller tillfälligt sänkt sats),
-  // övrigt 25 % — sätts av verksamheten efter besked från Skatteverket/revisor.
-  vatRateBp: z.coerce.number().int().refine((v) => [600, 1200, 2500].includes(v), "Momssats: 6, 12 eller 25 %").default(1200),
+  // Momssats i baspunkter. Livsmedel: tillfälligt 6 % t.o.m. 2027-12-31,
+  // därefter 12 %. Restaurang/catering 12 %, övrigt 25 %.
+  vatRateBp: z.coerce.number().int().refine((v) => [600, 1200, 2500].includes(v), "Momssats: 6, 12 eller 25 %").default(600),
   unit: z.enum(["kg", "paket"]).default("kg"),
   packageWeightGrams: z.coerce.number().int().min(0).max(100000).default(0),
   weightOptions: z

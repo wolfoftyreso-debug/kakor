@@ -1,3 +1,4 @@
+import { ConsentReset } from "@/components/CookieConsent";
 import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
 import { invoiceConfig, isVerifiedValue } from "@/lib/config";
@@ -80,11 +81,13 @@ export default function IntegritetPage() {
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Cookies och lokal lagring</h2>
           <p style={{ margin: 0 }}>
             {process.env.NEXT_PUBLIC_GA4_ID
-              ? "Webbplatsen använder Google Analytics 4 för besöksstatistik. "
+              ? "Webbplatsen kan använda Google Analytics 4 för anonym besöksstatistik — men bara om ni godkänner det i bannern. Utan samtycke laddas inget Google-script och inga statistikcookies sätts. "
               : "Webbplatsen använder inga spårnings- eller marknadsföringscookies. "}
-            Varukorgen lagras i webbläsarens lokala lagring och en nödvändig sessionskaka används
-            enbart för administratörens inloggning — ingen av dessa kräver samtycke.
+            Varukorgen och ert cookieval lagras i webbläsarens lokala lagring och en nödvändig
+            sessionskaka används enbart för administratörens inloggning — ingen av dessa kräver
+            samtycke.
           </p>
+          {process.env.NEXT_PUBLIC_GA4_ID ? <ConsentReset /> : null}
         </section>
         <section>
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Era rättigheter</h2>

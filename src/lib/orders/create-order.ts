@@ -198,7 +198,9 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
 
   // Svensk dag, inte UTC — en order kl 00–02 sommartid ska inte fakturadateras föregående dag.
   const invoiceDate = todayInStockholm();
-  const dueDate = addDays(invoiceDate, invoiceConfig.paymentTermsDays);
+  // Förfallodagen räknas från LEVERANSDAGEN, inte fakturadatumet: fakturan
+  // skapas vid beställningen men kunden ska aldrig behöva betala före leverans.
+  const dueDate = addDays(deliveryDate, invoiceConfig.paymentTermsDays);
   const downloadToken = randomBytes(24).toString("hex");
 
   let created: Awaited<ReturnType<typeof runCreateTransaction>>;

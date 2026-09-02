@@ -9,7 +9,7 @@ import { orgNumber } from "./helpers";
 
 // Golden path (integration): riktig databas, riktig ordermotor, riktig PDF.
 
-let products: { id: string; name: string; pricePerKgOre: number }[] = [];
+let products: { id: string; name: string; pricePerKgOre: number; vatRateBp: number }[] = [];
 let validDate = "";
 // Unik kund per anrop — missbruksspärren (max ordrar per e-post/org.nr och
 // dygn) ska inte slå till i testsviten.
@@ -64,7 +64,8 @@ describe("order + faktura (golden path)", () => {
     // Servern räknar priset från databasen — aldrig från klienten.
     const expectedSubtotal = 2 * products[0].pricePerKgOre + 1 * products[1].pricePerKgOre;
     expect(order.subtotalOre).toBe(expectedSubtotal);
-    expect(order.vatOre).toBe(Math.round(2 * products[0].pricePerKgOre * 0.12) + Math.round(products[1].pricePerKgOre * 0.12));
+    const vat = (ore: number, bp: number) => Math.round((ore * bp) / 10000);
+    expect(order.vatOre).toBe(vat(2 * products[0].pricePerKgOre, products[0].vatRateBp) + vat(products[1].pricePerKgOre, products[1].vatRateBp));
     expect(order.totalOre).toBe(order.subtotalOre + order.vatOre);
 
     // Separata statusar

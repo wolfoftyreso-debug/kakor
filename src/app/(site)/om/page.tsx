@@ -32,7 +32,7 @@ export default function OmPage() {
       <p style={{ fontSize: 17, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
         Sockerbagaren bakar klassiska svenska småkakor — mandelkubb, kolasnittar och
         chokladsnittar — på riktigt smör, vanligt strösocker och kvalitativa traditionella
-        råvaror, och kör själva ut dem till arbetsplatser i södra Stockholm.
+        råvaror, och levererar dem till arbetsplatser i södra Stockholm.
       </p>
       <div style={{ minHeight: 280, borderRadius: 8, overflow: "hidden", margin: "28px 0" }}>
         <ImageSlot

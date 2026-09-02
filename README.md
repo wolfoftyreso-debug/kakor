@@ -93,11 +93,18 @@ Viktiga principer:
 
 ## Fakturor
 
-- Skapas automatiskt med ordern; förfallodatum = fakturadatum +
-  `INVOICE_PAYMENT_TERMS_DAYS` (default 30).
+- Skapas automatiskt med ordern; förfallodatum = leveransdag +
+  `INVOICE_PAYMENT_TERMS_DAYS` (default 30) — kunden betalar aldrig före leverans.
 - Kunden når PDF:n via en 48-teckens slumpad token: `/faktura/<token>`
   (noindex, ej gissningsbar). Skickas även som PDF-bilaga i fakturamejlet.
 - Admin kan ladda ner, skicka igen och markera betald (reskontran).
+- Kreditfakturor ur samma nummerserie: hel kreditering vid avbruten order
+  (fakturan blir CREDITED) och **delkreditering** per rad/mängd på
+  orderdetaljen (fel sort, saknad vikt, reklamation) — fakturan står kvar och
+  "att betala" minskar; blir allt krediterat stängs fakturan.
+- Momssats per produkt (admin → Produkter). Livsmedel: tillfälligt 6 %
+  2026-04-01 – 2027-12-31 (riksdagsbeslut 2025/26:SkU9), därefter 12 %.
+  Admin-översikten påminner när satsen ska ändras.
 - **Kreditfaktura:** när en fakturerad order avbryts i admin utfärdas
   automatiskt en kreditfaktura (nästa nummer i fakturaserien, negativa belopp,
   egen PDF-länk) som mejlas till faktura-e-posten; originalfakturan får
@@ -178,7 +185,8 @@ Se [`.env.example`](.env.example). Sammanfattning:
 | `ADMIN_NOTIFY_EMAIL` | intern avisering vid ny order |
 | `ABUSE_LIMIT_PER_EMAIL` / `ABUSE_LIMIT_PER_ORG` | missbrukstak per dygn (default 10 / 30) |
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | felövervakning (tom sträng stänger av) |
-| `NEXT_PUBLIC_GA4_ID` | GA4 (kräver samtyckesbanner) |
+| `NEXT_PUBLIC_GA4_ID` | GA4 — samtyckesbanner visas, scriptet laddas först efter "Tillåt" |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile i kassan (båda krävs, annars av) |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Search Console-verifiering |
 
 ## Deployment (GitHub → Vercel → Neon)
@@ -218,7 +226,8 @@ rollback, smoke tests: **[DEPLOYMENT.md](DEPLOYMENT.md)**.
   `preferred_source_impression`/`preferred_source_click` mäts, ingen
   "confirmed"-händelse fejkas. Vid ev. framtida CSP: tillåt script från
   `news.google.com`.
-- **Analytics**: GA4 laddas endast om `NEXT_PUBLIC_GA4_ID` är satt
+- **Analytics**: GA4 laddas endast om `NEXT_PUBLIC_GA4_ID` är satt och besökaren
+  tryckt "Tillåt statistik" i samtyckesbannern (valet sparas i `sb_consent_v1`)
   (anonymize_ip, inga annonssignaler). `track()` i `src/lib/analytics.ts`
   är no-op utan GA — mätning kan aldrig fälla sajten. Ingen PII i event.
 - **Checklista vid lansering**: verifiera domänen i Google Search Console

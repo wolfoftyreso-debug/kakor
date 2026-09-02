@@ -51,9 +51,9 @@ export function ProductForm({
       <label className="field">
         Momssats
         <select name="vatRateBp" defaultValue={String(initial.vatRateBp)}>
-          <option value="1200">12 % (livsmedel)</option>
-          <option value="600">6 %</option>
-          <option value="2500">25 %</option>
+          <option value="600">6 % (livsmedel, tillfälligt sänkt t.o.m. 2027-12-31)</option>
+          <option value="1200">12 % (livsmedel ordinarie, restaurang/catering)</option>
+          <option value="2500">25 % (övrigt)</option>
         </select>
       </label>
       <label className="field">

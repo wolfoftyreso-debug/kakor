@@ -71,7 +71,8 @@ export default function VillkorPage() {
           <p style={{ margin: 0 }}>
             Betalning sker mot faktura. Fakturan skapas när ni skickar beställningen, mejlas till
             angiven faktura-e-post och kan även laddas ner som PDF. Betalningsvillkor:{" "}
-            {invoiceConfig.paymentTermsDays} dagar netto från fakturadatum. Vid försenad betalning
+            {invoiceConfig.paymentTermsDays} dagar netto räknat från leveransdagen — ni betalar aldrig före
+            leverans. Förfallodatum står på fakturan. Vid försenad betalning
             utgår dröjsmålsränta enligt räntelagen samt förseningsersättning enligt lagen om
             ersättning för inkassokostnader. Avbryts en fakturerad beställning krediteras fakturan
             med en kreditfaktura.

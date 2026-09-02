@@ -11,7 +11,7 @@ const TRACES_SEPARATOR = /kan innehålla spår av/i;
 function parseList(part: string): string[] {
   return part
     .replace(/^\s*Innehåller\b/i, "")
-    .split(",")
+    .split(/,|\boch\b/)
     .map((a) => a.trim().replace(/\.+$/, ""))
     .filter(Boolean)
     .map((a) => a.charAt(0).toUpperCase() + a.slice(1));
@@ -33,7 +33,9 @@ const ALLERGEN_WORDS = [
 
 /** Delar upp en ingrediensrad i segment där allergener markeras (för <strong>). */
 export function highlightAllergens(ingredients: string): { text: string; allergen: boolean }[] {
-  const pattern = new RegExp(`(${ALLERGEN_WORDS.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "giu");
+  // Längsta ordet först — annars matchar "soja" i "sojalecitin" bara halva ordet.
+  const words = [...ALLERGEN_WORDS].sort((x, y) => y.length - x.length);
+  const pattern = new RegExp(`(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "giu");
   const out: { text: string; allergen: boolean }[] = [];
   let last = 0;
   for (const m of ingredients.matchAll(pattern)) {

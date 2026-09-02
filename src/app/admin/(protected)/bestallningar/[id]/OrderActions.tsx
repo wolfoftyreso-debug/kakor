@@ -10,6 +10,7 @@ import {
   resendInvoiceEmail,
   resendOrderEmails,
   issueCreditNoteForOrder,
+  issuePartialCreditNote,
   type ActionResult,
 } from "@/app/admin/actions";
 
@@ -29,6 +30,7 @@ export function OrderActions({
   paymentStatus,
   deliveryStatus,
   needsCreditNote = false,
+  creditLines = [],
 }: {
   orderId: string;
   status: string;
@@ -36,11 +38,19 @@ export function OrderActions({
   deliveryStatus: string;
   /** Avbruten order med faktura men utan kreditfaktura (t.ex. efter ett avbrutet anrop). */
   needsCreditNote?: boolean;
+  /** Fakturarader med återstående (ej krediterad) mängd — för delkreditering. */
+  creditLines?: { lineIndex: number; productName: string; unit: string; unitPriceOre: number; remaining: number }[];
 }) {
   const [pending, startTransition] = useTransition();
   const [payNote, setPayNote] = useState("");
   const [deliveryNote, setDeliveryNote] = useState("");
   const [note, setNote] = useState("");
+  const [creditQty, setCreditQty] = useState<Record<number, string>>({});
+  const [creditReason, setCreditReason] = useState("");
+  const creditable = creditLines.filter((l) => l.remaining > 0);
+  const creditSelection = creditable
+    .map((l) => ({ lineIndex: l.lineIndex, qty: parseInt(creditQty[l.lineIndex] ?? "", 10) }))
+    .filter((l) => Number.isInteger(l.qty) && l.qty > 0);
   // Varje åtgärd ger synlig feedback — en knapp som "gör ingenting" är ett fel.
   const [feedback, setFeedback] = useState<ActionResult | null>(null);
 
@@ -157,6 +167,60 @@ export function OrderActions({
             </p>
             <button className="btn btn-primary btn-block" disabled={pending} onClick={() => run(() => issueCreditNoteForOrder(orderId))}>
               Utfärda kreditfaktura
+            </button>
+          </div>
+        )}
+
+        {creditable.length > 0 && (
+          <div className="card" style={{ padding: 18 }}>
+            <div style={{ fontWeight: 700, marginBottom: 6 }}>Delkreditera</div>
+            <p style={{ fontSize: 13, color: "var(--text-2)", margin: "0 0 10px" }}>
+              Fel sort, saknad vikt eller reklamation: ange hur mycket av varje rad som krediteras.
+              Kreditfakturan mejlas till kunden och fakturans belopp att betala minskar.
+            </p>
+            {creditable.map((l) => (
+              <label key={l.lineIndex} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, marginBottom: 8 }}>
+                <span style={{ flex: 1 }}>
+                  {l.productName}{" "}
+                  <span style={{ color: "var(--text-2)" }}>(återstår {l.remaining} {l.unit})</span>
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  max={l.remaining}
+                  step={1}
+                  inputMode="numeric"
+                  value={creditQty[l.lineIndex] ?? ""}
+                  onChange={(e) => setCreditQty((q) => ({ ...q, [l.lineIndex]: e.target.value }))}
+                  aria-label={`Antal ${l.unit} att kreditera av ${l.productName}`}
+                  style={{ ...inputStyle, width: 90, marginBottom: 0 }}
+                />
+              </label>
+            ))}
+            <input
+              value={creditReason}
+              onChange={(e) => setCreditReason(e.target.value)}
+              placeholder="Anledning (står på kreditfakturan)"
+              aria-label="Anledning till krediteringen"
+              maxLength={200}
+              style={inputStyle}
+            />
+            <button
+              className="btn btn-outline btn-block"
+              disabled={pending || creditSelection.length === 0}
+              onClick={() => {
+                if (!window.confirm("Utfärda kreditfaktura för de angivna raderna? Kreditfakturan mejlas till kunden.")) return;
+                run(async () => {
+                  const r = await issuePartialCreditNote(orderId, creditSelection, creditReason);
+                  if (r.ok) {
+                    setCreditQty({});
+                    setCreditReason("");
+                  }
+                  return r;
+                });
+              }}
+            >
+              Utfärda delkreditfaktura
             </button>
           </div>
         )}

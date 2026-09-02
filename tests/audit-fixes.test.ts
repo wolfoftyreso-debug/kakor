@@ -14,7 +14,7 @@ import { orgNumber } from "./helpers";
 // Regressionstester för fynden i den fullständiga granskningen (säkerhet +
 // affärslogik). Riktig databas — samma motor som produktion.
 
-let products: { id: string; name: string; pricePerKgOre: number }[] = [];
+let products: { id: string; name: string; pricePerKgOre: number; vatRateBp: number }[] = [];
 let validDate = "";
 let n = 0;
 
@@ -124,8 +124,9 @@ describe("ordermotor — idempotens och prisspärr", () => {
     });
     expect(await prisma.order.count()).toBe(before);
     const price = products[0].pricePerKgOre;
-    const ok = await createOrder(input({ expectedTotalOre: Math.round(price * 1.12) }), { skipEmails: true });
-    expect(ok.order.totalOre).toBe(Math.round(price * 1.12));
+    const withVat = price + Math.round((price * products[0].vatRateBp) / 10000);
+    const ok = await createOrder(input({ expectedTotalOre: withVat }), { skipEmails: true });
+    expect(ok.order.totalOre).toBe(withVat);
   });
 
   it("missbruksspärr: fler än gränsen per e-post och dygn avvisas (TOO_MANY)", async () => {

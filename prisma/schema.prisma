@@ -36,7 +36,7 @@ model Product {
   // sanna viktsummor i kassan/leveransvyn, aldrig för prisberäkning.
   packageWeightGrams Int @default(0)
   // Moms i baspunkter (livsmedel = 1200 = 12 %).
-  vatRateBp   Int      @default(1200)
+  vatRateBp   Int      @default(600)
   // JSON-array med viktalternativ i kg, t.ex. [1,2,3].
   weightOptionsJson String @default("[1,2,3]")
   ingredients String   @default("")
@@ -77,11 +77,13 @@ model DeliveryArea {
 model CreditNote {
   id           String  @id @default(cuid())
   creditNumber String  @unique // nästa nummer i fakturaserien
-  invoiceId    String  @unique
+  invoiceId    String
   invoice      Invoice @relation(fields: [invoiceId], references: [id])
 
+  // FULL = hela (återstående) fakturabeloppet, PARTIAL = valda rader/mängder.
+  kind         String   @default("FULL")
   issuedDate   DateTime @default(now())
-  snapshotJson String // fakturans snapshot + creditsInvoiceNumber, belopp negerade i PDF
+  snapshotJson String // krediterade rader + creditsInvoiceNumber, belopp negerade i PDF
 
   subtotalOre Int
   vatOre      Int
@@ -89,6 +91,8 @@ model CreditNote {
 
   downloadToken String @unique
   createdAt     DateTime @default(now())
+
+  @@index([invoiceId])
 }
 
 model Counter {
@@ -215,7 +219,7 @@ model Invoice {
   // Slumpad token för säker nedladdningslänk utan inloggning.
   downloadToken String @unique
 
-  creditNote CreditNote?
+  creditNotes CreditNote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

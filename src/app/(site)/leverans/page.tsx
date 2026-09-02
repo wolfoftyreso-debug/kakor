@@ -13,12 +13,12 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Fikaleverans i södra Stockholm",
   description:
-    "Fikaleverans till arbetsplatser i södra Stockholm: fasta leveransdagar per område i Tyresö, Nacka, Haninge och Huddinge. Vi kör själva, under dagen, till bemannade företagsadresser.",
+    "Fikaleverans till arbetsplatser i södra Stockholm: fasta leveransdagar per område i Tyresö, Nacka, Haninge och Huddinge. Leverans under dagen till bemannade företagsadresser.",
   alternates: { canonical: "/leverans" },
   ...sharePreview({
     title: "Fikaleverans i södra Stockholm",
     description:
-      "Fikaleverans till arbetsplatser i södra Stockholm: fasta leveransdagar per område i Tyresö, Nacka, Haninge och Huddinge. Vi kör själva, under dagen, till bemannade företagsadresser.",
+      "Fikaleverans till arbetsplatser i södra Stockholm: fasta leveransdagar per område i Tyresö, Nacka, Haninge och Huddinge. Leverans under dagen till bemannade företagsadresser.",
     path: "/leverans",
   }),
 };
@@ -49,7 +49,7 @@ export default async function LeveransPage() {
         Fikaleverans i södra Stockholm
       </h1>
       <p className="lede">
-        Vi kör själva, på fasta leveransdagar per område. Leveransen kommer under dagen — vi kan
+        Fasta leveransdagar per område. Leveransen kommer under dagen — vi kan
         inte lova exakt klockslag, så någon behöver finnas på plats för att ta emot den: reception,
         personalrum eller lastkaj.
       </p>

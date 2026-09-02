@@ -9,10 +9,14 @@ import { NextRequest, NextResponse } from "next/server";
 const IS_DEV = process.env.NODE_ENV !== "production";
 // Vercels förhandsgranskningsverktyg (endast preview-deployer, aldrig produktion).
 const IS_VERCEL_PREVIEW = !!process.env.VERCEL && process.env.VERCEL_ENV !== "production";
+// Cloudflare Turnstile (robotskydd i kassan) — bara när nyckel finns.
+const TURNSTILE = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+const TURNSTILE_HOST = "https://challenges.cloudflare.com";
 
 function buildCsp(nonce: string): string {
   const scriptExtra = [
     "https://www.googletagmanager.com",
+    TURNSTILE ? TURNSTILE_HOST : "",
     IS_VERCEL_PREVIEW ? "https://vercel.live" : "",
     IS_DEV ? "'unsafe-eval'" : "",
   ]
@@ -36,7 +40,7 @@ function buildCsp(nonce: string): string {
     `img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com${IS_VERCEL_PREVIEW ? " https://vercel.live https://vercel.com" : ""}`,
     "font-src 'self' data:",
     `connect-src 'self' ${connectExtra}`,
-    `frame-src ${IS_VERCEL_PREVIEW ? "https://vercel.live" : "'none'"}`,
+    `frame-src ${[TURNSTILE ? TURNSTILE_HOST : "", IS_VERCEL_PREVIEW ? "https://vercel.live" : ""].filter(Boolean).join(" ") || "'none'"}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
