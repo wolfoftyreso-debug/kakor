@@ -3,7 +3,9 @@
 //   DATABASE_URL=… E2E_CRON_SECRET=<serverns CRON_SECRET> npx tsx scripts/e2e/full-flow.mts
 // Kräver Chromium (CHROMIUM_PATH), en admin (E2E_ADMIN_EMAIL/PASSWORD) och en
 // tom/lokal databas — skriptet skapar ordrar, prenumerationer och kreditfakturor.
-// Kör ALDRIG mot produktion.
+// Kör ALDRIG mot produktion. Varje körning gör två admininloggningar (en
+// felaktig, en riktig) — inloggningsspärren tillåter fem per fem minuter och
+// IP, så vänta minst fem minuter mellan tredje och fjärde körningen.
 import { chromium } from "playwright-core";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import { prisma } from "../../src/lib/db";
