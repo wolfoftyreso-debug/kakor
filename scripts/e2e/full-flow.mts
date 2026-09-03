@@ -217,7 +217,8 @@ try {
   check("DB: genererad order har faktura och period", !!cronOrder?.invoice && !!cronOrder?.subscriptionPeriod);
   const run2 = await (await fetch(B + "/api/cron/generate-subscription-orders", { headers: { Authorization: `Bearer ${CRON}` } })).json();
   const count = await prisma.order.count({ where: { subscriptionId: sub.id } });
-  check("cron igen → ingen dubblett (unik period)", count === 1 && run2.ok === true, `ordrar: ${count}`);
+  check("cron igen svarar ok", run2.ok === true, JSON.stringify(run2).slice(0, 160));
+  check("cron igen → ingen dubblett (unik period)", count === 1, `ordrar: ${count}`);
   const after = await prisma.subscription.findUniqueOrThrow({ where: { id: sub.id } });
   check("nästa leveransdatum flyttat fram 14 dagar", toISODate(after.nextDeliveryDate) === toISODate(addDays(target, 14)), `${toISODate(target)} → ${toISODate(after.nextDeliveryDate)}`);
   if (cronOrder) {
