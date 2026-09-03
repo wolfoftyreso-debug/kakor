@@ -91,6 +91,16 @@ Viktiga principer:
 - Första admin skapas av seed från `ADMIN_EMAIL`/`ADMIN_PASSWORD` (endast om
   ingen admin finns), eller när som helst med `npm run admin:create`.
 
+## Fullt flödestest (E2E)
+
+`scripts/e2e/full-flow.mts` kör hela livscykeln i webbläsare mot ett lokalt
+produktionsbygge: engångsköp och fikaprenumeration i kassan, idempotens och
+prisspärr i API:t, cron-generering, admin (bekräfta, leverera, betala, avbryt
+med kreditfaktura, delkreditering, prenumerationsstyrning, produktredigering),
+PDF-innehåll, e-postlogg och felfall (honeypot, Luhn, postnummerspärr, 404,
+CSP, rate limit). Se kommentaren i filen för hur den startas. Kör aldrig mot
+produktion — den skapar riktiga ordrar i databasen.
+
 ## Fakturor
 
 - Skapas automatiskt med ordern; förfallodatum = leveransdag +
