@@ -4,7 +4,7 @@ import { CookieConsent } from "./CookieConsent";
 
 // GA4 — laddas ENDAST om NEXT_PUBLIC_GA4_ID är satt och ser ut som ett
 // riktigt mät-ID (G-XXXXXXX) OCH besökaren gett samtycke i bannern.
-// Inline-scriptet får CSP-nonce från middlewaren; utan nonce blockeras det.
+// Inline-scriptet får CSP-nonce från proxyn (src/proxy.ts); utan nonce blockeras det.
 const GA_ID_PATTERN = /^G-[A-Z0-9]{6,14}$/;
 
 export async function AnalyticsScript() {

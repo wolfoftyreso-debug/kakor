@@ -99,7 +99,9 @@ prisspärr i API:t, cron-generering, admin (bekräfta, leverera, betala, avbryt
 med kreditfaktura, delkreditering, prenumerationsstyrning, produktredigering),
 PDF-innehåll, e-postlogg och felfall (honeypot, Luhn, postnummerspärr, 404,
 CSP, rate limit). Se kommentaren i filen för hur den startas. Kör aldrig mot
-produktion — den skapar riktiga ordrar i databasen.
+produktion — den skapar riktiga ordrar i databasen. Körs automatiskt varje
+måndag (och på begäran) i GitHub Actions (`.github/workflows/e2e.yml`) mot en
+tillfällig PostgreSQL i jobbet.
 
 ## Fakturor
 
@@ -112,6 +114,9 @@ produktion — den skapar riktiga ordrar i databasen.
   (fakturan blir CREDITED) och **delkreditering** per rad/mängd på
   orderdetaljen (fel sort, saknad vikt, reklamation) — fakturan står kvar och
   "att betala" minskar; blir allt krediterat stängs fakturan.
+- **Bokföringsexport**: admin → Fakturor → "Bokföringsexport (CSV)" ger fakturor
+  och kreditfakturor för en period, per momssats (6/12/25 %), semikolon-
+  avgränsat med BOM för svensk Excel. Kreditfakturor har negativa belopp.
 - Momssats per produkt (admin → Produkter). Livsmedel: tillfälligt 6 %
   2026-04-01 – 2027-12-31 (riksdagsbeslut 2025/26:SkU9), därefter 12 %.
   Admin-översikten påminner när satsen ska ändras.
@@ -154,7 +159,7 @@ med återkommande förvalt (`/bestall?typ=aterkommande`). Generering:
 
 ## Säkerhet & missbruksskydd
 
-- **CSP med nonce** per request (`src/middleware.ts`): script bara från egen
+- **CSP med nonce** per request (`src/proxy.ts`): script bara från egen
   domän + nonce (`strict-dynamic`), GA4 via nonce, `frame-ancestors 'none'`,
   `form-action 'self'`. HSTS, nosniff, X-Frame-Options, Referrer-Policy,
   Permissions-Policy sätts i `next.config.ts`.

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Content Security Policy med nonce per request. Next.js läser nonce ur
-// CSP-headern på förfrågan och sätter den på sina egna script-taggar;
-// egna inline-script (GA4) får nonce via headern "x-nonce".
+// Proxy (Next 16, tidigare "middleware"): Content Security Policy med nonce
+// per request. Next.js läser nonce ur CSP-headern på förfrågan och sätter den
+// på sina egna script-taggar; egna inline-script (GA4) får nonce via headern
+// "x-nonce".
 // Försvar på djupet: en framtida XSS (t.ex. via ett tredjepartsbibliotek)
 // ska inte kunna köra script mot admin-sessionen.
 
@@ -51,7 +52,7 @@ function buildCsp(nonce: string): string {
     .join("; ");
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = buildCsp(nonce);
 

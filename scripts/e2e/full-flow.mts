@@ -246,7 +246,7 @@ section("5. Admin — inloggning, order, leverans, betalning");
 const admin = await newPage();
 try {
   const { page } = admin;
-  const r = await page.goto(B + "/admin/bestallningar");
+  await page.goto(B + "/admin/bestallningar");
   check("oinloggad → login", page.url().includes("/admin/login"));
   await page.getByLabel(/E-post/).fill(ADMIN_EMAIL);
   await page.getByLabel(/Lösenord/).fill("fel-losenord-123");

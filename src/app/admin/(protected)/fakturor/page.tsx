@@ -8,6 +8,7 @@ import { formatDate, todayInStockholm } from "@/lib/dates";
 import { isInvoiceOverdue } from "@/lib/status";
 import { PaymentStatusPill } from "@/components/admin/StatusPills";
 import { MarkInvoicePaidButton } from "./MarkInvoicePaidButton";
+import { ExportForm } from "./ExportForm";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — fakturor", robots: { index: false } };
@@ -76,6 +77,8 @@ export default async function InvoicesPage({
       <p style={{ color: "var(--text-2)", fontSize: 14, margin: "0 0 20px" }}>
         Enkel reskontra — obetalt i listan: <strong>{formatOre(unpaidSum)}</strong>
       </p>
+
+      <ExportForm />
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
         {FILTERS.map((f) => (
