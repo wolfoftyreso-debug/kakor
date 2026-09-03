@@ -1,6 +1,6 @@
 // Fullt flödestest (E2E) mot ett körande produktionsbygge:
 //   npm run build && PORT=3122 CRON_SECRET=… ADMIN_NOTIFY_EMAIL=… npm start
-//   DATABASE_URL=… npx tsx scripts/e2e/full-flow.mts
+//   DATABASE_URL=… E2E_CRON_SECRET=<serverns CRON_SECRET> npx tsx scripts/e2e/full-flow.mts
 // Kräver Chromium (CHROMIUM_PATH), en admin (E2E_ADMIN_EMAIL/PASSWORD) och en
 // tom/lokal databas — skriptet skapar ordrar, prenumerationer och kreditfakturor.
 // Kör ALDRIG mot produktion.
@@ -10,7 +10,9 @@ import { prisma } from "../../src/lib/db";
 import { addDays, toISODate } from "../../src/lib/dates";
 
 const B = process.env.BASE ?? "http://127.0.0.1:3122";
-const CRON = process.env.CRON_SECRET ?? "revisionshemlighet";
+// OBS: Prisma läser .env vid import, så process.env.CRON_SECRET kan vara
+// .env-värdet och inte serverns. Ange därför serverns hemlighet separat.
+const CRON = process.env.E2E_CRON_SECRET ?? "revisionshemlighet";
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "audit@sockerbagaren.se";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "Audit-Losen-2026!";
 const CHROMIUM = process.env.CHROMIUM_PATH ?? "/opt/pw-browsers/chromium";
@@ -103,6 +105,16 @@ function nextDeliveryDate(from: Date, minDaysAhead: number) {
   }
   throw new Error("ingen leveransdag");
 }
+// Två körningar tätt inpå varandra: rate limit-spärren (10/min per IP) från
+// förra körningens sista sektion ska ha löpt ut innan kassan används.
+for (let i = 0; i < 8; i++) {
+  const probe = await fetch(B + "/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+  if (probe.status !== 429) break;
+  const wait = Number(probe.headers.get("retry-after") ?? "10") + 1;
+  console.log(`   (rate limit aktiv från tidigare körning — väntar ${wait} s)`);
+  await new Promise((r) => setTimeout(r, wait * 1000));
+}
+
 const today = new Date();
 const validDate = toISODate(nextDeliveryDate(today, area.leadTimeDays + 1));
 
