@@ -66,10 +66,10 @@ const products = [
 // Leveransdagar per område: endast torsdag (4) just nu (verksamhetens
 // uppgift, aug 2026) — ändras i admin -> Inställningar utan kodändring.
 const areas = [
-  { slug: "tyreso", name: "Tyresö", weekdaysJson: "[4]", sortOrder: 1 },
-  { slug: "nacka", name: "Nacka", weekdaysJson: "[4]", sortOrder: 2 },
-  { slug: "haninge", name: "Haninge", weekdaysJson: "[4]", sortOrder: 3 },
-  { slug: "huddinge", name: "Huddinge", weekdaysJson: "[4]", sortOrder: 4 },
+  { slug: "tyreso", name: "Tyresö", postalCodePrefixesJson: '["135"]', weekdaysJson: "[4]", sortOrder: 1 },
+  { slug: "nacka", name: "Nacka", postalCodePrefixesJson: '["131", "132", "133", "138"]', weekdaysJson: "[4]", sortOrder: 2 },
+  { slug: "haninge", name: "Haninge", postalCodePrefixesJson: '["136", "137"]', weekdaysJson: "[4]", sortOrder: 3 },
+  { slug: "huddinge", name: "Huddinge", postalCodePrefixesJson: '["141", "142", "143"]', weekdaysJson: "[4]", sortOrder: 4 },
 ];
 
 async function main() {
@@ -93,6 +93,10 @@ async function main() {
     await prisma.counter.upsert({ where: { name }, create: { name, value }, update: {} });
   }
 
+  // Postnummerprefix (postalCodePrefixesJson) är svensk postnummergeografi per
+  // kommun: Tyresö 135, Nacka 131/132/133/138, Haninge 136/137, Huddinge
+  // 141/142/143. Kassan avvisar postnummer utanför prefixen; verksamheten
+  // justerar listan i admin → Inställningar (tomt = ingen spärr).
   for (const a of areas) {
     await prisma.deliveryArea.upsert({
       where: { slug: a.slug },
