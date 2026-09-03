@@ -223,6 +223,9 @@ automatiskt — det beslutet är verksamhetens.)
 
 1. **Neon**: projekt i EU-region, `DATABASE_URL` (poolad) och `DIRECT_DATABASE_URL`
    (direkt) i Vercel → Production. Skapa en återställningspunkt före första migrationen.
+1b. **Resend-domän**: Resend-kontot har nått sin domängräns (12 domäner) —
+   ta bort en oanvänd (t.ex. en med status "failed") eller uppgradera planen
+   innan `sockerbagaren.se` kan läggas till och verifieras.
 2. **Migrationer**: körs automatiskt av `scripts/vercel-build.mjs` i Production
    när `DIRECT_DATABASE_URL` finns i build-miljön. Finns `DATABASE_URL` men inte
    `DIRECT_DATABASE_URL` avbryts bygget (databasen skulle annars hamna i otakt

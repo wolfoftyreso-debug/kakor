@@ -1,0 +1,71 @@
+# Fullt flödestest (E2E) i webbläsare mot ett produktionsbygge med riktig
+# PostgreSQL — varje måndag 05:30 UTC och på begäran. Skapar ordrar,
+# prenumerationer och kreditfakturor i en tillfällig databas i jobbet,
+# aldrig mot produktion. Se scripts/e2e/full-flow.mts.
+name: E2E
+
+on:
+  schedule:
+    - cron: "30 5 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  full-flow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sockerbagaren
+        ports: ["55432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:55432/sockerbagaren
+      DIRECT_DATABASE_URL: postgresql://postgres:postgres@localhost:55432/sockerbagaren
+      CRON_SECRET: e2e-cron-hemlighet
+      E2E_CRON_SECRET: e2e-cron-hemlighet
+      ADMIN_EMAIL: e2e-admin@sockerbagaren.se
+      ADMIN_PASSWORD: E2E-Hemligt-Ord-2026!
+      E2E_ADMIN_EMAIL: e2e-admin@sockerbagaren.se
+      E2E_ADMIN_PASSWORD: E2E-Hemligt-Ord-2026!
+      ADMIN_NOTIFY_EMAIL: e2e-notify@sockerbagaren.se
+      EMAIL_PROVIDER: log
+      SITE_URL: http://127.0.0.1:3122
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Chromium för Playwright
+        run: npx --yes playwright@1.62.1 install --with-deps chromium
+      - name: Migrera och seeda databasen
+        run: |
+          npx prisma migrate deploy
+          npx tsx prisma/seed.ts
+      - name: Bygg och starta
+        run: |
+          npm run build
+          PORT=3122 nohup npm start > server.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:3122/api/health && break; sleep 1; done
+      - name: Fullt flödestest
+        run: |
+          CHROMIUM_PATH="$(find ~/.cache/ms-playwright -type f -name chrome -path '*chromium*' | head -1)"
+          echo "Chromium: $CHROMIUM_PATH"
+          CHROMIUM_PATH="$CHROMIUM_PATH" npx tsx scripts/e2e/full-flow.mts
+      - name: Serverlogg vid fel
+        if: failure()
+        run: tail -100 server.log

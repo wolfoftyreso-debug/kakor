@@ -24,7 +24,10 @@ export function Turnstile({ onToken, resetKey = 0 }: { onToken: (token: string |
   const ref = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const onTokenRef = useRef(onToken);
-  onTokenRef.current = onToken;
+  // Senaste callbacken i en ref — uppdateras i en effekt, aldrig under render.
+  useEffect(() => {
+    onTokenRef.current = onToken;
+  }, [onToken]);
 
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY) return;
