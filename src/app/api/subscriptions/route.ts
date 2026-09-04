@@ -7,7 +7,7 @@ import { calculateTotals } from "@/lib/money";
 import { OrderError } from "@/lib/orders/create-order";
 import { sendEmail } from "@/lib/email";
 import { FREQUENCY_LABELS } from "@/lib/status";
-import { formatDeliveryDate } from "@/lib/dates";
+import { formatDeliveryDateWithYear } from "@/lib/dates";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { describeError } from "@/lib/log";
 import { clientIp, verifyTurnstile } from "@/lib/turnstile";
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
 
 Prenumerationsnummer: ${subscription.number}
 Intervall: ${FREQUENCY_LABELS[subscription.frequency as keyof typeof FREQUENCY_LABELS] ?? subscription.frequency}
-Första leverans: ${formatDeliveryDate(subscription.nextDeliveryDate)}
+Första leverans: ${formatDeliveryDateWithYear(subscription.nextDeliveryDate)}
 Leveransadress: ${subscription.deliveryAddress}, ${subscription.deliveryPostalCode} ${subscription.deliveryCity}
 Belopp per leverans: ${formatOre(totals.totalOre)} inkl. moms (${formatOre(totals.subtotalOre)} exkl. moms)
 

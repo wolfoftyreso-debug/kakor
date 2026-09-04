@@ -3,6 +3,7 @@ import { requireAdminPage } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { invoiceConfig, emailConfig, siteConfig } from "@/lib/config";
 import { AreaForm } from "./AreaForm";
+import { safeBlockedDates } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — inställningar", robots: { index: false } };
@@ -34,7 +35,8 @@ export default async function SettingsPage() {
         <p style={{ color: "var(--text-2)", fontSize: 13.5, margin: "0 0 16px", maxWidth: "70ch" }}>
           Veckodagar anges 1–7 (1 = måndag … 7 = söndag). Framförhållning = antal hela dagar mellan
           beställning och tidigast valbara leveransdag. Postnummerprefix (frivilligt) spärrar
-          beställningar med postnummer utanför området.
+          beställningar med postnummer utanför området. Spärrade datum tar bort enskilda
+          leveransdagar (semester, inventering, fullbokat) — svenska helgdagar spärras automatiskt.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
           {areas.map((a) => (
@@ -45,6 +47,7 @@ export default async function SettingsPage() {
               weekdays={safeJoin(a.weekdaysJson)}
               leadTimeDays={a.leadTimeDays}
               postalPrefixes={safeJoin(a.postalCodePrefixesJson)}
+              blockedDates={safeBlockedDates(a.blockedDatesJson).join("\n")}
               active={a.active}
             />
           ))}

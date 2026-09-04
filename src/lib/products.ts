@@ -41,6 +41,8 @@ export interface AreaWithDates {
   name: string;
   weekdays: number[];
   leadTimeDays: number;
+  /** Datum admin spärrat (ISO). Helgdagar räknas bort automatiskt i dates.ts. */
+  blockedDates: string[];
   upcomingDates: string[]; // ISO-datum
 }
 
@@ -53,17 +55,29 @@ export const getAreasWithDates = cache(async function getAreasWithDates(dateCoun
   });
   return areas.map((a) => {
     const weekdays = safeWeekdays(a.weekdaysJson);
+    const blockedDates = safeBlockedDates(a.blockedDatesJson);
     return {
       slug: a.slug,
       name: a.name,
       weekdays,
       leadTimeDays: a.leadTimeDays,
-      upcomingDates: upcomingDeliveryDates({ weekdays, leadTimeDays: a.leadTimeDays }, dateCount).map(
+      blockedDates,
+      upcomingDates: upcomingDeliveryDates({ weekdays, leadTimeDays: a.leadTimeDays, blockedDates }, dateCount).map(
         toISODate
       ),
     };
   });
 });
+
+/** Spärrade datum från admin — bara giltiga ISO-datum släpps igenom. */
+export function safeBlockedDates(json: string): string[] {
+  try {
+    const arr = JSON.parse(json);
+    return Array.isArray(arr) ? arr.filter((x) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x)) : [];
+  } catch {
+    return [];
+  }
+}
 
 export function safeWeekdays(json: string): number[] {
   try {

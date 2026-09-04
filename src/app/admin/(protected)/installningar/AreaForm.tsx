@@ -10,6 +10,7 @@ export function AreaForm({
   weekdays,
   leadTimeDays,
   postalPrefixes,
+  blockedDates,
   active,
 }: {
   areaId: string;
@@ -17,6 +18,8 @@ export function AreaForm({
   weekdays: string;
   leadTimeDays: number;
   postalPrefixes: string;
+  /** Ett ISO-datum per rad. */
+  blockedDates: string;
   active: boolean;
 }) {
   const action = saveArea.bind(null, areaId);
@@ -53,6 +56,20 @@ export function AreaForm({
       <label className="field">
         Postnummerprefix (frivilligt)
         <input name="postalPrefixes" defaultValue={postalPrefixes} placeholder="135,136" />
+      </label>
+      <label className="field">
+        Spärrade datum för det här området (frivilligt)
+        <textarea
+          name="blockedDates"
+          defaultValue={blockedDates}
+          rows={3}
+          placeholder={"2026-12-17\n2026-12-24"}
+          style={{ fontFamily: "var(--font-mono, monospace)", fontSize: 13 }}
+        />
+        <span style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+          Ett datum per rad (ÅÅÅÅ-MM-DD). Helgdagar, midsommar-, jul- och nyårsafton är redan
+          spärrade automatiskt. Passerade datum rensas när du sparar.
+        </span>
       </label>
       <label className="checkbox-label">
         <input type="checkbox" name="active" defaultChecked={active} />

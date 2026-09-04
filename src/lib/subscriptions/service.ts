@@ -12,7 +12,7 @@ import {
 } from "@/lib/dates";
 import type { SubscriptionInput } from "@/lib/validation";
 import type { SubscriptionFrequency } from "@/lib/status";
-import { safeWeekdays } from "@/lib/products";
+import { safeBlockedDates, safeWeekdays } from "@/lib/products";
 import { assertNotAbusive, createOrder, OrderError } from "@/lib/orders/create-order";
 
 // Prenumeration = återkommande order/fakturering — INTE kortdebitering.
@@ -102,6 +102,7 @@ export async function createSubscription(input: SubscriptionInput) {
   const areaConfig = {
     weekdays: safeWeekdays(area.weekdaysJson),
     leadTimeDays: area.leadTimeDays,
+    blockedDates: safeBlockedDates(area.blockedDatesJson),
   };
   if (!isValidDeliveryDate(firstDate, areaConfig)) {
     throw new OrderError("Leveransdagen är inte tillgänglig — välj en ny dag", "firstDeliveryDate");
@@ -216,6 +217,7 @@ export async function generateDueSubscriptionOrders(
     const areaConfig = {
       weekdays: safeWeekdays(area.weekdaysJson),
       leadTimeDays: area.leadTimeDays,
+      blockedDates: safeBlockedDates(area.blockedDatesJson),
     };
 
     // 1) Passerat datum eller "idag" (t.ex. paus som släppts sent): skapa

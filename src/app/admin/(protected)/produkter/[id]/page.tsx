@@ -39,6 +39,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           imageRef: product.imageRef,
           vatRateBp: product.vatRateBp,
           badge: product.badge,
+          piecesPerKgApprox: product.piecesPerKgApprox == null ? "" : String(product.piecesPerKgApprox),
           sortOrder: product.sortOrder,
           active: product.active,
         }}

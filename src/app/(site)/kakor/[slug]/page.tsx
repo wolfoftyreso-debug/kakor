@@ -150,6 +150,16 @@ export default async function ProductPage({ params }: Props) {
                 <dt>Säljs</dt>
                 <dd>{product.unit === "paket" ? "Per paket, 1,5 kg (0,5 kg av varje sort)" : "Per kilo, hela kilon, blanda fritt med andra sorter"}</dd>
               </div>
+              {product.piecesPerKgApprox != null && product.piecesPerKgApprox > 0 && (
+                <div className="spec-row">
+                  <dt>Antal</dt>
+                  <dd>
+                    {product.unit === "paket"
+                      ? `Ca ${product.piecesPerKgApprox} kakor per kilo`
+                      : `Ca ${product.piecesPerKgApprox} kakor per kilo — räkna 3–5 kakor per person till fikat`}
+                  </dd>
+                </div>
+              )}
               <div className="spec-row">
                 <dt>Allergener</dt>
                 <dd>{chips.join(", ")}</dd>

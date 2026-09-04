@@ -14,6 +14,7 @@ import {
 } from "@/components/admin/StatusPills";
 import { OrderActions } from "./OrderActions";
 import { remainingByLine } from "@/lib/invoice/credit";
+import { looksLikePersonalNumber } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — orderdetalj", robots: { index: false } };
@@ -50,9 +51,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <h1 style={{ fontSize: 26 }}>
           Order <span className="mono">{order.orderNumber}</span>
         </h1>
-        <Link href="/admin/bestallningar" style={{ fontSize: 14, fontWeight: 600 }}>
-          ← Alla beställningar
-        </Link>
+        <span style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <Link href={`/admin/bestallningar/${order.id}/foljesedel`} style={{ fontSize: 14, fontWeight: 600 }}>
+            Följesedel (utskrift)
+          </Link>
+          <Link href="/admin/bestallningar" style={{ fontSize: 14, fontWeight: 600 }}>
+            ← Alla beställningar
+          </Link>
+        </span>
       </div>
       <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
         <OrderStatusPill status={order.status} />
@@ -97,6 +103,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <section className="card" style={{ padding: "20px 24px", fontSize: 14.5, lineHeight: 1.7 }}>
           <div className="section-label" style={{ marginBottom: 10 }}>KUND</div>
           <strong>{order.companyName}</strong> · {order.orgNumber}
+          {looksLikePersonalNumber(order.orgNumber) && (
+            <span className="pill pill-neutral" style={{ marginLeft: 8, fontSize: 11.5 }} title="Organisationsnumret har personnummerformat — troligen enskild firma. Vi säljer bara till näringsidkare; kontrollera vid tvekan.">
+              Enskild firma?
+            </span>
+          )}
           <br />
           {order.contactName} · <a href={`mailto:${order.email}`}>{order.email}</a> ·{" "}
           {order.phone ? <a href={`tel:${order.phone}`}>{order.phone}</a> : "telefon saknas"}

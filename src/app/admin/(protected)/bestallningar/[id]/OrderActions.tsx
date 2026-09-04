@@ -9,6 +9,7 @@ import {
   markOrderPaid,
   resendInvoiceEmail,
   resendOrderEmails,
+  sendPaymentReminder,
   issueCreditNoteForOrder,
   issuePartialCreditNote,
   type ActionResult,
@@ -131,6 +132,18 @@ export function OrderActions({
             <button className="btn btn-outline" disabled={pending} onClick={() => run(() => resendOrderEmails(orderId))}>
               Skicka bekräftelse + faktura igen
             </button>
+            {paymentStatus === "UNPAID" && status !== "CANCELLED" && (
+              <button
+                className="btn btn-outline"
+                disabled={pending}
+                onClick={() => {
+                  if (!window.confirm("Skicka betalningspåminnelse till kundens faktura-e-post?")) return;
+                  run(() => sendPaymentReminder(orderId));
+                }}
+              >
+                Skicka betalningspåminnelse
+              </button>
+            )}
           </div>
         </div>
 

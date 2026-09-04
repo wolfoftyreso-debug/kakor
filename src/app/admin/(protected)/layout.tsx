@@ -23,6 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div style={{ minHeight: "100vh" }}>
       <header
+        className="no-print"
         style={{
           background: "var(--text)",
           color: "var(--bg)",

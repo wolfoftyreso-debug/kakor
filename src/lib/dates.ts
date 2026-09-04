@@ -81,6 +81,84 @@ export interface DeliveryDayConfig {
   weekdays: number[];
   /** Beställ senast N hela dagar före leveransdagen. */
   leadTimeDays: number;
+  /** ISO-datum (YYYY-MM-DD) som admin spärrat — semester, inventering, fulla dagar. */
+  blockedDates?: string[];
+}
+
+/** Påskdagen (Gregoriansk, Meeus/Jones/Butcher) som UTC-midnatt. */
+export function easterSunday(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31); // 3 = mars, 4 = april
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+/** Första lördagen i intervallet [fromDay, fromDay+6] i given månad (1–12). */
+function saturdayOnOrAfter(year: number, month: number, fromDay: number): Date {
+  const start = new Date(Date.UTC(year, month - 1, fromDay));
+  const wd = isoWeekday(start); // 6 = lördag
+  return addDays(start, (6 - wd + 7) % 7);
+}
+
+/**
+ * Svenska helgdagar plus de aftnar då ingen tar emot leveranser (midsommar-,
+ * jul- och nyårsafton). Vi levererar aldrig dessa dagar — kontoren är stängda.
+ * Returnerar namnet på dagen, eller null.
+ */
+export function swedishHolidayName(date: Date): string | null {
+  const y = date.getUTCFullYear();
+  const iso = toISODate(date);
+  const fixed: Record<string, string> = {
+    [`${y}-01-01`]: "nyårsdagen",
+    [`${y}-01-06`]: "trettondedag jul",
+    [`${y}-05-01`]: "första maj",
+    [`${y}-06-06`]: "nationaldagen",
+    [`${y}-12-24`]: "julafton",
+    [`${y}-12-25`]: "juldagen",
+    [`${y}-12-26`]: "annandag jul",
+    [`${y}-12-31`]: "nyårsafton",
+  };
+  if (fixed[iso]) return fixed[iso];
+  const easter = easterSunday(y);
+  const moving: [Date, string][] = [
+    [addDays(easter, -2), "långfredagen"],
+    [easter, "påskdagen"],
+    [addDays(easter, 1), "annandag påsk"],
+    [addDays(easter, 39), "Kristi himmelsfärdsdag"],
+    [addDays(easter, 49), "pingstdagen"],
+    [addDays(saturdayOnOrAfter(y, 6, 20), -1), "midsommarafton"],
+    [saturdayOnOrAfter(y, 6, 20), "midsommardagen"],
+    [saturdayOnOrAfter(y, 10, 31), "alla helgons dag"],
+  ];
+  for (const [d, name] of moving) if (toISODate(d) === iso) return name;
+  return null;
+}
+
+export function isSwedishHoliday(date: Date): boolean {
+  return swedishHolidayName(date) !== null;
+}
+
+function validWeekdays(config: DeliveryDayConfig): number[] {
+  return [...new Set(config.weekdays)].filter((w) => w >= 1 && w <= 7);
+}
+
+/** Dag då vi faktiskt kör: rätt veckodag, inte helgdag, inte spärrad av admin. */
+export function isDeliverableDay(date: Date, config: DeliveryDayConfig, weekdays = validWeekdays(config)): boolean {
+  if (!weekdays.includes(isoWeekday(date))) return false;
+  if (isSwedishHoliday(date)) return false;
+  if (config.blockedDates?.includes(toISODate(date))) return false;
+  return true;
 }
 
 /**
@@ -92,14 +170,14 @@ export function upcomingDeliveryDates(
   count: number,
   now = new Date()
 ): Date[] {
-  const weekdays = [...new Set(config.weekdays)].filter((w) => w >= 1 && w <= 7);
+  const weekdays = validWeekdays(config);
   if (weekdays.length === 0 || count <= 0) return [];
   const earliest = addDays(todayInStockholm(now), Math.max(0, config.leadTimeDays) + 1);
   const result: Date[] = [];
   let cursor = earliest;
   // Max ~26 veckor framåt som skydd mot oändlig loop.
   for (let i = 0; i < 7 * 26 && result.length < count; i++) {
-    if (weekdays.includes(isoWeekday(cursor))) result.push(cursor);
+    if (isDeliverableDay(cursor, config, weekdays)) result.push(cursor);
     cursor = addDays(cursor, 1);
   }
   return result;
@@ -118,11 +196,12 @@ export function isValidDeliveryDate(date: Date, config: DeliveryDayConfig, now =
  * fått sitt nästa datum — ordrar får aldrig hamna på dagar utan leverans.
  */
 export function snapToDeliveryWeekday(date: Date, config: DeliveryDayConfig): Date {
-  const weekdays = [...new Set(config.weekdays)].filter((w) => w >= 1 && w <= 7);
+  const weekdays = validWeekdays(config);
   if (weekdays.length === 0) return date;
   let cursor = date;
-  for (let i = 0; i < 7; i++) {
-    if (weekdays.includes(isoWeekday(cursor))) return cursor;
+  // Upp till fyra veckor: en helgdag eller spärrad vecka ska hoppas över, inte stoppa.
+  for (let i = 0; i < 28; i++) {
+    if (isDeliverableDay(cursor, config, weekdays)) return cursor;
     cursor = addDays(cursor, 1);
   }
   return date;
@@ -136,12 +215,12 @@ export function nextSubscriptionDate(
 ): Date {
   const gapDays = frequency === "WEEKLY" ? 7 : frequency === "BIWEEKLY" ? 14 : 28;
   const target = addDays(after, gapDays);
-  // Justera till närmast följande giltiga veckodag.
-  const weekdays = [...new Set(config.weekdays)].filter((w) => w >= 1 && w <= 7);
+  // Justera till närmast följande giltiga dag (veckodag, ej helgdag, ej spärrad).
+  const weekdays = validWeekdays(config);
   if (weekdays.length === 0) return target;
   let cursor = target;
-  for (let i = 0; i < 7; i++) {
-    if (weekdays.includes(isoWeekday(cursor))) return cursor;
+  for (let i = 0; i < 28; i++) {
+    if (isDeliverableDay(cursor, config, weekdays)) return cursor;
     cursor = addDays(cursor, 1);
   }
   return target;

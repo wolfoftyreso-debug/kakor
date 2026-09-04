@@ -4,9 +4,10 @@ import { sendEmail } from "@/lib/email";
 import { emailConfig, siteConfig } from "@/lib/config";
 import { formatOre } from "@/lib/money";
 import { priceSuffix, qtyLabel } from "@/lib/units";
-import { formatDeliveryDateWithYear } from "@/lib/dates";
+import { formatDeliveryDateWithYear, toISODate, todayInStockholm } from "@/lib/dates";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
+import { looksLikePersonalNumber } from "@/lib/validation";
 
 // Transaktionell e-post vid order: orderbekräftelse till kontakt-e-post och
 // faktura (med PDF-bilaga + nedladdningslänk) till faktura-e-post.
@@ -106,7 +107,7 @@ Sockerbagaren`;
       text: `Ny beställning via webben.
 
 Order: ${order.orderNumber}
-Kund: ${order.companyName} (${order.orgNumber})
+Kund: ${order.companyName} (${order.orgNumber})${looksLikePersonalNumber(order.orgNumber) ? " — OBS: personnummerformat, troligen enskild firma" : ""}
 Kontakt: ${order.contactName}, ${order.email}${order.phone ? `, ${order.phone}` : ""}
 Leverans: ${deliveryDay} — ${order.deliveryAddress}, ${order.deliveryPostalCode} ${order.deliveryCity}${order.deliveryArea ? ` (${order.deliveryArea.name})` : ""}
 ${order.deliveryInstruction ? `Kommentar: ${order.deliveryInstruction}\n` : ""}
@@ -120,4 +121,89 @@ Admin: ${siteConfig.url}/admin/bestallningar/${order.id}`,
     });
   }
   return confirmationSent && invoiceSent;
+}
+
+/**
+ * Leveransbekräftelse till kontakt-e-post när ordern markerats levererad.
+ * Kunden ska inte behöva undra om kakorna kom fram — och påminnelsen om
+ * fakturan minskar sena betalningar. Returnerar false om mejlet inte gick.
+ */
+export async function sendDeliveryConfirmationEmail(orderId: string): Promise<boolean> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: true, invoice: true },
+  });
+  if (!order || order.deliveryStatus !== "DELIVERED") return false;
+  const lines = order.items.map((i) => `  ${i.productName}: ${qtyLabel(i.weightKg, i.unit)}`).join("\n");
+  const invoicePart =
+    order.invoice && order.paymentStatus !== "PAID" && order.invoice.status !== "CREDITED"
+      ? `\nFAKTURA\nFaktura ${order.invoice.invoiceNumber} på ${formatOre(order.totalOre)} inkl. moms förfaller ${toISODate(order.invoice.dueDate)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen).\nLadda ner fakturan: ${siteConfig.url}/faktura/${order.invoice.downloadToken}\n`
+      : "";
+  const text = `Nu är kakorna levererade!
+
+Order ${order.orderNumber} har lämnats på ${order.deliveryAddress}, ${order.deliveryPostalCode} ${order.deliveryCity} i dag, ${formatDeliveryDateWithYear(order.deliveredAt ?? order.deliveryDate)}.
+
+KAKOR
+${lines}
+
+Förvara kakorna torrt och svalt i stängd förpackning — då håller de sig krispiga i flera veckor.
+${invoicePart}
+Saknas något eller stämmer inte leveransen? Svara på det här mejlet så rättar vi till det.
+
+Vänliga hälsningar
+Sockerbagaren`;
+  return sendEmail({
+    to: order.email,
+    subject: `Levererat: ${order.orderNumber} — Sockerbagaren`,
+    text,
+    type: "DELIVERY_CONFIRMATION",
+    orderId: order.id,
+  });
+}
+
+/**
+ * Vänlig betalningspåminnelse till faktura-e-post. Skickas manuellt från admin
+ * (aldrig automatiskt — en påminnelse till en kund som just betalat skadar
+ * relationen mer än en dags försening). Fakturan bifogas igen som PDF.
+ */
+export async function sendPaymentReminderEmail(orderId: string): Promise<boolean> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { invoice: { include: { creditNotes: true } } },
+  });
+  if (!order || !order.invoice || order.paymentStatus === "PAID" || order.invoice.status === "CREDITED") return false;
+  const invoice = order.invoice;
+  const credited = invoice.creditNotes.reduce((s, c) => s + c.totalOre, 0); // negativt
+  const toPay = Math.max(0, invoice.totalOre + credited);
+  const due = toISODate(invoice.dueDate);
+  const overdue = invoice.dueDate.getTime() < todayInStockholm().getTime();
+  let attachments: { filename: string; content: Buffer; contentType: string }[] | undefined;
+  try {
+    const pdf = await renderInvoicePdf(parseSnapshot(invoice.snapshotJson), invoice.invoiceNumber);
+    attachments = [{ filename: `faktura-${invoice.invoiceNumber}.pdf`, content: pdf, contentType: "application/pdf" }];
+  } catch (e) {
+    console.error("Påminnelse-PDF misslyckades:", e instanceof Error ? e.message.slice(0, 300) : e);
+  }
+  const text = `${overdue ? "Påminnelse: faktura" : "Vänlig påminnelse: faktura"} ${invoice.invoiceNumber} från Sockerbagaren
+
+Vi har ännu inte sett någon betalning för faktura ${invoice.invoiceNumber} (order ${order.orderNumber}).
+
+Belopp att betala: ${formatOre(toPay)} inkl. moms
+Förfallodatum: ${due}${overdue ? " (passerat)" : ""}
+${credited !== 0 ? `Beloppet är efter kreditering (${formatOre(-credited)}).\n` : ""}
+${attachments ? "Fakturan bifogas på nytt som PDF." : ""}
+Ladda ner fakturan: ${siteConfig.url}/faktura/${invoice.downloadToken}
+
+Har betalningen redan gjorts kan ni bortse från det här mejlet — svara gärna med betaldatum så stämmer vi av.
+
+Vänliga hälsningar
+Sockerbagaren`;
+  return sendEmail({
+    to: order.invoiceEmail,
+    subject: `${overdue ? "Påminnelse" : "Vänlig påminnelse"}: faktura ${invoice.invoiceNumber} — Sockerbagaren`,
+    text,
+    attachments,
+    type: "PAYMENT_REMINDER",
+    orderId: order.id,
+  });
 }
