@@ -205,6 +205,35 @@ export function productListNode(path: string, products: ProductCardData[]): Json
  * FAQPage-nod — används ENDAST för frågor/svar som faktiskt visas på sidan,
  * med exakt samma text. Aldrig påhittade frågor.
  */
+/**
+ * Artikelnod för kunskaps-/guidesidor: rubrik, publicerings- och ändringsdatum,
+ * bild och utgivare (organisationen). Datumen sätts av verksamheten vid
+ * verklig innehållsändring — aldrig byggtid.
+ */
+export function articleNode(opts: {
+  path: string;
+  headline: string;
+  description: string;
+  image: string;
+  datePublished: string;
+  dateModified: string;
+}): JsonLdNode {
+  return {
+    "@type": "Article",
+    "@id": `${SITE()}${opts.path}#article`,
+    headline: opts.headline,
+    description: opts.description,
+    image: `${SITE()}${opts.image}`,
+    inLanguage: "sv-SE",
+    datePublished: opts.datePublished,
+    dateModified: opts.dateModified,
+    author: { "@id": ids.organization() },
+    publisher: { "@id": ids.organization() },
+    mainEntityOfPage: { "@id": ids.webpage(opts.path) },
+    isPartOf: { "@id": ids.website() },
+  };
+}
+
 export function faqNode(path: string, faqs: { q: string; a: string }[]): JsonLdNode {
   return {
     "@type": "FAQPage",

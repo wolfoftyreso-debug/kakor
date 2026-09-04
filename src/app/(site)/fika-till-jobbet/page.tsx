@@ -4,7 +4,7 @@ import { sharePreview } from "@/lib/seo/meta";
 import { getActiveProducts, getDeliveryDaysLabel } from "@/lib/products";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { breadcrumbNode, faqNode, graph, webPageNode } from "@/lib/seo/schema";
+import { articleNode, breadcrumbNode, faqNode, graph, webPageNode } from "@/lib/seo/schema";
 import { formatOre } from "@/lib/money";
 import { priceSuffix } from "@/lib/units";
 import { PageHeader } from "@/components/PageHeader";
@@ -29,6 +29,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/fika-till-jobbet" },
   ...sharePreview({ title: TITLE, description: DESCRIPTION, path: "/fika-till-jobbet", image: { url: "/images/fika.jpg", alt: "Fika med småkakor och kaffe på jobbet" } }),
 };
+
+// Sätts vid verklig innehållsändring (aldrig byggtid).
+const PUBLISHED = "2026-09-02";
+const UPDATED = "2026-09-04";
 
 const CRUMBS = [
   { name: "Sockerbagaren", path: "/" },
@@ -82,7 +86,8 @@ export default async function FikaTillJobbetPage() {
     <>
       <JsonLd
         data={graph(
-          webPageNode({ path: "/fika-till-jobbet", title: TITLE, description: DESCRIPTION, breadcrumbs: CRUMBS }),
+          webPageNode({ path: "/fika-till-jobbet", title: TITLE, description: DESCRIPTION, breadcrumbs: CRUMBS, dateModified: UPDATED }),
+          articleNode({ path: "/fika-till-jobbet", headline: "Fika till jobbet — så ordnar ni det utan krångel", description: DESCRIPTION, image: "/images/fika.jpg", datePublished: PUBLISHED, dateModified: UPDATED }),
           breadcrumbNode("/fika-till-jobbet", CRUMBS),
           faqNode("/fika-till-jobbet", FAQS)
         )}
