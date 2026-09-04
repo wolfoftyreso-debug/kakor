@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/auth/guard";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { ProductForm } from "../ProductForm";
@@ -23,7 +24,12 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
   return (
     <>
-      <h1 style={{ fontSize: 26, marginBottom: 20 }}>Redigera {product.name}</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
+        <h1 style={{ fontSize: 26, margin: 0 }}>Redigera {product.name}</h1>
+        <Link href={`/admin/produkter/${product.id}/etikett`} style={{ fontSize: 14, fontWeight: 600 }}>
+          Etiketter för förpackningen (utskrift)
+        </Link>
+      </div>
       <ProductForm
         productId={product.id}
         initial={{

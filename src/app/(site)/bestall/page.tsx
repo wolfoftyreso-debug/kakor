@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
-import { invoiceConfig } from "@/lib/config";
+import { invoiceConfig, orderPolicy } from "@/lib/config";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { CheckoutFlow } from "./CheckoutFlow";
 import { JsonLd } from "@/components/JsonLd";
@@ -34,7 +34,7 @@ export default async function BestallPage() {
           })
         )}
       />
-      <CheckoutFlow products={products} areas={areas} paymentTermsDays={invoiceConfig.paymentTermsDays} />
+      <CheckoutFlow products={products} areas={areas} paymentTermsDays={invoiceConfig.paymentTermsDays} changePolicy={orderPolicy} />
     </>
   );
 }

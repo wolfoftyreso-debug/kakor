@@ -43,30 +43,43 @@ export interface AreaWithDates {
   leadTimeDays: number;
   /** Datum admin spärrat (ISO). Helgdagar räknas bort automatiskt i dates.ts. */
   blockedDates: string[];
+  /** Datum där kapacitetstaket redan är nått — visas inte i kassan. */
+  fullDates: string[];
   upcomingDates: string[]; // ISO-datum
 }
 
 import { toISODate, upcomingDeliveryDates, weekdayName } from "@/lib/dates";
+import { bookedKgByDate } from "@/lib/orders/capacity";
 
 export const getAreasWithDates = cache(async function getAreasWithDates(dateCount = 4): Promise<AreaWithDates[]> {
   const areas = await prisma.deliveryArea.findMany({
     where: { active: true },
     orderBy: { sortOrder: "asc" },
   });
-  return areas.map((a) => {
-    const weekdays = safeWeekdays(a.weekdaysJson);
-    const blockedDates = safeBlockedDates(a.blockedDatesJson);
-    return {
-      slug: a.slug,
-      name: a.name,
-      weekdays,
-      leadTimeDays: a.leadTimeDays,
-      blockedDates,
-      upcomingDates: upcomingDeliveryDates({ weekdays, leadTimeDays: a.leadTimeDays, blockedDates }, dateCount).map(
-        toISODate
-      ),
-    };
-  });
+  return Promise.all(
+    areas.map(async (a) => {
+      const weekdays = safeWeekdays(a.weekdaysJson);
+      const blockedDates = safeBlockedDates(a.blockedDatesJson);
+      // Fulla dagar: hämta fler kandidater än vi visar, så listan inte krymper
+      // när en dag faller bort.
+      let fullDates: string[] = [];
+      if (a.maxKgPerDay > 0) {
+        const candidates = upcomingDeliveryDates({ weekdays, leadTimeDays: a.leadTimeDays, blockedDates }, dateCount + 4).map(toISODate);
+        const booked = await bookedKgByDate(a.id, candidates);
+        fullDates = candidates.filter((d) => (booked.get(d) ?? 0) >= a.maxKgPerDay);
+      }
+      const config = { weekdays, leadTimeDays: a.leadTimeDays, blockedDates: [...blockedDates, ...fullDates] };
+      return {
+        slug: a.slug,
+        name: a.name,
+        weekdays,
+        leadTimeDays: a.leadTimeDays,
+        blockedDates,
+        fullDates,
+        upcomingDates: upcomingDeliveryDates(config, dateCount).map(toISODate),
+      };
+    })
+  );
 });
 
 /** Spärrade datum från admin — bara giltiga ISO-datum släpps igenom. */

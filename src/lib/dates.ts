@@ -237,3 +237,38 @@ export function formatTimestamp(date: Date): string {
     minute: "2-digit",
   }).format(date);
 }
+
+/** Tidsstämpel för klockslag (0–23) i svensk tid på ett rent datum (UTC-midnatt). */
+export function stockholmTime(date: Date, hour: number): Date {
+  const iso = toISODate(date);
+  const naive = new Date(`${iso}T${String(hour).padStart(2, "0")}:00:00.000Z`);
+  const inStockholm = new Date(naive.toLocaleString("en-US", { timeZone: "Europe/Stockholm" }));
+  const inUtc = new Date(naive.toLocaleString("en-US", { timeZone: "UTC" }));
+  return new Date(naive.getTime() - (inStockholm.getTime() - inUtc.getTime()));
+}
+
+/** Arbetsdag = måndag–fredag som inte är helgdag. */
+export function isWorkday(date: Date): boolean {
+  return isoWeekday(date) <= 5 && !isSwedishHoliday(date);
+}
+
+/**
+ * Sista tidpunkt för ändring/avbokning: kl. `hour` svensk tid, `workdays`
+ * arbetsdagar före leveransdagen. Leverans torsdag med 2 arbetsdagar ⇒ tisdag kl 12.
+ */
+export function changeDeadline(deliveryDate: Date, workdays: number, hour: number): Date {
+  let cursor = deliveryDate;
+  let left = Math.max(0, workdays);
+  while (left > 0) {
+    cursor = addDays(cursor, -1);
+    if (isWorkday(cursor)) left--;
+  }
+  return stockholmTime(cursor, hour);
+}
+
+/** "tisdag 8 september kl. 12.00" */
+export function formatDeadline(deadline: Date): string {
+  const day = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", weekday: "long", day: "numeric", month: "long" }).format(deadline);
+  const time = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", hour: "2-digit", minute: "2-digit" }).format(deadline);
+  return `${day} kl. ${time.replace(":", ".")}`;
+}

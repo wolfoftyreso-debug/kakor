@@ -11,6 +11,7 @@ export function AreaForm({
   leadTimeDays,
   postalPrefixes,
   blockedDates,
+  maxKgPerDay,
   active,
 }: {
   areaId: string;
@@ -20,6 +21,7 @@ export function AreaForm({
   postalPrefixes: string;
   /** Ett ISO-datum per rad. */
   blockedDates: string;
+  maxKgPerDay: number;
   active: boolean;
 }) {
   const action = saveArea.bind(null, areaId);
@@ -69,6 +71,13 @@ export function AreaForm({
         <span style={{ fontSize: 12.5, color: "var(--text-2)" }}>
           Ett datum per rad (ÅÅÅÅ-MM-DD). Helgdagar, midsommar-, jul- och nyårsafton är redan
           spärrade automatiskt. Passerade datum rensas när du sparar.
+        </span>
+      </label>
+      <label className="field">
+        Max kilo per leveransdag (0 = ingen gräns)
+        <input name="maxKgPerDay" type="number" min="0" max="100000" defaultValue={maxKgPerDay} />
+        <span style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+          Lösvikt plus paketvikt. Fulla dagar döljs i kassan; prenumerationer räknas in men stoppas inte.
         </span>
       </label>
       <label className="checkbox-label">

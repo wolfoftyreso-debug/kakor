@@ -1,10 +1,10 @@
-import { invoiceConfig } from "@/lib/config";
+import { invoiceConfig, orderPolicy } from "@/lib/config";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { emailConfig, siteConfig } from "@/lib/config";
 import { formatOre } from "@/lib/money";
 import { priceSuffix, qtyLabel } from "@/lib/units";
-import { formatDeliveryDateWithYear, toISODate, todayInStockholm } from "@/lib/dates";
+import { changeDeadline, formatDeadline, formatDeliveryDateWithYear, toISODate, todayInStockholm } from "@/lib/dates";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { looksLikePersonalNumber } from "@/lib/validation";
@@ -45,6 +45,7 @@ LEVERANS
 ${order.deliveryAddress}, ${order.deliveryPostalCode} ${order.deliveryCity}
 Leveransdag: ${deliveryDay}
 Vi levererar under dagen — se till att någon finns på plats för att ta emot leveransen.
+Ändringar eller avbokning: svara på det här mejlet senast ${formatDeadline(changeDeadline(order.deliveryDate, orderPolicy.changeCutoffWorkdays, orderPolicy.changeCutoffHour))}. Därefter är ordern packad och faktureras.
 
 FAKTURA
 Betalning sker mot faktura. Fakturan skapas nu och skickas till ${order.invoiceEmail}. Förfallodatum ${order.invoice.dueDate.toISOString().slice(0, 10)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen).
