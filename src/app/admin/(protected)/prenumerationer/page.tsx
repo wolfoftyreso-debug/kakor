@@ -7,6 +7,7 @@ import type { Prisma } from "@prisma/client";
 import { qtyLabel } from "@/lib/units";
 import { FREQUENCY_LABELS, type SubscriptionFrequency } from "@/lib/status";
 import { SubscriptionActions, GenerateOrdersButton } from "./SubscriptionActions";
+import { EditSubscriptionForm } from "./EditSubscriptionForm";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — prenumerationer", robots: { index: false } };
@@ -29,6 +30,11 @@ export default async function SubscriptionsPage({
   const where: Prisma.SubscriptionWhereInput =
     filter === "avslutade" ? { status: "CANCELLED" } : filter === "alla" ? {} : { status: { in: ["ACTIVE", "PAUSED"] } };
   const totalCount = await prisma.subscription.count({ where });
+  const productOptions = await prisma.product.findMany({
+    where: { active: true },
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, name: true, unit: true },
+  });
   const subscriptions = await prisma.subscription.findMany({
     where,
     take: PAGE_SIZE,
@@ -126,6 +132,14 @@ export default async function SubscriptionsPage({
                   status={s.status}
                   nextDeliveryDate={s.nextDeliveryDate.toISOString().slice(0, 10)}
                 />
+                {s.status !== "CANCELLED" && (
+                  <EditSubscriptionForm
+                    subscriptionId={s.id}
+                    frequency={s.frequency}
+                    items={s.items.map((i) => ({ productId: i.productId, weightKg: i.weightKg }))}
+                    products={productOptions}
+                  />
+                )}
               </div>
             </div>
           ))}

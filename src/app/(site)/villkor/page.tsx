@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
-import { invoiceConfig, isVerifiedValue } from "@/lib/config";
+import { invoiceConfig, isVerifiedValue, orderPolicy } from "@/lib/config";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 
 export const metadata: Metadata = {
@@ -101,9 +101,12 @@ export default function VillkorPage() {
         <section>
           <h2>Avbokning &amp; ändringar</h2>
           <p>
-            Ändringar och avbokningar hanteras så långt det är möjligt — ju tidigare besked,
-            desto bättre: svara på orderbekräftelsen med ordernumret. Eftersom leveranserna packas och planeras per leveransdag kan
-            ändringar nära inpå leveransdagen vara svåra att tillgodose.
+            Ändringar och avbokningar görs kostnadsfritt fram till kl.{" "}
+            {String(orderPolicy.changeCutoffHour).padStart(2, "0")}.00 {orderPolicy.changeCutoffWorkdays === 1 ? "en arbetsdag" : `${orderPolicy.changeCutoffWorkdays} arbetsdagar`} före
+            leveransdagen: svara på orderbekräftelsen med ordernumret. Den exakta tidpunkten står i
+            er orderbekräftelse. Därefter är beställningen packad och planerad i körningen och
+            faktureras i sin helhet. För prenumerationer gäller samma gräns för att pausa eller ändra
+            nästa leverans.
           </p>
         </section>
         <section>

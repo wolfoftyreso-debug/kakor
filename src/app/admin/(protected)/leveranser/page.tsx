@@ -6,6 +6,7 @@ import { formatDeliveryDate, toISODate, todayInStockholm, capitalizeFirst } from
 import { qtyLabel } from "@/lib/units";
 import { MarkDeliveredInline } from "./MarkDeliveredInline";
 import { PrintButton } from "@/components/admin/PrintButton";
+import { totalKg as orderKg } from "@/lib/orders/capacity";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — leveranser", robots: { index: false } };
@@ -33,7 +34,7 @@ export default async function DeliveriesPage({
           },
     orderBy: [{ deliveryDate: "asc" }, { createdAt: "asc" }],
     take: 300,
-    include: { items: true, deliveryArea: true },
+    include: { items: { include: { product: { select: { packageWeightGrams: true } } } }, deliveryArea: true },
   });
 
   const groups = new Map<string, typeof orders>();
@@ -100,6 +101,18 @@ export default async function DeliveriesPage({
           }
         }
         const bakplan = [...perProduct.values()].sort((a, b) => b.qty - a.qty);
+        // Kapacitet per område den här dagen: "Tyresö 18 av 30 kg".
+        const byArea = new Map<string, { name: string; kg: number; max: number }>();
+        for (const o of dayOrders) {
+          if (!o.deliveryArea) continue;
+          const cur = byArea.get(o.deliveryArea.id) ?? { name: o.deliveryArea.name, kg: 0, max: o.deliveryArea.maxKgPerDay };
+          cur.kg += orderKg(o.items.map((i) => ({ weightKg: i.weightKg, unit: i.unit, packageWeightGrams: i.product?.packageWeightGrams })));
+          byArea.set(o.deliveryArea.id, cur);
+        }
+        const capacityNote = [...byArea.values()]
+          .filter((a) => a.max > 0)
+          .map((a) => `${a.name} ${Math.round(a.kg * 10) / 10} av ${a.max} kg${a.kg >= a.max ? " — FULLT" : ""}`)
+          .join(" · ");
         return (
           <section key={dateKey} style={{ marginBottom: 32 }}>
             <h2
@@ -119,7 +132,10 @@ export default async function DeliveriesPage({
             </div>
             {visa !== "levererade" && bakplan.length > 0 && (
               <div className="card bakplan" style={{ padding: "12px 18px", marginBottom: 14, background: "var(--butter-soft)" }}>
-                <div className="section-label" style={{ marginBottom: 6 }}>BAKPLAN — PER SORT</div>
+                <div className="section-label" style={{ marginBottom: 6 }}>
+                  BAKPLAN — PER SORT
+                  {capacityNote ? <span style={{ fontWeight: 400, letterSpacing: 0, textTransform: "none", marginLeft: 10 }}>{capacityNote}</span> : null}
+                </div>
                 <div style={{ display: "flex", gap: "6px 22px", flexWrap: "wrap", fontSize: 14 }}>
                   {bakplan.map((b) => (
                     <span key={`${b.name}|${b.unit}`}>

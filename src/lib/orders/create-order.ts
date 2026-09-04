@@ -4,7 +4,8 @@ import { prisma } from "@/lib/db";
 import { calculateTotals } from "@/lib/money";
 import { nextNumber } from "@/lib/numbering";
 import { invoiceConfig, isVerifiedValue } from "@/lib/config";
-import { addDays, fromISODate, isValidDeliveryDate, toISODate, todayInStockholm } from "@/lib/dates";
+import { addDays, capitalizeFirst, formatDeliveryDate, fromISODate, isValidDeliveryDate, toISODate, todayInStockholm } from "@/lib/dates";
+import { bookedKgByDate, totalKg } from "@/lib/orders/capacity";
 import { safeBlockedDates, safeWeekdays } from "@/lib/products";
 import type { InvoiceSnapshot } from "@/lib/invoice/snapshot";
 import type { CheckoutInput } from "@/lib/validation";
@@ -168,6 +169,23 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
     where: { id: { in: productIds }, active: true },
   });
   const productById = new Map(products.map((p) => [p.id, p]));
+
+  // Kapacitetstak per dag: prenumerationsordrar är planerad volym och räknas
+  // in men stoppas aldrig — de skulle annars tyst falla bort ur generatorn.
+  if (!options.subscription && area.maxKgPerDay > 0) {
+    const iso = toISODate(deliveryDate);
+    const booked = (await bookedKgByDate(area.id, [iso])).get(iso) ?? 0;
+    const thisKg = totalKg(
+      input.items.map((i) => ({ weightKg: i.weightKg, unit: productById.get(i.productId)?.unit ?? "kg", packageWeightGrams: productById.get(i.productId)?.packageWeightGrams }))
+    );
+    if (booked + thisKg > area.maxKgPerDay) {
+      throw new OrderError(
+        `${capitalizeFirst(formatDeliveryDate(deliveryDate))} är fullbokad i ${area.name} — välj en annan leveransdag`,
+        "deliveryDate",
+        "DAY_FULL"
+      );
+    }
+  }
 
   const lines = input.items.map((item) => {
     const product = productById.get(item.productId);

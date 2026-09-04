@@ -67,6 +67,9 @@ model DeliveryArea {
   // JSON-array med ISO-datum då vi INTE levererar (semester, inventering).
   // Svenska helgdagar utesluts alltid automatiskt (dates.ts).
   blockedDatesJson String @default("[]")
+  // Kapacitetstak i kilo per leveransdag (lösvikt + paketvikt). 0 = ingen gräns.
+  // Fulla dagar döljs i kassan; prenumerationsordrar räknas in men stoppas aldrig.
+  maxKgPerDay Int @default(0)
   active   Boolean @default(true)
   sortOrder Int    @default(0)
 

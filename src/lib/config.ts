@@ -26,6 +26,14 @@ export const siteConfig = {
     "Klassiska småkakor bakade på riktiga råvaror — levererade direkt till företag i Tyresö, Nacka, Haninge och Huddinge. Betalning mot faktura.",
 };
 
+// Avbokning/ändring: senast kl. HH, N arbetsdagar före leveransdagen.
+// Räknas per order (helger och helgdagar hoppas över) och visas i kassan,
+// orderbekräftelsen, villkoren och admin.
+export const orderPolicy = {
+  changeCutoffWorkdays: parseInt(env("ORDER_CHANGE_CUTOFF_WORKDAYS", "2"), 10),
+  changeCutoffHour: parseInt(env("ORDER_CHANGE_CUTOFF_HOUR", "12"), 10),
+};
+
 export const invoiceConfig = {
   companyName: env("INVOICE_COMPANY_NAME", "Landvex AB"),
   orgNumber: env("INVOICE_ORG_NUMBER", "559141-7042"),

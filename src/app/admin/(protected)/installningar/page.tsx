@@ -48,6 +48,7 @@ export default async function SettingsPage() {
               leadTimeDays={a.leadTimeDays}
               postalPrefixes={safeJoin(a.postalCodePrefixesJson)}
               blockedDates={safeBlockedDates(a.blockedDatesJson).join("\n")}
+              maxKgPerDay={a.maxKgPerDay}
               active={a.active}
             />
           ))}

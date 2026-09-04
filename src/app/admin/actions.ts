@@ -23,7 +23,7 @@ import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 import { formatOre } from "@/lib/money";
 import { fromISODate, todayInStockholm, isoWeekday, weekdayName, toISODate, swedishHolidayName } from "@/lib/dates";
-import { canTransitionOrder } from "@/lib/status";
+import { canTransitionOrder, SUBSCRIPTION_FREQUENCY } from "@/lib/status";
 
 async function requireAdmin() {
   const admin = await getAdmin();
@@ -564,6 +564,7 @@ const areaSchema = z.object({
     .refine((arr) => arr.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(fromISODate(d).getTime())), {
       message: "Spärrade datum skrivs som ÅÅÅÅ-MM-DD, ett per rad (t.ex. 2026-12-17)",
     }),
+  maxKgPerDay: z.coerce.number().int().min(0, "Max kg: 0 = ingen gräns").max(100000),
   active: z.coerce.boolean(),
 });
 
@@ -578,6 +579,7 @@ export async function saveArea(
     leadTimeDays: formData.get("leadTimeDays"),
     postalPrefixes: formData.get("postalPrefixes") ?? "",
     blockedDates: formData.get("blockedDates") ?? "",
+    maxKgPerDay: formData.get("maxKgPerDay") ?? 0,
     active: formData.get("active") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Kontrollera fälten" };
@@ -593,12 +595,62 @@ export async function saveArea(
         d.postalPrefixes ? d.postalPrefixes.split(",").map((s) => s.trim()) : []
       ),
       blockedDatesJson: JSON.stringify(blockedDates),
+      maxKgPerDay: d.maxKgPerDay,
       active: d.active,
     },
   });
   revalidatePath("/admin/installningar");
   revalidatePath("/bestall");
   const days = [...new Set(d.weekdays.split(",").map((s) => parseInt(s.trim(), 10)))].map(weekdayName).join(", ");
-  const blockedNote = blockedDates.length ? `, ${blockedDates.length} spärrade datum` : "";
+  const blockedNote = `${blockedDates.length ? `, ${blockedDates.length} spärrade datum` : ""}${d.maxKgPerDay > 0 ? `, max ${d.maxKgPerDay} kg/dag` : ""}`;
   return { saved: `Sparat — leveransdagar: ${days}${blockedNote}${d.active ? "" : " (området är inaktivt)"}` };
+}
+
+// ---------- Ändra befintlig prenumeration ----------
+
+const subscriptionUpdateSchema = z.object({
+  frequency: z.enum(SUBSCRIPTION_FREQUENCY),
+  items: z
+    .array(z.object({ productId: z.string().cuid(), weightKg: z.coerce.number().int().min(1).max(100) }))
+    .min(1, "Minst en sort")
+    .max(30),
+});
+
+/**
+ * Byt innehåll eller intervall på en prenumeration. Gäller från nästa leverans:
+ * nästa datum rörs inte, och redan genererade ordrar påverkas aldrig.
+ */
+export async function updateSubscriptionContents(
+  id: string,
+  frequency: string,
+  items: { productId: string; weightKg: number }[]
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!idSchema.safeParse(id).success) return { ok: false, error: "Ogiltigt id" };
+  const parsed = subscriptionUpdateSchema.safeParse({ frequency, items });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Kontrollera fälten" };
+  const d = parsed.data;
+  if (new Set(d.items.map((i) => i.productId)).size !== d.items.length) {
+    return { ok: false, error: "Samma sort får bara förekomma en gång" };
+  }
+  const sub = await prisma.subscription.findUnique({ where: { id }, include: { items: true } });
+  if (!sub) return { ok: false, error: "Prenumerationen finns inte" };
+  if (sub.status === "CANCELLED") return { ok: false, error: "Prenumerationen är avslutad" };
+  const products = await prisma.product.findMany({ where: { id: { in: d.items.map((i) => i.productId) }, active: true } });
+  if (products.length !== d.items.length) return { ok: false, error: "En vald sort finns inte eller är inaktiv" };
+
+  await prisma.$transaction([
+    prisma.subscriptionItem.deleteMany({ where: { subscriptionId: id } }),
+    prisma.subscriptionItem.createMany({ data: d.items.map((i) => ({ subscriptionId: id, productId: i.productId, weightKg: i.weightKg })) }),
+    prisma.subscription.update({ where: { id }, data: { frequency: d.frequency } }),
+  ]);
+  const summary = d.items
+    .map((i) => {
+      const p = products.find((x) => x.id === i.productId)!;
+      return `${i.weightKg} ${p.unit} ${p.name}`;
+    })
+    .join(", ");
+  console.log(`[admin] ${maskEmail(admin.email)} ändrade ${sub.number}: ${d.frequency}; ${summary}`);
+  revalidatePath("/admin/prenumerationer");
+  return { ok: true, message: `Sparat — gäller från nästa leverans: ${summary}` };
 }

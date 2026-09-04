@@ -20,7 +20,7 @@ import type { AreaWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
 import { formatOre, calculateTotals } from "@/lib/money";
 import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/units";
-import { capitalizeFirst, formatDeliveryDate, fromISODate, toISODate, upcomingDeliveryDates } from "@/lib/dates";
+import { capitalizeFirst, formatDeliveryDate, fromISODate, toISODate, upcomingDeliveryDates, changeDeadline, formatDeadline } from "@/lib/dates";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 import { newIdempotencyKey } from "@/lib/idempotency";
 import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/Turnstile";
@@ -107,11 +107,16 @@ export function CheckoutFlow({
   products,
   areas,
   paymentTermsDays,
+  changePolicy,
 }: {
   products: ProductCardData[];
   areas: AreaWithDates[];
   paymentTermsDays: number;
+  /** Avbokning/ändring senast kl. changeCutoffHour, changeCutoffWorkdays arbetsdagar före leverans. */
+  changePolicy: { changeCutoffWorkdays: number; changeCutoffHour: number };
 }) {
+  const deadlineText = (iso: string | null) =>
+    iso ? formatDeadline(changeDeadline(fromISODate(iso), changePolicy.changeCutoffWorkdays, changePolicy.changeCutoffHour)) : null;
   const cart = useCart();
   const [step, setStep] = useState(1);
   const [areaSlug, setAreaSlug] = useState<string | null>(null);
@@ -272,7 +277,7 @@ export function CheckoutFlow({
             {
               weekdays: selectedArea.weekdays,
               leadTimeDays: selectedArea.leadTimeDays,
-              blockedDates: selectedArea.blockedDates,
+              blockedDates: [...selectedArea.blockedDates, ...selectedArea.fullDates],
             },
             Math.max(4, selectedArea.upcomingDates.length)
           ).map(toISODate)
@@ -952,7 +957,11 @@ export function CheckoutFlow({
             <div className="info-box-muted" style={{ margin: "20px 0 28px" }}>
               <strong>Betalning sker mot faktura.</strong> Ingen kortbetalning behövs — fakturan
               skapas {mode === "RECURRING" ? "inför varje leverans" : "när ni skickar beställningen"} och
-              mejlas till er faktura-e-post. Genom att beställa godkänner ni våra{" "}
+              mejlas till er faktura-e-post.
+              {mode !== "RECURRING" && deadlineText(deliveryDate) ? (
+                <> Ändringar och avbokning senast {deadlineText(deliveryDate)} — därefter faktureras ordern.</>
+              ) : null}{" "}
+              Genom att beställa godkänner ni våra{" "}
               <Link href="/villkor" target="_blank" rel="noopener">köpvillkor</Link>.
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
@@ -1095,7 +1104,7 @@ export function CheckoutFlow({
             <br />
             2. Vi packar och levererar på vald leveransdag.
             <br />
-            3. Något att ändra? Svara på orderbekräftelsen.
+            3. Något att ändra? Svara på orderbekräftelsen{result.deliveryDate ? ` senast ${deadlineText(result.deliveryDate)}` : ""}.
           </div>
           <div style={{ textAlign: "center", marginTop: 24 }}>
             <a href={result.invoiceUrl} className="btn btn-outline" target="_blank" rel="noopener">

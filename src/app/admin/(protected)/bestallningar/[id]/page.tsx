@@ -4,7 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
-import { formatDate, formatDeliveryDate, capitalizeFirst, formatTimestamp } from "@/lib/dates";
+import { formatDate, formatDeliveryDate, capitalizeFirst, formatTimestamp, changeDeadline, formatDeadline } from "@/lib/dates";
+import { orderPolicy } from "@/lib/config";
 import { priceSuffix, qtyLabel } from "@/lib/units";
 import { isOrderOverdue } from "@/lib/status";
 import {
@@ -117,6 +118,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <br />
           {capitalizeFirst(formatDeliveryDate(order.deliveryDate))} ·
           leverans under dagen
+          {order.deliveryStatus === "PENDING" && order.status !== "CANCELLED" && (
+            <div style={{ fontSize: 13, color: "var(--text-2)" }}>
+              Kundens ändringsgräns: {formatDeadline(changeDeadline(order.deliveryDate, orderPolicy.changeCutoffWorkdays, orderPolicy.changeCutoffHour))}
+            </div>
+          )}
           {order.deliveryInstruction && (
             <div style={{ background: "var(--butter-soft)", borderRadius: 6, padding: "8px 12px", marginTop: 8, fontSize: 13.5 }}>
               {order.deliveryInstruction}
