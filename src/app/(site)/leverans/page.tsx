@@ -7,6 +7,8 @@ import { ImageSlot } from "@/components/ImageSlot";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumbNode, faqNode, graph, webPageNode } from "@/lib/seo/schema";
+import { PageHeader } from "@/components/PageHeader";
+import { FaqList } from "@/components/FaqList";
 
 export const dynamic = "force-dynamic";
 
@@ -64,22 +66,23 @@ export default async function LeveransPage() {
       )}
     />
     <Breadcrumbs crumbs={CRUMBS} container="container-narrow" />
-    <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
-      <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)", marginBottom: 14 }}>
-        Fikaleverans i södra Stockholm
-      </h1>
-      <p className="lede">
-        Fasta leveransdagar per område. Leveransen kommer under dagen — vi kan
-        inte lova exakt klockslag, så någon behöver finnas på plats för att ta emot den: reception,
-        personalrum eller lastkaj.
-      </p>
-
-      <div style={{ height: 340, borderRadius: "var(--radius-xl)", overflow: "hidden", margin: "28px 0 4px", boxShadow: "var(--shadow-md)" }}>
-        <ImageSlot
-          label="Sockerbagarens bud bär en kartong med kakor till leveransbilen"
-          src="/images/leverans.jpg"
-        />
-      </div>
+    <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
+      <PageHeader
+        eyebrow="Leverans"
+        title="Fikaleverans i södra Stockholm"
+        lede="Fasta leveransdagar per område. Leveransen kommer under dagen — vi kan inte lova exakt klockslag, så någon behöver finnas på plats för att ta emot den: reception, personalrum eller lastkaj."
+        facts={[
+          { label: "Områden", value: "Tyresö, Nacka, Haninge, Huddinge" },
+          { label: "Leveransdag", value: [...new Set(areas.flatMap((a) => a.weekdays))].map(weekdayName).join(" och ") || "Se område" },
+          { label: "Tid", value: "Under dagen, bemannad adress" },
+          { label: "Leveransavgift", value: "Ingen" },
+        ]}
+      />
+      <figure>
+        <div className="media" style={{ minHeight: 320 }}>
+          <ImageSlot label="Sockerbagarens bud bär en kartong med kakor till leveransbilen" src="/images/leverans.jpg" />
+        </div>
+      </figure>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, margin: "32px 0" }}>
         {areas.map((a) => (
@@ -107,23 +110,15 @@ export default async function LeveransPage() {
         leveransen.
       </div>
 
-      <h2 style={{ fontSize: 22, margin: "32px 0 12px" }}>Betalning</h2>
-      <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
+      <h2>Betalning</h2>
+      <p>
         All betalning sker mot faktura. Fakturan skickas till er faktura-e-post och kan även laddas
         ner som PDF direkt efter beställningen. Inga kort, inga konton.
       </p>
 
-      <h2 style={{ fontSize: 22, margin: "32px 0 6px" }}>Vanliga frågor om leveransen</h2>
-      <div>
-        {LEVERANS_FAQS.map((f) => (
-          <div key={f.q} style={{ borderBottom: "1px solid var(--border)", padding: "14px 4px" }}>
-            <h3 style={{ fontSize: "15.5px", fontWeight: 700, fontFamily: "var(--font-sans)" }}>{f.q}</h3>
-            <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--brown-2)", margin: "6px 0 0", maxWidth: "65ch" }}>{f.a}</p>
-          </div>
-        ))}
-      </div>
+      <FaqList heading="Vanliga frågor om leveransen" items={LEVERANS_FAQS} />
 
-      <div style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap" }}>
+      <div className="actions">
         <Link href="/bestall" className="btn btn-primary btn-lg">
           Beställ kakor
         </Link>

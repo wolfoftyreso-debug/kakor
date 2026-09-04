@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { ImageSlot } from "@/components/ImageSlot";
+import { Reveal } from "@/components/Reveal";
 import { TrustStrip } from "@/components/TrustStrip";
 import { Steps } from "@/components/Steps";
 import { IconCheck } from "@/components/Icons";
@@ -99,6 +100,7 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={pageGraph} />
+      <Reveal />
       {/* HERO */}
       <section style={{ background: "var(--section-tint)" }} className="hero-grid">
         <div className="hero-copy">
@@ -143,7 +145,8 @@ export default async function HomePage() {
       </section>
 
       {/* PRODUKTER */}
-      <section id="kakor" className="container section-y">
+      <section id="kakor" className="container section-y reveal">
+        <div className="rule-label">Sortiment</div>
         <div className="section-head">
           <div>
             <h2 className="h-section">Våra kakor</h2>
@@ -163,6 +166,25 @@ export default async function HomePage() {
           {products.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
+        </div>
+      </section>
+
+      {/* RECEPT 1957 — sajtens sanna ursprung som redaktionellt band */}
+      <section className="band-1957 on-dark">
+        <div className="container section-y inner">
+          <div className="year" aria-hidden="true">1957</div>
+          <div>
+            <div className="rule-label">Recepten</div>
+            <h2 className="h-section">Bakat efter Svenskt konditorlexikon 1957.</h2>
+            <p>
+              Våra tre sorter bakas efter recepten i konditorernas egen handbok från 1957 — så som
+              småkakor bakades innan margarin och tillsatser blev standard: smör, socker, vetemjöl,
+              ägg, mandel, choklad och sirap. Inget mer.
+            </p>
+            <Link href="/om" className="section-link">
+              Om recepten och oss →
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -206,7 +228,8 @@ export default async function HomePage() {
       </section>
 
       {/* SÅ FUNGERAR DET */}
-      <section className="container section-y">
+      <section className="container section-y reveal">
+        <div className="rule-label">Så fungerar det</div>
         <div className="section-head">
           <div>
             <h2 className="h-section">Så fungerar det</h2>
@@ -321,7 +344,8 @@ export default async function HomePage() {
       </section>
 
       {/* FAQ */}
-      <section className="container-narrow section-y">
+      <section className="container-narrow section-y reveal">
+        <div className="rule-label">Vanliga frågor</div>
         <h2 className="h-section" style={{ marginBottom: 24 }}>Vanliga frågor</h2>
         <div>
           {FAQS.map((f) => (

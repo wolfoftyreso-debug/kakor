@@ -35,7 +35,7 @@ export function ImageSlot({
   if (showImage) {
     return (
       // fill kräver en positionerad förälder — wrappern fyller containern.
-      <span style={{ position: "relative", display: "block", width: "100%", height: "100%" }}>
+      <span style={{ position: "relative", display: "block", width: "100%", height: "100%", minHeight: "inherit" }}>
         <Image
           src={src}
           alt={decorative ? "" : label}

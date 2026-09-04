@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { getActiveProducts } from "@/lib/products";
+import { FaqList } from "@/components/FaqList";
 import { ProductCard } from "@/components/ProductCard";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -132,21 +133,7 @@ export default async function KakorPage() {
         </p>
 
         {/* FAQ före sidans avslutande CTA-band — sidan ska sluta i handling. */}
-        <section style={{ marginTop: 56 }}>
-          <h2 className="h-sub" style={{ marginBottom: 8 }}>
-            Vanliga frågor om småkakor
-          </h2>
-          <div>
-            {KAKOR_FAQS.map((f) => (
-              <div key={f.q} style={{ borderBottom: "1px solid var(--border)", padding: "16px 4px" }}>
-                <h3 style={{ fontSize: "15.5px", fontWeight: 700, fontFamily: "var(--font-sans)" }}>{f.q}</h3>
-                <div style={{ fontSize: 14, lineHeight: 1.65, color: "var(--brown-2)", marginTop: 6, maxWidth: "65ch" }}>
-                  {f.a}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <FaqList heading="Vanliga frågor om småkakor" items={KAKOR_FAQS} />
       </div>
 
       <section className="cta-band">
