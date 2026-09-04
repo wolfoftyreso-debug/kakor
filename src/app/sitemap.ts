@@ -17,6 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/bestall", priority: 0.9 },
     { path: "/prenumeration", priority: 0.9 },
     { path: "/fika-till-jobbet", priority: 0.7 },
+    { path: "/julfika", priority: 0.6 },
     { path: "/leverans", priority: 0.6 },
     { path: "/ingredienser", priority: 0.5 },
     { path: "/om", priority: 0.5 },

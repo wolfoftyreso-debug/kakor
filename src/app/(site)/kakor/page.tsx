@@ -33,6 +33,10 @@ const KAKOR_FAQS = [
     a: "I en tät burk i rumstemperatur, gärna med bakplåtspapper mellan lagren. Undvik kylskåp — kakor tar lätt smak och mister sin konsistens i kyla.",
   },
   {
+    q: "Hur länge håller kakor i rumstemperatur?",
+    a: "Småkakor på riktigt smör håller sig fina i flera veckor i en tät burk i rumstemperatur. Öppna burken så lite som möjligt och lägg bakplåtspapper mellan lagren, så behåller de både smak och konsistens.",
+  },
+  {
     q: "Hur länge håller kakor i frysen?",
     a: "Småkakor tål frysning mycket bra. Frys i tät påse eller burk och låt tina i rumstemperatur — konsistens och smak håller sig i flera månader.",
   },
@@ -97,7 +101,7 @@ export default async function KakorPage() {
         <p className="lede" style={{ margin: "0 0 28px" }}>
           Klassiska svenska smörkakor efter recept från Svenskt konditorlexikon 1957 — kolasnittar,
           mandelkubb och chokladsnittar bakade på riktigt smör, vanligt strösocker och kvalitativa
-          traditionella råvaror. Fikabröd per kilo till arbetsplatser i Tyresö, Nacka, Haninge och
+          traditionella råvaror. Kaffekakor och fikabröd per kilo till arbetsplatser i Tyresö, Nacka, Haninge och
           Huddinge — betalning sker alltid mot faktura.
         </p>
         <div

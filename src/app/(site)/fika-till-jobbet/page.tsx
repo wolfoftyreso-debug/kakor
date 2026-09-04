@@ -55,6 +55,14 @@ const FAQS = [
     a: "Leveransen kommer på ert områdes fasta leveransdag. Kassan visar nästa tillgängliga leveransdag för Tyresö, Nacka, Haninge och Huddinge direkt när ni väljer datum.",
   },
   {
+    q: "Är fika på jobbet en skattefri förmån?",
+    a: "Ja, enklare förtäring som kaffe, te och kakor räknas enligt Skatteverket som en skattefri personalvårdsförmån när den erbjuds hela personalen och intas på arbetsplatsen. För arbetsgivaren är kostnaden avdragsgill. Kontrollera alltid aktuella regler hos Skatteverket eller er redovisningskonsult.",
+  },
+  {
+    q: "Vad bjuder man på sista dagen på jobbet eller vid en avtackning?",
+    a: "Ett fat med klassiska småkakor räcker långt: det kräver ingen servering, går att dela ut på flera avdelningar och passar både förmiddagskaffet och eftermiddagen. Beställ till kontoret dagen före så finns det på plats när ni samlas.",
+  },
+  {
     q: "Håller kakorna till nästa dag?",
     a: "Ja. Småkakor på riktigt smör håller sig fina i flera veckor i en tät burk i rumstemperatur, och tål frysning i flera månader. Det som blir över på fredagen kan alltså sparas till måndagsmötet.",
   },
@@ -145,7 +153,33 @@ export default async function FikaTillJobbetPage() {
           Klassiska småkakor passar året runt: mandelkubb och kolasnittar hör hemma på julfikat
           lika självklart som på påskens kaffebord eller sommaravslutningen. Beställ i god tid
           inför storhelger — leveransdagarna är fasta per område och kassan visar vilka datum som
-          är lediga.
+          är lediga. Mer om <Link href="/julfika">julfika och påskfika på jobbet</Link>.
+        </p>
+
+        <h2 style={{ fontSize: 24, margin: "36px 0 10px" }}>Kakor till kaffet på kontoret</h2>
+        <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch" }}>
+          Kaffet på kontoret är oftast löst: maskin eller bryggare, alltid på. Det som saknas är
+          något gott till kaffet. Kaffekakor som kolasnittar, mandelkubb och chokladsnittar är
+          gjorda för just det: de håller sig fräscha i burken hela veckan, tål att stå framme och
+          kräver varken kylskåp eller tallrik. Beställ per kilo, ställ en burk vid kaffemaskinen och
+          fyll på när den börjar sina.
+        </p>
+
+        <h2 style={{ fontSize: 24, margin: "36px 0 10px" }}>Bjuda på fika på jobbet</h2>
+        <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch" }}>
+          Födelsedag, sista dagen på jobbet, avtackning eller bara ett tack till teamet: att bjuda
+          på fika är det enklaste sättet att markera en händelse utan att ordna något stort. Räkna
+          med den rejäla mängden (5 kakor per person) när fikat är dagens samlingspunkt, och beställ
+          till kontoret med leverans dagen innan så att det står klart när ni samlas.
+        </p>
+
+        <h2 style={{ fontSize: 24, margin: "36px 0 10px" }}>Är fika på jobbet skattefritt?</h2>
+        <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch" }}>
+          Enligt Skatteverket är enklare förtäring på arbetsplatsen, som kaffe, te, frukt och kakor,
+          en skattefri personalvårdsförmån för de anställda när den erbjuds hela personalen och
+          intas på arbetsplatsen. För arbetsgivaren är kostnaden avdragsgill. Fakturan från oss
+          fungerar som underlag i bokföringen. Reglerna kan ändras, så stäm av med er
+          redovisningskonsult om ni är osäkra.
         </p>
 
         <h2 style={{ fontSize: 24, margin: "36px 0 10px" }}>Sorterna och vad de kostar</h2>
