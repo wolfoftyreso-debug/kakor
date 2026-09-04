@@ -129,7 +129,8 @@ export default async function KakorPage() {
           Osäkra på hur mycket ni behöver?{" "}
           <Link href="/fika-till-jobbet" style={{ fontWeight: 600 }}>
             Guide: fika till jobbet — mängder per person, fredagsfika och möten
-          </Link>
+          </Link>{" "}
+          · <Link href="/julfika" style={{ fontWeight: 600 }}>Julfika på jobbet</Link>
         </p>
 
         {/* FAQ före sidans avslutande CTA-band — sidan ska sluta i handling. */}

@@ -82,6 +82,7 @@ export async function SiteFooter() {
             title="INFORMATION"
             links={[
               { href: "/fika-till-jobbet", label: "Guide: fika till jobbet" },
+              { href: "/julfika", label: "Julfika på jobbet" },
               { href: "/ingredienser", label: "Ingredienser & allergener" },
               { href: "/villkor", label: "Leverans- & köpvillkor" },
               { href: "/integritet", label: "Integritetspolicy" },

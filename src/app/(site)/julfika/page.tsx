@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "/julfika" },
-  ...sharePreview({ title: TITLE, description: DESCRIPTION, path: "/julfika" }),
+  ...sharePreview({ title: TITLE, description: DESCRIPTION, path: "/julfika", image: { url: "/images/hero.jpg", alt: "Fat med chokladsnittar, mandelkubb och kolasnittar" } }),
 };
 
 const CRUMBS = [

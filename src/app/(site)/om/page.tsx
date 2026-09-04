@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     description:
       "Sockerbagaren bakar klassiska svenska småkakor på riktiga råvaror och levererar till arbetsplatser i södra Stockholm. Betalning mot faktura.",
     path: "/om",
+    image: { url: "/images/bakning.jpg", alt: "Chokladsnittar läggs upp på plåt" },
   }),
 };
 
