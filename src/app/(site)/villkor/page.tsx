@@ -29,17 +29,17 @@ export default function VillkorPage() {
       description={String(metadata.description)}
       dateModified={CONTENT_UPDATED}
     />
-    <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
-      <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 20 }}>
+    <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
+      <h1 className="h-display page-title">
         Leverans- &amp; köpvillkor
       </h1>
-      <p style={{ fontSize: 13, color: "var(--text-2)", margin: "0 0 20px" }}>
+      <p className="meta">
         Uppdaterad {CONTENT_UPDATED}
       </p>
       <div style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch", display: "flex", flexDirection: "column", gap: 18 }}>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Avtal och behörighet</h2>
-          <p style={{ margin: 0 }}>
+          <h2>Avtal och behörighet</h2>
+          <p>
             Beställningar görs via vår webbplats och riktar sig endast till företag och
             organisationer. Avtal ingås när ni skickar beställningen och vi bekräftar den med en
             orderbekräftelse med ordernummer till angiven e-postadress. Den som beställer ansvarar
@@ -49,16 +49,16 @@ export default function VillkorPage() {
           </p>
         </section>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Priser</h2>
-          <p style={{ margin: 0 }}>
+          <h2>Priser</h2>
+          <p>
             Priserna på webbplatsen gäller vid beställningstillfället och anges i svenska kronor
             exklusive moms. Moms enligt gällande momssats tillkommer och specificeras i kassan och
             på fakturan tillsammans med nettobelopp och totalsumma.
           </p>
         </section>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Leverans och risk</h2>
-          <p style={{ margin: 0 }}>
+          <h2>Leverans och risk</h2>
+          <p>
             Vi levererar på fasta leveransdagar per område, till bemannade företagsadresser i
             Tyresö, Nacka, Haninge och Huddinge. Leveransen sker under dagen — vi anger inte
             exakt klockslag, så någon behöver finnas på plats för att ta emot leveransen. Vald
@@ -67,8 +67,8 @@ export default function VillkorPage() {
           </p>
         </section>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Betalning &amp; faktura</h2>
-          <p style={{ margin: 0 }}>
+          <h2>Betalning &amp; faktura</h2>
+          <p>
             Betalning sker mot faktura. Fakturan skapas när ni skickar beställningen, mejlas till
             angiven faktura-e-post och kan även laddas ner som PDF. Betalningsvillkor:{" "}
             {invoiceConfig.paymentTermsDays} dagar netto räknat från leveransdagen — ni betalar aldrig före
@@ -79,8 +79,8 @@ export default function VillkorPage() {
           </p>
         </section>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Reklamation</h2>
-          <p style={{ margin: 0 }}>
+          <h2>Reklamation</h2>
+          <p>
             Kakorna är färskvara. Kontrollera leveransen vid mottagandet och reklamera synliga fel
             (skadad förpackning, fel sort eller mängd) samma dag och övriga fel utan dröjsmål,
             genom att svara på orderbekräftelsen med ordernumret. Vid befogad reklamation ersätter
@@ -89,8 +89,8 @@ export default function VillkorPage() {
           </p>
         </section>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Fikaprenumeration</h2>
-          <p style={{ margin: 0 }}>
+          <h2>Fikaprenumeration</h2>
+          <p>
             Fikaprenumerationen löper tills vidare utan bindningstid. Inför varje leverans skapas
             en vanlig order med faktura enligt valt intervall, några dagar före leveransdagen. Ni
             pausar, ändrar eller avslutar när ni vill genom att svara på bekräftelsemejlet; en
@@ -99,16 +99,16 @@ export default function VillkorPage() {
           </p>
         </section>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Avbokning &amp; ändringar</h2>
-          <p style={{ margin: 0 }}>
+          <h2>Avbokning &amp; ändringar</h2>
+          <p>
             Ändringar och avbokningar hanteras så långt det är möjligt — ju tidigare besked,
             desto bättre: svara på orderbekräftelsen med ordernumret. Eftersom leveranserna packas och planeras per leveransdag kan
             ändringar nära inpå leveransdagen vara svåra att tillgodose.
           </p>
         </section>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Force majeure</h2>
-          <p style={{ margin: 0 }}>
+          <h2>Force majeure</h2>
+          <p>
             Vi ansvarar inte för försening eller utebliven leverans som beror på omständigheter
             utanför vår kontroll, såsom extremt väder, trafikstopp, strejk, myndighetsbeslut eller
             leverantörsbrist. Vi meddelar er så snart vi kan och erbjuder ny leveransdag eller
@@ -116,16 +116,16 @@ export default function VillkorPage() {
           </p>
         </section>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Ändringar och tvist</h2>
-          <p style={{ margin: 0 }}>
+          <h2>Ändringar och tvist</h2>
+          <p>
             Vi kan ändra dessa villkor; den version som gäller för en beställning är den som var
             publicerad när beställningen lades. Svensk rätt tillämpas och tvist prövas av allmän
             domstol.
           </p>
         </section>
         <section>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Säljare</h2>
-          <p style={{ margin: 0 }}>
+          <h2>Säljare</h2>
+          <p>
             {invoiceConfig.companyName}, org.nr {invoiceConfig.orgNumber},{" "}
             {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}.
             {isVerifiedValue(invoiceConfig.vatNumber) ? ` Momsreg.nr ${invoiceConfig.vatNumber}.` : ""}

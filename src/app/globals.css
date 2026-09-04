@@ -1500,3 +1500,350 @@ header.site-header {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* =====================================================================
+   Design 2.0 — redaktionell nivå: typografisk skala, lexikonets linjaler,
+   gemensamt sidhuvud och prosa för innehållssidor, faktakolumn, 1957-band,
+   infasning. Skuggor tonas ner till förmån för linjer (designpaketet:
+   "skuggor: inga eller 0 2px 8px"). Radier 6–10 px.
+   ===================================================================== */
+:root {
+  --radius-xl: 10px;
+  --shadow-lg: 0 14px 36px rgba(59, 40, 27, 0.14);
+  --measure: 65ch;
+}
+body {
+  hanging-punctuation: first;
+}
+p {
+  text-wrap: pretty;
+}
+.h-display {
+  font-size: clamp(36px, 5.4vw, 64px);
+  letter-spacing: -1.1px;
+}
+.hero-copy .h-display {
+  font-size: clamp(40px, 5.8vw, 68px);
+}
+.h-section {
+  letter-spacing: -0.5px;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Lexikonets linjal: liten versalrubrik med en linje som löper ut. */
+.rule-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 14px;
+}
+.rule-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.on-dark .rule-label {
+  color: var(--butter);
+}
+.on-dark .rule-label::after {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ---------- Sidhuvud för innehållssidor ---------- */
+.page-header {
+  padding: 8px 0 28px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.page-header--facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px 48px;
+  align-items: start;
+}
+@media (min-width: 861px) {
+  .page-header--facts {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+}
+.page-header .eyebrow {
+  margin-bottom: 12px;
+}
+.page-title {
+  font-size: clamp(34px, 4.6vw, 50px);
+  margin-bottom: 14px;
+}
+.page-header .lede {
+  margin: 0;
+}
+
+/* Faktakolumn: bara verifierbar data (leveransdagar ur admin, pris ur databas). */
+.facts {
+  margin: 0;
+  border-top: 2px solid var(--text);
+  font-size: 14px;
+}
+.facts-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.facts dt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.facts dd {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.3;
+  color: var(--text);
+}
+.facts dd a {
+  color: var(--text);
+}
+
+/* ---------- Prosa ---------- */
+.prose {
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--brown-2);
+}
+.prose > h2,
+.prose section > h2 {
+  font-size: clamp(22px, 2.6vw, 28px);
+  line-height: 1.2;
+  color: var(--text);
+  margin: 44px 0 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  text-wrap: balance;
+}
+.prose > h2:first-child,
+.prose section:first-child > h2 {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 8px;
+}
+.prose h3 {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 22px 0 6px;
+}
+.prose p,
+.prose li {
+  max-width: var(--measure);
+}
+.prose p {
+  margin: 0 0 14px;
+}
+.prose ul,
+.prose ol {
+  margin: 0 0 16px;
+  padding-left: 22px;
+}
+.prose li {
+  margin-bottom: 6px;
+}
+.prose strong {
+  color: var(--text);
+}
+.prose .meta {
+  font-size: 13px;
+  color: var(--text-2);
+  margin: -4px 0 20px;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14.5px;
+  margin: 14px 0 8px;
+  max-width: var(--measure);
+}
+.prose th,
+.prose td {
+  text-align: left;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.prose th {
+  font-size: 11.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-2);
+  font-weight: 700;
+}
+.prose td.num,
+.prose th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.prose tbody tr:last-child td {
+  border-bottom: 2px solid var(--text);
+}
+.prose .pull {
+  font-family: var(--font-serif);
+  font-size: clamp(20px, 2.4vw, 26px);
+  line-height: 1.35;
+  color: var(--text);
+  border-left: 3px solid var(--butter);
+  padding: 4px 0 4px 20px;
+  margin: 26px 0;
+  max-width: 34ch;
+  text-wrap: balance;
+}
+.prose .actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 28px 0 8px;
+}
+.prose figure {
+  margin: 28px 0;
+}
+.prose figure .media {
+  position: relative;
+  min-height: 280px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.prose figcaption {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-top: 8px;
+}
+
+/* ---------- FAQ-lista (gemensam) ---------- */
+.faq-list {
+  margin-top: 44px;
+}
+.faq-heading {
+  margin-bottom: 6px;
+}
+.faq-item summary span {
+  flex: 1;
+}
+
+/* ---------- 1957-bandet (startsidan) ---------- */
+.band-1957 {
+  background: var(--text);
+  color: var(--footer-text);
+}
+.band-1957 .inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px 56px;
+  align-items: center;
+}
+@media (min-width: 861px) {
+  .band-1957 .inner {
+    grid-template-columns: auto 1fr;
+  }
+}
+.band-1957 .year {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(88px, 15vw, 180px);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: var(--butter);
+  font-variant-numeric: lining-nums;
+}
+.band-1957 h2 {
+  color: #fff;
+  margin-bottom: 10px;
+}
+.band-1957 p {
+  color: var(--footer-text);
+  font-size: 16px;
+  line-height: 1.65;
+  max-width: 52ch;
+  margin: 0 0 18px;
+}
+.band-1957 .section-link {
+  color: var(--butter);
+  border-color: var(--butter);
+}
+.band-1957 .section-link:hover {
+  color: #fff;
+  border-color: #fff;
+}
+
+/* ---------- Produktsidans faktalista ---------- */
+.spec {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  border-top: 1px solid var(--border);
+}
+.spec-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.spec dt {
+  color: var(--text-2);
+  font-size: 12.5px;
+  letter-spacing: 0.4px;
+}
+.spec dd {
+  margin: 0;
+  color: var(--text);
+}
+.product-hero-media {
+  aspect-ratio: 4 / 3;
+  min-height: 0;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+/* ---------- Infasning ---------- */
+html.js .reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+}
+html.js .reveal.in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Mjukare hero-media: linje i stället för tung skugga. */
+@media (min-width: 861px) {
+  .hero-media {
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(59, 40, 27, 0.08);
+  }
+}
+/* Med faktakolumn: något mindre rubrik så att den inte bryts på fyra rader. */
+.page-header--facts .page-title {
+  font-size: clamp(30px, 3.8vw, 42px);
+}

@@ -5,6 +5,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { faqNode, graph, webPageNode } from "@/lib/seo/schema";
 import { Steps } from "@/components/Steps";
 import { TrustStrip } from "@/components/TrustStrip";
+import { FaqList } from "@/components/FaqList";
 
 // Fikaprenumerationen är INTE en egen butik eller checkout — det är ett
 // köpläge i sajtens enda beställningsflöde (/bestall). Den här sidan
@@ -103,15 +104,7 @@ export default async function PrenumerationPage() {
           <strong>Betalning mot faktura, precis som vanligt.</strong> Ingen kortdebitering och inget
           konto — varje leverans faktureras för sig, till den fakturaadress ni anger.
         </div>
-        <h2 className="h-sub" style={{ margin: "48px 0 6px" }}>Vanliga frågor om fikaprenumerationen</h2>
-        <div>
-          {PREN_FAQS.map((f) => (
-            <div key={f.q} style={{ borderBottom: "1px solid var(--border)", padding: "14px 4px" }}>
-              <h3 style={{ fontSize: "15.5px", fontWeight: 700, fontFamily: "var(--font-sans)" }}>{f.q}</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--brown-2)", margin: "6px 0 0", maxWidth: "65ch" }}>{f.a}</p>
-            </div>
-          ))}
-        </div>
+        <FaqList heading="Vanliga frågor om fikaprenumerationen" items={PREN_FAQS} />
         <p style={{ marginTop: 20, fontSize: 14.5 }}>
           Hur mycket ska ni beställa? <Link href="/fika-till-jobbet" style={{ fontWeight: 600 }}>Guide: fika till jobbet</Link>
         </p>

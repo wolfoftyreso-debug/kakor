@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ImageSlot } from "@/components/ImageSlot";
 import { invoiceConfig, isVerifiedValue } from "@/lib/config";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
+import { PageHeader } from "@/components/PageHeader";
 
 export const metadata: Metadata = {
   title: { absolute: "Om Sockerbagaren — småkakor på recept från 1957" },
@@ -27,41 +28,46 @@ export default function OmPage() {
       title="Om Sockerbagaren"
       description={String(metadata.description)}
     />
-    <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
-      <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)", marginBottom: 14 }}>Om Sockerbagaren</h1>
-      <p style={{ fontSize: 17, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
-        Sockerbagaren bakar klassiska svenska småkakor — mandelkubb, kolasnittar och
-        chokladsnittar — på riktigt smör, vanligt strösocker och kvalitativa traditionella
-        råvaror, och levererar dem till arbetsplatser i södra Stockholm.
-      </p>
-      <div style={{ minHeight: 280, borderRadius: 8, overflow: "hidden", margin: "28px 0" }}>
-        <ImageSlot
-          label="Chokladsnittar läggs upp på plåt"
-          src="/images/bakning.jpg"
-        />
-      </div>
-      <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
+    <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
+      <PageHeader
+        eyebrow="Om oss"
+        title="Om Sockerbagaren"
+        lede="Sockerbagaren bakar klassiska svenska småkakor — mandelkubb, kolasnittar och chokladsnittar — på riktigt smör, vanligt strösocker och kvalitativa traditionella råvaror, och levererar dem till arbetsplatser i södra Stockholm."
+        facts={[
+          { label: "Recept", value: "Svenskt konditorlexikon 1957" },
+          { label: "Kunder", value: "Företag i södra Stockholm" },
+          { label: "Betalning", value: "Alltid mot faktura" },
+          { label: "Kontor", value: `${invoiceConfig.address}, ${invoiceConfig.city}` },
+        ]}
+      />
+      <figure>
+        <div className="media">
+          <ImageSlot label="Chokladsnittar läggs upp på plåt" src="/images/bakning.jpg" />
+        </div>
+        <figcaption>Chokladsnittar på plåt — sortimentet bakas i omgångar och levereras från lagret i Tyresö.</figcaption>
+      </figure>
+      <p>
         Vi säljer till företag: kontor, verkstäder, byggföretag, kliniker och butiker. Betalningen
         sker alltid mot faktura, och leveransen kommer på fasta leveransdagar per område — Tyresö,
         Nacka, Haninge och Huddinge.
       </p>
-      <h2 style={{ fontSize: 22, margin: "32px 0 12px" }}>Recept från 1957</h2>
-      <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
+      <h2>Recept från 1957</h2>
+      <p>
         Våra recept kommer från Svenskt konditorlexikon från 1957 — den tidens handbok för
         yrkeskonditorer. Det betyder gammaldags småkakor så som de bakades innan margarin och
         tillsatser blev standard: smör, socker, vetemjöl, ägg, mandel, choklad och sirap. Kakorna
         bakas i omgångar och levereras från lagret på Radiovägen i Tyresö.
       </p>
-      <h2 style={{ fontSize: 22, margin: "32px 0 12px" }}>Så beställer ni</h2>
-      <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
+      <h2>Så beställer ni</h2>
+      <p>
         Välj sorter och mängd per kilo (eller prova-på-paketet på 1,5 kg), välj leveransdag för ert
         område och ange faktureringsuppgifter — fakturan skapas direkt och förfaller först efter
         leveransen. Återkommande fika? <Link href="/prenumeration">Fikaprenumerationen</Link> gör
         om samma beställning automatiskt. Läs mer i vår{" "}
         <Link href="/fika-till-jobbet">guide till fika på jobbet</Link>.
       </p>
-      <h2 style={{ fontSize: 22, margin: "32px 0 12px" }}>Företagsuppgifter</h2>
-      <p style={{ fontSize: 15, lineHeight: 1.8, color: "var(--brown-2)" }}>
+      <h2>Företagsuppgifter</h2>
+      <p style={{ lineHeight: 1.8 }}>
         {invoiceConfig.companyName}
         <br />
         Org.nr {invoiceConfig.orgNumber}
@@ -84,7 +90,7 @@ export default function OmPage() {
           </>
         )}
       </p>
-      <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
+      <div className="actions">
         <Link href="/bestall" className="btn btn-primary">
           Beställ kakor
         </Link>

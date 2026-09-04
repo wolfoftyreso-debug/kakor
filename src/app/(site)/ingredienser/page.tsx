@@ -35,11 +35,11 @@ export default async function IngredienserPage() {
       title="Ingredienser & allergener"
       description={String(metadata.description)}
     />
-    <div className="container-narrow" style={{ padding: "24px 24px 80px" }}>
-      <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)", marginBottom: 14 }}>
+    <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
+      <h1 className="h-display page-title">
         Ingredienser &amp; allergener
       </h1>
-      <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--brown-2)", maxWidth: "60ch" }}>
+      <p className="lede">
         Smör ska smaka smör. Våra kakor bakas på riktigt smör, vanligt strösocker och kvalitativa
         traditionella råvaror. Allergener är markerade i fetstil i varje förteckning.
       </p>

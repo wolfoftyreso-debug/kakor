@@ -16,6 +16,7 @@ import { PRODUCT_KNOWLEDGE } from "@/lib/product-content";
 import { allergenChips } from "@/lib/allergens";
 import { formatOre } from "@/lib/money";
 import { priceSuffix } from "@/lib/units";
+import { FaqList } from "@/components/FaqList";
 
 // Object.hasOwn: en admin-skapad slug som "constructor" får aldrig nå prototypkedjan.
 const knowledgeFor = (slug: string) =>
@@ -120,7 +121,7 @@ export default async function ProductPage({ params }: Props) {
       <Breadcrumbs crumbs={crumbs} />
       <div className="container-medium has-sticky-buy" style={{ paddingTop: 24, paddingBottom: 64 }}>
         <div className="two-col" style={{ display: "grid", gap: 40, alignItems: "start" }}>
-          <div className="card-media" style={{ minHeight: 340, borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-md)" }}>
+          <div className="card-media product-hero-media">
             <ImageSlot label={`${product.name} — närbild`} src={product.imageRef || undefined} priority />
             {product.badge && <span className="product-badge">{product.badge}</span>}
           </div>
@@ -137,6 +138,31 @@ export default async function ProductPage({ params }: Props) {
               </p>
             </div>
             <ProductBuyBox product={cardData} deliveryDays={deliveryDays} />
+            <dl className="spec" aria-label="Snabbfakta">
+              <div className="spec-row">
+                <dt>Pris</dt>
+                <dd>
+                  {formatOre(product.pricePerKgOre)}
+                  {priceSuffix(product.unit)} exkl. moms
+                </dd>
+              </div>
+              <div className="spec-row">
+                <dt>Säljs</dt>
+                <dd>{product.unit === "paket" ? "Per paket, 1,5 kg (0,5 kg av varje sort)" : "Per kilo, hela kilon, blanda fritt med andra sorter"}</dd>
+              </div>
+              <div className="spec-row">
+                <dt>Allergener</dt>
+                <dd>{chips.join(", ")}</dd>
+              </div>
+              <div className="spec-row">
+                <dt>Förvaring</dt>
+                <dd>Tät burk i rumstemperatur, tål frysning</dd>
+              </div>
+              <div className="spec-row">
+                <dt>Leverans</dt>
+                <dd>{deliveryDays ? `${deliveryDays} i Tyresö, Nacka, Haninge och Huddinge` : "Fasta dagar per område"}</dd>
+              </div>
+            </dl>
           </div>
         </div>
 
@@ -194,33 +220,21 @@ export default async function ProductPage({ params }: Props) {
         </div>
 
         {knowledge && (
-          <section style={{ marginTop: 48, maxWidth: "70ch" }}>
-            <h2 className="h-sub" style={{ marginBottom: 14 }}>
+          <section className="prose" style={{ marginTop: 48, maxWidth: "70ch" }}>
+            <div className="rule-label">Kunskap</div>
+            <h2 className="h-sub" style={{ marginBottom: 14, border: 0, padding: 0, marginTop: 0 }}>
               {knowledge.heading}
             </h2>
             {knowledge.paragraphs.map((p) => (
-              <p
-                key={p.slice(0, 24)}
-                style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", margin: "0 0 14px" }}
-              >
-                {p}
-              </p>
+              <p key={p.slice(0, 24)}>{p}</p>
             ))}
           </section>
         )}
 
         {knowledge?.faqs && knowledge.faqs.length > 0 && (
-          <section style={{ marginTop: 40, maxWidth: "70ch" }}>
-            <h2 className="h-sub" style={{ marginBottom: 6 }}>
-              Vanliga frågor om {product.name.toLowerCase()}
-            </h2>
-            {knowledge.faqs.map((f) => (
-              <div key={f.q} style={{ borderBottom: "1px solid var(--border)", padding: "14px 4px" }}>
-                <h3 style={{ fontSize: "15.5px", fontWeight: 700, fontFamily: "var(--font-sans)" }}>{f.q}</h3>
-                <p style={{ fontSize: 14, lineHeight: 1.65, color: "var(--brown-2)", margin: "6px 0 0" }}>{f.a}</p>
-              </div>
-            ))}
-          </section>
+          <div style={{ maxWidth: "70ch" }}>
+            <FaqList heading={`Vanliga frågor om ${product.name.toLowerCase()}`} items={knowledge.faqs} />
+          </div>
         )}
 
         {related.length > 0 && (
