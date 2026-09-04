@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "/fika-till-jobbet" },
-  ...sharePreview({ title: TITLE, description: DESCRIPTION, path: "/fika-till-jobbet" }),
+  ...sharePreview({ title: TITLE, description: DESCRIPTION, path: "/fika-till-jobbet", image: { url: "/images/fika.jpg", alt: "Fika med småkakor och kaffe på jobbet" } }),
 };
 
 const CRUMBS = [
@@ -108,7 +108,7 @@ export default async function FikaTillJobbetPage() {
           ]}
         />
 
-        <h2>Hur mycket fika per person?</h2>
+        <h2>Hur mycket fika per person — och till många?</h2>
         <p>
           Tumregeln är <strong>3–5 småkakor per person</strong>. Tre räcker när fikat har annat
           tilltugg också, fem när kakorna är det enda som bjuds eller när fikat drar ut på tiden.

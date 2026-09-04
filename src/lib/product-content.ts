@@ -26,9 +26,22 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
       "Kolasnittar kallas ofta även kolakakor eller kolakex — en av de mest älskade klassikerna i svenska kakburkar. Den karaktäristiska sega kolasmaken kommer från sirap och smör som karamelliseras i ugnen, och snittarna skärs traditionellt diagonalt medan kakan fortfarande är varm.",
       "Sega kolasnittar får sin konsistens av just sirapen: ju mer sirap i förhållande till mjöl, desto segare kärna, medan kanterna blir spröda. En liten mängd salt lyfter kolasmaken — därför bakas våra kolasnittar med keltiskt salt i degen.",
       "Kolasnittar hör till familjen snittkakor: degen rullas till längder, plattas till, gräddas och skärs i sneda bitar. Samma teknik används för chokladsnittar, vilket gör de två sorterna till ett naturligt par på fikabordet.",
+      "Kolasnittar med flingsalt eller havssalt har blivit en modern favorit: saltet lyfter kolasmaken och gör kakan mindre söt. Våra kolasnittar saltas i degen med keltiskt salt i stället för att strös ovanpå — samma balans, men jämnt fördelad i varje bit. Vill ni ha choklad till kolan är chokladsnittarna den naturliga följeslagaren.",
       "Förvaringstips: kolasnittar håller sig bäst i en tät burk i rumstemperatur, gärna med bakplåtspapper mellan lagren så att de inte fastnar i varandra. De går utmärkt att frysa — låt dem tina i rumstemperatur en stund före serveringen.",
     ],
     faqs: [
+      {
+        q: "Varför blir kolasnittar sega?",
+        a: "Segheten kommer från sirapen: sirap och smör som karamelliseras i ugnen ger en seg kärna, medan kanterna blir spröda. Ju mer sirap i förhållande till mjöl och ju kortare gräddning, desto segare kaka. Kolasnittar som gräddats längre blir i stället knäckiga.",
+      },
+      {
+        q: "Är kolasnittar och sirapssnittar samma sak?",
+        a: "Ja, sirapssnittar är ett äldre namn på samma kaka: snittade längder på en deg med sirap och smör. Namnet kolasnittar syftar på kolasmaken som uppstår när sirapen karamelliseras.",
+      },
+      {
+        q: "Har kolasnittarna flingsalt?",
+        a: "Inte ovanpå. Vi saltar degen med keltiskt salt, vilket ger samma lyft åt kolasmaken som flingsalt men jämnt fördelat i hela kakan.",
+      },
       {
         q: "Är kolasnittar och kolakakor samma sak?",
         a: "I praktiken ja. Kolasnittar är det traditionella namnet på den snittade sirapskakan, medan kolakakor används både om snittarna och om runda varianter av samma deg. Söker ni kolakakor till fikat är det de här ni vill ha.",
@@ -74,6 +87,7 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
     paragraphs: [
       "Chokladsnittar är kolasnittarnas chokladiga syskon — en skuren småkaka på mördeg med kakao, ofta toppad med pärlsocker. Snittkakor är en egen familj i det svenska kakbaket: degen kavlas i längder, grädds och skärs i diagonala bitar.",
       "Våra chokladsnittar bakas med både mörk choklad och kakao, vilket ger en djupare chokladkaraktär än snittar med enbart kakao. Ljus sirap ger den runda sötman och en seg kärna — samma princip som i kolasnittarna, men med chokladen i fokus.",
+      "Chokladsnittar med sirap är den klassiska varianten: den ljusa sirapen ger seg kärna och rund sötma, precis som i kolasnittarna. Det är så våra bakas — snittkakor på mördeg med choklad, kakao och ljus sirap.",
       "Chokladsnittar är den av våra sorter som oftast väljs som chokladkaka till kaffet: chokladig utan att vara tung, och lätt att dela ut på ett fat till många.",
       "Förvaringstips: förvara i tät burk i rumstemperatur, separera lagren med bakplåtspapper. Chokladsnittar går bra att frysa och tinar snabbt i rumstemperatur.",
     ],

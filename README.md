@@ -201,6 +201,7 @@ Se [`.env.example`](.env.example). Sammanfattning:
 | `ABUSE_LIMIT_PER_EMAIL` / `ABUSE_LIMIT_PER_ORG` | missbrukstak per dygn (default 10 / 30) |
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | felövervakning (tom sträng stänger av) |
 | `NEXT_PUBLIC_GA4_ID` | GA4 — samtyckesbanner visas, scriptet laddas först efter "Tillåt" |
+| `NEXT_PUBLIC_SAME_AS` | profil-URL:er (GBP, hitta.se, LinkedIn) som `sameAs` i Organization-schemat |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile i kassan (båda krävs, annars av) |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Search Console-verifiering |
 

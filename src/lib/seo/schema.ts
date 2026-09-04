@@ -16,7 +16,7 @@
 //    aldrig som frikopplade JSON-objekt.
 // =====================================================================
 
-import { siteConfig, invoiceConfig } from "@/lib/config";
+import { siteConfig, invoiceConfig, isVerifiedValue } from "@/lib/config";
 import type { ProductCardData } from "@/components/ProductCard";
 
 type JsonLdNode = Record<string, unknown>;
@@ -38,6 +38,11 @@ export const ids = {
  * inget bageri/besökslokal att deklarera (verksamhetens uppgift).
  * Adressen är den registrerade fakturaadressen från konfigurationen.
  */
+const SAME_AS = (process.env.NEXT_PUBLIC_SAME_AS ?? "")
+  .split(",")
+  .map((v) => v.trim())
+  .filter((v) => /^https?:\/\//.test(v));
+
 export function organizationNode(): JsonLdNode {
   return {
     "@type": "Organization",
@@ -55,6 +60,14 @@ export function organizationNode(): JsonLdNode {
       addressCountry: "SE",
     },
     areaServed: ["Tyresö", "Nacka", "Haninge", "Huddinge"].map((name) => ({ "@type": "City", name })),
+    // Kopplingar till profiler (Google Business Profile, hitta.se, LinkedIn …)
+    // sätts i NEXT_PUBLIC_SAME_AS som kommaseparerad lista när de finns.
+    ...(SAME_AS.length > 0 ? { sameAs: SAME_AS } : {}),
+    ...(isVerifiedValue(invoiceConfig.email)
+      ? { contactPoint: { "@type": "ContactPoint", contactType: "customer service", email: invoiceConfig.email, availableLanguage: "sv" } }
+      : {}),
+    ...(isVerifiedValue(invoiceConfig.vatNumber) ? { vatID: invoiceConfig.vatNumber } : {}),
+    taxID: invoiceConfig.orgNumber,
   };
 }
 
@@ -123,6 +136,20 @@ export function webPageNode(opts: WebPageOptions): JsonLdNode {
  * refereras. Priset är sajtens faktiska försäljningspris (per kilo).
  * Inga ratings/recensioner — sådana finns inte verifierade.
  */
+// Google vill ha flera bildformat (1:1, 4:3, 16:9) för produktresultat. Vi
+// levererar de varianter som finns i /public/images: <namn>-square.jpg,
+// <namn>-og.jpg (1200×630) och originalbilden. Saknas en variant hoppas den
+// över — inga länkar till filer som inte finns.
+const PRODUCT_IMAGE_VARIANTS: Record<string, string[]> = {
+  "/images/kolasnittar.jpg": ["/images/kolasnittar-square.jpg", "/images/kolasnittar.jpg", "/images/kolasnittar-og.jpg"],
+  "/images/mandelkubb.jpg": ["/images/mandelkubb-square.jpg", "/images/mandelkubb.jpg", "/images/mandelkubb-og.jpg"],
+  "/images/chokladsnittar.jpg": ["/images/chokladsnittar-square.jpg", "/images/chokladsnittar.jpg", "/images/chokladsnittar-og.jpg"],
+};
+function productImages(imageRef: string): string[] {
+  const variants = PRODUCT_IMAGE_VARIANTS[imageRef] ?? [imageRef];
+  return variants.map((v) => `${SITE()}${v}`);
+}
+
 export function productNode(product: ProductCardData): JsonLdNode {
   return {
     "@type": "Product",
@@ -130,7 +157,8 @@ export function productNode(product: ProductCardData): JsonLdNode {
     name: product.name,
     description: product.description,
     url: `${SITE()}/kakor/${product.slug}`,
-    ...(product.imageRef ? { image: `${SITE()}${product.imageRef}` } : {}),
+    ...(product.imageRef ? { image: productImages(product.imageRef) } : {}),
+    category: "Småkakor",
     brand: { "@id": ids.organization() },
     offers: {
       "@type": "Offer",

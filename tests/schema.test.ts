@@ -88,7 +88,11 @@ describe("schema-motorn", () => {
     // Kanonisk entitets-URL = produktens egen sida.
     expect(node.url).toMatch(/\/kakor\/kolasnittar$/);
     // Produktfoto med absolut URL; utelämnas helt när referens saknas.
-    expect(node.image).toMatch(/\/images\/kolasnittar\.jpg$/);
+    // Flera bildformat (1:1, 4:3, 16:9) för Googles produktresultat — originalet ingår alltid.
+    expect(Array.isArray(node.image)).toBe(true);
+    expect((node.image as string[]).some((u) => /\/images\/kolasnittar\.jpg$/.test(u))).toBe(true);
+    expect((node.image as string[]).some((u) => /kolasnittar-square\.jpg$/.test(u))).toBe(true);
+    expect(node.category).toBe("Småkakor");
     expect(productNode({ ...product, imageRef: "" })).not.toHaveProperty("image");
     const offer = node.offers as Record<string, unknown>;
     expect(offer.price).toBe("295.00");

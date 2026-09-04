@@ -22,6 +22,7 @@ export const metadata: Metadata = {
     description:
       "Fikaprenumeration för företag: kolasnittar, mandelkubb och chokladsnittar varje, varannan eller var fjärde vecka. Faktura per leverans, ingen bindningstid.",
     path: "/prenumeration",
+    image: { url: "/images/prenumeration.jpg", alt: "Fat med chokladsnittar till fikaprenumerationen" },
   }),
 };
 

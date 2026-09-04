@@ -22,6 +22,7 @@ export const metadata: Metadata = {
     description:
       "Fikaleverans till arbetsplatser i södra Stockholm: fasta leveransdagar i Tyresö, Nacka, Haninge och Huddinge, under dagen till bemannade företagsadresser.",
     path: "/leverans",
+    image: { url: "/images/leverans.jpg", alt: "Sockerbagarens bud bär en kartong med kakor" },
   }),
 };
 
