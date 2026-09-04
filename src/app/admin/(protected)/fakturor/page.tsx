@@ -8,6 +8,7 @@ import { formatDate, todayInStockholm } from "@/lib/dates";
 import { isInvoiceOverdue } from "@/lib/status";
 import { PaymentStatusPill } from "@/components/admin/StatusPills";
 import { MarkInvoicePaidButton } from "./MarkInvoicePaidButton";
+import { SendReminderButton } from "./SendReminderButton";
 import { ExportForm } from "./ExportForm";
 
 export const dynamic = "force-dynamic";
@@ -173,7 +174,10 @@ export default async function InvoicesPage({
                     </td>
                     <td>
                       {inv.status === "UNPAID" && inv.order.status !== "CANCELLED" && (
-                        <MarkInvoicePaidButton orderId={inv.orderId} />
+                        <span style={{ display: "inline-flex", gap: 6, flexWrap: "wrap" }}>
+                          <MarkInvoicePaidButton orderId={inv.orderId} />
+                          {overdue && <SendReminderButton orderId={inv.orderId} />}
+                        </span>
                       )}
                     </td>
                   </tr>

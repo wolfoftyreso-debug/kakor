@@ -16,6 +16,8 @@ export interface ProductFormValues {
   allergens: string;
   imageRef: string;
   badge: string;
+  /** Tom sträng = okänt (visas inte på produktsidan). */
+  piecesPerKgApprox: string;
   sortOrder: number;
   active: boolean;
 }
@@ -92,6 +94,10 @@ export function ProductForm({
       <label className="field">
         Etikett på produktkortet (t.ex. Bästsäljare — tom för ingen)
         <input name="badge" defaultValue={initial.badge} maxLength={30} placeholder="Bästsäljare" />
+      </label>
+      <label className="field">
+        Ca antal kakor per kilo (frivilligt — visas på produktsidan)
+        <input name="piecesPerKgApprox" type="number" min="1" max="500" defaultValue={initial.piecesPerKgApprox} placeholder="Räkna en riktig sats innan du fyller i" />
       </label>
       <label className="field">
         Sorteringsordning

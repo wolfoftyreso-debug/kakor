@@ -7,12 +7,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
-import { safeWeekdays } from "@/lib/products";
+import { safeBlockedDates, safeWeekdays } from "@/lib/products";
 import { prisma } from "@/lib/db";
 import { getAdmin, loginAdmin, logoutAdmin } from "@/lib/auth/session";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { maskEmail } from "@/lib/log";
-import { sendOrderEmails } from "@/lib/orders/order-emails";
+import { sendDeliveryConfirmationEmail, sendOrderEmails, sendPaymentReminderEmail } from "@/lib/orders/order-emails";
 import { issueCreditNoteInTx, sendCreditNoteEmail, CreditError } from "@/lib/invoice/credit";
 import { isoDateSchema } from "@/lib/validation";
 import { createHash } from "node:crypto";
@@ -22,7 +22,7 @@ import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 import { formatOre } from "@/lib/money";
-import { fromISODate, todayInStockholm, isoWeekday, weekdayName, toISODate } from "@/lib/dates";
+import { fromISODate, todayInStockholm, isoWeekday, weekdayName, toISODate, swedishHolidayName } from "@/lib/dates";
 import { canTransitionOrder } from "@/lib/status";
 
 async function requireAdmin() {
@@ -137,8 +137,32 @@ export async function markOrderDelivered(orderId: string, note: string): Promise
   });
   if (res.count !== 1) return { ok: false, error: "Ordern ändrades samtidigt av någon annan — ladda om sidan" };
   await logEvent(orderId, "DELIVERED", `Markerad som levererad${note ? ` — ${note}` : ""}`, admin.email);
+  // Kunden får veta att kakorna är framme. Mejlfel stoppar aldrig statusändringen.
+  let mailed = false;
+  try {
+    mailed = await sendDeliveryConfirmationEmail(orderId);
+  } catch (e) {
+    console.error("Leveransbekräftelse misslyckades:", e instanceof Error ? e.message.slice(0, 300) : e);
+  }
+  if (mailed) await logEvent(orderId, "EMAIL", "Leveransbekräftelse skickad till kunden", "system");
   revalidatePath("/admin", "layout");
-  return { ok: true, message: "Markerad som levererad" };
+  return { ok: true, message: mailed ? "Markerad som levererad — kunden har fått leveransbekräftelse" : "Markerad som levererad (leveransbekräftelsen kunde inte skickas — se e-postloggen)" };
+}
+
+/** Manuell betalningspåminnelse — fakturan bifogas igen. Loggas i historiken. */
+export async function sendPaymentReminder(orderId: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
+  if (!order || !order.invoice) return { ok: false, error: "Ordern har ingen faktura" };
+  if (order.status === "CANCELLED") return { ok: false, error: "Ordern är avbruten — ingen påminnelse" };
+  if (order.paymentStatus === "PAID") return { ok: false, error: "Fakturan är redan betald" };
+  if (order.invoice.status === "CREDITED") return { ok: false, error: "Fakturan är krediterad i sin helhet" };
+  const sent = await sendPaymentReminderEmail(orderId);
+  if (!sent) return { ok: false, error: "Påminnelsen kunde inte skickas — se e-postloggen" };
+  await logEvent(orderId, "EMAIL", `Betalningspåminnelse skickad till ${order.invoiceEmail}`, admin.email);
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: `Påminnelse skickad till ${order.invoiceEmail}` };
 }
 
 export async function confirmOrder(orderId: string): Promise<ActionResult> {
@@ -380,6 +404,11 @@ export async function setSubscriptionNextDate(id: string, isoDate: string): Prom
   if (weekdays.length > 0 && !weekdays.includes(isoWeekday(date))) {
     return { error: `${sub.deliveryArea.name} levererar bara ${weekdays.map(weekdayName).join(", ")}` };
   }
+  const holiday = swedishHolidayName(date);
+  if (holiday) return { error: `${toISODate(date)} är ${holiday} — ingen leverans den dagen` };
+  if (safeBlockedDates(sub.deliveryArea.blockedDatesJson).includes(toISODate(date))) {
+    return { error: `${toISODate(date)} är spärrat under Inställningar` };
+  }
   await prisma.subscription.update({
     where: { id },
     data: { nextDeliveryDate: date },
@@ -426,6 +455,10 @@ const productSchema = z.object({
     .or(z.literal(""))
     .default(""),
   badge: z.string().trim().max(30).default(""),
+  // Ungefärligt antal kakor per kilo — svar på kundens vanligaste fråga ("räcker 2 kg till 30 personer?").
+  piecesPerKgApprox: z
+    .union([z.literal(""), z.coerce.number().int().min(1, "Minst 1 kaka per kilo").max(500, "Max 500 kakor per kilo")])
+    .default(""),
   sortOrder: z.coerce.number().int().min(0).max(999).default(0),
   active: z.coerce.boolean().default(false),
 }).superRefine((d, ctx) => {
@@ -454,6 +487,7 @@ export async function saveProduct(
     allergens: formData.get("allergens") ?? "",
     imageRef: formData.get("imageRef") ?? "",
     badge: formData.get("badge") ?? "",
+    piecesPerKgApprox: String(formData.get("piecesPerKgApprox") ?? "").trim(),
     sortOrder: formData.get("sortOrder") ?? 0,
     active: formData.get("active") === "on",
   });
@@ -480,6 +514,7 @@ export async function saveProduct(
     allergens: d.allergens,
     imageRef: d.imageRef,
     badge: d.badge,
+    piecesPerKgApprox: d.piecesPerKgApprox === "" ? null : d.piecesPerKgApprox,
     sortOrder: d.sortOrder,
     active: d.active,
   };
@@ -516,6 +551,19 @@ const areaSchema = z.object({
     .string()
     .trim()
     .regex(/^$|^\d{2,5}(\s*,\s*\d{2,5})*$/, "Postnummerprefix: t.ex. 135,136 (tomt = ingen spärr)"),
+  // Ett ISO-datum per rad eller kommaseparerat. Passerade datum rensas vid sparning.
+  blockedDates: z
+    .string()
+    .trim()
+    .transform((raw) =>
+      raw
+        .split(/[\s,;]+/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    )
+    .refine((arr) => arr.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(fromISODate(d).getTime())), {
+      message: "Spärrade datum skrivs som ÅÅÅÅ-MM-DD, ett per rad (t.ex. 2026-12-17)",
+    }),
   active: z.coerce.boolean(),
 });
 
@@ -529,10 +577,13 @@ export async function saveArea(
     weekdays: formData.get("weekdays"),
     leadTimeDays: formData.get("leadTimeDays"),
     postalPrefixes: formData.get("postalPrefixes") ?? "",
+    blockedDates: formData.get("blockedDates") ?? "",
     active: formData.get("active") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Kontrollera fälten" };
   const d = parsed.data;
+  const today = toISODate(todayInStockholm());
+  const blockedDates = [...new Set(d.blockedDates)].filter((iso) => iso >= today).sort();
   await prisma.deliveryArea.update({
     where: { id: areaId },
     data: {
@@ -541,10 +592,13 @@ export async function saveArea(
       postalCodePrefixesJson: JSON.stringify(
         d.postalPrefixes ? d.postalPrefixes.split(",").map((s) => s.trim()) : []
       ),
+      blockedDatesJson: JSON.stringify(blockedDates),
       active: d.active,
     },
   });
   revalidatePath("/admin/installningar");
+  revalidatePath("/bestall");
   const days = [...new Set(d.weekdays.split(",").map((s) => parseInt(s.trim(), 10)))].map(weekdayName).join(", ");
-  return { saved: `Sparat — leveransdagar: ${days}${d.active ? "" : " (området är inaktivt)"}` };
+  const blockedNote = blockedDates.length ? `, ${blockedDates.length} spärrade datum` : "";
+  return { saved: `Sparat — leveransdagar: ${days}${blockedNote}${d.active ? "" : " (området är inaktivt)"}` };
 }

@@ -38,6 +38,8 @@ interface FormState {
   deliveryCity: string;
   reference: string;
   deliveryInstruction: string;
+  /** Tom = fakturaadress samma som leveransadress (servern faller tillbaka). */
+  billingAddress: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -51,6 +53,7 @@ const EMPTY_FORM: FormState = {
   deliveryPostalCode: "",
   deliveryCity: "",
   reference: "",
+  billingAddress: "",
   deliveryInstruction: "",
 };
 
@@ -266,7 +269,11 @@ export function CheckoutFlow({
     () =>
       selectedArea
         ? upcomingDeliveryDates(
-            { weekdays: selectedArea.weekdays, leadTimeDays: selectedArea.leadTimeDays },
+            {
+              weekdays: selectedArea.weekdays,
+              leadTimeDays: selectedArea.leadTimeDays,
+              blockedDates: selectedArea.blockedDates,
+            },
             Math.max(4, selectedArea.upcomingDates.length)
           ).map(toISODate)
         : [],
@@ -410,7 +417,7 @@ export function CheckoutFlow({
           : await fetch("/api/orders", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...common, deliveryDate, billingAddress: "" }),
+              body: JSON.stringify({ ...common, deliveryDate, billingAddress: form.billingAddress.trim() }),
             });
       // Ett HTML-svar (gateway-timeout, för stor body) är inte ett nätverksfel —
       // säg vad som hände i stället för "kontrollera uppkopplingen".
@@ -889,6 +896,26 @@ export function CheckoutFlow({
               <div style={{ gridColumn: "1 / -1" }}>
                 <Field label="Referens / märkning (frivilligt)" value={form.reference} error={errors.reference} onChange={(v) => setField("reference", v)} placeholder="T.ex. kostnadsställe" />
               </div>
+              {mode !== "RECURRING" && (
+                <label className="field" style={{ gridColumn: "1 / -1" }} htmlFor="falt-fakturaadress">
+                  Fakturaadress om annan än leveransadressen (frivilligt)
+                  <textarea
+                    id="falt-fakturaadress"
+                    rows={2}
+                    maxLength={300}
+                    placeholder="T.ex. Box 123, 135 22 Tyresö — lämna tomt så står leveransadressen på fakturan"
+                    value={form.billingAddress}
+                    onChange={(e) => setField("billingAddress", e.target.value)}
+                    aria-invalid={!!errors.billingAddress}
+                    aria-describedby={errors.billingAddress ? "falt-fakturaadress-fel" : undefined}
+                  />
+                  {errors.billingAddress && (
+                    <span id="falt-fakturaadress-fel" className="error-text">
+                      {errors.billingAddress}
+                    </span>
+                  )}
+                </label>
+              )}
               <label className="field" style={{ gridColumn: "1 / -1" }} htmlFor="falt-kommentar">
                 Kommentar till leveransen (frivilligt)
                 <textarea
@@ -1002,6 +1029,7 @@ export function CheckoutFlow({
             </div>
             <div style={{ color: "var(--text-2)" }}>
               {form.contactName} · {form.email} · Faktura till {sameEmail ? form.email : form.invoiceEmail}
+              {mode !== "RECURRING" && form.billingAddress.trim() ? <> · Fakturaadress: {form.billingAddress.trim()}</> : null}
             </div>
           </div>
           <div className="info-box" style={{ marginBottom: 28 }}>

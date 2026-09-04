@@ -72,6 +72,19 @@ export function isValidOrgNumber(value: string): boolean {
   return sum % 10 === 0;
 }
 
+/**
+ * Ser numret ut som ett personnummer (ÅÅMMDD-XXXX) snarare än ett organisations-
+ * nummer? Organisationsnummer har alltid 20–99 i position 3–4; personnummer har
+ * en månad 01–12. Enskilda firmor använder personnummer som organisationsnummer
+ * och är legitima företagskunder, så det här är en flagga för admin — inte ett stopp.
+ */
+export function looksLikePersonalNumber(value: string): boolean {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length !== 10) return false;
+  const month = Number(digits.slice(2, 4));
+  return month >= 1 && month <= 12;
+}
+
 const orgNumberSchema = z
   .string()
   .trim()

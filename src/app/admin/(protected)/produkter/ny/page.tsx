@@ -24,6 +24,7 @@ export default async function NewProductPage() {
           imageRef: "",
           vatRateBp: 1200,
           badge: "",
+          piecesPerKgApprox: "",
           sortOrder: 0,
           active: false,
         }}

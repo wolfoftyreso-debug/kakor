@@ -91,3 +91,66 @@ describe("snapToDeliveryWeekday", () => {
     expect(toISODate(d)).toBe("2026-09-01");
   });
 });
+
+// ---------- Helgdagar och spärrade datum (kund- och affärsgranskning) ----------
+import { easterSunday, isSwedishHoliday, swedishHolidayName, snapToDeliveryWeekday } from "@/lib/dates";
+
+describe("svenska helgdagar", () => {
+  it("räknar påsk rätt (Meeus) för flera år", () => {
+    expect(toISODate(easterSunday(2026))).toBe("2026-04-05");
+    expect(toISODate(easterSunday(2027))).toBe("2027-03-28");
+    expect(toISODate(easterSunday(2028))).toBe("2028-04-16");
+    expect(toISODate(easterSunday(2030))).toBe("2030-04-21");
+  });
+
+  it("känner igen rörliga helgdagar 2026", () => {
+    expect(swedishHolidayName(fromISODate("2026-04-03"))).toBe("långfredagen");
+    expect(swedishHolidayName(fromISODate("2026-04-06"))).toBe("annandag påsk");
+    expect(swedishHolidayName(fromISODate("2026-05-14"))).toBe("Kristi himmelsfärdsdag"); // torsdag!
+    expect(swedishHolidayName(fromISODate("2026-05-24"))).toBe("pingstdagen");
+    expect(swedishHolidayName(fromISODate("2026-06-19"))).toBe("midsommarafton");
+    expect(swedishHolidayName(fromISODate("2026-06-20"))).toBe("midsommardagen");
+    expect(swedishHolidayName(fromISODate("2026-10-31"))).toBe("alla helgons dag");
+    expect(swedishHolidayName(fromISODate("2027-11-06"))).toBe("alla helgons dag");
+  });
+
+  it("känner igen fasta dagar och lämnar vanliga dagar", () => {
+    for (const iso of ["2026-01-01", "2026-01-06", "2026-05-01", "2026-06-06", "2026-12-24", "2026-12-25", "2026-12-26", "2026-12-31"]) {
+      expect(isSwedishHoliday(fromISODate(iso)), iso).toBe(true);
+    }
+    for (const iso of ["2026-09-10", "2026-05-07", "2026-05-21", "2026-12-17"]) {
+      expect(isSwedishHoliday(fromISODate(iso)), iso).toBe(false);
+    }
+  });
+
+  it("erbjuder aldrig Kristi himmelsfärd som torsdagsleverans", () => {
+    const now = new Date("2026-05-04T08:00:00.000Z"); // måndag 4 maj
+    const dates = upcomingDeliveryDates({ weekdays: [4], leadTimeDays: 2 }, 3, now).map(toISODate);
+    expect(dates).toEqual(["2026-05-07", "2026-05-21", "2026-05-28"]);
+    expect(isValidDeliveryDate(fromISODate("2026-05-14"), { weekdays: [4], leadTimeDays: 2 }, now)).toBe(false);
+  });
+
+  it("hoppar över julveckan: 24 och 31 december är torsdagar 2026", () => {
+    const now = new Date("2026-12-14T08:00:00.000Z");
+    const dates = upcomingDeliveryDates({ weekdays: [4], leadTimeDays: 2 }, 3, now).map(toISODate);
+    expect(dates).toEqual(["2026-12-17", "2027-01-07", "2027-01-14"]);
+  });
+});
+
+describe("spärrade datum från admin", () => {
+  const config = { weekdays: [4], leadTimeDays: 2, blockedDates: ["2026-09-17"] };
+
+  it("tas bort ur listan och godkänns inte vid validering", () => {
+    const dates = upcomingDeliveryDates(config, 3, NOW).map(toISODate);
+    expect(dates).toEqual(["2026-09-10", "2026-09-24", "2026-10-01"]);
+    expect(isValidDeliveryDate(fromISODate("2026-09-17"), config, NOW)).toBe(false);
+    expect(isValidDeliveryDate(fromISODate("2026-09-17"), { ...config, blockedDates: [] }, NOW)).toBe(true);
+  });
+
+  it("prenumerationer snäpper förbi spärrade dagar och helgdagar", () => {
+    // Veckovis från 10/9 → 17/9 är spärrad → 24/9.
+    expect(toISODate(nextSubscriptionDate(fromISODate("2026-09-10"), "WEEKLY", config))).toBe("2026-09-24");
+    // Snäpp av ett redan satt datum som blivit helgdag.
+    expect(toISODate(snapToDeliveryWeekday(fromISODate("2026-05-14"), { weekdays: [4], leadTimeDays: 2 }))).toBe("2026-05-21");
+  });
+});

@@ -43,6 +43,8 @@ model Product {
   imageRef    String   @default("")
   // Kort etikett på produktkortet, t.ex. "Bästsäljare". Tom = ingen etikett.
   badge       String   @default("")
+  // Ungefärligt antal kakor per kilo (uppmätt av verksamheten). null = visas inte.
+  piecesPerKgApprox Int?
   active      Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
@@ -62,6 +64,9 @@ model DeliveryArea {
   leadTimeDays Int    @default(2)
   // JSON-array med postnummerprefix (t.ex. ["135","136"]). Tom = ingen postnummerspärr.
   postalCodePrefixesJson String @default("[]")
+  // JSON-array med ISO-datum då vi INTE levererar (semester, inventering).
+  // Svenska helgdagar utesluts alltid automatiskt (dates.ts).
+  blockedDatesJson String @default("[]")
   active   Boolean @default(true)
   sortOrder Int    @default(0)
 

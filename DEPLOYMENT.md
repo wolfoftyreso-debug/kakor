@@ -238,7 +238,10 @@ automatiskt — det beslutet är verksamhetens.)
    när den ska tillbaka till 12 %.
 4. **Fakturauppgifter**: `INVOICE_BANKGIRO`, `INVOICE_VAT_NUMBER`, `INVOICE_EMAIL`,
    `INVOICE_F_SKATT` med verifierade värden. Utan verifierat bankgiro/momsnr
-   stänger ordermotorn beställningar i produktion (503).
+   stänger ordermotorn beställningar i produktion (503). `INVOICE_EMAIL` är
+   dessutom ett lagkrav: e-handelslagen (2002:562) 8 § kräver att namn, adress
+   och e-postadress syns för besökaren — sidfoten visar adressen först när
+   värdet är satt (placeholdern renderas aldrig publikt).
 5. **E-post**: Resend-domän verifierad (SPF/DKIM), `EMAIL_PROVIDER=resend`,
    `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` (bevakad låda — obligatorisk),
    `ADMIN_NOTIFY_EMAIL` (intern avisering vid ny order).

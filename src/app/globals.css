@@ -1847,3 +1847,64 @@ html.js .reveal.in {
 .page-header--facts .page-title {
   font-size: clamp(30px, 3.8vw, 42px);
 }
+
+/* ---------- Utskrift: körlista och följesedel ---------- */
+.print-sheet {
+  background: #fff;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 8px 4px;
+}
+.print-table th,
+.print-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--line, #d8cfc4);
+}
+.print-table thead th {
+  border-bottom: 2px solid var(--text);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .no-print,
+  nav,
+  footer,
+  .btn,
+  button {
+    display: none !important;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #999 !important;
+    break-inside: avoid;
+  }
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+  a[href^="tel:"]::after {
+    content: "";
+  }
+  .print-sheet header {
+    display: flex !important;
+  }
+  section {
+    break-inside: avoid;
+  }
+  .bakplan {
+    break-inside: avoid;
+  }
+}

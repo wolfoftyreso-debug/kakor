@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { formatDeliveryDate, toISODate, todayInStockholm, capitalizeFirst } from "@/lib/dates";
 import { qtyLabel } from "@/lib/units";
 import { MarkDeliveredInline } from "./MarkDeliveredInline";
+import { PrintButton } from "@/components/admin/PrintButton";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — leveranser", robots: { index: false } };
@@ -50,6 +51,7 @@ export default async function DeliveriesPage({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
         <h1 style={{ fontSize: 26 }}>Leveranser</h1>
         <div style={{ display: "flex", gap: 8 }}>
+          {visa !== "levererade" && sortedKeys.length > 0 && <PrintButton label="Skriv ut körlista" />}
           <Link
             href="/admin/leveranser"
             className={visa !== "levererade" ? "btn btn-primary" : "btn btn-outline"}
@@ -85,6 +87,19 @@ export default async function DeliveriesPage({
         ]
           .filter(Boolean)
           .join(" + ") || "0 kg";
+        // Bakplan: hur mycket av varje sort dagen kräver — det är vad som ska
+        // finnas i lager/bakas i sats, inte "12 kg totalt".
+        const perProduct = new Map<string, { name: string; unit: string; qty: number; orders: number }>();
+        for (const o of dayOrders) {
+          for (const i of o.items) {
+            const key = `${i.productName}|${i.unit}`;
+            const cur = perProduct.get(key) ?? { name: i.productName, unit: i.unit, qty: 0, orders: 0 };
+            cur.qty += i.weightKg;
+            cur.orders += 1;
+            perProduct.set(key, cur);
+          }
+        }
+        const bakplan = [...perProduct.values()].sort((a, b) => b.qty - a.qty);
         return (
           <section key={dateKey} style={{ marginBottom: 32 }}>
             <h2
@@ -102,6 +117,19 @@ export default async function DeliveriesPage({
             <div style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 14 }}>
               {dayOrders.length} leverans{dayOrders.length === 1 ? "" : "er"} · {dayTotal} totalt
             </div>
+            {visa !== "levererade" && bakplan.length > 0 && (
+              <div className="card bakplan" style={{ padding: "12px 18px", marginBottom: 14, background: "var(--butter-soft)" }}>
+                <div className="section-label" style={{ marginBottom: 6 }}>BAKPLAN — PER SORT</div>
+                <div style={{ display: "flex", gap: "6px 22px", flexWrap: "wrap", fontSize: 14 }}>
+                  {bakplan.map((b) => (
+                    <span key={`${b.name}|${b.unit}`}>
+                      <strong>{qtyLabel(b.qty, b.unit)}</strong> {b.name}{" "}
+                      <span style={{ color: "var(--text-2)", fontSize: 12.5 }}>({b.orders} order{b.orders === 1 ? "" : "s"})</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {dayOrders.map((o) => (
                 <div key={o.id} className="card" style={{ padding: "16px 18px" }}>
@@ -140,6 +168,13 @@ export default async function DeliveriesPage({
                       style={{ padding: "9px 16px", fontSize: 13 }}
                     >
                       Öppna beställning
+                    </Link>
+                    <Link
+                      href={`/admin/bestallningar/${o.id}/foljesedel`}
+                      className="btn btn-outline"
+                      style={{ padding: "9px 16px", fontSize: 13 }}
+                    >
+                      Följesedel
                     </Link>
                     {o.deliveryStatus === "PENDING" ? (
                       <MarkDeliveredInline orderId={o.id} />
