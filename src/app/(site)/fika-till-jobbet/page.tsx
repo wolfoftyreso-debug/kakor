@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { ImageSlot } from "@/components/ImageSlot";
+import { CONTENT_DATES } from "@/lib/seo/content-dates";
 import Link from "next/link";
 import { sharePreview } from "@/lib/seo/meta";
 import { getActiveProducts, getDeliveryDaysLabel } from "@/lib/products";
@@ -31,8 +33,8 @@ export const metadata: Metadata = {
 };
 
 // Sätts vid verklig innehållsändring (aldrig byggtid).
-const PUBLISHED = "2026-09-02";
-const UPDATED = "2026-09-04";
+const PUBLISHED = CONTENT_DATES["/fika-till-jobbet"].published;
+const UPDATED = CONTENT_DATES["/fika-till-jobbet"].updated;
 
 const CRUMBS = [
   { name: "Sockerbagaren", path: "/" },
@@ -94,6 +96,12 @@ export default async function FikaTillJobbetPage() {
       />
       <Breadcrumbs crumbs={CRUMBS} container="container-narrow" />
       <article className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
+        <figure>
+          <div className="media">
+            <ImageSlot label="Fika med småkakor och kaffe på jobbet" src="/images/fika.jpg" priority />
+          </div>
+          <figcaption>Fika på jobbet: småkakor som räcker till alla, utan att någon behöver stå i köket.</figcaption>
+        </figure>
         <PageHeader
           eyebrow="Guide"
           title="Fika till jobbet — så ordnar ni det utan krångel"

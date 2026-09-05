@@ -34,7 +34,8 @@ interface Props {
 function productPageTitle(product: { name: string; slug: string; unit: string; packageWeightGrams: number }): string {
   const aka = knowledgeFor(product.slug)?.titleAka;
   const name = aka ? `${product.name} (${aka})` : product.name;
-  return product.unit === "paket" ? `${name} — ${formatWeightKg(product.packageWeightGrams)} småkakor till företag` : `${name} per kilo till företag`;
+  // ≤ 60 tecken inkl. " — Sockerbagaren": köpsignalen "till företag" ligger i beskrivningen.
+  return product.unit === "paket" ? `${name} — ${formatWeightKg(product.packageWeightGrams)} småkakor` : `${name} per kilo`;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
