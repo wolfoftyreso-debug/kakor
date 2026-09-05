@@ -118,10 +118,18 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href="/bestall" className="btn btn-primary" style={{ padding: "11px 22px", fontSize: 14 }}>
-            Beställ
-          </Link>
+        <div
+          className="header-actions"
+          style={{ display: "flex", alignItems: "center", gap: 16 }}
+          // Mobil: EN knapp — "Beställ" när korgen är tom, "Korg N" när den har
+          // innehåll (CSS-styrt via attributen så att SSR och klient matchar).
+          data-cart={totalKg > 0 ? "full" : "empty"}
+        >
+          {pathname !== "/bestall" && (
+            <Link href="/bestall" className="btn btn-primary cta-order" style={{ padding: "11px 22px", fontSize: 14 }}>
+              Beställ
+            </Link>
+          )}
           <Link
             href="/bestall"
             className="cart-link"
