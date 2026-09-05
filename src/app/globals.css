@@ -137,6 +137,21 @@ button, input, select, textarea {
   color: var(--bg);
   box-shadow: 0 1px 2px rgba(59, 40, 27, 0.2);
 }
+/* Länk-knappar: ingen länkfärg (a, a:hover, :visited) och ingen grå
+   tryckmarkering i iOS får någonsin göra texten mörk på den mörka botten. */
+a.btn-primary,
+a.btn-primary:link,
+a.btn-primary:visited,
+a.btn-primary:hover,
+a.btn-primary:active,
+a.btn-primary:focus {
+  color: var(--bg);
+}
+.btn,
+.cart-link,
+.menu-toggle {
+  -webkit-tap-highlight-color: transparent;
+}
 .btn-primary:hover {
   background: var(--brown-2);
   color: var(--bg);
@@ -703,11 +718,33 @@ button, input, select, textarea {
     letter-spacing: 0.2px !important;
   }
   .header-actions {
-    gap: 5px !important;
+    gap: 10px !important;
   }
   .header-actions .btn {
-    padding: 10px 10px !important;
-    font-size: 13px !important;
+    padding: 10px 14px !important;
+    font-size: 13.5px !important;
+  }
+  /* En enda tydlig knapp på mobil: Beställ när korgen är tom, annars Korg N. */
+  .header-actions[data-cart="full"] .cta-order {
+    display: none !important;
+  }
+  .header-actions[data-cart="empty"] .cart-link {
+    display: none !important;
+  }
+  .header-actions[data-cart="full"] .cart-link {
+    background: var(--text);
+    color: var(--bg) !important;
+    border-radius: var(--radius);
+    padding: 0 14px;
+    align-items: center !important;
+    gap: 7px !important;
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+  .header-actions[data-cart="full"] .cart-link > span {
+    margin-top: 0 !important;
+    font-size: 11px !important;
+    padding: 3px 7px !important;
   }
   .menu-toggle {
     padding: 4px !important;
