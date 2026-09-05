@@ -120,7 +120,7 @@ export default async function AreaPage({ params }: Props) {
                   <strong>{capitalizeFirst(formatDeliveryDate(nextDate))}</strong>.
                 </>
               ) : (
-                "Tillgängliga dagar visas i checkouten."
+                "Tillgängliga dagar visas i kassan."
               )}
             </div>
           </div>
@@ -190,7 +190,7 @@ export default async function AreaPage({ params }: Props) {
           </div>
           <div style={{ minHeight: 220, maxHeight: 380, borderRadius: 8, overflow: "hidden" }}>
             <ImageSlot
-              label="Sockerbagarens bud bär en kartong med kakor till leveransbilen"
+              label="Kartong med kakor lastas för leverans"
               src="/images/leverans.jpg"
             />
           </div>

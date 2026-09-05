@@ -19,6 +19,7 @@ import type { ProductCardData } from "@/components/ProductCard";
 import type { AreaWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
 import { formatOre, calculateTotals } from "@/lib/money";
+import { effectiveVatRateBp } from "@/lib/vat";
 import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/units";
 import { capitalizeFirst, formatDeliveryDate, fromISODate, toISODate, upcomingDeliveryDates, changeDeadline, formatDeadline } from "@/lib/dates";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
@@ -262,7 +263,11 @@ export function CheckoutFlow({
   // Räknas per render (fyra rader — billigt): priset ingår då alltid, så
   // en prisändring som hämtas via router.refresh() slår igenom i summan.
   const totals = calculateTotals(
-    activeLines.map((l) => ({ netOre: l.kg * l.product.pricePerKgOre, vatRateBp: l.product.vatRateBp ?? 1200 }))
+    activeLines.map((l) => ({
+      netOre: l.kg * l.product.pricePerKgOre,
+      // Momsen följer leveransdagen (6 % t.o.m. 2027-12-31): samma regel som servern.
+      vatRateBp: effectiveVatRateBp(l.product.vatRateBp ?? 1200, deliveryDate ?? ""),
+    }))
   );
 
   const selectedArea = areas.find((a) => a.slug === areaSlug) ?? null;
@@ -962,7 +967,7 @@ export function CheckoutFlow({
                 <> Ändringar och avbokning senast {deadlineText(deliveryDate)} — därefter faktureras ordern.</>
               ) : null}{" "}
               Genom att beställa godkänner ni våra{" "}
-              <Link href="/villkor" target="_blank" rel="noopener">köpvillkor</Link>.
+              <Link href="/villkor" target="_blank" rel="noopener">köpvillkor</Link> (öppnas i ny flik).
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
               <button type="button" className="btn btn-outline" onClick={() => goTo(2)}>
@@ -1108,7 +1113,7 @@ export function CheckoutFlow({
           </div>
           <div style={{ textAlign: "center", marginTop: 24 }}>
             <a href={result.invoiceUrl} className="btn btn-outline" target="_blank" rel="noopener">
-              Ladda ner faktura (PDF)
+              Ladda ner faktura (PDF, ny flik)
             </a>
           </div>
           <PreferredSourceCTA placement="result_success" />

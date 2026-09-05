@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { getAreasWithDates } from "@/lib/products";
-import { capitalizeFirst, formatDeliveryDate, fromISODate, weekdayName } from "@/lib/dates";
+import { capitalizeFirst, formatDeliveryDate, fromISODate, weekdayName, listSv } from "@/lib/dates";
 import { ImageSlot } from "@/components/ImageSlot";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     description:
       "Fikaleverans till arbetsplatser i södra Stockholm: fasta leveransdagar i Tyresö, Nacka, Haninge och Huddinge, under dagen till bemannade företagsadresser.",
     path: "/leverans",
-    image: { url: "/images/leverans.jpg", alt: "Sockerbagarens bud bär en kartong med kakor" },
+    image: { url: "/images/leverans.jpg", alt: "Kartong med kakor på väg ut för leverans" },
   }),
 };
 
@@ -74,14 +74,14 @@ export default async function LeveransPage() {
         lede="Fasta leveransdagar per område. Leveransen kommer under dagen — vi kan inte lova exakt klockslag, så någon behöver finnas på plats för att ta emot den: reception, personalrum eller lastkaj."
         facts={[
           { label: "Områden", value: "Tyresö, Nacka, Haninge, Huddinge" },
-          { label: "Leveransdag", value: [...new Set(areas.flatMap((a) => a.weekdays))].map(weekdayName).join(" och ") || "Se område" },
+          { label: "Leveransdag", value: listSv([...new Set(areas.flatMap((a) => a.weekdays))].map(weekdayName)) || "Se område" },
           { label: "Tid", value: "Under dagen, bemannad adress" },
           { label: "Leveransavgift", value: "Ingen" },
         ]}
       />
       <figure>
         <div className="media" style={{ minHeight: 320 }}>
-          <ImageSlot label="Sockerbagarens bud bär en kartong med kakor till leveransbilen" src="/images/leverans.jpg" />
+          <ImageSlot label="Kartong med kakor lastas för leverans" src="/images/leverans.jpg" />
         </div>
       </figure>
 
@@ -94,7 +94,7 @@ export default async function LeveransPage() {
               </Link>
             </div>
             <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 6 }}>
-              Leveransdag: {[...new Set(a.weekdays)].map(weekdayName).join(" och ")}
+              Leveransdag: {listSv([...new Set(a.weekdays)].map(weekdayName))}
             </div>
             {a.upcomingDates[0] && (
               <div style={{ fontSize: "13.5px", marginTop: 4 }}>

@@ -7,18 +7,25 @@ import { calculateTotals } from "@/lib/money";
 import { OrderError } from "@/lib/orders/create-order";
 import { sendEmail } from "@/lib/email";
 import { FREQUENCY_LABELS } from "@/lib/status";
-import { formatDeliveryDateWithYear } from "@/lib/dates";
+import { capitalizeFirst, formatDeliveryDateWithYear } from "@/lib/dates";
+import { effectiveVatRateBp } from "@/lib/vat";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { describeError } from "@/lib/log";
 import { clientIp, verifyTurnstile } from "@/lib/turnstile";
 import { formatOre } from "@/lib/money";
 
+// Vercel: PDF-rendering + mejl kan ta tid — standard 10 s räcker inte på kalla starter.
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
+  // Minutfönster mot burst + dygnsfönster mot långsam fakturagenerering från
+  // en och samma adress (löpnumrerade fakturor mejlas till valfri mottagare).
   const limit = await rateLimit(clientKey(req.headers, "subscription"), { limit: 10, windowMs: 60_000 });
-  if (!limit.ok) {
+  const daily = limit.ok ? await rateLimit(clientKey(req.headers, "subscription-dygn"), { limit: 40, windowMs: 24 * 3600_000 }) : limit;
+  if (!limit.ok || !daily.ok) {
     return NextResponse.json(
       { ok: false, error: "För många försök — vänta en stund och försök igen" },
-      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
+      { status: 429, headers: { "Retry-After": String(limit.ok ? daily.retryAfterSeconds : limit.retryAfterSeconds) } }
     );
   }
 
@@ -64,7 +71,10 @@ export async function POST(req: NextRequest) {
     const totals = calculateTotals(
       parsed.data.items.map((i) => {
         const product = products.find((p) => p.id === i.productId);
-        return { netOre: i.weightKg * (product?.pricePerKgOre ?? 0), vatRateBp: product?.vatRateBp ?? 1200 };
+        return {
+          netOre: i.weightKg * (product?.pricePerKgOre ?? 0),
+          vatRateBp: effectiveVatRateBp(product?.vatRateBp ?? 1200, parsed.data.firstDeliveryDate),
+        };
       })
     );
     if (parsed.data.expectedTotalOre !== undefined && parsed.data.expectedTotalOre !== totals.totalOre) {
@@ -88,7 +98,7 @@ export async function POST(req: NextRequest) {
 
 Prenumerationsnummer: ${subscription.number}
 Intervall: ${FREQUENCY_LABELS[subscription.frequency as keyof typeof FREQUENCY_LABELS] ?? subscription.frequency}
-Första leverans: ${formatDeliveryDateWithYear(subscription.nextDeliveryDate)}
+Första leverans: ${capitalizeFirst(formatDeliveryDateWithYear(subscription.nextDeliveryDate))}
 Leveransadress: ${subscription.deliveryAddress}, ${subscription.deliveryPostalCode} ${subscription.deliveryCity}
 Belopp per leverans: ${formatOre(totals.totalOre)} inkl. moms (${formatOre(totals.subtotalOre)} exkl. moms)
 

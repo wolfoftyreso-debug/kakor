@@ -56,15 +56,16 @@ Neon-utvecklingsdatabas och kör `npm run db:migrate && npm run db:seed`.
 
 - Schemat versioneras i `prisma/migrations/` — en tom Neon-databas
   återskapas fullständigt med `npx prisma migrate deploy`.
-- **Runtime kör aldrig migrations.** Migrations körs i deploy-steget eller
-  manuellt:
-  - Enklast (rekommenderat tills vidare): kör manuellt inför/efter deploy
-    av schemaändringar: `DIRECT_DATABASE_URL=... npx prisma migrate deploy`
-    (idempotent — redan applicerade migrationer hoppas över; Prismas
-    migrationslås förhindrar race vid parallella körningar).
-  - Alternativ: lägg `prisma migrate deploy && npm run build` som Build
-    Command i Vercel. Gör det medvetet i så fall — varje deploy (även
-    preview) kör då migrations mot sin miljös databas.
+- **Runtime kör aldrig migrations.** De körs i bygget av
+  `scripts/vercel-build.mjs` (Build Command i `vercel.json`): i Production
+  och Preview när `DIRECT_DATABASE_URL` finns i build-miljön (Preview ska ha
+  en egen Neon-branch). `migrate deploy` är idempotent och Prismas
+  migrationslås förhindrar race vid parallella byggen. Manuell körning
+  behövs bara om bygget saknar `DIRECT_DATABASE_URL`:
+  `DIRECT_DATABASE_URL=... npx prisma migrate deploy`.
+- Migrationer måste vara **additiva** (expand/contract): bygget migrerar
+  före `next build`, så en misslyckad build lämnar databasen ett steg före
+  koden — det är ofarligt bara så länge gammal kod tål det nya schemat.
 - Ny migration skapas lokalt mot dev-databasen:
   `npx prisma migrate dev --name <beskrivning>` (kräver interaktiv TTY),
   eller via `prisma migrate diff` + `migrate deploy` (se git-historiken för
@@ -102,9 +103,10 @@ Deployment dupliceras inte i CI — det sköter Vercels Git-integration.
 
 ## Vercel-projektet
 
-- Kopplat till GitHub-repot; framework-preset Next.js, default build/install
-  (`npm run build` via package.json). `vercel.json` innehåller endast det
-  nödvändiga: funktionsregion (`fra1`) och cron-schemat.
+- Kopplat till GitHub-repot; framework-preset Next.js. `vercel.json` sätter
+  Build Command (`node scripts/vercel-build.mjs` — migrationer + build),
+  funktionsregion (`fra1`) och cron-schemat. Funktionernas tidsgränser
+  ligger som `export const maxDuration` i respektive route-fil.
 - **Branchstrategi**: produktionsbranchen deployar production; alla andra
   branches/PRs får Preview Deployments (QA av UI/checkout/admin/mobil).
 - Preview är automatiskt skyddad i koden: `noindex`, e-postutskick spärrade
@@ -212,9 +214,10 @@ automatiskt — det beslutet är verksamhetens.)
 
 ## Kända medvetna begränsningar
 
-- Rate limiting är in-memory per serverless-instans (skyddar mot enkel
-  brute force/spam; distribuerad rate limiting kräver extern lagring och
-  är medvetet bortvald i denna skala).
+- Rate limiting sker i två lager: per serverless-instans i minne och delat
+  via tabellen `RateLimitBucket` i databasen (fast fönster, villkorade
+  uppdateringar utan nollställningskapplöpning). Utöver minutfönstret finns
+  ett dygnstak per IP i kassan (40 beställningar/prenumerationsstarter).
 - E-postutskick sker efter commit utan kö — vid providerfel finns ordern
   kvar och admin kan skicka om ("Skicka faktura igen").
 
@@ -230,7 +233,8 @@ automatiskt — det beslutet är verksamhetens.)
    när `DIRECT_DATABASE_URL` finns i build-miljön. Finns `DATABASE_URL` men inte
    `DIRECT_DATABASE_URL` avbryts bygget (databasen skulle annars hamna i otakt
    med koden). Saknas databas helt byggs sajten med en varning — det är läget
-   tills Neon är kopplat. Preview migrerar aldrig.
+   tills Neon är kopplat. Preview migrerar sin egen databas när
+   `DIRECT_DATABASE_URL` är satt för Preview-miljön.
 3. **Seed + admin**: `DATABASE_URL=<prod> I_KNOW_THIS_IS_PROD=1 ADMIN_EMAIL=… ADMIN_PASSWORD=… npm run admin:create`
    (minst 12 tecken, aldrig exempelvärden). Sätt etiketten "Bästsäljare" och
    kontrollera priser i admin → Produkter. Momssatsen seedas till 6 %

@@ -40,7 +40,7 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
       },
       {
         q: "Har kolasnittarna flingsalt?",
-        a: "Inte ovanpå. Vi saltar degen med keltiskt salt, vilket ger samma lyft åt kolasmaken som flingsalt men jämnt fördelat i hela kakan.",
+        a: "Inte ovanpå. Degen saltas med keltiskt salt, vilket ger samma lyft åt kolasmaken som flingsalt men jämnt fördelat i hela kakan.",
       },
       {
         q: "Är kolasnittar och kolakakor samma sak?",
@@ -88,13 +88,13 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
       "Chokladsnittar är kolasnittarnas chokladiga syskon — en skuren småkaka på mördeg med kakao, ofta toppad med pärlsocker. Snittkakor är en egen familj i det svenska kakbaket: degen kavlas i längder, grädds och skärs i diagonala bitar.",
       "Våra chokladsnittar bakas med både mörk choklad och kakao, vilket ger en djupare chokladkaraktär än snittar med enbart kakao. Ljus sirap ger den runda sötman och en seg kärna — samma princip som i kolasnittarna, men med chokladen i fokus.",
       "Chokladsnittar med sirap är den klassiska varianten: den ljusa sirapen ger seg kärna och rund sötma, precis som i kolasnittarna. Det är så våra bakas — snittkakor på mördeg med choklad, kakao och ljus sirap.",
-      "Chokladsnittar är den av våra sorter som oftast väljs som chokladkaka till kaffet: chokladig utan att vara tung, och lätt att dela ut på ett fat till många.",
+      "Chokladsnittar är vår chokladkaka till kaffet: chokladig utan att vara tung, och lätt att dela ut på ett fat till många.",
       "Förvaringstips: förvara i tät burk i rumstemperatur, separera lagren med bakplåtspapper. Chokladsnittar går bra att frysa och tinar snabbt i rumstemperatur.",
     ],
     faqs: [
       {
         q: "Vad är skillnaden mellan chokladsnittar och kolasnittar?",
-        a: "Samma bakteknik — snittade längder — men chokladsnittar bakas med choklad och kakao i degen medan kolasnittar får sin smak av karamelliserad sirap och smör. Många beställer båda så att fikat får en ljus och en mörk sort.",
+        a: "Samma bakteknik — snittade längder — men chokladsnittar bakas med choklad och kakao i degen medan kolasnittar får sin smak av karamelliserad sirap och smör. Beställ gärna båda så att fikat får en ljus och en mörk sort.",
       },
       {
         q: "Hur länge håller chokladsnittar?",

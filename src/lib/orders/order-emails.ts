@@ -4,7 +4,7 @@ import { sendEmail } from "@/lib/email";
 import { emailConfig, siteConfig } from "@/lib/config";
 import { formatOre } from "@/lib/money";
 import { priceSuffix, qtyLabel } from "@/lib/units";
-import { changeDeadline, formatDeadline, formatDeliveryDateWithYear, toISODate, todayInStockholm } from "@/lib/dates";
+import { capitalizeFirst, changeDeadline, formatDeadline, formatDeliveryDateWithYear, toISODate, todayInStockholm } from "@/lib/dates";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { looksLikePersonalNumber } from "@/lib/validation";
@@ -27,7 +27,7 @@ export async function sendOrderEmails(orderId: string): Promise<boolean> {
         `  ${i.productName}: ${qtyLabel(i.weightKg, i.unit)} à ${formatOre(i.unitPricePerKgOre)}${priceSuffix(i.unit)} exkl. moms`
     )
     .join("\n");
-  const deliveryDay = formatDeliveryDateWithYear(order.deliveryDate);
+  const deliveryDay = capitalizeFirst(formatDeliveryDateWithYear(order.deliveryDate));
   const invoiceUrl = `${siteConfig.url}/faktura/${order.invoice.downloadToken}`;
 
   const confirmationText = `Tack för er beställning!
@@ -56,7 +56,7 @@ Frågor? Svara på det här mejlet.
 Vänliga hälsningar
 Sockerbagaren`;
 
-  const confirmationSent = await sendEmail({
+  const confirmationPromise = sendEmail({
     to: order.email,
     subject: `Orderbekräftelse ${order.orderNumber} — Sockerbagaren`,
     text: confirmationText,
@@ -92,7 +92,7 @@ Ladda ner fakturan: ${invoiceUrl}
 Vänliga hälsningar
 Sockerbagaren`;
 
-  const invoiceSent = await sendEmail({
+  const invoicePromise = sendEmail({
     to: order.invoiceEmail,
     subject: `Faktura ${order.invoice.invoiceNumber} — Sockerbagaren`,
     text: invoiceText,
@@ -101,8 +101,11 @@ Sockerbagaren`;
     orderId: order.id,
   });
   // Verksamheten ska inte behöva logga in för att upptäcka en ny order.
-  if (emailConfig.adminNotify) {
-    await sendEmail({
+  // Alla tre utskick går parallellt: tre seriella 10 s-timeouts + PDF skulle
+  // annars kunna passera funktionens tidsgräns efter att ordern redan sparats.
+  const adminPromise = !emailConfig.adminNotify
+    ? Promise.resolve(false)
+    : sendEmail({
       to: emailConfig.adminNotify,
       subject: `Ny order ${order.orderNumber} — ${order.companyName} (${formatOre(order.totalOre)})`,
       text: `Ny beställning via webben.
@@ -120,7 +123,7 @@ Admin: ${siteConfig.url}/admin/bestallningar/${order.id}`,
       type: "ADMIN_NEW_ORDER",
       orderId: order.id,
     });
-  }
+  const [confirmationSent, invoiceSent] = await Promise.all([confirmationPromise, invoicePromise, adminPromise]);
   return confirmationSent && invoiceSent;
 }
 
@@ -147,7 +150,7 @@ Order ${order.orderNumber} har lämnats på ${order.deliveryAddress}, ${order.de
 KAKOR
 ${lines}
 
-Förvara kakorna torrt och svalt i stängd förpackning — då håller de sig krispiga i flera veckor.
+Förvara kakorna i tät burk eller stängd förpackning i rumstemperatur. Bäst före-datum står på förpackningen.
 ${invoicePart}
 Saknas något eller stämmer inte leveransen? Svara på det här mejlet så rättar vi till det.
 

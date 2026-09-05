@@ -62,6 +62,11 @@ export async function issueCreditNoteInTx(
   actor: string,
   opts: { lines?: CreditLineRequest[]; reason?: string } = {}
 ) {
+  // Radlås: en UPDATE på fakturaraden håller andra krediteringar av samma
+  // faktura väntande tills den här transaktionen är klar. Utan det kan två
+  // adminflikar kreditera samma rad två gånger (båda läser samma "återstår").
+  const locked = await tx.invoice.updateMany({ where: { id: invoiceId }, data: { updatedAt: new Date() } });
+  if (locked.count !== 1) return null;
   const invoice = await tx.invoice.findUnique({
     where: { id: invoiceId },
     include: { creditNotes: { orderBy: { createdAt: "asc" } } },
@@ -70,7 +75,8 @@ export async function issueCreditNoteInTx(
   // Idempotent för hel kreditering: redan stängd faktura krediteras inte igen.
   if (invoice.status === "CREDITED") {
     if (opts.lines) throw new CreditError("Fakturan är redan krediterad i sin helhet");
-    return invoice.creditNotes.find((c) => c.kind === "FULL") ?? invoice.creditNotes.at(-1) ?? null;
+    const existing = invoice.creditNotes.find((c) => c.kind === "FULL") ?? invoice.creditNotes.at(-1);
+    return existing ? { ...existing, reused: true } : null;
   }
 
   const original = parseSnapshot(invoice.snapshotJson);
@@ -109,13 +115,27 @@ export async function issueCreditNoteInTx(
       sourceLineIndex: index,
     };
   });
-  const totals = calculateTotals(lines.map((l) => ({ netOre: l.lineTotalOre, vatRateBp: l.vatRateBp })));
+  let totals = calculateTotals(lines.map((l) => ({ netOre: l.lineTotalOre, vatRateBp: l.vatRateBp })));
   // Stänger den här krediteringen fakturan?
   const closes = remaining.every((r) => {
     const req = requested.find((q) => q.index === remaining.indexOf(r));
     return r.remaining - (req?.qty ?? 0) === 0;
   });
   const kind = closes ? "FULL" : "PARTIAL";
+  if (closes) {
+    // Sista kreditnotan tar exakt det som återstår av fakturan — annars kan
+    // flera delkrediteringar med egen öresavrundning summera till 1 öre mer
+    // än fakturan (12 345 öre × 3 à 6 %: 3 × 741 = 2 223 mot fakturans 2 222).
+    const prev = invoice.creditNotes.reduce(
+      (s, c) => ({ sub: s.sub - c.subtotalOre, vat: s.vat - c.vatOre, tot: s.tot - c.totalOre }),
+      { sub: 0, vat: 0, tot: 0 }
+    );
+    totals = {
+      subtotalOre: Math.max(0, invoice.subtotalOre - prev.sub),
+      vatOre: Math.max(0, invoice.vatOre - prev.vat),
+      totalOre: Math.max(0, invoice.totalOre - prev.tot),
+    };
+  }
 
   const today = todayInStockholm();
   const snapshot: InvoiceSnapshot = {
@@ -157,7 +177,7 @@ export async function issueCreditNoteInTx(
       actor,
     },
   });
-  return created;
+  return { ...created, reused: false };
 }
 
 /** Mejlar kreditfakturan (PDF + länk) till fakturamottagaren. Kastar aldrig. */

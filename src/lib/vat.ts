@@ -8,6 +8,15 @@ export const FOOD_VAT_RATE_BP = 600;
 export const FOOD_VAT_ORDINARY_BP = 1200;
 export const FOOD_VAT_TEMP_END = "2027-12-31"; // sista dagen med 6 %
 
+/**
+ * Momssats för en leverans: skattskyldigheten inträder vid leveransen, inte
+ * vid beställningen. En order lagd i december 2027 för leverans i januari 2028
+ * ska därför ha 12 % även om produkten fortfarande står på 6 %.
+ */
+export function effectiveVatRateBp(productRateBp: number, deliveryIso: string): number {
+  return productRateBp === FOOD_VAT_RATE_BP && deliveryIso > FOOD_VAT_TEMP_END ? FOOD_VAT_ORDINARY_BP : productRateBp;
+}
+
 /** Påminnelse till admin om att momssatsen är tillfällig. */
 export function foodVatNotice(todayIso: string, productsAtTempRate: number): { urgent: boolean; text: string } | null {
   if (productsAtTempRate === 0) return null;

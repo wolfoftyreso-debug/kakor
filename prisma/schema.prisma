@@ -34,7 +34,7 @@ model Product {
   // Informativ vikt per paket i gram (0 för lösviktsprodukter). Används för
   // sanna viktsummor i kassan/leveransvyn, aldrig för prisberäkning.
   packageWeightGrams Int @default(0)
-  // Moms i baspunkter (livsmedel = 1200 = 12 %).
+  // Moms i baspunkter (livsmedel = 600 = 6 % t.o.m. 2027-12-31, därefter 1200).
   vatRateBp   Int      @default(600)
   // JSON-array med viktalternativ i kg, t.ex. [1,2,3].
   weightOptionsJson String @default("[1,2,3]")
@@ -176,6 +176,8 @@ model Order {
 
   @@unique([subscriptionId, subscriptionPeriod])
   @@index([deliveryDate])
+  // Kapacitet per område och dag (bookedKgByDate) körs vid varje kassavisning.
+  @@index([deliveryAreaId, deliveryDate])
   @@index([status])
   @@index([paymentStatus])
   @@index([deliveryStatus])

@@ -6,12 +6,18 @@ import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { describeError } from "@/lib/log";
 import { clientIp, verifyTurnstile } from "@/lib/turnstile";
 
+// Vercel: PDF-rendering + mejl kan ta tid — standard 10 s räcker inte på kalla starter.
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
+  // Minutfönster mot burst + dygnsfönster mot långsam fakturagenerering från
+  // en och samma adress (löpnumrerade fakturor mejlas till valfri mottagare).
   const limit = await rateLimit(clientKey(req.headers, "checkout"), { limit: 10, windowMs: 60_000 });
-  if (!limit.ok) {
+  const daily = limit.ok ? await rateLimit(clientKey(req.headers, "checkout-dygn"), { limit: 40, windowMs: 24 * 3600_000 }) : limit;
+  if (!limit.ok || !daily.ok) {
     return NextResponse.json(
       { ok: false, error: "För många försök — vänta en stund och försök igen" },
-      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
+      { status: 429, headers: { "Retry-After": String(limit.ok ? daily.retryAfterSeconds : limit.retryAfterSeconds) } }
     );
   }
 

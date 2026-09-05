@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { formatDeliveryDate } from "@/lib/dates";
+import { formatDeliveryDate, snapToDeliveryWeekday } from "@/lib/dates";
+import { safeBlockedDates, safeWeekdays } from "@/lib/products";
 import type { Prisma } from "@prisma/client";
 import { qtyLabel } from "@/lib/units";
 import { FREQUENCY_LABELS, type SubscriptionFrequency } from "@/lib/status";
@@ -10,6 +11,16 @@ import { SubscriptionActions, GenerateOrdersButton } from "./SubscriptionActions
 import { EditSubscriptionForm } from "./EditSubscriptionForm";
 
 export const dynamic = "force-dynamic";
+
+/** Kadensankaret kan vara en helgdag — visa dagen kakorna faktiskt kommer. */
+function actualDeliveryDate(s: { nextDeliveryDate: Date; deliveryArea: { weekdaysJson: string; leadTimeDays: number; blockedDatesJson: string } | null }): Date {
+  if (!s.deliveryArea) return s.nextDeliveryDate;
+  return snapToDeliveryWeekday(s.nextDeliveryDate, {
+    weekdays: safeWeekdays(s.deliveryArea.weekdaysJson),
+    leadTimeDays: s.deliveryArea.leadTimeDays,
+    blockedDates: safeBlockedDates(s.deliveryArea.blockedDatesJson),
+  });
+}
 export const metadata: Metadata = { title: "Admin — prenumerationer", robots: { index: false } };
 
 const STATUS_FILTERS = [
@@ -106,7 +117,7 @@ export default async function SubscriptionsPage({
                   </div>
                   {s.status !== "CANCELLED" && (
                     <div style={{ color: "var(--text-2)" }}>
-                      Nästa: {formatDeliveryDate(s.nextDeliveryDate)}
+                      Nästa: {formatDeliveryDate(actualDeliveryDate(s))}
                     </div>
                   )}
                 </div>

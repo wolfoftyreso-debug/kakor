@@ -272,3 +272,32 @@ export function formatDeadline(deadline: Date): string {
   const time = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", hour: "2-digit", minute: "2-digit" }).format(deadline);
   return `${day} kl. ${time.replace(":", ".")}`;
 }
+
+/**
+ * Kadensankare för prenumerationer: närmaste dag (samma eller senare) på
+ * områdets veckodagar, UTAN hänsyn till helgdagar och spärrade datum.
+ * Själva leveransen snäpps separat (snapToDeliveryWeekday) — annars driver
+ * kadensen en vecka varje gång en helgdag skjuter en leverans.
+ */
+export function snapToWeekday(date: Date, weekdays: number[]): Date {
+  const valid = [...new Set(weekdays)].filter((w) => w >= 1 && w <= 7);
+  if (valid.length === 0) return date;
+  let cursor = date;
+  for (let i = 0; i < 7; i++) {
+    if (valid.includes(isoWeekday(cursor))) return cursor;
+    cursor = addDays(cursor, 1);
+  }
+  return date;
+}
+
+/** Nästa kadensdatum: fast intervall från ankaret, snäppt till veckodag (inte helgdag). */
+export function nextCadenceDate(after: Date, frequency: "WEEKLY" | "BIWEEKLY" | "MONTHLY", weekdays: number[]): Date {
+  const gapDays = frequency === "WEEKLY" ? 7 : frequency === "BIWEEKLY" ? 14 : 28;
+  return snapToWeekday(addDays(after, gapDays), weekdays);
+}
+
+/** "torsdag", "tisdag och torsdag", "måndag, onsdag och torsdag". */
+export function listSv(items: string[]): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} och ${items[items.length - 1]}`;
+}

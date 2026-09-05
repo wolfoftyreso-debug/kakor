@@ -181,8 +181,9 @@ med återkommande förvalt (`/bestall?typ=aterkommande`). Generering:
 - Enradsfält saneras från radbrytningar/kontrolltecken (PDF-/mejlskydd),
   `imageRef` begränsas till `/images/*`, loggar innehåller aldrig
   personuppgifter i klartext (maskad e-post, avkortade felmeddelanden).
-- Vill ni ha CAPTCHA (Cloudflare Turnstile) ovanpå detta krävs nycklar från
-  verksamheten — inte infört.
+- Cloudflare Turnstile finns inbyggt i kassan och aktiveras när båda
+  nycklarna (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`) är
+  satta; utan nycklar gäller honeypot + rate limits (minut- och dygnsfönster).
 
 ## Environment variables
 

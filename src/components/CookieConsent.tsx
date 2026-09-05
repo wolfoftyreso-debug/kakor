@@ -42,7 +42,7 @@ export function CookieConsent() {
   return (
     <div className="consent" role="region" aria-label="Cookies">
       <p className="consent-text">
-        Vi vill använda Google Analytics för anonym besöksstatistik. Inga cookies för statistik
+        Vi vill använda Google Analytics för pseudonymiserad besöksstatistik. Inga cookies för statistik
         sätts förrän ni godkänner. Beställningen fungerar oavsett val.{" "}
         <Link href="/integritet">Läs mer</Link>
       </p>

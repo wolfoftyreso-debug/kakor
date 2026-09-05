@@ -42,7 +42,7 @@ const CRUMBS = [
 const FAQS = [
   {
     q: "När ska vi beställa julfikat?",
-    a: "Beställ så snart ni vet datumet. Leveransdagarna är fasta per område och veckorna före jul är de mest bokade. Kassan visar vilka leveransdagar som är lediga för ert område.",
+    a: "Beställ så snart ni vet datumet. Leveransdagarna är fasta per område och veckorna före jul kan bli fullbokade. Kassan visar vilka leveransdagar som är lediga för ert område.",
   },
   {
     q: "Hur mycket kakor behövs till ett julfika?",
@@ -58,7 +58,7 @@ const FAQS = [
   },
   {
     q: "Levererar ni till påskfikat också?",
-    a: "Ja, samma sortiment och samma leveransdagar. Beställ i veckan före påsk så att leveransen hinner fram före skärtorsdagen.",
+    a: "Ja, samma sortiment och samma leveransdagar. Välj den leveransdag i kassan som ligger närmast före ert påskfika.",
   },
 ];
 
@@ -97,7 +97,7 @@ export default async function JulfikaPage() {
 
         <h2>Beställ i tid</h2>
         <p>
-          Leveransdagarna är fasta per område, och veckorna före jul är de mest efterfrågade. Välj
+          Leveransdagarna är fasta per område, och veckorna före jul kan bli fullbokade. Välj
           datum i kassan så snart julfikat är inbokat: kassan visar bara lediga leveransdagar, så ni
           ser direkt om ert datum går att få. Leveransen kommer under dagen till en bemannad adress.
         </p>

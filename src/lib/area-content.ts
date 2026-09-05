@@ -25,7 +25,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       "Företagsfika i Tyresö: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Tyresö",
     heroText:
-      "Vi levererar fika direkt till arbetsplatser i Tyresö — kontor, verkstäder, butiker och kliniker. Vi utgår från lagret på Radiovägen i Tyresö, så leveransen kommer från grannskapet.",
+      "Vi levererar fika direkt till arbetsplatser i Tyresö — kontor, verkstäder, butiker och kliniker. Kakorna levereras från Radiovägen i Tyresö, så leveransen kommer från grannskapet.",
     midHeading: "Företagsfika i Tyresö",
     midText:
       "Fredagsfika på kontoret vid Tyresö centrum, kundmöte i Bollmora eller personalrum i Trollbäcken — vi levererar samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
@@ -40,7 +40,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       },
       {
         q: "Hur snabbt kan vi få kakor?",
-        a: "Beställ i checkouten så visar vi nästa tillgängliga leveransdag för Tyresö.",
+        a: "Beställ i kassan så visar vi nästa tillgängliga leveransdag för Tyresö.",
       },
       {
         q: "Hur fungerar betalningen?",
@@ -71,7 +71,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       },
       {
         q: "Hur snabbt kan vi få kakor?",
-        a: "Beställ i checkouten så visar vi nästa tillgängliga leveransdag för Nacka.",
+        a: "Beställ i kassan så visar vi nästa tillgängliga leveransdag för Nacka.",
       },
       {
         q: "Kan vi blanda olika kakor i samma order?",
@@ -102,7 +102,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       },
       {
         q: "Hur snabbt kan vi få kakor?",
-        a: "Beställ i checkouten så visar vi nästa tillgängliga leveransdag för Haninge.",
+        a: "Beställ i kassan så visar vi nästa tillgängliga leveransdag för Haninge.",
       },
       {
         q: "Kan vi blanda olika kakor i samma order?",
@@ -133,7 +133,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       },
       {
         q: "Hur snabbt kan vi få kakor?",
-        a: "Beställ i checkouten så visar vi nästa tillgängliga leveransdag för Huddinge.",
+        a: "Beställ i kassan så visar vi nästa tillgängliga leveransdag för Huddinge.",
       },
       {
         q: "Kan vi blanda olika kakor i samma order?",

@@ -10,7 +10,7 @@ import { Steps } from "@/components/Steps";
 import { IconCheck } from "@/components/Icons";
 import { formatOre } from "@/lib/money";
 import { priceSuffix } from "@/lib/units";
-import { fromISODate, weekdayName, isoWeekday } from "@/lib/dates";
+import { fromISODate, weekdayName, isoWeekday, listSv } from "@/lib/dates";
 import { siteConfig } from "@/lib/config";
 import { JsonLd } from "@/components/JsonLd";
 import { faqNode, graph, productListNode, productNode, webPageNode } from "@/lib/seo/schema";
@@ -179,7 +179,8 @@ export default async function HomePage() {
             <p>
               Våra tre sorter bakas efter recepten i konditorernas egen handbok från 1957 — så som
               småkakor bakades innan margarin och tillsatser blev standard: smör, socker, vetemjöl,
-              ägg, mandel, choklad och sirap. Inget mer.
+              ägg, mandel, choklad och sirap — och inte mycket mer. Hela ingrediensförteckningen
+              står på varje sort.
             </p>
             <Link href="/om" className="section-link">
               Om recepten och oss →
@@ -334,7 +335,7 @@ export default async function HomePage() {
                   Leveransdag:{" "}
                   {a.upcomingDates[0]
                     ? weekdayName(isoWeekday(fromISODate(a.upcomingDates[0])))
-                    : a.weekdays.map(weekdayName).join(" & ")}
+                    : listSv(a.weekdays.map(weekdayName))}
                 </div>
                 <span className="area-cta">Kakor till företag i {a.name}</span>
               </Link>

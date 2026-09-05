@@ -50,7 +50,7 @@ const FAQS = [
   },
   {
     q: "Vad passar bäst till fredagsfika på jobbet?",
-    a: "En blandning av en ljus och en mörk sort brukar gå hem hos flest — till exempel kolasnittar och chokladsnittar — och mandelkubb för dem som vill ha något mer mättande till kaffet. Med en fikaprenumeration kommer samma blandning automatiskt varje eller varannan fredag.",
+    a: "En blandning av en ljus och en mörk sort brukar gå hem hos flest — till exempel kolasnittar och chokladsnittar — och mandelkubb för dem som vill ha något mer mättande till kaffet. Med en fikaprenumeration kommer samma blandning automatiskt varje eller varannan vecka, på ert områdes leveransdag.",
   },
   {
     q: "Kan man beställa fika till jobbet mot faktura?",
@@ -70,7 +70,7 @@ const FAQS = [
   },
   {
     q: "Håller kakorna till nästa dag?",
-    a: "Ja. Småkakor på riktigt smör håller sig fina i flera veckor i en tät burk i rumstemperatur, och tål frysning i flera månader. Det som blir över på fredagen kan alltså sparas till måndagsmötet.",
+    a: "Ja. Förvara kakorna i en tät burk i rumstemperatur, så håller de sig fram till bäst före-datumet på förpackningen. Det som blir över på fredagen kan alltså sparas till måndagsmötet.",
   },
 ];
 
@@ -182,7 +182,7 @@ export default async function FikaTillJobbetPage() {
           Födelsedag, sista dagen på jobbet, avtackning eller bara ett tack till teamet: att bjuda
           på fika är det enklaste sättet att markera en händelse utan att ordna något stort. Räkna
           med den rejäla mängden (5 kakor per person) när fikat är dagens samlingspunkt, och beställ
-          till kontoret med leverans dagen innan så att det står klart när ni samlas.
+          till kontoret med den leveransdag som ligger närmast före så att det står klart när ni samlas.
         </p>
 
         <h2>Är fika på jobbet skattefritt?</h2>

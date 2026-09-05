@@ -92,6 +92,9 @@ export async function markOrderPaid(orderId: string, note: string): Promise<Acti
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
   if (!order) return { ok: false, error: "Ordern finns inte" };
   if (!canTransitionOrder(order, "pay")) return { ok: false, error: "Ordern kan inte markeras som betald i nuvarande status" };
+  if (order.invoice?.status === "CREDITED") {
+    return { ok: false, error: "Fakturan är krediterad i sin helhet — det finns inget att betala" };
+  }
   const now = new Date();
   // Villkorad uppdatering: två flikar (betala + avbryt samtidigt) får aldrig
   // ge PAID + CANCELLED — övergången gäller bara om tillståndet är oförändrat.
@@ -102,9 +105,14 @@ export async function markOrderPaid(orderId: string, note: string): Promise<Acti
     });
     if (res.count !== 1) return false;
     if (order.invoice) {
-      await tx.invoice.update({ where: { id: order.invoice.id }, data: { status: "PAID", paidAt: now } });
+      // Villkorat: en faktura som hann krediteras i en annan flik får aldrig bli "betald".
+      const inv = await tx.invoice.updateMany({ where: { id: order.invoice.id, status: "UNPAID" }, data: { status: "PAID", paidAt: now } });
+      if (inv.count !== 1) throw new Error("CONCURRENT");
     }
     return true;
+  }).catch((e: unknown) => {
+    if (e instanceof Error && e.message === "CONCURRENT") return false;
+    throw e;
   });
   if (!changed) return { ok: false, error: "Ordern ändrades samtidigt av någon annan — ladda om sidan" };
   await logEvent(
@@ -194,6 +202,7 @@ export async function cancelOrder(orderId: string, note: string): Promise<Action
   // kreditfaktura får aldrig uppstå (bokföringskrav). Mejlet går efter commit.
   let creditId: string | null = null;
   let creditNumber = "";
+  let creditReused = false;
   try {
     await prisma.$transaction(
       async (tx) => {
@@ -210,6 +219,7 @@ export async function cancelOrder(orderId: string, note: string): Promise<Action
           if (credit) {
             creditId = credit.id;
             creditNumber = credit.creditNumber;
+            creditReused = credit.reused === true;
           }
         }
       },
@@ -222,11 +232,13 @@ export async function cancelOrder(orderId: string, note: string): Promise<Action
     console.error("Avbryt order misslyckades:", e instanceof Error ? e.message.slice(0, 300) : e);
     return { ok: false, error: "Ordern kunde inte avbrytas — ingenting har ändrats. Försök igen." };
   }
-  const mailed = creditId ? await sendCreditNoteEmail(creditId) : false;
+  const mailed = creditId && !creditReused ? await sendCreditNoteEmail(creditId) : false;
   revalidatePath("/admin", "layout");
   return {
     ok: true,
-    message: creditNumber
+    message: creditReused
+      ? `Order avbruten. Fakturan var redan krediterad i sin helhet (kreditfaktura ${creditNumber}).`
+      : creditNumber
       ? `Order avbruten. Kreditfaktura ${creditNumber} utfärdad${mailed ? " och mejlad" : " — mejlet kunde inte skickas, skicka igen från fakturalistan"}.`
       : "Order avbruten.",
   };
@@ -298,6 +310,8 @@ export async function addOrderNote(orderId: string, note: string): Promise<Actio
   if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
   const parsedNote = z.string().trim().min(1).max(1000, "Noteringen är för lång (max 1000 tecken)").safeParse(note);
   if (!parsedNote.success) return { ok: false, error: parsedNote.error.issues[0]?.message ?? "Skriv en notering" };
+  const exists = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true } });
+  if (!exists) return { ok: false, error: "Ordern finns inte" };
   await logEvent(orderId, "NOTE", parsedNote.data, admin.email);
   revalidatePath(`/admin/bestallningar/${orderId}`);
   return { ok: true, message: "Notering sparad" };
@@ -374,6 +388,7 @@ export async function setSubscriptionStatus(
   status: "ACTIVE" | "PAUSED" | "CANCELLED"
 ): Promise<{ error: string } | null> {
   await requireAdmin();
+  if (!idSchema.safeParse(id).success) return { error: "Ogiltigt id" };
   // Server actions är publika endpoints — TS-unionen skyddar inte i runtime.
   const parsed = z.enum(["ACTIVE", "PAUSED", "CANCELLED"]).safeParse(status);
   if (!parsed.success) return { error: "Ogiltig status" };
@@ -474,12 +489,13 @@ export async function saveProduct(
   formData: FormData
 ): Promise<{ error: string } | null> {
   await requireAdmin();
+  if (productId !== null && !idSchema.safeParse(productId).success) return { error: "Ogiltigt produkt-id" };
   const parsed = productSchema.safeParse({
     name: formData.get("name"),
     slug: formData.get("slug"),
     description: formData.get("description"),
     priceKr: formData.get("priceKr"),
-    vatRateBp: formData.get("vatRateBp") ?? 1200,
+    vatRateBp: formData.get("vatRateBp") ?? 600,
     unit: formData.get("unit") ?? "kg",
     packageWeightGrams: formData.get("packageWeightGrams") ?? 0,
     weightOptions: formData.get("weightOptions"),
@@ -574,6 +590,7 @@ export async function saveArea(
   formData: FormData
 ): Promise<{ error?: string; saved?: string } | null> {
   await requireAdmin();
+  if (!idSchema.safeParse(areaId).success) return { error: "Ogiltigt områdes-id" };
   const parsed = areaSchema.safeParse({
     weekdays: formData.get("weekdays"),
     leadTimeDays: formData.get("leadTimeDays"),

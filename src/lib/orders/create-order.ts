@@ -6,6 +6,7 @@ import { nextNumber } from "@/lib/numbering";
 import { invoiceConfig, isVerifiedValue } from "@/lib/config";
 import { addDays, capitalizeFirst, formatDeliveryDate, fromISODate, isValidDeliveryDate, toISODate, todayInStockholm } from "@/lib/dates";
 import { bookedKgByDate, totalKg } from "@/lib/orders/capacity";
+import { effectiveVatRateBp } from "@/lib/vat";
 import { safeBlockedDates, safeWeekdays } from "@/lib/products";
 import type { InvoiceSnapshot } from "@/lib/invoice/snapshot";
 import type { CheckoutInput } from "@/lib/validation";
@@ -52,7 +53,7 @@ export async function assertNotAbusive(input: { email: string; invoiceEmail: str
   if (byEmail >= ABUSE_LIMITS.perEmail || byOrg >= ABUSE_LIMITS.perOrgNumber) {
     // Synligt för verksamheten: en riktig kund som stoppas ska gå att upptäcka i loggarna.
     console.warn(
-      `[missbruksspärr] order avvisad: e-post ${byEmail}/${ABUSE_LIMITS.perEmail}, org.nr ${input.orgNumber} ${byOrg}/${ABUSE_LIMITS.perOrgNumber}`
+      `[missbruksspärr] order avvisad: e-post ${byEmail}/${ABUSE_LIMITS.perEmail}, org.nr ${byOrg}/${ABUSE_LIMITS.perOrgNumber}`
     );
     throw new OrderError(
       "Vi har redan tagit emot ovanligt många beställningar från er det senaste dygnet. Svara på er senaste orderbekräftelse så lägger vi till det ni behöver.",
@@ -70,8 +71,10 @@ export async function assertNotAbusive(input: { email: string; invoiceEmail: str
  */
 export function assertInvoicingConfigured() {
   if (process.env.VERCEL_ENV !== "production") return;
-  if (!isVerifiedValue(invoiceConfig.bankgiro) || !isVerifiedValue(invoiceConfig.vatNumber)) {
-    console.error("[faktura] beställning stoppad: INVOICE_BANKGIRO/INVOICE_VAT_NUMBER är inte verifierade i miljön");
+  // Bankgiro och momsnummer krävs på fakturan (ML 17 kap.), e-postadressen
+  // krävs synlig för kunden (e-handelslagen 8 §) — utan dem säljer vi inte.
+  if (!isVerifiedValue(invoiceConfig.bankgiro) || !isVerifiedValue(invoiceConfig.vatNumber) || !isVerifiedValue(invoiceConfig.email)) {
+    console.error("[faktura] beställning stoppad: INVOICE_BANKGIRO/INVOICE_VAT_NUMBER/INVOICE_EMAIL är inte verifierade i miljön");
     throw new OrderError(
       "Beställningar är tillfälligt stängda medan vi slutför fakturainställningarna. Försök igen senare.",
       undefined,
@@ -82,7 +85,7 @@ export function assertInvoicingConfigured() {
 
 /** Samma nyckel måste bära samma beställning — annars är det inte en retry. */
 function sameOrderPayload(
-  existing: { items: { productId: string | null; weightKg: number }[]; deliveryDate: Date; companyName: string; orgNumber: string; email: string; invoiceEmail: string; deliveryAddress: string; deliveryPostalCode: string },
+  existing: { items: { productId: string | null; weightKg: number }[]; deliveryDate: Date; companyName: string; orgNumber: string; email: string; invoiceEmail: string; deliveryAddress: string; deliveryPostalCode: string; deliveryCity: string; reference: string; billingAddress: string; deliveryInstruction: string },
   input: CheckoutInput
 ): boolean {
   const key = (items: { productId: string | null; weightKg: number }[]) =>
@@ -95,7 +98,11 @@ function sameOrderPayload(
     existing.email.toLowerCase() === input.email.toLowerCase() &&
     existing.invoiceEmail.toLowerCase() === input.invoiceEmail.toLowerCase() &&
     existing.deliveryAddress === input.deliveryAddress &&
-    existing.deliveryPostalCode === input.deliveryPostalCode
+    existing.deliveryPostalCode === input.deliveryPostalCode &&
+    existing.deliveryCity === input.deliveryCity &&
+    existing.reference === input.reference &&
+    existing.billingAddress === input.billingAddress &&
+    existing.deliveryInstruction === input.deliveryInstruction
   );
 }
 
@@ -172,12 +179,18 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
 
   // Kapacitetstak per dag: prenumerationsordrar är planerad volym och räknas
   // in men stoppas aldrig — de skulle annars tyst falla bort ur generatorn.
-  if (!options.subscription && area.maxKgPerDay > 0) {
+  // Kontrollen körs snabbt här (tydligt fel utan att bränna löpnummer) och
+  // en gång till INUTI transaktionen under radlås på området, så att två
+  // samtidiga beställningar inte båda passerar samma lediga kilon.
+  const capacityCheck = !options.subscription && area.maxKgPerDay > 0;
+  const lockedAreaId = area.id;
+  const areaMaxKg = area.maxKgPerDay;
+  const thisKg = totalKg(
+    input.items.map((i) => ({ weightKg: i.weightKg, unit: productById.get(i.productId)?.unit ?? "kg", packageWeightGrams: productById.get(i.productId)?.packageWeightGrams }))
+  );
+  const assertCapacity = async (client: Pick<typeof prisma, "order">) => {
     const iso = toISODate(deliveryDate);
-    const booked = (await bookedKgByDate(area.id, [iso])).get(iso) ?? 0;
-    const thisKg = totalKg(
-      input.items.map((i) => ({ weightKg: i.weightKg, unit: productById.get(i.productId)?.unit ?? "kg", packageWeightGrams: productById.get(i.productId)?.packageWeightGrams }))
-    );
+    const booked = (await bookedKgByDate(area.id, [iso], client)).get(iso) ?? 0;
     if (booked + thisKg > area.maxKgPerDay) {
       throw new OrderError(
         `${capitalizeFirst(formatDeliveryDate(deliveryDate))} är fullbokad i ${area.name} — välj en annan leveransdag`,
@@ -185,7 +198,8 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
         "DAY_FULL"
       );
     }
-  }
+  };
+  if (capacityCheck) await assertCapacity(prisma);
 
   const lines = input.items.map((item) => {
     const product = productById.get(item.productId);
@@ -199,7 +213,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
       weightKg: item.weightKg,
       unit: product.unit,
       unitPricePerKgOre: product.pricePerKgOre,
-      vatRateBp: product.vatRateBp,
+      vatRateBp: effectiveVatRateBp(product.vatRateBp, input.deliveryDate),
       lineTotalOre: item.weightKg * product.pricePerKgOre,
     };
   });
@@ -248,6 +262,12 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
 
   async function runCreateTransaction() {
     return prisma.$transaction(async (tx) => {
+    if (capacityCheck) {
+      // Radlås på området (en UPDATE låser raden i Postgres tills commit):
+      // parallella beställningar till samma område köar här.
+      await tx.deliveryArea.updateMany({ where: { id: lockedAreaId }, data: { maxKgPerDay: areaMaxKg } });
+      await assertCapacity(tx);
+    }
     const orderNumber = await nextNumber(tx, "order");
     const invoiceNumber = await nextNumber(tx, "invoice");
 
