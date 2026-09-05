@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import { siteConfig } from "@/lib/config";
 import { AREA_CONTENT } from "@/lib/area-content";
+import { CONTENT_DATES } from "@/lib/seo/content-dates";
 
 // Dynamisk sitemap: produktsidorna hämtas ur databasen med RIKTIGA
 // lastModified (produktens updatedAt) — datum fejkas aldrig per deploy.
@@ -26,11 +27,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
   const areaPages = Object.keys(AREA_CONTENT).map((slug) => ({ path: `/${slug}`, priority: 0.8 }));
 
-  const entries: MetadataRoute.Sitemap = [...staticPages, ...areaPages].map((p) => ({
-    url: `${base}${p.path}`,
-    changeFrequency: "weekly" as const,
-    priority: p.priority,
-  }));
+  const entries: MetadataRoute.Sitemap = [...staticPages, ...areaPages].map((p) => {
+    const dates = (CONTENT_DATES as Record<string, { updated: string }>)[p.path];
+    return {
+      url: `${base}${p.path}`,
+      changeFrequency: "weekly" as const,
+      priority: p.priority,
+      // Bara sidor med ett riktigt redaktionellt datum får lastModified.
+      ...(dates ? { lastModified: new Date(`${dates.updated}T00:00:00.000Z`) } : {}),
+    };
+  });
 
   try {
     const products = await prisma.product.findMany({

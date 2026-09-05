@@ -157,6 +157,8 @@ export function productNode(product: ProductCardData): JsonLdNode {
     name: product.name,
     description: product.description,
     url: `${SITE()}/kakor/${product.slug}`,
+    // Produktresultat i Google vill ha en identifierare; slugen är vår stabila artikelkod.
+    sku: product.slug,
     ...(product.imageRef ? { image: productImages(product.imageRef) } : {}),
     category: "Småkakor",
     brand: { "@id": ids.organization() },
@@ -185,6 +187,12 @@ export function productNode(product: ProductCardData): JsonLdNode {
       },
       availability: "https://schema.org/InStock",
       seller: { "@id": ids.organization() },
+      // Leverans ingår i priset inom leveransområdet (samma uppgift som i villkoren).
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "SEK" },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: "SE" },
+      },
     },
   };
 }

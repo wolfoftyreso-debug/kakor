@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { ImageSlot } from "@/components/ImageSlot";
+import { CONTENT_DATES } from "@/lib/seo/content-dates";
 import Link from "next/link";
 import { sharePreview } from "@/lib/seo/meta";
 import { getActiveProducts, getDeliveryDaysLabel } from "@/lib/products";
@@ -20,7 +22,7 @@ export const dynamic = "force-dynamic";
 
 const TITLE = "Julfika på jobbet — beställ kakor i tid";
 const DESCRIPTION =
-  "Julfika och påskfika på jobbet: hur mycket ni behöver, när ni bör beställa inför helgerna och vilka klassiska småkakor som passar. Leverans till företag i södra Stockholm, faktura.";
+  "Julfika och påskfika på jobbet: hur mycket som går åt, när ni bör beställa inför helgerna och vilka småkakor som passar. Leverans i södra Stockholm, faktura.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -30,8 +32,8 @@ export const metadata: Metadata = {
 };
 
 // Sätts vid verklig innehållsändring (aldrig byggtid).
-const PUBLISHED = "2026-09-03";
-const UPDATED = "2026-09-04";
+const PUBLISHED = CONTENT_DATES["/julfika"].published;
+const UPDATED = CONTENT_DATES["/julfika"].updated;
 
 const CRUMBS = [
   { name: "Sockerbagaren", path: "/" },
@@ -76,6 +78,12 @@ export default async function JulfikaPage() {
       />
       <Breadcrumbs crumbs={CRUMBS} container="container-narrow" />
       <article className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
+        <figure>
+          <div className="media">
+            <ImageSlot label="Fat med chokladsnittar, mandelkubb och kolasnittar" src="/images/hero.jpg" priority />
+          </div>
+          <figcaption>Julfikat på fatet: chokladsnittar, mandelkubb och kolasnittar, samma tre sorter hela året.</figcaption>
+        </figure>
         <PageHeader
           eyebrow="Säsong"
           title="Julfika på jobbet"

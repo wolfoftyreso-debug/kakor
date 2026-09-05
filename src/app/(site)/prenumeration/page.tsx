@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ImageSlot } from "@/components/ImageSlot";
 import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { JsonLd } from "@/components/JsonLd";
@@ -96,6 +97,11 @@ export default async function PrenumerationPage() {
           </Link>
         </p>
       </section>
+      <figure className="container-medium" style={{ margin: "0 auto", padding: "0 24px" }}>
+        <div className="media" style={{ position: "relative", minHeight: 280, borderRadius: "var(--radius-lg)", overflow: "hidden", border: "1px solid var(--border)" }}>
+          <ImageSlot label="Fat med chokladsnittar till fikaprenumerationen" src="/images/prenumeration.jpg" priority sizes="(max-width: 980px) 100vw, 980px" />
+        </div>
+      </figure>
       <TrustStrip band />
 
       <section className="container-medium" style={{ padding: "56px 24px 72px" }}>
