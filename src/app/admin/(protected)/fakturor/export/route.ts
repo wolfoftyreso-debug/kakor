@@ -19,33 +19,36 @@ function kr(ore: number): string {
   return (ore / 100).toFixed(2).replace(".", ",");
 }
 function csvCell(v: string): string {
-  return /[;"\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+  // Formelinjektion: ett företagsnamn som "=HYPERLINK(...)" eller "-2+3|cmd"
+  // får inte köras när kalkylprogrammet öppnar filen — neutralisera med
+  // apostrof, som Excel/LibreOffice tolkar som text.
+  const safe = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
+  return /[;"\n\r']/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 function perRate(snapshotJson: string, sign: 1 | -1) {
   const net: Record<number, number> = { 600: 0, 1200: 0, 2500: 0 };
   const vat: Record<number, number> = { 600: 0, 1200: 0, 2500: 0 };
-  let other = 0;
   try {
     for (const line of parseSnapshot(snapshotJson).lines) {
       const v = Math.round((line.lineTotalOre * line.vatRateBp) / 10000);
+      // Produktschemat tillåter bara 6/12/25 % — andra satser kan inte förekomma.
       if (line.vatRateBp in net) {
         net[line.vatRateBp] += sign * line.lineTotalOre;
         vat[line.vatRateBp] += sign * v;
-      } else {
-        other += sign * (line.lineTotalOre + v);
       }
     }
   } catch {
     /* korrupt snapshot — raden exporteras ändå med totaler */
   }
-  return { net, vat, other };
+  return { net, vat };
 }
 
 export async function GET(req: NextRequest) {
   if (!(await getAdmin())) return new NextResponse("Ej inloggad", { status: 401 });
   const params = req.nextUrl.searchParams;
   const today = todayInStockholm();
-  const defaultFrom = toISODate(new Date(today.getFullYear(), today.getMonth(), 1));
+  // Svensk kalendermånad oavsett serverns tidszon.
+  const defaultFrom = `${toISODate(today).slice(0, 7)}-01`;
   const fromParsed = isoDateSchema("Ogiltigt datum").safeParse(params.get("from") ?? defaultFrom);
   const toParsed = isoDateSchema("Ogiltigt datum").safeParse(params.get("to") ?? toISODate(today));
   if (!fromParsed.success || !toParsed.success) return new NextResponse("Ogiltigt datumintervall", { status: 400 });

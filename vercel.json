@@ -8,16 +8,5 @@
       "path": "/api/cron/generate-subscription-orders",
       "schedule": "0 5 * * *"
     }
-  ],
-  "functions": {
-    "src/app/api/cron/generate-subscription-orders/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/orders/route.ts": {
-      "maxDuration": 30
-    },
-    "src/app/api/subscriptions/route.ts": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }

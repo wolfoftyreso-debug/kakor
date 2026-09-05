@@ -16,7 +16,7 @@ export function Steps({ items }: { items: StepItem[] }) {
             </span>
           </div>
           <div>
-            <div className="step-title">{s.title}</div>
+            <h3 className="step-title" style={{ margin: 0, font: "inherit", fontWeight: 700 }}>{s.title}</h3>
             <p className="step-text">{s.text}</p>
           </div>
         </li>

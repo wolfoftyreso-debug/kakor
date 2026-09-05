@@ -6,6 +6,9 @@ import { pruneEmailLogs } from "@/lib/email";
 import { describeError } from "@/lib/log";
 import { sweepRateLimitBuckets } from "@/lib/rate-limit";
 
+// Vercel: PDF-rendering + mejl kan ta tid — standard 10 s räcker inte på kalla starter.
+export const maxDuration = 60;
+
 // Prenumerations-cron. Körs av Vercel Cron (GET, schema i vercel.json) —
 // Vercel skickar automatiskt "Authorization: Bearer <CRON_SECRET>" när
 // CRON_SECRET finns som env-variabel i projektet. POST behålls för manuell

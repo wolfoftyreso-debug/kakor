@@ -57,7 +57,7 @@ const PREN_FAQS = [
   },
   {
     q: "Passar prenumerationen för fredagsfika?",
-    a: "Ja — det är det vanligaste upplägget: en fast mängd varje eller varannan vecka så att fredagsfikat alltid finns på plats. Beställ gärna prova-på-paketet först för att se hur mycket som går åt hos er.",
+    a: "Ja — det är ett vanligt upplägg: en fast mängd varje eller varannan vecka så att fredagsfikat alltid finns på plats. Beställ gärna prova-på-paketet först för att se hur mycket som går åt hos er.",
   },
 ];
 

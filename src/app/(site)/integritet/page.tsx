@@ -70,18 +70,21 @@ export default function IntegritetPage() {
         <section>
           <h2>Mottagare och överföring</h2>
           <p>
-            Vi använder personuppgiftsbiträden för driften: Vercel Inc. (webbhotell, servrar i EU),
-            Neon Inc. (databas i EU), Resend Inc. (e-postutskick) och Functional Software Inc.
-            (Sentry, felövervakning i EU). Bolagen är amerikanska; i den mån uppgifter överförs
-            utanför EU/EES sker det med stöd av EU–US Data Privacy Framework eller EU-kommissionens
-            standardavtalsklausuler.
+            Vi använder personuppgiftsbiträden för driften: Vercel Inc. (webbhotell, servrar i
+            Frankfurt), Neon Inc. (databas), Resend Inc. (e-postutskick) och Functional Software
+            Inc. (Sentry, felövervakning). När robotskyddet i kassan är aktivt behandlar Cloudflare
+            Inc. (Turnstile) er IP-adress för att skilja människor från robotar, och när ni godkänt
+            statistik i cookiebannern behandlar Google Ireland Ltd (Google Analytics 4)
+            pseudonymiserade besöksdata. Bolagen är amerikanska eller har amerikanska moderbolag; i
+            den mån uppgifter överförs utanför EU/EES sker det med stöd av EU–US Data Privacy
+            Framework eller EU-kommissionens standardavtalsklausuler.
           </p>
         </section>
         <section>
           <h2>Cookies och lokal lagring</h2>
           <p>
             {process.env.NEXT_PUBLIC_GA4_ID
-              ? "Webbplatsen kan använda Google Analytics 4 för anonym besöksstatistik — men bara om ni godkänner det i bannern. Utan samtycke laddas inget Google-script och inga statistikcookies sätts. "
+              ? "Webbplatsen kan använda Google Analytics 4 för pseudonymiserad besöksstatistik — men bara om ni godkänner det i bannern. Utan samtycke laddas inget Google-script och inga statistikcookies sätts. "
               : "Webbplatsen använder inga spårnings- eller marknadsföringscookies. "}
             Varukorgen och ert cookieval lagras i webbläsarens lokala lagring och en nödvändig
             sessionskaka används enbart för administratörens inloggning — ingen av dessa kräver

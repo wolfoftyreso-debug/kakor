@@ -45,7 +45,9 @@ export default function VillkorPage() {
             orderbekräftelse med ordernummer till angiven e-postadress. Den som beställer ansvarar
             för att hen är behörig att beställa för det angivna företaget (organisationsnumret). Vi
             förbehåller oss rätten att neka en beställning. Ingen kortbetalning sker på
-            webbplatsen.
+            webbplatsen. Eftersom vi endast säljer till näringsidkare gäller inte konsumentköplagen
+            eller distansavtalslagen, och någon ångerrätt finns inte — se i stället avsnittet om
+            avbokning nedan.
           </p>
         </section>
         <section>
@@ -53,7 +55,8 @@ export default function VillkorPage() {
           <p>
             Priserna på webbplatsen gäller vid beställningstillfället och anges i svenska kronor
             exklusive moms. Moms enligt gällande momssats tillkommer och specificeras i kassan och
-            på fakturan tillsammans med nettobelopp och totalsumma.
+            på fakturan tillsammans med nettobelopp och totalsumma. Leverans inom våra
+            leveransområden ingår i priset; ingen leveransavgift tillkommer.
           </p>
         </section>
         <section>
@@ -81,7 +84,8 @@ export default function VillkorPage() {
         <section>
           <h2>Reklamation</h2>
           <p>
-            Kakorna är färskvara. Kontrollera leveransen vid mottagandet och reklamera synliga fel
+            Kakorna är livsmedel med begränsad hållbarhet; bäst före-datum anges på förpackningen.
+            Kontrollera leveransen vid mottagandet och reklamera synliga fel
             (skadad förpackning, fel sort eller mängd) samma dag och övriga fel utan dröjsmål,
             genom att svara på orderbekräftelsen med ordernumret. Vid befogad reklamation ersätter
             vi varan eller krediterar motsvarande belopp. Vårt ansvar är begränsat till

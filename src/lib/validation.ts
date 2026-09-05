@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { SUBSCRIPTION_FREQUENCY } from "@/lib/status";
 import { fromISODate, toISODate } from "@/lib/dates";
+import { sv } from "zod/locales";
+
+// Zods egna felmeddelanden ("Too big: expected number to be <=100") når kunden
+// via fieldErrors — svenska som förval, våra egna meddelanden går före.
+z.config(sv());
 
 // Kalenderriktigt datum: "2026-13-45" (Invalid Date → RangeError → 500) och
 // "2026-02-30" (V8 tolkar som 2 mars → ordern hamnar på ett annat datum än
@@ -108,7 +113,7 @@ const phoneSchema = z
 // för att tyst strippas — API-kontraktet är exakt.
 export const orderItemInputSchema = z.strictObject({
   productId: z.string().min(1),
-  weightKg: z.number().int("Antal anges i hela enheter (kilo eller paket)").min(1).max(100),
+  weightKg: z.number().int("Antal anges i hela enheter (kilo eller paket)").min(1, "Minst 1 per rad").max(100, "Högst 100 per rad"),
 });
 
 // Tak + dubblettspärr: utan dem kan ett enda anrop skapa en gigantisk

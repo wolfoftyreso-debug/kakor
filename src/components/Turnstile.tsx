@@ -75,7 +75,7 @@ export function Turnstile({ onToken, resetKey = 0 }: { onToken: (token: string |
         strategy="afterInteractive"
         onLoad={() => window.dispatchEvent(new Event("sb-turnstile-ready"))}
       />
-      <div ref={ref} style={{ minHeight: 65 }} aria-label="Robotkontroll" />
+      <div ref={ref} style={{ minHeight: 65 }} role="group" aria-label="Robotkontroll" />
     </>
   );
 }

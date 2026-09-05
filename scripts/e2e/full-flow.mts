@@ -103,7 +103,7 @@ const post = async (path: string, body: unknown) => {
 function nextDeliveryDate(from: Date, minDaysAhead: number) {
   for (let i = minDaysAhead; i < minDaysAhead + 14; i++) {
     const d = addDays(from, i);
-    if (weekdays.includes(d.getDay())) return d;
+    if (weekdays.includes(d.getUTCDay() || 7)) return d; // ISO-veckodag: söndag = 7
   }
   throw new Error("ingen leveransdag");
 }

@@ -18,8 +18,14 @@ const run = (cmd) => {
   execSync(cmd, { stdio: "inherit" });
 };
 
+// Preview-deployer migrerar också — mot SIN databas (DEPLOYMENT.md kräver en
+// separat Neon-branch för preview). Utan det ger varje schemaändring 500 på
+// alla databassidor i preview och PR-granskningen blir meningslös.
 const isProduction = process.env.VERCEL_ENV === "production";
-if (isProduction) {
+const isPreview = process.env.VERCEL_ENV === "preview";
+if (isPreview && process.env.DIRECT_DATABASE_URL) {
+  run("npx prisma migrate deploy");
+} else if (isProduction) {
   if (process.env.DIRECT_DATABASE_URL) {
     run("npx prisma migrate deploy");
   } else if (process.env.DATABASE_URL) {

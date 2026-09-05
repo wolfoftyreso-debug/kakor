@@ -18,11 +18,19 @@ export function totalKg(lines: KgLine[]): number {
   return Math.round(lines.reduce((s, l) => s + lineKg(l), 0) * 100) / 100;
 }
 
-/** Bokade kilo per ISO-datum i ett område (ej avbrutna, ej levererade ordrar). */
-export async function bookedKgByDate(areaId: string, isoDates: string[]): Promise<Map<string, number>> {
+/**
+ * Bokade kilo per ISO-datum i ett område. Alla ej avbrutna ordrar räknas —
+ * även levererade, eftersom dagens kapacitet är det som packas den dagen.
+ * `client` kan vara en transaktion (kapacitetskontroll under radlås).
+ */
+export async function bookedKgByDate(
+  areaId: string,
+  isoDates: string[],
+  client: Pick<typeof prisma, "order"> = prisma
+): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   if (isoDates.length === 0) return out;
-  const orders = await prisma.order.findMany({
+  const orders = await client.order.findMany({
     where: {
       deliveryAreaId: areaId,
       status: { not: "CANCELLED" },

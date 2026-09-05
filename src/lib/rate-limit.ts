@@ -58,24 +58,32 @@ export async function rateLimitShared(key: string, opts: { limit: number; window
       data: { count: { increment: 1 } },
     });
     if (bumped.count === 0) {
-      // Inget aktivt fönster: starta ett nytt (eller ta över ett utgånget).
+      // Inget aktivt fönster: starta ett nytt. Varje steg är en villkorad
+      // enskild sats, så parallella anrop kan aldrig nollställa ett fönster
+      // som en annan just startat — förloraren räknar upp i vinnarens fönster.
       const resetAt = new Date(now.getTime() + opts.windowMs);
+      let started = false;
       try {
-        await prisma.rateLimitBucket.upsert({
-          where: { key },
-          create: { key, count: 1, resetAt },
-          update: { count: 1, resetAt },
-        });
+        await prisma.rateLimitBucket.create({ data: { key, count: 1, resetAt } });
+        started = true;
       } catch (e) {
-        // Parallell skapelse — räkna upp i stället.
-        if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-          await prisma.rateLimitBucket.updateMany({ where: { key }, data: { count: { increment: 1 } } });
-        } else {
-          throw e;
-        }
+        if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e;
       }
-      return { ok: true, retryAfterSeconds: 0 };
+      if (!started) {
+        // Raden finns: ta över den bara om fönstret är UTGÅNGET.
+        const takeover = await prisma.rateLimitBucket.updateMany({
+          where: { key, resetAt: { lte: now } },
+          data: { count: 1, resetAt },
+        });
+        if (takeover.count === 1) started = true;
+      }
+      if (started) return { ok: true, retryAfterSeconds: 0 };
+      // Någon annan hann starta fönstret — räkna upp i det och kontrollera taket.
+      await prisma.rateLimitBucket.updateMany({ where: { key, resetAt: { gt: now } }, data: { count: { increment: 1 } } });
     }
+    // Räknaren läses efter uppräkningen. Under extrem samtidighet (många anrop
+    // i samma millisekund) kan den redan innehålla senare anrops steg — då
+    // stängs hellre ett anrop för mycket än ett för lite (fail-closed).
     const bucket = await prisma.rateLimitBucket.findUnique({ where: { key } });
     if (!bucket) return { ok: true, retryAfterSeconds: 0 };
     if (bucket.count > opts.limit) {

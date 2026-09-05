@@ -4,8 +4,9 @@ import { nextNumber } from "@/lib/numbering";
 import {
   fromISODate,
   isValidDeliveryDate,
-  nextSubscriptionDate,
+  nextCadenceDate,
   snapToDeliveryWeekday,
+  snapToWeekday,
   toISODate,
   todayInStockholm,
   addDays,
@@ -13,14 +14,15 @@ import {
 import type { SubscriptionInput } from "@/lib/validation";
 import type { SubscriptionFrequency } from "@/lib/status";
 import { safeBlockedDates, safeWeekdays } from "@/lib/products";
-import { assertNotAbusive, createOrder, OrderError } from "@/lib/orders/create-order";
+import { assertInvoicingConfigured, assertNotAbusive, createOrder, OrderError } from "@/lib/orders/create-order";
+import { describeError } from "@/lib/log";
 
 // Prenumeration = återkommande order/fakturering — INTE kortdebitering.
 // Motorn genererar vanliga ordrar via samma ordermotor som engångsköp.
 
 /** Samma nyckel måste bära samma prenumeration — annars är det inte en retry. */
 function sameSubscriptionPayload(
-  existing: { items: { productId: string; weightKg: number }[]; frequency: string; companyName: string; orgNumber: string; email: string; deliveryAddress: string },
+  existing: { items: { productId: string; weightKg: number }[]; frequency: string; companyName: string; orgNumber: string; email: string; invoiceEmail: string; deliveryAddress: string; deliveryPostalCode: string; nextDeliveryDate: Date; deliveryArea: { slug: string } | null },
   input: SubscriptionInput
 ): boolean {
   const key = (items: { productId: string; weightKg: number }[]) =>
@@ -31,7 +33,11 @@ function sameSubscriptionPayload(
     existing.companyName === input.companyName &&
     existing.orgNumber === input.orgNumber &&
     existing.email.toLowerCase() === input.email.toLowerCase() &&
-    existing.deliveryAddress === input.deliveryAddress
+    existing.invoiceEmail.toLowerCase() === input.invoiceEmail.toLowerCase() &&
+    existing.deliveryAddress === input.deliveryAddress &&
+    existing.deliveryPostalCode === input.deliveryPostalCode &&
+    existing.deliveryArea?.slug === input.areaSlug &&
+    toISODate(existing.nextDeliveryDate) === input.firstDeliveryDate
   );
 }
 
@@ -54,13 +60,17 @@ export async function createSubscription(input: SubscriptionInput) {
   if (input.idempotencyKey) {
     const existing = await prisma.subscription.findUnique({
       where: { idempotencyKey: input.idempotencyKey },
-      include: { items: true },
+      include: { items: true, deliveryArea: { select: { slug: true } } },
     });
     if (existing) {
       if (!sameSubscriptionPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
       return { subscription: existing, duplicate: true as const };
     }
   }
+
+  // Utan verifierade fakturauppgifter i produktion får ingen prenumeration
+  // startas — annars kastar cronen samma fel varje morgon utan att någon ser det.
+  assertInvoicingConfigured();
 
   // Missbruksspärrar: samma dygnsgränser som checkouten, plus max två
   // prenumerationsstarter per e-post — cronen skulle annars generera
@@ -127,7 +137,7 @@ export async function createSubscription(input: SubscriptionInput) {
     ) {
       const existing = await prisma.subscription.findUnique({
         where: { idempotencyKey: input.idempotencyKey },
-        include: { items: true },
+        include: { items: true, deliveryArea: { select: { slug: true } } },
       });
       if (existing) {
         if (!sameSubscriptionPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
@@ -225,34 +235,39 @@ export async function generateDueSubscriptionOrders(
     //    Gränsen är i morgon, inte kundens framförhållning: en missad
     //    cron-körning ska inte skjuta en redan planerad leverans en hel period.
     const earliest = addDays(today, 1);
-    let deliveryDate = sub.nextDeliveryDate;
+    // nextDeliveryDate är KADENSANKARET (t.ex. varannan torsdag). Helgdagar
+    // och spärrade datum flyttar bara den enskilda leveransen, aldrig ankaret —
+    // annars driver kadensen en vecka per helgdag (verifierat i tester).
+    let cadence = sub.nextDeliveryDate;
     let moved = false;
-    for (let i = 0; i < 60 && deliveryDate.getTime() < earliest.getTime(); i++) {
-      deliveryDate = nextSubscriptionDate(deliveryDate, frequency, areaConfig);
+    for (let i = 0; i < 60 && cadence.getTime() < earliest.getTime(); i++) {
+      cadence = nextCadenceDate(cadence, frequency, areaConfig.weekdays);
       moved = true;
     }
     // 2) Områdets leveransdagar kan ha ändrats sedan datumet sattes (t.ex.
-    //    tisdag+torsdag -> endast torsdag): snäpp till närmaste giltiga dag.
-    const snapped = snapToDeliveryWeekday(deliveryDate, areaConfig);
-    if (snapped.getTime() !== deliveryDate.getTime()) {
-      deliveryDate = snapped;
+    //    tisdag+torsdag -> endast torsdag): flytta ankaret till närmaste veckodag.
+    const onWeekday = snapToWeekday(cadence, areaConfig.weekdays);
+    if (onWeekday.getTime() !== cadence.getTime()) {
+      cadence = onWeekday;
       moved = true;
     }
+    // 3) Den faktiska leveransen: förbi helgdagar och spärrade dagar.
+    const deliveryDate = snapToDeliveryWeekday(cadence, areaConfig);
     // Vakt: har prenumerationen legat pausad längre än loopen når (60 × intervall)
     // får ALDRIG en bakdaterad order skapas — hoppa över och låt nästa körning
     // fortsätta framflyttningen från det sparade datumet.
     if (deliveryDate.getTime() < earliest.getTime()) {
-      await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: deliveryDate } });
+      await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: cadence } });
       result.skipped.push({
         subscriptionNumber: sub.number,
-        reason: `Passerat datum ${toISODate(sub.nextDeliveryDate)} — flyttas fram stegvis (nu ${toISODate(deliveryDate)})`,
+        reason: `Passerat datum ${toISODate(sub.nextDeliveryDate)} — flyttas fram stegvis (nu ${toISODate(cadence)})`,
       });
       continue;
     }
     if (moved) {
-      await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: deliveryDate } });
+      await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: cadence } });
     }
-    // 3) Hamnar det framflyttade datumet utanför horisonten genereras det vid
+    // 4) Hamnar det framflyttade datumet utanför horisonten genereras det vid
     //    en senare körning — men ligger det inom horisonten skapas ordern NU
     //    (tidigare tappades leveransen om framflyttningen landade på "idag").
     if (deliveryDate.getTime() > horizon.getTime()) {
@@ -318,7 +333,9 @@ export async function generateDueSubscriptionOrders(
         // Ordern för perioden finns redan (retry/dubbelkörning) — hoppa vidare.
         result.skipped.push({ subscriptionNumber: sub.number, reason: `Period ${period} redan genererad` });
       } else {
-        const reason = e instanceof Error ? e.message : "Okänt fel";
+        // OrderError är kundvänlig svenska; övriga fel (t.ex. Prisma) kan bära
+        // hela indata-objektet i meddelandet — logga bara namn/kod.
+        const reason = e instanceof OrderError ? e.message : `Tekniskt fel: ${JSON.stringify(describeError(e))}`;
         result.skipped.push({ subscriptionNumber: sub.number, reason });
         // Riktiga fel (inaktivt område, spärrat postnummer …) ska synas för
         // verksamheten — inte bara ligga i ett cron-svar ingen läser.
@@ -327,8 +344,8 @@ export async function generateDueSubscriptionOrders(
       }
     }
 
-    // Flytta fram nästa leveransdatum (även när perioden redan var genererad).
-    const next = nextSubscriptionDate(deliveryDate, frequency, areaConfig);
+    // Flytta fram kadensankaret (även när perioden redan var genererad).
+    const next = nextCadenceDate(cadence, frequency, areaConfig.weekdays);
     await prisma.subscription.update({
       where: { id: sub.id },
       data: { nextDeliveryDate: next },

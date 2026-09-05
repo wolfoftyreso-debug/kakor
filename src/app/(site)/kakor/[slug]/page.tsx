@@ -15,7 +15,7 @@ import { breadcrumbNode, faqNode, graph, ids, productNode, webPageNode } from "@
 import { PRODUCT_KNOWLEDGE } from "@/lib/product-content";
 import { allergenChips } from "@/lib/allergens";
 import { formatOre } from "@/lib/money";
-import { priceSuffix } from "@/lib/units";
+import { priceSuffix, formatWeightKg } from "@/lib/units";
 import { FaqList } from "@/components/FaqList";
 
 // Object.hasOwn: en admin-skapad slug som "constructor" får aldrig nå prototypkedjan.
@@ -31,10 +31,10 @@ interface Props {
 // Sidtitel ≤ ~45 tecken före " — Sockerbagaren": produktnamn + synonym med
 // egen sökvolym (Semrush: "kolakakor" 33 100, "mandelkubbar" 4 400,
 // "chokladkakor" 6 600) + köpsignalen "per kilo till företag".
-function productPageTitle(product: { name: string; slug: string; unit: string }): string {
+function productPageTitle(product: { name: string; slug: string; unit: string; packageWeightGrams: number }): string {
   const aka = knowledgeFor(product.slug)?.titleAka;
   const name = aka ? `${product.name} (${aka})` : product.name;
-  return product.unit === "paket" ? `${name} — 1,5 kg småkakor till företag` : `${name} per kilo till företag`;
+  return product.unit === "paket" ? `${name} — ${formatWeightKg(product.packageWeightGrams)} småkakor till företag` : `${name} per kilo till företag`;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -148,7 +148,7 @@ export default async function ProductPage({ params }: Props) {
               </div>
               <div className="spec-row">
                 <dt>Säljs</dt>
-                <dd>{product.unit === "paket" ? "Per paket, 1,5 kg (0,5 kg av varje sort)" : "Per kilo, hela kilon, blanda fritt med andra sorter"}</dd>
+                <dd>{product.unit === "paket" ? `Per paket, ${formatWeightKg(product.packageWeightGrams)}` : "Per kilo, hela kilon, blanda fritt med andra sorter"}</dd>
               </div>
               {product.piecesPerKgApprox != null && product.piecesPerKgApprox > 0 && (
                 <div className="spec-row">

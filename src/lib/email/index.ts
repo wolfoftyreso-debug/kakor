@@ -114,6 +114,11 @@ export async function sendEmail(msg: EmailMessage): Promise<boolean> {
 export const EMAIL_LOG_RETENTION_DAYS = 90;
 export async function pruneEmailLogs(): Promise<number> {
   const cutoff = new Date(Date.now() - EMAIL_LOG_RETENTION_DAYS * 86400_000);
-  const res = await prisma.emailLog.deleteMany({ where: { createdAt: { lt: cutoff } } });
+  // Adressen är personuppgiften; raden ("faktura skickad 3 mars") är
+  // bokföringsunderlag och behålls utan mottagare.
+  const res = await prisma.emailLog.updateMany({
+    where: { createdAt: { lt: cutoff }, to: { not: "" } },
+    data: { to: "", error: "" },
+  });
   return res.count;
 }

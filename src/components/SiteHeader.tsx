@@ -136,7 +136,7 @@ export function SiteHeader() {
               color: "var(--text)",
               textDecoration: "none",
             }}
-            aria-label={`Varukorg (${totalKg})`}
+            aria-label={`Varukorg, ${totalKg} ${totalKg === 1 ? "enhet" : "enheter"}`}
           >
             Korg
             <span

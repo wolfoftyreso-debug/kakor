@@ -35,7 +35,7 @@ const KAKOR_FAQS = [
   },
   {
     q: "Hur länge håller kakor i rumstemperatur?",
-    a: "Småkakor på riktigt smör håller sig fina i flera veckor i en tät burk i rumstemperatur. Öppna burken så lite som möjligt och lägg bakplåtspapper mellan lagren, så behåller de både smak och konsistens.",
+    a: "Bäst före-datum står på förpackningen. Förvara kakorna i en tät burk i rumstemperatur, öppna burken så lite som möjligt och lägg bakplåtspapper mellan lagren, så behåller de både smak och konsistens.",
   },
   {
     q: "Hur länge håller kakor i frysen?",
