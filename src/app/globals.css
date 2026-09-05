@@ -909,8 +909,16 @@ button, input, select, textarea {
   border-color: #dccba5;
 }
 .product-card .card-media {
-  aspect-ratio: 4 / 3;
-  max-height: 240px;
+  /* Explicit höjd i stället för aspect-ratio + max-height: Safari räknar om
+     kombinationen till en smalare bild (4:3 av 240 px) och lämnar en tom
+     remsa till höger. En fast höjd beter sig lika i alla motorer. */
+  height: clamp(190px, 62vw, 240px);
+}
+/* Bildens wrapper ska täcka hela ytan oavsett hur föräldern fått sin höjd
+   (procenthöjd inuti flex-kolumn är opålitlig i Safari). */
+.card-media > span {
+  position: absolute !important;
+  inset: 0;
 }
 .product-badge {
   position: absolute;
