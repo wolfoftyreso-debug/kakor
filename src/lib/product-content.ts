@@ -109,13 +109,13 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
   "prova-pa-paket": {
     heading: "Om prova-på-paketet",
     paragraphs: [
-      "Prova-på-paketet är det enkla sättet att låta arbetsplatsen smaka hela sortimentet innan ni bestämmer favorit: 0,5 kg vardera av mandelkubb, kolasnittar och chokladsnittar — 1,5 kg gammaldags småkakor på riktigt smör.",
+      "Prova-på-paketet är det enkla sättet att låta arbetsplatsen smaka hela sortimentet innan ni bestämmer favorit: 0,5 kg vardera av mandelkubb, kolasnittar och chokladsnittar — 1,5 kg gammaldags småkakor på riktigt smör.",
       "Tre sorter ger också en bra spridning på fikabordet: en mör och mättande kaka (mandelkubb), en seg kolakaka (kolasnittar) och en chokladkaka (chokladsnittar). När ni vet vad som går åt först är det lätt att beställa den sorten per kilo nästa gång.",
     ],
     faqs: [
       {
         q: "Hur många personer räcker prova-på-paketet till?",
-        a: "Räkna med 3–5 småkakor per person till en fika. Hur många kakor 1,5 kg ger beror på sorten — snittar är lätta och mandelkubb tyngre — så paketet är ett bra sätt att se hur långt det räcker hos just er.",
+        a: "Räkna med 3–5 småkakor per person till en fika. Hur många kakor 1,5 kg ger beror på sorten — snittar är lätta och mandelkubb tyngre — så paketet är ett bra sätt att se hur långt det räcker hos just er.",
       },
       {
         q: "Kan vi blanda paketet med kakor per kilo i samma order?",

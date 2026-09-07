@@ -11,7 +11,7 @@ export function unitLabel(unit: string): string {
 
 /** "3 kg", "1 paket", "2 paket" */
 export function qtyLabel(qty: number, unit: string): string {
-  return `${qty} ${unitLabel(unit)}`;
+  return `${qty}\u00a0${unitLabel(unit)}`;
 }
 
 /** Prissuffix: "/kg" eller "/paket". */
@@ -28,5 +28,5 @@ export function lineWeightGrams(qty: number, unit: string, packageWeightGrams: n
 export function formatWeightKg(grams: number): string {
   const kg = grams / 1000;
   const text = Number.isInteger(kg) ? String(kg) : kg.toLocaleString("sv-SE", { maximumFractionDigits: 2 });
-  return `${text} kg`;
+  return `${text}\u00a0kg`;
 }

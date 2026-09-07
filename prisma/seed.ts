@@ -46,11 +46,11 @@ const products = [
   },
   {
     // Styckvara: säljs per paket (pricePerKgOre = pris per paket).
-    // Startpris = 1,5 kg × startpriset 295 kr/kg — bekräftas/ändras i admin.
+    // Startpris = 1,5 kg × startpriset 295 kr/kg — bekräftas/ändras i admin.
     slug: "prova-pa-paket",
     name: "Prova-på-paket",
     description:
-      "1,5 kg småkakor — 0,5 kg vardera av mandelkubb, kolasnittar och chokladsnittar. Hela sortimentet i en beställning: det enkla sättet att låta arbetsplatsen provsmaka och hitta sin favorit.",
+      "1,5 kg småkakor — 0,5 kg vardera av mandelkubb, kolasnittar och chokladsnittar. Hela sortimentet i en beställning: det enkla sättet att låta arbetsplatsen provsmaka och hitta sin favorit.",
     pricePerKgOre: 44250,
     unit: "paket",
     packageWeightGrams: 1500,

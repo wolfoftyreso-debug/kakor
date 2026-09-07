@@ -5,8 +5,8 @@ describe("försäljningsenheter", () => {
   it("etiketter per enhet", () => {
     expect(unitLabel("kg")).toBe("kg");
     expect(unitLabel("paket")).toBe("paket");
-    expect(qtyLabel(3, "kg")).toBe("3 kg");
-    expect(qtyLabel(2, "paket")).toBe("2 paket");
+    expect(qtyLabel(3, "kg")).toBe("3\u00a0kg");
+    expect(qtyLabel(2, "paket")).toBe("2\u00a0paket");
     expect(priceSuffix("kg")).toBe("/kg");
     expect(priceSuffix("paket")).toBe("/paket");
   });
@@ -22,8 +22,8 @@ describe("försäljningsenheter", () => {
   });
 
   it("viktformat med svensk decimalkomma", () => {
-    expect(formatWeightKg(3000)).toBe("3 kg");
-    expect(formatWeightKg(1500)).toBe("1,5 kg");
-    expect(formatWeightKg(4500)).toBe("4,5 kg");
+    expect(formatWeightKg(3000)).toBe("3\u00a0kg");
+    expect(formatWeightKg(1500)).toBe("1,5\u00a0kg");
+    expect(formatWeightKg(4500)).toBe("4,5\u00a0kg");
   });
 });

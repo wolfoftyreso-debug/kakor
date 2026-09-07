@@ -48,7 +48,7 @@ const FAQS = [
   },
   {
     q: "Hur mycket är ett kilo småkakor?",
-    a: "Det beror på sorten: snittar (kolasnittar och chokladsnittar) är lätta och ger många kakor per kilo, medan mandelkubb är en tyngre kaka som ger färre men mer mättande bitar. Prova-på-paketet med 0,5 kg av varje sort är ett bra sätt att se hur långt ett kilo räcker hos er.",
+    a: "Det beror på sorten: snittar (kolasnittar och chokladsnittar) är lätta och ger många kakor per kilo, medan mandelkubb är en tyngre kaka som ger färre men mer mättande bitar. Prova-på-paketet med 0,5 kg av varje sort är ett bra sätt att se hur långt ett kilo räcker hos er.",
   },
   {
     q: "Vad passar bäst till fredagsfika på jobbet?",
@@ -117,7 +117,7 @@ export default async function FikaTillJobbetPage() {
             { label: "Per person", value: "3–5 småkakor" },
             { label: "Leverans", value: deliveryDays ? `${deliveryDays} i södra Stockholm` : "Fasta dagar per område" },
             { label: "Betalning", value: "Faktura, förfaller efter leverans" },
-            { label: "Minsta mängd", value: "1 kg per sort eller prova-på-paket" },
+            { label: "Minsta mängd", value: "1 kg per sort eller prova-på-paket" },
           ]}
         />
 
@@ -134,8 +134,8 @@ export default async function FikaTillJobbetPage() {
           <thead>
             <tr>
               <th>Antal personer</th>
-              <th className="num">Lätt fika (3 st)</th>
-              <th className="num">Rejäl fika (5 st)</th>
+              <th className="num">Lätt fika (3 st)</th>
+              <th className="num">Rejäl fika (5 st)</th>
             </tr>
           </thead>
           <tbody>
@@ -219,7 +219,7 @@ export default async function FikaTillJobbetPage() {
                 {paket.name}
               </Link>{" "}
               — {formatOre(paket.pricePerKgOre)}
-              {priceSuffix(paket.unit)} exkl. moms, 0,5 kg av varje sort
+              {priceSuffix(paket.unit)} exkl. moms, 0,5 kg av varje sort
             </li>
           )}
         </ul>

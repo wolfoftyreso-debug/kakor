@@ -61,7 +61,7 @@ export default function OmPage() {
       </p>
       <h2>Så beställer ni</h2>
       <p>
-        Välj sorter och mängd per kilo (eller prova-på-paketet på 1,5 kg), välj leveransdag för ert
+        Välj sorter och mängd per kilo (eller prova-på-paketet på 1,5 kg), välj leveransdag för ert
         område och ange faktureringsuppgifter — fakturan skapas direkt och förfaller först efter
         leveransen. Återkommande fika? <Link href="/prenumeration">Fikaprenumerationen</Link> gör
         om samma beställning automatiskt. Läs mer i vår{" "}
