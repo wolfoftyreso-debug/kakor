@@ -29,7 +29,12 @@ function pdfMoney(ore: number): string {
 const isCredit = (snapshot: InvoiceSnapshot) => !!snapshot.creditsInvoiceNumber;
 const signed = (snapshot: InvoiceSnapshot, ore: number) => (isCredit(snapshot) ? -ore : ore);
 
-export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: string): Promise<Buffer> {
+export interface RenderOptions {
+  /** Statusrad under dokumenttiteln, t.ex. "Krediterad 2026-09-10 genom kreditfaktura 10231". */
+  statusNote?: string;
+}
+
+export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: string, options: RenderOptions = {}): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const credit = isCredit(snapshot);
     const docTitle = credit ? "KREDITFAKTURA" : "FAKTURA";
@@ -58,6 +63,11 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
     doc.text(docTitle, M, M, { width: CONTENT_W, align: "right" });
     doc.font("Helvetica").fontSize(10).fillColor(MUTED);
     doc.text(`${credit ? "Kreditfakturanummer" : "Fakturanummer"} ${invoiceNumber}`, M, M + 26, { width: CONTENT_W, align: "right" });
+    if (options.statusNote) {
+      // Fakturan som laddas ner i efterhand ska aldrig se betalbar ut om den är krediterad.
+      doc.font("Helvetica-Bold").fontSize(9).fillColor("#9B2C2C");
+      doc.text(options.statusNote.toUpperCase(), M, M + 40, { width: CONTENT_W, align: "right", lineBreak: false });
+    }
 
     let y = M + 56;
     doc.moveTo(M, y).lineTo(W - M, y).lineWidth(1.5).stroke(BROWN);
@@ -74,33 +84,46 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
     doc.font("Helvetica").fontSize(9.5).fillColor(BROWN);
     doc.text(`Org.nr ${snapshot.buyer.orgNumber}`, M, y + 27, { width: colW, height: 14, ellipsis: true });
     doc.text(snapshot.buyer.billingAddress, M, y + 40, { width: colW, height: 52, ellipsis: true });
+    // Mottagarreferens: kundens egen märkning, annars beställarens namn – fakturor
+    // utan referens fastnar i många attestflöden.
     if (snapshot.buyer.reference) {
       doc.text(`Er referens: ${snapshot.buyer.reference}`, M, doc.y + 2, { width: colW, height: 14, ellipsis: true });
+    } else if (snapshot.buyer.contactName) {
+      doc.text(`Att: ${snapshot.buyer.contactName}`, M, doc.y + 2, { width: colW, height: 14, ellipsis: true });
     }
 
     const rows: [string, string][] = credit
       ? [
           ["Kreditdatum", (snapshot.invoiceDate)],
           ["Krediterar faktura", snapshot.creditsInvoiceNumber ?? ""],
+          ...(snapshot.creditedInvoiceDate ? ([["Fakturadatum", snapshot.creditedInvoiceDate]] as [string, string][]) : []),
           ["Ordernummer", snapshot.orderNumber],
+          ...(snapshot.subscriptionNumber ? ([["Prenumeration", snapshot.subscriptionNumber]] as [string, string][]) : []),
           ["Avser leverans", (snapshot.deliveryDate)],
         ]
       : [
           ["Fakturadatum", (snapshot.invoiceDate)],
           ["Förfallodatum", (snapshot.dueDate)],
-          ["Betalningsvillkor", `${snapshot.paymentTermsDays} dagar netto från leverans`],
+          // Kort nog för en rad: villkoret räknas från leveransdagen, inte fakturadatumet.
+          ["Betalningsvillkor", `${snapshot.paymentTermsDays} dagar från leverans`],
           ["Ordernummer", snapshot.orderNumber],
+          ...(snapshot.subscriptionNumber ? ([["Prenumeration", snapshot.subscriptionNumber]] as [string, string][]) : []),
           // Fakturan utfärdas vid beställning – leveransen ligger framåt i tiden.
           ["Planerad leverans", (snapshot.deliveryDate)],
+          ...(snapshot.deliveryAddress ? ([["Leveransadress", snapshot.deliveryAddress]] as [string, string][]) : []),
         ];
     let ry = y;
+    const labelW = 100;
+    const valueW = W - M - (col2 + labelW);
     for (const [label, value] of rows) {
-      doc.font("Helvetica").fontSize(9.5).fillColor(MUTED).text(label, col2, ry, { width: 130 });
-      doc.font("Helvetica-Bold").fontSize(9.5).fillColor(BROWN).text(value, col2 + 130, ry);
+      doc.font("Helvetica").fontSize(9.5).fillColor(MUTED).text(label, col2, ry, { width: labelW, lineBreak: false });
+      // Aldrig radbrytning i värdekolumnen – ett långt värde får hellre klippas än
+      // trycka in nästa rad i sig själv.
+      doc.font("Helvetica-Bold").fontSize(9.5).fillColor(BROWN).text(value, col2 + labelW, ry, { width: valueW, height: 12, ellipsis: true, lineBreak: false });
       ry += 15;
     }
 
-    y = Math.min(Math.max(doc.y + 14, ry + 14, y + 100), y + 130);
+    y = Math.min(Math.max(doc.y + 14, ry + 14, y + 100), y + 160);
 
     // --- Radtabell (paginerar: tabellhuvudet ritas om på ny sida) ---
     const cols = { name: M, kg: M + 215, price: M + 285, vat: M + 370, total: M + 420 };
@@ -130,7 +153,8 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
       doc.font("Helvetica-Bold").text(line.productName, cols.name + 8, rowY, { width: 200, height: 14, ellipsis: true, lineBreak: false });
       doc.font("Helvetica");
       doc.text(qtyLabel(line.weightKg, line.unit ?? "kg"), cols.kg, rowY, { width: 70, align: "right", lineBreak: false });
-      doc.text(pdfMoney(signed(snapshot, line.unitPricePerKgOre)), cols.price, rowY, { width: 75, align: "right", lineBreak: false });
+      // À-priset är alltid positivt – på kreditfakturor negeras bara radbeloppet.
+      doc.text(pdfMoney(line.unitPricePerKgOre), cols.price, rowY, { width: 75, align: "right", lineBreak: false });
       doc.text(`${String(line.vatRateBp / 100).replace(".", ",")} %`, cols.vat, rowY, { width: 40, align: "right", lineBreak: false });
       doc.text(pdfMoney(signed(snapshot, line.lineTotalOre)), cols.total, rowY, {
         width: W - M - cols.total - 8,
@@ -140,6 +164,10 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
       y += 26;
       doc.moveTo(M, y).lineTo(W - M, y).lineWidth(0.5).stroke(BORDER);
     }
+    // Kolumnbeloppen är netto – sägs uttryckligen så att brutto inte konteras som netto.
+    doc.font("Helvetica").fontSize(8).fillColor(MUTED);
+    doc.text("À-pris och radbelopp anges exkl. moms.", M + 8, y + 5, { lineBreak: false });
+    y += 8;
     // Summering + betalningsblock behöver ~200 pt – bryt sida om de inte får plats.
     if (y + 200 > PAGE_BOTTOM + 60) {
       doc.addPage();
@@ -153,6 +181,8 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
     // Beskattningsunderlag och moms per momssats (ML 17 kap. 24 §) – en rad
     // per sats om raderna har olika satser, annars som förut.
     const byRate = new Map<number, { net: number; vat: number }>();
+    // Moms per rad (samma avrundning som fakturans total) – annars kan
+    // delsummorna avvika ett öre från "Att betala" och fastna i attestflödet.
     for (const line of snapshot.lines) {
       const g = byRate.get(line.vatRateBp) ?? { net: 0, vat: 0 };
       g.net += line.lineTotalOre;
@@ -187,7 +217,8 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
 
     // --- Betalningsinformation ---
     y += 16;
-    doc.rect(M, y, CONTENT_W, 66).fill(LIGHT_BG);
+    const payBoxH = credit ? 94 : 66;
+    doc.rect(M, y, CONTENT_W, payBoxH).fill(LIGHT_BG);
     doc.font("Helvetica-Bold").fontSize(8.5).fillColor(MUTED).text(credit ? "KREDITERING" : "BETALNINGSINFORMATION", M + 12, y + 10);
     doc.font("Helvetica").fontSize(9.5).fillColor(BROWN);
     if (credit) {
@@ -199,37 +230,53 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
         M + 12,
         y + 24
       );
+      const remaining = snapshot.remainingToPayOre;
+      // En mening per rad – rutan har fast höjd och ingen rad får klippas tyst.
       doc.text(
         partial
-          ? "Fakturans återstående belopp betalas enligt fakturans förfallodatum. Är den redan betald återbetalas det krediterade beloppet."
-          : "Fakturan ska inte betalas. Är den redan betald återbetalas beloppet.",
+          ? remaining !== undefined
+            ? `Återstår att betala på faktura ${snapshot.creditsInvoiceNumber}: ${pdfMoney(remaining)} inkl. moms, enligt fakturans förfallodatum.`
+            : "Fakturans återstående belopp betalas enligt fakturans förfallodatum."
+          : "Fakturan ska inte betalas.",
         M + 12,
         y + 38,
         { width: CONTENT_W - 24, lineBreak: false }
       );
       doc.text(
-        `Kreditdatum: ${snapshot.invoiceDate}${snapshot.creditReason ? `. Anledning: ${snapshot.creditReason}` : ""}`,
+        partial ? "Är fakturan redan betald återbetalas det krediterade beloppet." : "Är fakturan redan betald återbetalas beloppet.",
         M + 12,
         y + 52,
         { width: CONTENT_W - 24, lineBreak: false }
       );
+      const original = snapshot.creditedInvoiceTotalOre !== undefined
+        ? ` Ursprungligt fakturabelopp: ${pdfMoney(snapshot.creditedInvoiceTotalOre)} inkl. moms.`
+        : "";
+      doc.text(`Kreditdatum: ${snapshot.invoiceDate}.${original}`, M + 12, y + 66, { width: CONTENT_W - 24, lineBreak: false });
+      if (snapshot.creditReason) {
+        doc.text(`Anledning: ${snapshot.creditReason}`, M + 12, y + 80, { width: CONTENT_W - 24, height: 12, ellipsis: true, lineBreak: false });
+      }
     } else {
       // Platshållare ("[EJ VERIFIERAT …]") får aldrig hamna på en kundfaktura –
       // saknas verifierat bankgiro skrivs en neutral rad tills värdet är satt.
+      const hasBankgiro = isVerifiedValue(snapshot.seller.bankgiro);
       doc.text(
-        isVerifiedValue(snapshot.seller.bankgiro)
+        hasBankgiro
           ? `Bankgiro: ${snapshot.seller.bankgiro}`
-          : "Betalningsuppgifter meddelas separat.",
+          : "Betalningsuppgifter har inte kunnat anges på fakturan – de meddelas separat före förfallodagen.",
         M + 12,
-        y + 24
+        y + 24,
+        { width: CONTENT_W - 24, lineBreak: false }
       );
       doc.text(
         `Ange fakturanummer ${invoiceNumber} som referens vid betalning.`,
         M + 12,
         y + 38
       );
+      // Samma mening som i köpvillkoren – fakturan och villkoren får inte säga olika.
       doc.text(
-        `Förfallodatum: ${(snapshot.dueDate)}. Efter förfallodagen debiteras dröjsmålsränta enligt räntelagen.`,
+        hasBankgiro
+          ? `Förfallodatum: ${(snapshot.dueDate)}. Vid försenad betalning utgår dröjsmålsränta enligt räntelagen och förseningsersättning enligt lag.`
+          : `Förfallodatum: ${(snapshot.dueDate)}.`,
         M + 12,
         y + 52,
         { width: CONTENT_W - 24, lineBreak: false }
