@@ -7,7 +7,7 @@ import { calculateTotals } from "@/lib/money";
 import { OrderError } from "@/lib/orders/create-order";
 import { sendEmail } from "@/lib/email";
 import { FREQUENCY_LABELS } from "@/lib/status";
-import { capitalizeFirst, formatDeliveryDateWithYear } from "@/lib/dates";
+import { capitalizeFirst, formatDeliveryDateWithYear, isoWeekday, weekdayName } from "@/lib/dates";
 import { effectiveVatRateBp } from "@/lib/vat";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { describeError } from "@/lib/log";
@@ -91,24 +91,36 @@ export async function POST(req: NextRequest) {
 
     // Bekräftelse – prenumerationen är sparad även om mejlet fallerar.
     if (!isReplay) {
+      const intervalLabel = (FREQUENCY_LABELS[subscription.frequency as keyof typeof FREQUENCY_LABELS] ?? subscription.frequency).toLowerCase();
+      const weekday = `${weekdayName(isoWeekday(subscription.nextDeliveryDate))}ar`;
+      const text = `Tack! Er fikaprenumeration är igång.
+
+Prenumerationsnummer: ${subscription.number}
+Första leverans: ${capitalizeFirst(formatDeliveryDateWithYear(subscription.nextDeliveryDate))}
+Därefter: ${intervalLabel} på ${weekday}. Infaller en leverans på en helgdag hör vi av oss om den flyttas eller utgår.
+Leveransadress: ${subscription.deliveryAddress}, ${subscription.deliveryPostalCode} ${subscription.deliveryCity}
+Belopp per leverans: ${formatOre(totals.totalOre)} inkl. moms (${formatOre(totals.subtotalOre)} exkl. moms) enligt dagens priser – priset som gäller vid varje leverans står på fakturan.
+
+Några dagar före varje leverans får ni en orderbekräftelse, och fakturan går till ${subscription.invoiceEmail}. Ni betalar per leverans, aldrig i förskott.
+Vill ni pausa, ändra mängd eller avsluta? Svara på det här mejlet så ordnar vi det – ingen bindningstid.
+
+Vänliga hälsningar
+Sockerbagaren`;
       await sendEmail({
         to: subscription.email,
         subject: `Fikaprenumeration ${subscription.number} startad – Sockerbagaren`,
-        text: `Tack! Er fikaprenumeration är igång.
-
-Prenumerationsnummer: ${subscription.number}
-Intervall: ${FREQUENCY_LABELS[subscription.frequency as keyof typeof FREQUENCY_LABELS] ?? subscription.frequency}
-Första leverans: ${capitalizeFirst(formatDeliveryDateWithYear(subscription.nextDeliveryDate))}
-Leveransadress: ${subscription.deliveryAddress}, ${subscription.deliveryPostalCode} ${subscription.deliveryCity}
-Belopp per leverans: ${formatOre(totals.totalOre)} inkl. moms (${formatOre(totals.subtotalOre)} exkl. moms)
-
-Inför varje leverans skapas en vanlig order med faktura till ${subscription.invoiceEmail}.
-Vill ni pausa, ändra eller avsluta? Svara på det här mejlet så ordnar vi det.
-
-Vänliga hälsningar
-Sockerbagaren`,
+        text,
         type: "SUBSCRIPTION_CONFIRMATION",
       });
+      // Ekonomi får fakturorna men har annars aldrig sett överenskommelsen.
+      if (subscription.invoiceEmail.toLowerCase() !== subscription.email.toLowerCase()) {
+        await sendEmail({
+          to: subscription.invoiceEmail,
+          subject: `Fikaprenumeration ${subscription.number} startad – Sockerbagaren`,
+          text: `Kopia till er faktura-e-post: ${subscription.email} har startat en fikaprenumeration som faktureras per leverans.\n\n${text}`,
+          type: "SUBSCRIPTION_CONFIRMATION",
+        });
+      }
     }
 
     return NextResponse.json({

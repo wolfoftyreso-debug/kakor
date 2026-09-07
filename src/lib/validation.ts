@@ -172,13 +172,16 @@ export const subscriptionSchema = z.strictObject({
 
   invoiceEmail: emailSchema("Ange en giltig faktura-e-post"),
   reference: singleLine(0, "", 120).default(""),
+  billingAddress: multiLine(300, 4),
 
   expectedTotalOre: z.number().int().min(0).optional(),
   sb_extra: honeypotSchema,
   turnstileToken: turnstileTokenSchema,
 });
 
-export type SubscriptionInput = z.infer<typeof subscriptionSchema>;
+// Fakturaadressen är frivillig för anropare (tom = leveransadressen) – schemat
+// fyller i "" vid parsning, men tjänsten ska kunna anropas utan fältet.
+export type SubscriptionInput = Omit<z.infer<typeof subscriptionSchema>, "billingAddress"> & { billingAddress?: string };
 
 /** Plattar ut zod-fel till { fältnamn: meddelande } för formulärvisning. */
 export function fieldErrors(error: z.ZodError): Record<string, string> {

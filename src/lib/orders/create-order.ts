@@ -5,7 +5,7 @@ import { calculateTotals } from "@/lib/money";
 import { nextNumber } from "@/lib/numbering";
 import { invoiceConfig, isVerifiedValue } from "@/lib/config";
 import { addDays, capitalizeFirst, formatDeliveryDate, fromISODate, isValidDeliveryDate, toISODate, todayInStockholm } from "@/lib/dates";
-import { bookedKgByDate, totalKg } from "@/lib/orders/capacity";
+import { bookedKgByDate, totalKg, type CapacityClient } from "@/lib/orders/capacity";
 import { effectiveVatRateBp } from "@/lib/vat";
 import { safeBlockedDates, safeWeekdays } from "@/lib/products";
 import type { InvoiceSnapshot } from "@/lib/invoice/snapshot";
@@ -117,10 +117,12 @@ const IDEMPOTENCY_MISMATCH = () =>
   );
 
 export interface CreateOrderOptions {
-  /** Sätts för prenumerationsgenererade ordrar (idempotensnyckel). */
-  subscription?: { id: string; period: string };
+  /** Sätts för prenumerationsgenererade ordrar (idempotensnyckel + avtalsreferens på fakturan). */
+  subscription?: { id: string; period: string; number?: string };
   /** Hoppa över e-post (t.ex. i tester). */
   skipEmails?: boolean;
+  /** Extra rader till kunden i orderbekräftelsen (t.ex. flyttad leveransdag, sort som utgått). */
+  customerNotes?: string[];
 }
 
 /**
@@ -191,7 +193,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
   const thisKg = totalKg(
     input.items.map((i) => ({ weightKg: i.weightKg, unit: productById.get(i.productId)?.unit ?? "kg", packageWeightGrams: productById.get(i.productId)?.packageWeightGrams }))
   );
-  const assertCapacity = async (client: Pick<typeof prisma, "order">) => {
+  const assertCapacity = async (client: CapacityClient) => {
     const iso = toISODate(deliveryDate);
     const booked = (await bookedKgByDate(area.id, [iso], client)).get(iso) ?? 0;
     if (booked + thisKg > area.maxKgPerDay) {
@@ -327,6 +329,8 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
       },
       orderNumber,
       deliveryDate: toISODate(deliveryDate),
+      deliveryAddress: `${input.deliveryAddress}, ${input.deliveryPostalCode} ${input.deliveryCity}`,
+      subscriptionNumber: options.subscription?.number,
       lines: lines.map(({ productId: _productId, ...rest }) => rest),
       subtotalOre: totals.subtotalOre,
       vatOre: totals.vatOre,
@@ -367,7 +371,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
 
   if (!options.skipEmails) {
     // Medvetet efter transaktionen: ordern är säkrad även om e-posten fallerar.
-    await sendOrderEmails(created.order.id).catch((e) =>
+    await sendOrderEmails(created.order.id, { customerNotes: options.customerNotes }).catch((e) =>
       console.error("Ordermail misslyckades:", e)
     );
   }

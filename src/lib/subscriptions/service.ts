@@ -16,13 +16,15 @@ import type { SubscriptionFrequency } from "@/lib/status";
 import { safeBlockedDates, safeWeekdays } from "@/lib/products";
 import { assertInvoicingConfigured, assertNotAbusive, createOrder, OrderError } from "@/lib/orders/create-order";
 import { describeError } from "@/lib/log";
+import { notifyAdminSkippedSubscription, notifyCustomerSkippedDelivery } from "@/lib/subscriptions/emails";
+import { swedishHolidayName } from "@/lib/dates";
 
 // Prenumeration = återkommande order/fakturering – INTE kortdebitering.
 // Motorn genererar vanliga ordrar via samma ordermotor som engångsköp.
 
 /** Samma nyckel måste bära samma prenumeration – annars är det inte en retry. */
 function sameSubscriptionPayload(
-  existing: { items: { productId: string; weightKg: number }[]; frequency: string; companyName: string; orgNumber: string; email: string; invoiceEmail: string; deliveryAddress: string; deliveryPostalCode: string; nextDeliveryDate: Date; deliveryArea: { slug: string } | null },
+  existing: { items: { productId: string; weightKg: number }[]; frequency: string; companyName: string; orgNumber: string; email: string; invoiceEmail: string; deliveryAddress: string; deliveryPostalCode: string; deliveryCity: string; deliveryInstruction: string; contactName: string; phone: string; reference: string; nextDeliveryDate: Date; deliveryArea: { slug: string } | null },
   input: SubscriptionInput
 ): boolean {
   const key = (items: { productId: string; weightKg: number }[]) =>
@@ -36,6 +38,13 @@ function sameSubscriptionPayload(
     existing.invoiceEmail.toLowerCase() === input.invoiceEmail.toLowerCase() &&
     existing.deliveryAddress === input.deliveryAddress &&
     existing.deliveryPostalCode === input.deliveryPostalCode &&
+    existing.deliveryCity === input.deliveryCity &&
+    // Rättar kunden bara portkoden eller referensen och skickar igen är det
+    // inte en retry – då ska den nya uppgiften sparas, inte tyst ignoreras.
+    existing.deliveryInstruction === input.deliveryInstruction &&
+    existing.contactName === input.contactName &&
+    existing.phone === input.phone &&
+    existing.reference === input.reference &&
     existing.deliveryArea?.slug === input.areaSlug &&
     toISODate(existing.nextDeliveryDate) === input.firstDeliveryDate
   );
@@ -166,6 +175,7 @@ export async function createSubscription(input: SubscriptionInput) {
           deliveryAreaId: areaId,
           invoiceEmail: input.invoiceEmail,
           reference: input.reference,
+          billingAddress: input.billingAddress ?? "",
           frequency: input.frequency,
           nextDeliveryDate: firstDate,
           items: {
@@ -217,10 +227,9 @@ export async function generateDueSubscriptionOrders(
     if (!area || !area.active) {
       // Inaktiverat område: hoppa över med tydlig orsak i stället för att
       // låta createOrder kasta samma fel varje dag.
-      result.skipped.push({
-        subscriptionNumber: sub.number,
-        reason: area ? `Leveransområdet ${area.name} är inaktiverat – prenumerationen behöver ses över i admin` : "Leveransområde saknas",
-      });
+      const reason = area ? `Leveransområdet ${area.name} är inaktiverat – prenumerationen behöver ses över i admin` : "Leveransområde saknas";
+      result.skipped.push({ subscriptionNumber: sub.number, reason });
+      await notifyAdminSkippedSubscription(sub, toISODate(sub.nextDeliveryDate), reason).catch(() => false);
       continue;
     }
     const frequency = sub.frequency as SubscriptionFrequency;
@@ -271,6 +280,18 @@ export async function generateDueSubscriptionOrders(
     //    en senare körning – men ligger det inom horisonten skapas ordern NU
     //    (tidigare tappades leveransen om framflyttningen landade på "idag").
     if (deliveryDate.getTime() > horizon.getTime()) {
+      // Ordinarie dag är helgdag/spärrad och närmaste leveransdag ligger så
+      // långt fram att nästa kadenspunkt tar över: leveransen utgår. Kunden
+      // ska få veta det NU – inte vänta på kakor på torsdagen. (Mejlet
+      // dedupliceras per prenumeration och datum i e-postloggen.)
+      if (cadence.getTime() <= horizon.getTime() && deliveryDate.getTime() !== cadence.getTime()) {
+        const holiday = swedishHolidayName(cadence);
+        const why = holiday ? `är ${holiday}` : "är en dag utan leverans";
+        const predictedNext = snapToDeliveryWeekday(nextCadenceDate(cadence, frequency, areaConfig.weekdays), areaConfig);
+        await notifyCustomerSkippedDelivery(sub, cadence, predictedNext, why).catch((e) =>
+          console.error(`[prenumeration] mejl om utebliven leverans misslyckades för ${sub.number}:`, describeError(e))
+        );
+      }
       result.skipped.push({
         subscriptionNumber: sub.number,
         reason: `Passerat datum ${toISODate(sub.nextDeliveryDate)} – framflyttad till ${toISODate(deliveryDate)}`,
@@ -283,7 +304,22 @@ export async function generateDueSubscriptionOrders(
     const droppedItems = sub.items.filter((i) => !i.product.active && i.weightKg > 0);
     if (activeItems.length === 0) {
       result.skipped.push({ subscriptionNumber: sub.number, reason: "Inga aktiva produkter" });
+      await notifyAdminSkippedSubscription(sub, period, "Inga aktiva produkter i prenumerationen").catch(() => false);
       continue;
+    }
+
+    // Rader till kundens orderbekräftelse: flyttad leveransdag, sort som utgått.
+    const customerNotes: string[] = [];
+    if (deliveryDate.getTime() !== cadence.getTime()) {
+      const holiday = swedishHolidayName(cadence);
+      customerNotes.push(
+        `Ordinarie leveransdag ${toISODate(cadence)} ${holiday ? `är ${holiday}` : "är en dag utan leverans"} – den här leveransen sker ${period} i stället.`
+      );
+    }
+    if (droppedItems.length > 0) {
+      customerNotes.push(
+        `${droppedItems.map((i) => i.product.name).join(", ")} ingår inte i den här leveransen (sorten har utgått ur sortimentet). Beloppet är justerat – svara på mejlet om ni vill byta till en annan sort.`
+      );
     }
 
     try {
@@ -303,9 +339,9 @@ export async function generateDueSubscriptionOrders(
           deliveryInstruction: sub.deliveryInstruction,
           invoiceEmail: sub.invoiceEmail,
           reference: sub.reference,
-          billingAddress: "",
+          billingAddress: sub.billingAddress,
         },
-        { subscription: { id: sub.id, period }, skipEmails: options.skipEmails }
+        { subscription: { id: sub.id, period, number: sub.number }, skipEmails: options.skipEmails, customerNotes }
       );
       result.generated.push({
         subscriptionNumber: sub.number,
@@ -340,6 +376,7 @@ export async function generateDueSubscriptionOrders(
         // Riktiga fel (inaktivt område, spärrat postnummer …) ska synas för
         // verksamheten – inte bara ligga i ett cron-svar ingen läser.
         console.error(`[prenumeration] ${sub.number} kunde inte generera order för ${period}: ${reason}`);
+        await notifyAdminSkippedSubscription(sub, period, reason).catch(() => false);
         continue; // flytta INTE fram datumet vid riktiga fel
       }
     }

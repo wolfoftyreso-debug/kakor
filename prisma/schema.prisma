@@ -260,6 +260,8 @@ model Subscription {
 
   invoiceEmail String
   reference    String @default("")
+  /** Fakturaadress om annan än leveransadressen (tom = leveransadressen). */
+  billingAddress String @default("")
 
   frequency String // WEEKLY | BIWEEKLY | MONTHLY
   // Nästa planerade leveransdatum. Flyttas fram när order genererats.
