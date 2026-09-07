@@ -1,6 +1,6 @@
 import { todayInStockholm } from "@/lib/dates";
 
-// Separata statusmodeller — en order kan t.ex. vara CONFIRMED + UNPAID + DELIVERED.
+// Separata statusmodeller – en order kan t.ex. vara CONFIRMED + UNPAID + DELIVERED.
 
 export const ORDER_STATUS = ["NEW", "CONFIRMED", "CANCELLED"] as const;
 export type OrderStatus = (typeof ORDER_STATUS)[number];
@@ -20,7 +20,7 @@ export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUS)[number];
 export const SUBSCRIPTION_FREQUENCY = ["WEEKLY", "BIWEEKLY", "MONTHLY"] as const;
 export type SubscriptionFrequency = (typeof SUBSCRIPTION_FREQUENCY)[number];
 
-// MONTHLY = var 28:e dag (fast leveransveckodag) — etiketten ska inte lova kalendermånad.
+// MONTHLY = var 28:e dag (fast leveransveckodag) – etiketten ska inte lova kalendermånad.
 export const FREQUENCY_LABELS: Record<SubscriptionFrequency, string> = {
   WEEKLY: "Varje vecka",
   BIWEEKLY: "Varannan vecka",
@@ -50,7 +50,7 @@ export const DELIVERY_STATUS_LABELS: Record<DeliveryStatus, string> = {
 };
 
 /**
- * OVERDUE lagras aldrig — den beräknas alltid från förfallodatum + status.
+ * OVERDUE lagras aldrig – den beräknas alltid från förfallodatum + status.
  * "Idag" räknas i svensk tid (inte serverns lokala tidszon); förfallen först
  * dagen EFTER förfallodatumet.
  */
@@ -58,7 +58,7 @@ export function isInvoiceOverdue(invoice: { status: string; dueDate: Date }, now
   return invoice.status === "UNPAID" && invoice.dueDate.getTime() < todayInStockholm(now).getTime();
 }
 
-/** En avbruten order är aldrig "förfallen" — fakturan drivs inte in. */
+/** En avbruten order är aldrig "förfallen" – fakturan drivs inte in. */
 export function isOrderOverdue(
   order: { status: string; invoice: { status: string; dueDate: Date } | null },
   now = new Date()
@@ -67,7 +67,7 @@ export function isOrderOverdue(
 }
 
 /**
- * Servervakt för orderövergångar — UI:t döljer knappar, men server actions är
+ * Servervakt för orderövergångar – UI:t döljer knappar, men server actions är
  * anropbara endpoints och får aldrig lita på klienten.
  */
 export function canTransitionOrder(
@@ -80,7 +80,7 @@ export function canTransitionOrder(
     case "confirm":
       return order.status !== "CANCELLED";
     case "cancel":
-      // Betald eller levererad order avbryts inte — den krediteras/hanteras manuellt.
+      // Betald eller levererad order avbryts inte – den krediteras/hanteras manuellt.
       return order.status !== "CANCELLED" && order.paymentStatus !== "PAID" && order.deliveryStatus !== "DELIVERED";
   }
 }

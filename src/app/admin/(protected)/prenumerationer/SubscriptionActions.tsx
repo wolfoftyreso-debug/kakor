@@ -94,7 +94,7 @@ export function GenerateOrdersButton() {
         onClick={() =>
           startTransition(async () => {
             const r = await runSubscriptionGeneration();
-            setResult(`Genererade ${r.generated} order${r.generated === 1 ? "" : "rar"}, hoppade över ${r.skipped}.`);
+            setResult(`Genererade ${r.generated} ${r.generated === 1 ? "order" : "ordrar"}, hoppade över ${r.skipped}.`);
           })
         }
       >

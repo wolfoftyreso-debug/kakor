@@ -6,10 +6,10 @@ import { pruneEmailLogs } from "@/lib/email";
 import { describeError } from "@/lib/log";
 import { sweepRateLimitBuckets } from "@/lib/rate-limit";
 
-// Vercel: PDF-rendering + mejl kan ta tid — standard 10 s räcker inte på kalla starter.
+// Vercel: PDF-rendering + mejl kan ta tid – standard 10 s räcker inte på kalla starter.
 export const maxDuration = 60;
 
-// Prenumerations-cron. Körs av Vercel Cron (GET, schema i vercel.json) —
+// Prenumerations-cron. Körs av Vercel Cron (GET, schema i vercel.json) –
 // Vercel skickar automatiskt "Authorization: Bearer <CRON_SECRET>" när
 // CRON_SECRET finns som env-variabel i projektet. POST behålls för manuell
 // körning/CLI. Motorn är idempotent: unikhetsvillkoret
@@ -30,7 +30,7 @@ async function runCron(req: NextRequest): Promise<NextResponse> {
   if (!timingSafeEqual(digest(auth), digest(`Bearer ${secret}`))) {
     return NextResponse.json({ ok: false, error: "Obehörig" }, { status: 401 });
   }
-  // Städning först och oberoende av generatorn — kastar generatorn ska
+  // Städning först och oberoende av generatorn – kastar generatorn ska
   // rate limit-tabellen och e-postloggen ändå inte växa.
   const swept = await sweepRateLimitBuckets().catch(() => 0);
   const prunedEmailLogs = await pruneEmailLogs().catch(() => 0);

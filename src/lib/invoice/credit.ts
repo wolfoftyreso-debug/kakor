@@ -14,8 +14,8 @@ import { qtyLabel } from "@/lib/units";
 // (krediterade rader + referens till fakturan), egen nedladdningslänk.
 //
 // Två former:
-//   FULL    — krediterar allt som återstår på fakturan; fakturan blir CREDITED.
-//   PARTIAL — krediterar valda rader/mängder (fel sort, saknad vikt, reklamation);
+//   FULL    – krediterar allt som återstår på fakturan; fakturan blir CREDITED.
+//   PARTIAL – krediterar valda rader/mängder (fel sort, saknad vikt, reklamation);
 //             fakturan står kvar och "att betala" minskar med kreditbeloppet.
 // En faktura kan ha flera kreditfakturor. Det som redan krediterats per rad
 // räknas av (sourceLineIndex) så att en rad aldrig krediteras två gånger.
@@ -123,7 +123,7 @@ export async function issueCreditNoteInTx(
   });
   const kind = closes ? "FULL" : "PARTIAL";
   if (closes) {
-    // Sista kreditnotan tar exakt det som återstår av fakturan — annars kan
+    // Sista kreditnotan tar exakt det som återstår av fakturan – annars kan
     // flera delkrediteringar med egen öresavrundning summera till 1 öre mer
     // än fakturan (12 345 öre × 3 à 6 %: 3 × 741 = 2 223 mot fakturans 2 222).
     const prev = invoice.creditNotes.reduce(
@@ -172,8 +172,8 @@ export async function issueCreditNoteInTx(
       orderId: invoice.orderId,
       type: "CREDITED",
       message: closes
-        ? `Kreditfaktura ${creditNumber} utfärdad — krediterar faktura ${invoice.invoiceNumber} (${formatOre(totals.totalOre)}).${opts.reason ? ` Anledning: ${opts.reason}` : ""}`
-        : `Kreditfaktura ${creditNumber} utfärdad — delkreditering ${formatOre(totals.totalOre)} av faktura ${invoice.invoiceNumber} (${detail}).${opts.reason ? ` Anledning: ${opts.reason}` : ""}`,
+        ? `Kreditfaktura ${creditNumber} utfärdad – krediterar faktura ${invoice.invoiceNumber} (${formatOre(totals.totalOre)}).${opts.reason ? ` Anledning: ${opts.reason}` : ""}`
+        : `Kreditfaktura ${creditNumber} utfärdad – delkreditering ${formatOre(totals.totalOre)} av faktura ${invoice.invoiceNumber} (${detail}).${opts.reason ? ` Anledning: ${opts.reason}` : ""}`,
       actor,
     },
   });
@@ -205,7 +205,7 @@ Kreditfaktura: ${credit.creditNumber}
 Krediterat belopp: ${formatOre(-credit.totalOre)} inkl. moms
 Ladda ner kreditfakturan: ${siteConfig.url}/faktura/${credit.downloadToken}
 
-${invoice.status === "PAID" ? "Fakturan är betald — beloppet återbetalas." : "Fakturan ska inte betalas. Har den redan betalats återbetalas beloppet."}
+${invoice.status === "PAID" ? "Fakturan är betald – beloppet återbetalas." : "Fakturan ska inte betalas. Har den redan betalats återbetalas beloppet."}
 
 Vänliga hälsningar
 Sockerbagaren`
@@ -213,14 +213,14 @@ Sockerbagaren`
 
 Kreditfaktura: ${credit.creditNumber}
 Krediterat belopp: ${formatOre(-credit.totalOre)} inkl. moms
-Återstår att betala på fakturan: ${formatOre(remainingToPay)} inkl. moms${invoice.status === "PAID" ? " (fakturan är redan betald — det krediterade beloppet återbetalas)" : ` — förfallodatum ${toISODate(invoice.dueDate)} som tidigare`}
+Återstår att betala på fakturan: ${formatOre(remainingToPay)} inkl. moms${invoice.status === "PAID" ? " (fakturan är redan betald – det krediterade beloppet återbetalas)" : ` – förfallodatum ${toISODate(invoice.dueDate)} som tidigare`}
 Ladda ner kreditfakturan: ${siteConfig.url}/faktura/${credit.downloadToken}
 
 Vänliga hälsningar
 Sockerbagaren`;
   return sendEmail({
     to: invoice.order.invoiceEmail,
-    subject: `Kreditfaktura ${credit.creditNumber} — Sockerbagaren`,
+    subject: `Kreditfaktura ${credit.creditNumber} – Sockerbagaren`,
     text,
     attachments,
     type: "CREDIT_NOTE",

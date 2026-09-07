@@ -15,12 +15,12 @@ import { FaqList } from "@/components/FaqList";
 // Säsongssida. Semrush (se, 2026-09): "julfika" 1 600/mån (KD 23) med hela
 // volymen i november–december, "påskfika" 720 (KD 20) i mars–april,
 // "julfika på jobbet" 10. Sidan ligger ute året runt så att den är indexerad
-// när säsongen börjar. Inga löften om särskilda julsorter — sortimentet är
+// när säsongen börjar. Inga löften om särskilda julsorter – sortimentet är
 // detsamma året runt och hämtas ur databasen.
 
 export const dynamic = "force-dynamic";
 
-const TITLE = "Julfika på jobbet — beställ kakor i tid";
+const TITLE = "Julfika på jobbet – beställ kakor i tid";
 const DESCRIPTION =
   "Julfika och påskfika på jobbet: hur mycket som går åt, när ni bör beställa inför helgerna och vilka småkakor som passar. Leverans i södra Stockholm, faktura.";
 
@@ -125,7 +125,7 @@ export default async function JulfikaPage() {
               <Link href={`/kakor/${p.slug}`} style={{ fontWeight: 600 }}>
                 {p.name}
               </Link>{" "}
-              — {formatOre(p.pricePerKgOre)}
+              – {formatOre(p.pricePerKgOre)}
               {priceSuffix(p.unit)} exkl. moms
             </li>
           ))}

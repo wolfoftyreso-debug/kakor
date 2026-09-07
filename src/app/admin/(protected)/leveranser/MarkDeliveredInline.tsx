@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { markOrderDelivered, type ActionResult } from "@/app/admin/actions";
 
-export function MarkDeliveredInline({ orderId }: { orderId: string }) {
+export function MarkDeliveredInline({ orderId, orderNumber }: { orderId: string; orderNumber: string }) {
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
   const [showNote, setShowNote] = useState(false);
   const [note, setNote] = useState("");
   const [result, setResult] = useState<ActionResult | null>(null);
@@ -16,7 +18,7 @@ export function MarkDeliveredInline({ orderId }: { orderId: string }) {
         style={{ padding: "12px 16px", fontSize: 13, minHeight: 44 }}
         onClick={() => setShowNote(true)}
       >
-        Markera levererad
+        Markera som levererad
       </button>
     );
   }
@@ -43,9 +45,16 @@ export function MarkDeliveredInline({ orderId }: { orderId: string }) {
         className="btn btn-primary"
         style={{ padding: "12px 16px", fontSize: 13, minHeight: 44 }}
         disabled={pending}
-        onClick={() => startTransition(async () => setResult(await markOrderDelivered(orderId, note)))}
+        onClick={() =>
+          startTransition(async () => {
+            const r = await markOrderDelivered(orderId, note);
+            setResult(r);
+            // Raden försvinner ur listan – bekräftelsen visas som banner högst upp.
+            if (r.ok) router.replace(`/admin/leveranser?klar=${encodeURIComponent(orderNumber)}`);
+          })
+        }
       >
-        {pending ? "Sparar…" : "Klar — levererad"}
+        {pending ? "Sparar…" : "Klar – levererad"}
       </button>
       {result && !result.ok && (
         <span role="alert" className="error-text" style={{ fontSize: 12.5, flexBasis: "100%" }}>

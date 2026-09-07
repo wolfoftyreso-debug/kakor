@@ -1,6 +1,6 @@
 import { addDays, toISODate, todayInStockholm } from "@/lib/dates";
 
-// Bokföringsexport (CSV) — serverkomponent, ren GET-länk till exportrouten.
+// Bokföringsexport (CSV) – serverkomponent, ren GET-länk till exportrouten.
 export function ExportForm() {
   const today = todayInStockholm();
   const thisMonthFrom = toISODate(new Date(today.getFullYear(), today.getMonth(), 1));

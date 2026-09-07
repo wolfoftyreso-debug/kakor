@@ -6,7 +6,8 @@ export function formatOre(ore: number, opts?: { withCurrency?: boolean }): strin
     minimumFractionDigits: ore % 100 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(kr);
-  return opts?.withCurrency === false ? formatted : `${formatted} kr`;
+  // Fast mellanslag mellan tal och enhet (Svenska skrivregler): "295 kr" bryts aldrig över rad.
+  return opts?.withCurrency === false ? formatted : `${formatted}\u00a0kr`;
 }
 
 export interface VatLine {

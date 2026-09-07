@@ -1,10 +1,10 @@
 import * as Sentry from "@sentry/nextjs";
 import { describeError } from "@/lib/log";
 
-// Cloudflare Turnstile — robotskydd i kassan. Helt env-styrt: utan nycklar
+// Cloudflare Turnstile – robotskydd i kassan. Helt env-styrt: utan nycklar
 // renderas ingen widget och inget verifieras (sajten fungerar som förut).
 // Med nycklar krävs en giltig token för att skapa order/prenumeration.
-// Testnycklar från Cloudflare ("1x0000…AA") passerar alltid — bra i preview.
+// Testnycklar från Cloudflare ("1x0000…AA") passerar alltid – bra i preview.
 
 const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 const SECRET_KEY = process.env.TURNSTILE_SECRET_KEY ?? "";
@@ -17,7 +17,7 @@ export type TurnstileResult = { ok: true } | { ok: false; reason: string };
 
 /**
  * Verifierar en token mot Cloudflare. Nätverksfel mot Cloudflare släpper
- * igenom (loggas + Sentry) — ett driftfel hos tredje part ska inte stoppa
+ * igenom (loggas + Sentry) – ett driftfel hos tredje part ska inte stoppa
  * beställningar; rate limiting och missbruksspärrarna finns kvar som skydd.
  * Ett uttryckligt "success: false" avvisas alltid.
  */
@@ -38,7 +38,7 @@ export async function verifyTurnstile(token: string | undefined, ip: string | nu
     if (data.success) return { ok: true };
     return { ok: false, reason: (data["error-codes"] ?? ["unknown"]).join(",") };
   } catch (e) {
-    console.error("[turnstile] verifiering kunde inte nå Cloudflare — släpper igenom:", describeError(e));
+    console.error("[turnstile] verifiering kunde inte nå Cloudflare – släpper igenom:", describeError(e));
     Sentry.captureException(e, { tags: { flow: "turnstile" } });
     return { ok: true };
   }

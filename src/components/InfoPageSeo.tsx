@@ -16,7 +16,7 @@ export function InfoPageSeo({
   name: string;
   title: string;
   description?: string;
-  /** ISO-datum — sätts ENDAST vid verklig innehållsändring, aldrig per deploy. */
+  /** ISO-datum – sätts ENDAST vid verklig innehållsändring, aldrig per deploy. */
   dateModified?: string;
 }) {
   const crumbs = [

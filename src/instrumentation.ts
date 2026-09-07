@@ -1,7 +1,7 @@
 // Körs en gång per serverstart (Next.js instrumentation, Node-runtime).
-// 1) Sentry-felövervakning (endast fel — ingen tracing, ingen PII).
+// 1) Sentry-felövervakning (endast fel – ingen tracing, ingen PII).
 // 2) Fail-fast-miljövalidering: saknad kritisk konfiguration ska synas
-//    direkt i loggarna vid boot — inte som slumpmässiga krascher i checkout.
+//    direkt i loggarna vid boot – inte som slumpmässiga krascher i checkout.
 import * as Sentry from "@sentry/nextjs";
 import { SENTRY_DSN, SENTRY_ENABLED } from "@/lib/sentry-config";
 
@@ -46,7 +46,7 @@ export async function register() {
   const report = checkEnv();
 
   for (const name of report.missing) {
-    console.error(`[env] KRITISKT: ${name} saknas — databasberoende sidor kommer att fela.`);
+    console.error(`[env] KRITISKT: ${name} saknas – databasberoende sidor kommer att fela.`);
   }
   for (const warning of report.warnings) {
     console.warn(`[env] ${warning}`);

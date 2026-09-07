@@ -17,10 +17,10 @@ import { safeBlockedDates, safeWeekdays } from "@/lib/products";
 import { assertInvoicingConfigured, assertNotAbusive, createOrder, OrderError } from "@/lib/orders/create-order";
 import { describeError } from "@/lib/log";
 
-// Prenumeration = återkommande order/fakturering — INTE kortdebitering.
+// Prenumeration = återkommande order/fakturering – INTE kortdebitering.
 // Motorn genererar vanliga ordrar via samma ordermotor som engångsköp.
 
-/** Samma nyckel måste bära samma prenumeration — annars är det inte en retry. */
+/** Samma nyckel måste bära samma prenumeration – annars är det inte en retry. */
 function sameSubscriptionPayload(
   existing: { items: { productId: string; weightKg: number }[]; frequency: string; companyName: string; orgNumber: string; email: string; invoiceEmail: string; deliveryAddress: string; deliveryPostalCode: string; nextDeliveryDate: Date; deliveryArea: { slug: string } | null },
   input: SubscriptionInput
@@ -43,7 +43,7 @@ function sameSubscriptionPayload(
 
 const IDEMPOTENCY_MISMATCH = () =>
   new OrderError(
-    "Den här prenumerationen har redan skickats med andra uppgifter — ladda om sidan och försök igen.",
+    "Den här prenumerationen har redan skickats med andra uppgifter – ladda om sidan och försök igen.",
     undefined,
     "IDEMPOTENCY_MISMATCH"
   );
@@ -69,11 +69,11 @@ export async function createSubscription(input: SubscriptionInput) {
   }
 
   // Utan verifierade fakturauppgifter i produktion får ingen prenumeration
-  // startas — annars kastar cronen samma fel varje morgon utan att någon ser det.
+  // startas – annars kastar cronen samma fel varje morgon utan att någon ser det.
   assertInvoicingConfigured();
 
   // Missbruksspärrar: samma dygnsgränser som checkouten, plus max två
-  // prenumerationsstarter per e-post — cronen skulle annars generera
+  // prenumerationsstarter per e-post – cronen skulle annars generera
   // riktiga ordrar/fakturor för spam-prenumerationer tills admin stoppar dem.
   await assertNotAbusive(input);
   const recentSubs = await prisma.subscription.count({
@@ -85,7 +85,7 @@ export async function createSubscription(input: SubscriptionInput) {
   });
   if (recentSubs >= 3) {
     throw new OrderError(
-      "Ni har redan startat en fikaprenumeration det senaste dygnet — svara på bekräftelsemejlet om ni vill ändra den.",
+      "Ni har redan startat en fikaprenumeration det senaste dygnet – svara på bekräftelsemejlet om ni vill ändra den.",
       undefined,
       "TOO_MANY"
     );
@@ -95,14 +95,14 @@ export async function createSubscription(input: SubscriptionInput) {
   if (!area || !area.active) throw new OrderError("Okänt leveransområde", "areaSlug");
   const areaId = area.id;
 
-  // Samma postnummerspärr som checkouten — annars startas prenumerationer
+  // Samma postnummerspärr som checkouten – annars startas prenumerationer
   // som ordergenereringen sedan inte kan leverera.
   const prefixes = safeParseStringArray(area.postalCodePrefixesJson);
   if (prefixes.length > 0) {
     const compact = input.deliveryPostalCode.replace(/\s/g, "");
     if (!prefixes.some((p) => compact.startsWith(p.replace(/\s/g, "")))) {
       throw new OrderError(
-        `Postnumret verkar inte ligga i ${area.name} — kontrollera adressen eller välj rätt område`,
+        `Postnumret verkar inte ligga i ${area.name} – kontrollera adressen eller välj rätt område`,
         "deliveryPostalCode"
       );
     }
@@ -115,14 +115,14 @@ export async function createSubscription(input: SubscriptionInput) {
     blockedDates: safeBlockedDates(area.blockedDatesJson),
   };
   if (!isValidDeliveryDate(firstDate, areaConfig)) {
-    throw new OrderError("Leveransdagen är inte tillgänglig — välj en ny dag", "firstDeliveryDate");
+    throw new OrderError("Leveransdagen är inte tillgänglig – välj en ny dag", "firstDeliveryDate");
   }
 
   const products = await prisma.product.findMany({
     where: { id: { in: input.items.map((i) => i.productId) }, active: true },
   });
   if (products.length !== new Set(input.items.map((i) => i.productId)).size) {
-    throw new OrderError("En produkt i prenumerationen finns inte längre", "items");
+    throw new OrderError("En sort i prenumerationen finns inte längre", "items");
   }
 
   try {
@@ -219,7 +219,7 @@ export async function generateDueSubscriptionOrders(
       // låta createOrder kasta samma fel varje dag.
       result.skipped.push({
         subscriptionNumber: sub.number,
-        reason: area ? `Leveransområdet ${area.name} är inaktiverat — prenumerationen behöver ses över i admin` : "Leveransområde saknas",
+        reason: area ? `Leveransområdet ${area.name} är inaktiverat – prenumerationen behöver ses över i admin` : "Leveransområde saknas",
       });
       continue;
     }
@@ -231,12 +231,12 @@ export async function generateDueSubscriptionOrders(
     };
 
     // 1) Passerat datum eller "idag" (t.ex. paus som släppts sent): skapa
-    //    aldrig en order för leverans samma dag — den hinner inte packas.
+    //    aldrig en order för leverans samma dag – den hinner inte packas.
     //    Gränsen är i morgon, inte kundens framförhållning: en missad
     //    cron-körning ska inte skjuta en redan planerad leverans en hel period.
     const earliest = addDays(today, 1);
     // nextDeliveryDate är KADENSANKARET (t.ex. varannan torsdag). Helgdagar
-    // och spärrade datum flyttar bara den enskilda leveransen, aldrig ankaret —
+    // och spärrade datum flyttar bara den enskilda leveransen, aldrig ankaret –
     // annars driver kadensen en vecka per helgdag (verifierat i tester).
     let cadence = sub.nextDeliveryDate;
     let moved = false;
@@ -254,13 +254,13 @@ export async function generateDueSubscriptionOrders(
     // 3) Den faktiska leveransen: förbi helgdagar och spärrade dagar.
     const deliveryDate = snapToDeliveryWeekday(cadence, areaConfig);
     // Vakt: har prenumerationen legat pausad längre än loopen når (60 × intervall)
-    // får ALDRIG en bakdaterad order skapas — hoppa över och låt nästa körning
+    // får ALDRIG en bakdaterad order skapas – hoppa över och låt nästa körning
     // fortsätta framflyttningen från det sparade datumet.
     if (deliveryDate.getTime() < earliest.getTime()) {
       await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: cadence } });
       result.skipped.push({
         subscriptionNumber: sub.number,
-        reason: `Passerat datum ${toISODate(sub.nextDeliveryDate)} — flyttas fram stegvis (nu ${toISODate(cadence)})`,
+        reason: `Passerat datum ${toISODate(sub.nextDeliveryDate)} – flyttas fram stegvis (nu ${toISODate(cadence)})`,
       });
       continue;
     }
@@ -268,12 +268,12 @@ export async function generateDueSubscriptionOrders(
       await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: cadence } });
     }
     // 4) Hamnar det framflyttade datumet utanför horisonten genereras det vid
-    //    en senare körning — men ligger det inom horisonten skapas ordern NU
+    //    en senare körning – men ligger det inom horisonten skapas ordern NU
     //    (tidigare tappades leveransen om framflyttningen landade på "idag").
     if (deliveryDate.getTime() > horizon.getTime()) {
       result.skipped.push({
         subscriptionNumber: sub.number,
-        reason: `Passerat datum ${toISODate(sub.nextDeliveryDate)} — framflyttad till ${toISODate(deliveryDate)}`,
+        reason: `Passerat datum ${toISODate(sub.nextDeliveryDate)} – framflyttad till ${toISODate(deliveryDate)}`,
       });
       continue;
     }
@@ -313,13 +313,13 @@ export async function generateDueSubscriptionOrders(
         deliveryDate: period,
       });
       if (droppedItems.length > 0) {
-        // Kunden faktureras för färre varor än avtalat — synligt i orderns
+        // Kunden faktureras för färre varor än avtalat – synligt i orderns
         // historik så att verksamheten kan meddela kunden.
         await prisma.orderEvent.create({
           data: {
             orderId: order.id,
             type: "NOTE",
-            message: `OBS: ${droppedItems.map((i) => i.product.name).join(", ")} ingår inte i leveransen — produkten är inaktiverad. Meddela kunden.`,
+            message: `OBS: ${droppedItems.map((i) => i.product.name).join(", ")} ingår inte i leveransen – produkten är inaktiverad. Meddela kunden.`,
             actor: "system",
           },
         });
@@ -330,15 +330,15 @@ export async function generateDueSubscriptionOrders(
         e.code === "P2002" &&
         (e.meta?.target as string[] | undefined)?.includes?.("subscriptionId")
       ) {
-        // Ordern för perioden finns redan (retry/dubbelkörning) — hoppa vidare.
+        // Ordern för perioden finns redan (retry/dubbelkörning) – hoppa vidare.
         result.skipped.push({ subscriptionNumber: sub.number, reason: `Period ${period} redan genererad` });
       } else {
         // OrderError är kundvänlig svenska; övriga fel (t.ex. Prisma) kan bära
-        // hela indata-objektet i meddelandet — logga bara namn/kod.
+        // hela indata-objektet i meddelandet – logga bara namn/kod.
         const reason = e instanceof OrderError ? e.message : `Tekniskt fel: ${JSON.stringify(describeError(e))}`;
         result.skipped.push({ subscriptionNumber: sub.number, reason });
         // Riktiga fel (inaktivt område, spärrat postnummer …) ska synas för
-        // verksamheten — inte bara ligga i ett cron-svar ingen läser.
+        // verksamheten – inte bara ligga i ett cron-svar ingen läser.
         console.error(`[prenumeration] ${sub.number} kunde inte generera order för ${period}: ${reason}`);
         continue; // flytta INTE fram datumet vid riktiga fel
       }

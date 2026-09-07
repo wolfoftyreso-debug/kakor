@@ -7,7 +7,7 @@ import { InfoPageSeo } from "@/components/InfoPageSeo";
 import { PageHeader } from "@/components/PageHeader";
 
 export const metadata: Metadata = {
-  title: { absolute: "Om Sockerbagaren — småkakor på recept från 1957" },
+  title: { absolute: "Om Sockerbagaren – småkakor på recept från 1957" },
   description:
     "Sockerbagaren bakar klassiska svenska småkakor på riktiga råvaror och levererar till arbetsplatser i södra Stockholm. Betalning mot faktura.",
   alternates: { canonical: "/om" },
@@ -33,7 +33,7 @@ export default function OmPage() {
       <PageHeader
         eyebrow="Om oss"
         title="Om Sockerbagaren"
-        lede="Sockerbagaren bakar klassiska svenska småkakor — mandelkubb, kolasnittar och chokladsnittar — på riktigt smör, vanligt strösocker och kvalitativa traditionella råvaror, och levererar dem till arbetsplatser i södra Stockholm."
+        lede="Sockerbagaren bakar klassiska svenska småkakor – mandelkubb, kolasnittar och chokladsnittar – på riktigt smör, vanligt strösocker och traditionella råvaror av hög kvalitet, och levererar dem till arbetsplatser i södra Stockholm."
         facts={[
           { label: "Recept", value: "Svenskt konditorlexikon 1957" },
           { label: "Kunder", value: "Företag i södra Stockholm" },
@@ -45,24 +45,24 @@ export default function OmPage() {
         <div className="media">
           <ImageSlot label="Chokladsnittar läggs upp på plåt" src="/images/bakning.jpg" />
         </div>
-        <figcaption>Chokladsnittar på plåt — sortimentet bakas i omgångar och levereras från lagret i Tyresö.</figcaption>
+        <figcaption>Chokladsnittar på plåt – sortimentet bakas i omgångar och levereras från lagret i Tyresö.</figcaption>
       </figure>
       <p>
         Vi säljer till företag: kontor, verkstäder, byggföretag, kliniker och butiker. Betalningen
-        sker alltid mot faktura, och leveransen kommer på fasta leveransdagar per område — Tyresö,
+        sker alltid mot faktura, och leveransen kommer på fasta leveransdagar per område – Tyresö,
         Nacka, Haninge och Huddinge.
       </p>
       <h2>Recept från 1957</h2>
       <p>
-        Våra recept kommer från Svenskt konditorlexikon från 1957 — den tidens handbok för
+        Våra recept kommer från Svenskt konditorlexikon från 1957 – den tidens handbok för
         yrkeskonditorer. Det betyder gammaldags småkakor så som de bakades innan margarin och
         tillsatser blev standard: smör, socker, vetemjöl, ägg, mandel, choklad och sirap. Kakorna
         bakas i omgångar och levereras från lagret på Radiovägen i Tyresö.
       </p>
       <h2>Så beställer ni</h2>
       <p>
-        Välj sorter och mängd per kilo (eller prova-på-paketet på 1,5 kg), välj leveransdag för ert
-        område och ange faktureringsuppgifter — fakturan skapas direkt och förfaller först efter
+        Välj sorter och mängd per kilo (eller prova-på-paketet på 1,5 kg), välj leveransdag för ert
+        område och ange faktureringsuppgifter – fakturan skapas direkt och förfaller först efter
         leveransen. Återkommande fika? <Link href="/prenumeration">Fikaprenumerationen</Link> gör
         om samma beställning automatiskt. Läs mer i vår{" "}
         <Link href="/fika-till-jobbet">guide till fika på jobbet</Link>.
@@ -76,7 +76,7 @@ export default function OmPage() {
         Kontor: {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}
         <br />
         Lager: Radiovägen 19, Tyresö (c/o Mewab)
-        {/* Kontaktvägar visas när verksamheten verifierat dem — platshållare
+        {/* Kontaktvägar visas när verksamheten verifierat dem – platshållare
             renderas aldrig publikt. */}
         {isVerifiedValue(invoiceConfig.email) && (
           <>

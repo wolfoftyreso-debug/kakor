@@ -8,7 +8,7 @@ import { Steps } from "@/components/Steps";
 import { TrustStrip } from "@/components/TrustStrip";
 import { FaqList } from "@/components/FaqList";
 
-// Fikaprenumerationen är INTE en egen butik eller checkout — det är ett
+// Fikaprenumerationen är INTE en egen butik eller checkout – det är ett
 // köpläge i sajtens enda beställningsflöde (/bestall). Den här sidan
 // förklarar hur det funkar och skickar in kunden i funneln med
 // återkommande leverans förvald.
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 const STEPS = [
   {
     title: "Välj kakor och mängd",
-    text: "Samma sortiment och samma varukorg som vanliga beställningar — blanda fritt.",
+    text: "Samma sortiment och samma varukorg som vanliga beställningar – blanda fritt.",
   },
   {
     title: "Välj hur ofta",
@@ -38,7 +38,7 @@ const STEPS = [
   },
   {
     title: "Fikat sköter sig självt",
-    text: "Inför varje leverans skapas en vanlig order med faktura som mejlas till er. Ingen bindningstid — svara på bekräftelsemejlet så pausar eller avslutar vi.",
+    text: "Inför varje leverans skapas en vanlig order med faktura som mejlas till er. Ingen bindningstid – svara på bekräftelsemejlet så pausar eller avslutar vi.",
   },
 ];
 
@@ -58,7 +58,7 @@ const PREN_FAQS = [
   },
   {
     q: "Passar prenumerationen för fredagsfika?",
-    a: "Ja — det är ett vanligt upplägg: en fast mängd varje eller varannan vecka så att fredagsfikat alltid finns på plats. Beställ gärna prova-på-paketet först för att se hur mycket som går åt hos er.",
+    a: "Ja – det är ett vanligt upplägg: en fast mängd varje eller varannan vecka så att fredagsfikat alltid finns på plats. Beställ gärna prova-på-paketet först för att se hur mycket som går åt hos er.",
   },
 ];
 
@@ -83,7 +83,7 @@ export default async function PrenumerationPage() {
           Fika som bara dyker upp.
         </h1>
         <p className="lede" style={{ margin: "0 auto", maxWidth: "52ch" }}>
-          Välj kakor, mängd och hur ofta — så står fikat på plats utan att någon behöver komma ihåg
+          Välj kakor, mängd och hur ofta – så står fikat på plats utan att någon behöver komma ihåg
           det. Det är en vanlig beställning som kommer igen automatiskt, inget mer.
         </p>
         <div style={{ display: "flex", gap: 14, marginTop: 26, flexWrap: "wrap", justifyContent: "center" }}>
@@ -93,7 +93,7 @@ export default async function PrenumerationPage() {
         </div>
         <p style={{ marginTop: 16, fontSize: 14 }}>
           <Link href="/bestall?typ=engang" style={{ fontWeight: 600 }}>
-            Vill ni bara beställa en gång? Samma väg — välj engångsbeställning i kassan.
+            Vill ni bara beställa en gång? Samma väg – välj engångsbeställning i kassan.
           </Link>
         </p>
       </section>
@@ -105,11 +105,11 @@ export default async function PrenumerationPage() {
       <TrustStrip band />
 
       <section className="container-medium" style={{ padding: "56px 24px 72px" }}>
-        <h2 className="h-section" style={{ marginBottom: 28 }}>Så funkar det</h2>
+        <h2 className="h-section" style={{ marginBottom: 28 }}>Så fungerar det</h2>
         <Steps items={STEPS} />
         <div className="info-box-muted" style={{ marginTop: 36, fontSize: "14.5px", lineHeight: 1.7 }}>
           <strong>Betalning mot faktura, precis som vanligt.</strong> Ingen kortdebitering och inget
-          konto — varje leverans faktureras för sig, till den fakturaadress ni anger.
+          konto – varje leverans faktureras för sig, till den faktura-e-post ni anger.
         </div>
         <FaqList heading="Vanliga frågor om fikaprenumerationen" items={PREN_FAQS} />
         <p style={{ marginTop: 20, fontSize: 14.5 }}>

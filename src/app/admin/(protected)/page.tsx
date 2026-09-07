@@ -10,7 +10,7 @@ import { toISODate } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Admin — översikt", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – översikt", robots: { index: false } };
 
 export default async function AdminDashboard() {
   await requireAdminPage();
@@ -45,10 +45,10 @@ export default async function AdminDashboard() {
         _sum: { totalOre: true },
       }),
       prisma.subscription.count({ where: { status: "ACTIVE" } }),
-      // Svenskt dygn (inte UTC-midnatt) — annars saknas ordrar lagda 00–02.
+      // Svenskt dygn (inte UTC-midnatt) – annars saknas ordrar lagda 00–02.
       prisma.order.count({ where: { createdAt: { gte: startOfStockholmDay() } } }),
       prisma.order.count({ where: { status: "NEW" } }),
-      // Delkrediteringar (negativa belopp) på obetalda fakturor — reskontran visar vad som återstår.
+      // Delkrediteringar (negativa belopp) på obetalda fakturor – reskontran visar vad som återstår.
       prisma.creditNote.aggregate({
         where: { invoice: { status: "UNPAID", order: { status: { not: "CANCELLED" } } } },
         _sum: { totalOre: true },
@@ -63,7 +63,7 @@ export default async function AdminDashboard() {
 
   const stats = [
     { label: "Nya beställningar", value: String(newOrderCount), href: "/admin/bestallningar?filter=nya" },
-    { label: "Beställningar idag", value: String(ordersToday), href: "/admin/bestallningar" },
+    { label: "Beställningar i dag", value: String(ordersToday), href: "/admin/bestallningar" },
     {
       label: "Obetalda fakturor",
       value: `${unpaidInvoices._count} · ${formatOre((unpaidInvoices._sum.totalOre ?? 0) + (unpaidCredits._sum.totalOre ?? 0))}`,

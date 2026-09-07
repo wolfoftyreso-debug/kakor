@@ -6,7 +6,7 @@ import { AreaForm } from "./AreaForm";
 import { safeBlockedDates } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin — inställningar", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – inställningar", robots: { index: false } };
 
 export default async function SettingsPage() {
   await requireAdminPage();
@@ -36,7 +36,7 @@ export default async function SettingsPage() {
           Veckodagar anges 1–7 (1 = måndag … 7 = söndag). Framförhållning = antal hela dagar mellan
           beställning och tidigast valbara leveransdag. Postnummerprefix (frivilligt) spärrar
           beställningar med postnummer utanför området. Spärrade datum tar bort enskilda
-          leveransdagar (semester, inventering, fullbokat) — svenska helgdagar spärras automatiskt.
+          leveransdagar (semester, inventering, fullbokat) – svenska helgdagar spärras automatiskt.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
           {areas.map((a) => (
@@ -58,10 +58,10 @@ export default async function SettingsPage() {
       <section>
         <h2 style={{ fontSize: 19, marginBottom: 8 }}>Företags- och fakturauppgifter</h2>
         <p style={{ color: "var(--text-2)", fontSize: 13.5, margin: "0 0 16px", maxWidth: "70ch" }}>
-          Dessa värden styrs av environment variables (se <code>.env.example</code>) och kräver
-          omstart/omdeploy vid ändring. Värden markerade{" "}
+          Dessa värden styrs av miljövariabler (se <code>.env.example</code>) och kräver
+          ny driftsättning vid ändring. Värden markerade{" "}
           <strong>[EJ VERIFIERAT]</strong> måste fyllas i av verksamheten innan skarpa fakturor
-          skickas — de hamnar på fakturan precis som de står här.
+          skickas – de hamnar på fakturan precis som de står här.
         </p>
         <div className="card" style={{ padding: "8px 20px", maxWidth: 640 }}>
           {companyRows.map(([label, value]) => (

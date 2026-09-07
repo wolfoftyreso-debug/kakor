@@ -2,8 +2,8 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 // Rate limiting i två lager:
-//  1) In-memory glidande fönster — snabbt, stoppar burstar inom en instans.
-//  2) Delad räknare i databasen (RateLimitBucket, fast fönster) — håller över
+//  1) In-memory glidande fönster – snabbt, stoppar burstar inom en instans.
+//  2) Delad räknare i databasen (RateLimitBucket, fast fönster) – håller över
 //     serverless-instanser och cold starts, där minnesräknaren nollställs.
 // Databasfel får aldrig blockera en kund: då gäller enbart minneslagret.
 
@@ -24,7 +24,7 @@ export interface RateLimitResult {
 export function rateLimitMemory(key: string, opts: { limit: number; windowMs: number }): RateLimitResult {
   const now = Date.now();
 
-  // Städa gamla nycklar då och då — varje bucket bedöms mot SITT eget
+  // Städa gamla nycklar då och då – varje bucket bedöms mot SITT eget
   // fönster, så ett kort checkout-fönster sopar aldrig bort login-buckets.
   if (now - lastSweep > 10 * 60_000) {
     lastSweep = now;
@@ -60,7 +60,7 @@ export async function rateLimitShared(key: string, opts: { limit: number; window
     if (bumped.count === 0) {
       // Inget aktivt fönster: starta ett nytt. Varje steg är en villkorad
       // enskild sats, så parallella anrop kan aldrig nollställa ett fönster
-      // som en annan just startat — förloraren räknar upp i vinnarens fönster.
+      // som en annan just startat – förloraren räknar upp i vinnarens fönster.
       const resetAt = new Date(now.getTime() + opts.windowMs);
       let started = false;
       try {
@@ -78,11 +78,11 @@ export async function rateLimitShared(key: string, opts: { limit: number; window
         if (takeover.count === 1) started = true;
       }
       if (started) return { ok: true, retryAfterSeconds: 0 };
-      // Någon annan hann starta fönstret — räkna upp i det och kontrollera taket.
+      // Någon annan hann starta fönstret – räkna upp i det och kontrollera taket.
       await prisma.rateLimitBucket.updateMany({ where: { key, resetAt: { gt: now } }, data: { count: { increment: 1 } } });
     }
     // Räknaren läses efter uppräkningen. Under extrem samtidighet (många anrop
-    // i samma millisekund) kan den redan innehålla senare anrops steg — då
+    // i samma millisekund) kan den redan innehålla senare anrops steg – då
     // stängs hellre ett anrop för mycket än ett för lite (fail-closed).
     const bucket = await prisma.rateLimitBucket.findUnique({ where: { key } });
     if (!bucket) return { ok: true, retryAfterSeconds: 0 };
@@ -94,7 +94,7 @@ export async function rateLimitShared(key: string, opts: { limit: number; window
     }
     return { ok: true, retryAfterSeconds: 0 };
   } catch (e) {
-    console.error("[rate-limit] delad räknare otillgänglig — minneslagret gäller:", e instanceof Error ? e.message : e);
+    console.error("[rate-limit] delad räknare otillgänglig – minneslagret gäller:", e instanceof Error ? e.message : e);
     return { ok: true, retryAfterSeconds: 0 };
   }
 }
@@ -106,7 +106,7 @@ export async function rateLimit(key: string, opts: { limit: number; windowMs: nu
   return rateLimitShared(key, opts);
 }
 
-/** Städar utgångna räknare — anropas från prenumerations-cronen. */
+/** Städar utgångna räknare – anropas från prenumerations-cronen. */
 export async function sweepRateLimitBuckets(): Promise<number> {
   const res = await prisma.rateLimitBucket.deleteMany({ where: { resetAt: { lt: new Date() } } });
   return res.count;

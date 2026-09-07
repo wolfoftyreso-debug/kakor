@@ -28,14 +28,14 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// Sidtitel ≤ ~45 tecken före " — Sockerbagaren": produktnamn + synonym med
+// Sidtitel ≤ ~45 tecken före " – Sockerbagaren": produktnamn + synonym med
 // egen sökvolym (Semrush: "kolakakor" 33 100, "mandelkubbar" 4 400,
 // "chokladkakor" 6 600) + köpsignalen "per kilo till företag".
 function productPageTitle(product: { name: string; slug: string; unit: string; packageWeightGrams: number }): string {
   const aka = knowledgeFor(product.slug)?.titleAka;
   const name = aka ? `${product.name} (${aka})` : product.name;
-  // ≤ 60 tecken inkl. " — Sockerbagaren": köpsignalen "till företag" ligger i beskrivningen.
-  return product.unit === "paket" ? `${name} — ${formatWeightKg(product.packageWeightGrams)} småkakor` : `${name} per kilo`;
+  // ≤ 60 tecken inkl. " – Sockerbagaren": köpsignalen "till företag" ligger i beskrivningen.
+  return product.unit === "paket" ? `${name} – ${formatWeightKg(product.packageWeightGrams)} småkakor` : `${name} per kilo`;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = productPageTitle(product);
   const aka = knowledgeFor(product.slug)?.aka;
   // Meta description ≤ ~155 tecken (trunkeras annars i sökresultaten).
-  const description = `${product.name}${aka ? ` (${aka})` : ""} — ${formatOre(product.pricePerKgOre)}${priceSuffix(product.unit)} exkl. moms. Levereras till företag i Tyresö, Nacka, Haninge och Huddinge, betalning mot faktura.`;
+  const description = `${product.name}${aka ? ` (${aka})` : ""} – ${formatOre(product.pricePerKgOre)}${priceSuffix(product.unit)} exkl. moms. Levereras till företag i Tyresö, Nacka, Haninge och Huddinge, betalning mot faktura.`;
   return {
     title,
     description,
@@ -123,7 +123,7 @@ export default async function ProductPage({ params }: Props) {
       <div className="container-medium has-sticky-buy" style={{ paddingTop: 24, paddingBottom: 64 }}>
         <div className="two-col" style={{ display: "grid", gap: 40, alignItems: "start" }}>
           <div className="card-media product-hero-media">
-            <ImageSlot label={`${product.name} — närbild`} src={product.imageRef || undefined} priority />
+            <ImageSlot label={`${product.name} – närbild`} src={product.imageRef || undefined} priority />
             {product.badge && <span className="product-badge">{product.badge}</span>}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -157,7 +157,7 @@ export default async function ProductPage({ params }: Props) {
                   <dd>
                     {product.unit === "paket"
                       ? `Ca ${product.piecesPerKgApprox} kakor per kilo`
-                      : `Ca ${product.piecesPerKgApprox} kakor per kilo — räkna 3–5 kakor per person till fikat`}
+                      : `Ca ${product.piecesPerKgApprox} kakor per kilo – räkna 3–5 kakor per person till fikat`}
                   </dd>
                 </div>
               )}
@@ -215,16 +215,16 @@ export default async function ProductPage({ params }: Props) {
             </div>
             <p style={{ fontSize: "12.5px", color: "var(--text-2)", margin: "12px 0 0" }}>
               {product.allergens}{" "}
-              <Link href="/ingredienser">Alla ingredienser &amp; allergener</Link>
+              <Link href="/ingredienser">Alla ingredienser och allergener</Link>
             </p>
           </section>
           <section className="card" style={{ padding: "22px 24px" }}>
-            <h2 style={{ fontSize: 19, marginBottom: 10 }}>Så levereras den</h2>
+            <h2 style={{ fontSize: 19, marginBottom: 10 }}>Så levereras kakorna</h2>
             <p style={{ margin: 0, fontSize: "14.5px", lineHeight: 1.65, color: "var(--brown-2)" }}>
               Vi levererar till bemannade företagsadresser i{" "}
               <Link href="/tyreso">Tyresö</Link>, <Link href="/nacka">Nacka</Link>,{" "}
               <Link href="/haninge">Haninge</Link> och <Link href="/huddinge">Huddinge</Link> på
-              områdets leveransdag — under dagen. Betalning mot faktura.{" "}
+              områdets leveransdag – under dagen. Betalning mot faktura.{" "}
               <Link href="/leverans">Om leveransen</Link>
             </p>
           </section>
@@ -244,7 +244,7 @@ export default async function ProductPage({ params }: Props) {
 
         {knowledge?.faqs && knowledge.faqs.length > 0 && (
           <div style={{ maxWidth: "70ch" }}>
-            <FaqList heading={`Vanliga frågor om ${product.name.toLowerCase()}`} items={knowledge.faqs} />
+            <FaqList heading={`Vanliga frågor om ${product.unit === "paket" ? "prova-på-paketet" : product.name.toLowerCase()}`} items={knowledge.faqs} />
           </div>
         )}
 
@@ -262,14 +262,14 @@ export default async function ProductPage({ params }: Props) {
                   style={{ overflow: "hidden", textDecoration: "none", color: "var(--text)" }}
                 >
                   <div className="card-media" style={{ height: 150 }}>
-                    <ImageSlot label={`${p.name} — närbild`} src={p.imageRef || undefined} />
+                    <ImageSlot label={`${p.name} – närbild`} src={p.imageRef || undefined} />
                     {p.badge && <span className="product-badge">{p.badge}</span>}
                   </div>
                   <div style={{ padding: "14px 16px" }}>
                     <div style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 700 }}>{p.name}</div>
                     <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 4 }}>
                       {formatOre(p.pricePerKgOre)}
-                      {priceSuffix(p.unit)} exkl. moms · blanda fritt i samma order
+                      {priceSuffix(p.unit)} exkl. moms · blanda fritt i samma beställning
                     </div>
                   </div>
                 </Link>

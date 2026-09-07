@@ -4,7 +4,7 @@ import { sendEmail } from "@/lib/email";
 import { emailConfig, siteConfig } from "@/lib/config";
 import { formatOre } from "@/lib/money";
 import { priceSuffix, qtyLabel } from "@/lib/units";
-import { capitalizeFirst, changeDeadline, formatDeadline, formatDeliveryDateWithYear, toISODate, todayInStockholm } from "@/lib/dates";
+import { capitalizeFirst, changeDeadline, formatDeadline, formatDeliveryDateWithYear, formatLongDate, todayInStockholm } from "@/lib/dates";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { looksLikePersonalNumber } from "@/lib/validation";
@@ -44,11 +44,11 @@ Totalt inkl. moms: ${formatOre(order.totalOre)}
 LEVERANS
 ${order.deliveryAddress}, ${order.deliveryPostalCode} ${order.deliveryCity}
 Leveransdag: ${deliveryDay}
-Vi levererar under dagen — se till att någon finns på plats för att ta emot leveransen.
+Vi levererar under dagen – se till att någon finns på plats för att ta emot leveransen.
 Ändringar eller avbokning: svara på det här mejlet senast ${formatDeadline(changeDeadline(order.deliveryDate, orderPolicy.changeCutoffWorkdays, orderPolicy.changeCutoffHour))}. Därefter är ordern packad och faktureras.
 
 FAKTURA
-Betalning sker mot faktura. Fakturan skapas nu och skickas till ${order.invoiceEmail}. Förfallodatum ${order.invoice.dueDate.toISOString().slice(0, 10)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen).
+Betalning sker mot faktura. Fakturan skapas nu och skickas till ${order.invoiceEmail}. Förfallodatum ${formatLongDate(order.invoice.dueDate)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen).
 Ni kan även ladda ner den här: ${invoiceUrl}
 
 Frågor? Svara på det här mejlet.
@@ -58,7 +58,7 @@ Sockerbagaren`;
 
   const confirmationPromise = sendEmail({
     to: order.email,
-    subject: `Orderbekräftelse ${order.orderNumber} — Sockerbagaren`,
+    subject: `Orderbekräftelse ${order.orderNumber} – Sockerbagaren`,
     text: confirmationText,
     type: "ORDER_CONFIRMATION",
     orderId: order.id,
@@ -84,7 +84,7 @@ Sockerbagaren`;
   const invoiceText = `Faktura ${order.invoice.invoiceNumber} från Sockerbagaren (${order.orderNumber})
 
 Belopp att betala: ${formatOre(order.totalOre)} inkl. moms
-Förfallodatum: ${order.invoice.dueDate.toISOString().slice(0, 10)}
+Förfallodatum: ${formatLongDate(order.invoice.dueDate)}
 
 ${attachments ? "Fakturan bifogas som PDF." : ""}
 Ladda ner fakturan: ${invoiceUrl}
@@ -94,7 +94,7 @@ Sockerbagaren`;
 
   const invoicePromise = sendEmail({
     to: order.invoiceEmail,
-    subject: `Faktura ${order.invoice.invoiceNumber} — Sockerbagaren`,
+    subject: `Faktura ${order.invoice.invoiceNumber} – Sockerbagaren`,
     text: invoiceText,
     attachments,
     type: "INVOICE",
@@ -107,14 +107,14 @@ Sockerbagaren`;
     ? Promise.resolve(false)
     : sendEmail({
       to: emailConfig.adminNotify,
-      subject: `Ny order ${order.orderNumber} — ${order.companyName} (${formatOre(order.totalOre)})`,
+      subject: `Ny order ${order.orderNumber} – ${order.companyName} (${formatOre(order.totalOre)})`,
       text: `Ny beställning via webben.
 
 Order: ${order.orderNumber}
-Kund: ${order.companyName} (${order.orgNumber})${looksLikePersonalNumber(order.orgNumber) ? " — OBS: personnummerformat, troligen enskild firma" : ""}
+Kund: ${order.companyName} (${order.orgNumber})${looksLikePersonalNumber(order.orgNumber) ? " – OBS: personnummerformat, troligen enskild firma" : ""}
 Kontakt: ${order.contactName}, ${order.email}${order.phone ? `, ${order.phone}` : ""}
-Leverans: ${deliveryDay} — ${order.deliveryAddress}, ${order.deliveryPostalCode} ${order.deliveryCity}${order.deliveryArea ? ` (${order.deliveryArea.name})` : ""}
-${order.deliveryInstruction ? `Kommentar: ${order.deliveryInstruction}\n` : ""}
+Leverans: ${deliveryDay} – ${order.deliveryAddress}, ${order.deliveryPostalCode} ${order.deliveryCity}${order.deliveryArea ? ` (${order.deliveryArea.name})` : ""}
+${order.deliveryInstruction ? `Leveransanvisning: ${order.deliveryInstruction}\n` : ""}
 KAKOR
 ${lines}
 
@@ -129,7 +129,7 @@ Admin: ${siteConfig.url}/admin/bestallningar/${order.id}`,
 
 /**
  * Leveransbekräftelse till kontakt-e-post när ordern markerats levererad.
- * Kunden ska inte behöva undra om kakorna kom fram — och påminnelsen om
+ * Kunden ska inte behöva undra om kakorna kom fram – och påminnelsen om
  * fakturan minskar sena betalningar. Returnerar false om mejlet inte gick.
  */
 export async function sendDeliveryConfirmationEmail(orderId: string): Promise<boolean> {
@@ -141,7 +141,7 @@ export async function sendDeliveryConfirmationEmail(orderId: string): Promise<bo
   const lines = order.items.map((i) => `  ${i.productName}: ${qtyLabel(i.weightKg, i.unit)}`).join("\n");
   const invoicePart =
     order.invoice && order.paymentStatus !== "PAID" && order.invoice.status !== "CREDITED"
-      ? `\nFAKTURA\nFaktura ${order.invoice.invoiceNumber} på ${formatOre(order.totalOre)} inkl. moms förfaller ${toISODate(order.invoice.dueDate)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen).\nLadda ner fakturan: ${siteConfig.url}/faktura/${order.invoice.downloadToken}\n`
+      ? `\nFAKTURA\nFaktura ${order.invoice.invoiceNumber} på ${formatOre(order.totalOre)} inkl. moms förfaller ${formatLongDate(order.invoice.dueDate)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen).\nLadda ner fakturan: ${siteConfig.url}/faktura/${order.invoice.downloadToken}\n`
       : "";
   const text = `Nu är kakorna levererade!
 
@@ -158,7 +158,7 @@ Vänliga hälsningar
 Sockerbagaren`;
   return sendEmail({
     to: order.email,
-    subject: `Levererat: ${order.orderNumber} — Sockerbagaren`,
+    subject: `Levererat: ${order.orderNumber} – Sockerbagaren`,
     text,
     type: "DELIVERY_CONFIRMATION",
     orderId: order.id,
@@ -167,7 +167,7 @@ Sockerbagaren`;
 
 /**
  * Vänlig betalningspåminnelse till faktura-e-post. Skickas manuellt från admin
- * (aldrig automatiskt — en påminnelse till en kund som just betalat skadar
+ * (aldrig automatiskt – en påminnelse till en kund som just betalat skadar
  * relationen mer än en dags försening). Fakturan bifogas igen som PDF.
  */
 export async function sendPaymentReminderEmail(orderId: string): Promise<boolean> {
@@ -179,7 +179,7 @@ export async function sendPaymentReminderEmail(orderId: string): Promise<boolean
   const invoice = order.invoice;
   const credited = invoice.creditNotes.reduce((s, c) => s + c.totalOre, 0); // negativt
   const toPay = Math.max(0, invoice.totalOre + credited);
-  const due = toISODate(invoice.dueDate);
+  const due = formatLongDate(invoice.dueDate);
   const overdue = invoice.dueDate.getTime() < todayInStockholm().getTime();
   let attachments: { filename: string; content: Buffer; contentType: string }[] | undefined;
   try {
@@ -198,13 +198,13 @@ ${credited !== 0 ? `Beloppet är efter kreditering (${formatOre(-credited)}).\n`
 ${attachments ? "Fakturan bifogas på nytt som PDF." : ""}
 Ladda ner fakturan: ${siteConfig.url}/faktura/${invoice.downloadToken}
 
-Har betalningen redan gjorts kan ni bortse från det här mejlet — svara gärna med betaldatum så stämmer vi av.
+Har betalningen redan gjorts kan ni bortse från det här mejlet – svara gärna med betaldatum så stämmer vi av.
 
 Vänliga hälsningar
 Sockerbagaren`;
   return sendEmail({
     to: order.invoiceEmail,
-    subject: `${overdue ? "Påminnelse" : "Vänlig påminnelse"}: faktura ${invoice.invoiceNumber} — Sockerbagaren`,
+    subject: `${overdue ? "Påminnelse" : "Vänlig påminnelse"}: faktura ${invoice.invoiceNumber} – Sockerbagaren`,
     text,
     attachments,
     type: "PAYMENT_REMINDER",

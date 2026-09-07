@@ -33,7 +33,7 @@ export function fromISODate(iso: string): Date {
 
 const WEEKDAY_NAMES = ["måndag", "tisdag", "onsdag", "torsdag", "fredag", "lördag", "söndag"];
 
-/** Versal första bokstav — svenska datum skrivs "Torsdag 10 september", inte "Torsdag 10 September" (CSS capitalize). */
+/** Versal första bokstav – svenska datum skrivs "Torsdag 10 september", inte "Torsdag 10 September" (CSS capitalize). */
 export function capitalizeFirst(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -52,7 +52,7 @@ export function formatDeliveryDate(date: Date): string {
   }).format(date);
 }
 
-/** Som formatDeliveryDate men med år — för mejl och dokument som läses långt senare. */
+/** Som formatDeliveryDate men med år – för mejl och dokument som läses långt senare. */
 export function formatDeliveryDateWithYear(date: Date): string {
   return new Intl.DateTimeFormat("sv-SE", {
     timeZone: "UTC",
@@ -81,7 +81,7 @@ export interface DeliveryDayConfig {
   weekdays: number[];
   /** Beställ senast N hela dagar före leveransdagen. */
   leadTimeDays: number;
-  /** ISO-datum (YYYY-MM-DD) som admin spärrat — semester, inventering, fulla dagar. */
+  /** ISO-datum (YYYY-MM-DD) som admin spärrat – semester, inventering, fulla dagar. */
   blockedDates?: string[];
 }
 
@@ -113,7 +113,7 @@ function saturdayOnOrAfter(year: number, month: number, fromDay: number): Date {
 
 /**
  * Svenska helgdagar plus de aftnar då ingen tar emot leveranser (midsommar-,
- * jul- och nyårsafton). Vi levererar aldrig dessa dagar — kontoren är stängda.
+ * jul- och nyårsafton). Vi levererar aldrig dessa dagar – kontoren är stängda.
  * Returnerar namnet på dagen, eller null.
  */
 export function swedishHolidayName(date: Date): string | null {
@@ -193,7 +193,7 @@ export function isValidDeliveryDate(date: Date, config: DeliveryDayConfig, now =
 /**
  * Närmaste datum (samma dag eller senare) som är en giltig leveransveckodag.
  * Används när ett områdes leveransdagar ändrats efter att en prenumeration
- * fått sitt nästa datum — ordrar får aldrig hamna på dagar utan leverans.
+ * fått sitt nästa datum – ordrar får aldrig hamna på dagar utan leverans.
  */
 export function snapToDeliveryWeekday(date: Date, config: DeliveryDayConfig): Date {
   const weekdays = validWeekdays(config);
@@ -226,7 +226,7 @@ export function nextSubscriptionDate(
   return target;
 }
 
-/** Riktig tidsstämpel (t.ex. levererad kl 00:30) — visas i svensk tid, inte UTC. */
+/** Riktig tidsstämpel (t.ex. levererad kl 00:30) – visas i svensk tid, inte UTC. */
 export function formatTimestamp(date: Date): string {
   return new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Europe/Stockholm",
@@ -276,7 +276,7 @@ export function formatDeadline(deadline: Date): string {
 /**
  * Kadensankare för prenumerationer: närmaste dag (samma eller senare) på
  * områdets veckodagar, UTAN hänsyn till helgdagar och spärrade datum.
- * Själva leveransen snäpps separat (snapToDeliveryWeekday) — annars driver
+ * Själva leveransen snäpps separat (snapToDeliveryWeekday) – annars driver
  * kadensen en vecka varje gång en helgdag skjuter en leverans.
  */
 export function snapToWeekday(date: Date, weekdays: number[]): Date {
@@ -300,4 +300,9 @@ export function nextCadenceDate(after: Date, frequency: "WEEKLY" | "BIWEEKLY" | 
 export function listSv(items: string[]): string {
   if (items.length <= 1) return items.join("");
   return `${items.slice(0, -1).join(", ")} och ${items[items.length - 1]}`;
+}
+
+/** "10 oktober 2026" – för kundmejl (fakturan och exporten behåller ISO). */
+export function formatLongDate(date: Date): string {
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" }).format(date);
 }

@@ -9,9 +9,9 @@ import { invoiceConfig } from "@/lib/config";
 import { PrintButton } from "@/components/admin/PrintButton";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin — följesedel", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – följesedel", robots: { index: false } };
 
-// Följesedel: läggs i kartongen. Inga priser — mottagaren på kontoret ska
+// Följesedel: läggs i kartongen. Inga priser – mottagaren på kontoret ska
 // bara kunna pricka av att rätt sorter och mängder kom fram.
 export default async function PackingSlipPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdminPage();
@@ -41,7 +41,7 @@ export default async function PackingSlipPage({ params }: { params: Promise<{ id
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-2)" }}>Följesedel</div>
+          <h1 style={{ fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-2)", margin: 0, fontFamily: "inherit", fontWeight: 400 }}>Följesedel</h1>
           <div className="mono" style={{ fontSize: 18, fontWeight: 700 }}>{order.orderNumber}</div>
           {order.invoice && (
             <div className="mono" style={{ fontSize: 12, color: "var(--text-2)" }}>Faktura {order.invoice.invoiceNumber}</div>
@@ -98,7 +98,7 @@ export default async function PackingSlipPage({ params }: { params: Promise<{ id
           <tr>
             <td style={{ fontWeight: 700 }}>Totalt</td>
             <td style={{ textAlign: "right", fontWeight: 700 }}>
-              {[totalKg > 0 ? `${totalKg} kg` : null, totalPaket > 0 ? `${totalPaket} paket` : null].filter(Boolean).join(" + ")}
+              {[totalKg > 0 ? `${totalKg} kg` : null, totalPaket > 0 ? `${totalPaket} paket` : null].filter(Boolean).join(" + ")}
             </td>
             <td />
             <td />

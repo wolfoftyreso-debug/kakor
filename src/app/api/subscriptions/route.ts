@@ -14,7 +14,7 @@ import { describeError } from "@/lib/log";
 import { clientIp, verifyTurnstile } from "@/lib/turnstile";
 import { formatOre } from "@/lib/money";
 
-// Vercel: PDF-rendering + mejl kan ta tid — standard 10 s räcker inte på kalla starter.
+// Vercel: PDF-rendering + mejl kan ta tid – standard 10 s räcker inte på kalla starter.
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   const daily = limit.ok ? await rateLimit(clientKey(req.headers, "subscription-dygn"), { limit: 40, windowMs: 24 * 3600_000 }) : limit;
   if (!limit.ok || !daily.ok) {
     return NextResponse.json(
-      { ok: false, error: "För många försök — vänta en stund och försök igen" },
+      { ok: false, error: "För många försök – vänta en stund och försök igen" },
       { status: 429, headers: { "Retry-After": String(limit.ok ? daily.retryAfterSeconds : limit.retryAfterSeconds) } }
     );
   }
@@ -44,13 +44,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Robotskydd (Cloudflare Turnstile) — no-op utan nycklar.
+  // Robotskydd (Cloudflare Turnstile) – no-op utan nycklar.
   const captcha = await verifyTurnstile(parsed.data.turnstileToken, clientIp(req.headers));
   if (!captcha.ok) {
     return NextResponse.json(
       {
         ok: false,
-        error: "Robotkontrollen gick inte igenom — försök igen.",
+        error: "Robotkontrollen gick inte igenom – försök igen.",
         code: "CAPTCHA_FAILED",
         fields: { turnstileToken: "Bekräfta att ni inte är en robot" },
       },
@@ -59,14 +59,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Per-leverans-summa räknas på servern från databasens priser — aldrig
+    // Per-leverans-summa räknas på servern från databasens priser – aldrig
     // klientens. Räknas FÖRE skapandet så att en prisändring under tiden
     // avvisas utan att någon prenumeration hinner sparas.
     const products = await prisma.product.findMany({
       where: { id: { in: parsed.data.items.map((i) => i.productId) }, active: true },
     });
     if (products.length !== new Set(parsed.data.items.map((i) => i.productId)).size) {
-      throw new OrderError("En produkt i prenumerationen finns inte längre", "items");
+      throw new OrderError("En sort i prenumerationen finns inte längre", "items");
     }
     const totals = calculateTotals(
       parsed.data.items.map((i) => {
@@ -79,21 +79,21 @@ export async function POST(req: NextRequest) {
     );
     if (parsed.data.expectedTotalOre !== undefined && parsed.data.expectedTotalOre !== totals.totalOre) {
       throw new OrderError(
-        "Priset har uppdaterats sedan ni började beställa — kontrollera den nya summan och skicka igen.",
+        "Priset har uppdaterats sedan ni började beställa – kontrollera den nya summan och skicka igen.",
         undefined,
         "PRICE_CHANGED"
       );
     }
 
     // Idempotent replay (retry/dubbelklick) returnerar en redan skapad
-    // prenumeration — då ska bekräftelsen inte mejlas en gång till.
+    // prenumeration – då ska bekräftelsen inte mejlas en gång till.
     const { subscription, duplicate: isReplay } = await createSubscription(parsed.data);
 
-    // Bekräftelse — prenumerationen är sparad även om mejlet fallerar.
+    // Bekräftelse – prenumerationen är sparad även om mejlet fallerar.
     if (!isReplay) {
       await sendEmail({
         to: subscription.email,
-        subject: `Fikaprenumeration ${subscription.number} startad — Sockerbagaren`,
+        subject: `Fikaprenumeration ${subscription.number} startad – Sockerbagaren`,
         text: `Tack! Er fikaprenumeration är igång.
 
 Prenumerationsnummer: ${subscription.number}
@@ -130,7 +130,7 @@ Sockerbagaren`,
     return NextResponse.json(
       {
         ok: false,
-        error: `Prenumerationen kunde inte startas — ingenting har sparats. Försök igen om en liten stund. Referens: ${ref}`,
+        error: `Prenumerationen kunde inte startas – ingenting har sparats. Försök igen om en liten stund. Referens: ${ref}`,
       },
       { status: 500 }
     );

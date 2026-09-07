@@ -12,7 +12,7 @@ import { EditSubscriptionForm } from "./EditSubscriptionForm";
 
 export const dynamic = "force-dynamic";
 
-/** Kadensankaret kan vara en helgdag — visa dagen kakorna faktiskt kommer. */
+/** Kadensankaret kan vara en helgdag – visa dagen kakorna faktiskt kommer. */
 function actualDeliveryDate(s: { nextDeliveryDate: Date; deliveryArea: { weekdaysJson: string; leadTimeDays: number; blockedDatesJson: string } | null }): Date {
   if (!s.deliveryArea) return s.nextDeliveryDate;
   return snapToDeliveryWeekday(s.nextDeliveryDate, {
@@ -21,10 +21,10 @@ function actualDeliveryDate(s: { nextDeliveryDate: Date; deliveryArea: { weekday
     blockedDates: safeBlockedDates(s.deliveryArea.blockedDatesJson),
   });
 }
-export const metadata: Metadata = { title: "Admin — prenumerationer", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – prenumerationer", robots: { index: false } };
 
 const STATUS_FILTERS = [
-  { key: "aktiva", label: "Aktiva & pausade" },
+  { key: "aktiva", label: "Aktiva och pausade" },
   { key: "avslutade", label: "Avslutade" },
   { key: "alla", label: "Alla" },
 ];
@@ -64,8 +64,8 @@ export default async function SubscriptionsPage({
         <GenerateOrdersButton />
       </div>
       <p style={{ color: "var(--text-2)", fontSize: 13.5, margin: "0 0 16px", maxWidth: "70ch" }}>
-        Ordrar för kommande leveranser genereras automatiskt om cron är konfigurerat, annars med
-        knappen ovan. Motorn är idempotent — samma period kan aldrig ge två ordrar.
+        Ordrar för kommande leveranser genereras automatiskt av den schemalagda körningen (om CRON_SECRET är satt), annars med
+        knappen ovan. Motorn är idempotent – samma period kan aldrig ge två ordrar.
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
         {STATUS_FILTERS.map((f) => (

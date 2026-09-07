@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 
 // __Host-prefix + Secure när sajten faktiskt serveras över HTTPS (Vercel,
-// eller SITE_URL med https). Signalen är trafiken — inte NODE_ENV: `next start`
+// eller SITE_URL med https). Signalen är trafiken – inte NODE_ENV: `next start`
 // lokalt över http skulle annars sätta en Secure-cookie som bara Chromium/
 // Firefox accepterar på localhost (Safari gör det inte → inloggningsloop).
 const SERVES_HTTPS = !!process.env.VERCEL || (process.env.SITE_URL ?? "").startsWith("https://");
@@ -25,7 +25,7 @@ export async function loginAdmin(email: string, password: string): Promise<boole
 
   const token = randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_TTL_HOURS * 3600_000);
-  // Städa utgångna sessioner (alla användare) vid varje lyckad inloggning —
+  // Städa utgångna sessioner (alla användare) vid varje lyckad inloggning –
   // annars växer tabellen obegränsat, eftersom utgångna rader annars bara
   // raderas när just den cookien används igen.
   await prisma.adminSession.deleteMany({ where: { expiresAt: { lt: new Date() } } }).catch(() => {});

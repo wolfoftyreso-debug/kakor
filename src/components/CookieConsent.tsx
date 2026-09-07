@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 // Samtyckesbanner för statistikcookies (GA4). Renderas bara när GA är
 // konfigurerat (prop från servern). Utan uttryckligt "Tillåt" laddas
-// inget Google-script — se AnalyticsScript. Valet sparas per webbläsare.
+// inget Google-script – se AnalyticsScript. Valet sparas per webbläsare.
 
 export const CONSENT_KEY = "sb_consent_v1";
 export const CONSENT_EVENT = "sb-consent-changed";

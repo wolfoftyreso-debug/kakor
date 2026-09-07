@@ -1,4 +1,4 @@
-// Små linjeikoner (currentColor) för trust strip och listor. Inga ikonbibliotek —
+// Små linjeikoner (currentColor) för trust strip och listor. Inga ikonbibliotek –
 // tre streckikoner i varumärkets stil räcker och väger ingenting.
 
 const base = {
@@ -36,7 +36,7 @@ export function IconTruck() {
   );
 }
 
-/** Smör/råvara — ett blad. */
+/** Smör/råvara – ett blad. */
 export function IconLeaf() {
   return (
     <svg {...base}>

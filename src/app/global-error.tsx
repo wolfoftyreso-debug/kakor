@@ -54,7 +54,7 @@ export default function GlobalError({
         >
           Försök igen
         </button>
-        {/* global-error ersätter hela root-layouten — next/link är inte tillgängligt här. */}
+        {/* global-error ersätter hela root-layouten – next/link är inte tillgängligt här. */}
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/" style={{ color: "#a03d2c", fontWeight: 700, display: "block", marginTop: 16 }}>
           Till startsidan

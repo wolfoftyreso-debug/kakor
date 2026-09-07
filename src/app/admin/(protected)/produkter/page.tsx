@@ -7,14 +7,20 @@ import { priceSuffix } from "@/lib/units";
 import { ProductActiveToggle } from "./ProductActiveToggle";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin — produkter", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – produkter", robots: { index: false } };
 
-export default async function ProductsPage() {
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ sparad?: string }> }) {
   await requireAdminPage();
+  const { sparad } = await searchParams;
   const products = await prisma.product.findMany({ orderBy: { sortOrder: "asc" } });
 
   return (
     <>
+      {sparad && (
+        <div role="status" className="info-box" style={{ marginBottom: 16, fontSize: 14 }}>
+          {sparad} är sparad.
+        </div>
+      )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
         <h1 style={{ fontSize: 26 }}>Produkter</h1>
         <Link href="/admin/produkter/ny" className="btn btn-primary" style={{ padding: "10px 18px", fontSize: 14 }}>
@@ -22,7 +28,7 @@ export default async function ProductsPage() {
         </Link>
       </div>
       <p style={{ color: "var(--text-2)", fontSize: 13.5, margin: "0 0 20px", maxWidth: "70ch" }}>
-        Prisändringar påverkar bara nya beställningar — historiska ordrar och fakturor behåller
+        Prisändringar påverkar bara nya beställningar – historiska ordrar och fakturor behåller
         sina belopp.
       </p>
 
@@ -30,13 +36,13 @@ export default async function ProductsPage() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Produkt</th>
-              <th>Pris</th>
-              <th>Förval</th>
-              <th>Allergener</th>
-              <th>Ordning</th>
-              <th>Status</th>
-              <th></th>
+              <th scope="col">Produkt</th>
+              <th scope="col">Pris</th>
+              <th scope="col">Förval</th>
+              <th scope="col">Allergener</th>
+              <th scope="col">Ordning</th>
+              <th scope="col">Status</th>
+              <th scope="col"><span className="visually-hidden">Åtgärder</span></th>
             </tr>
           </thead>
           <tbody>

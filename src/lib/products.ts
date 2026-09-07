@@ -43,8 +43,10 @@ export interface AreaWithDates {
   leadTimeDays: number;
   /** Datum admin spärrat (ISO). Helgdagar räknas bort automatiskt i dates.ts. */
   blockedDates: string[];
-  /** Datum där kapacitetstaket redan är nått — visas inte i kassan. */
+  /** Datum där kapacitetstaket redan är nått – visas inte i kassan. */
   fullDates: string[];
+  /** Postnummerprefix (tom = ingen spärr) – kassan varnar direkt i steg 3. */
+  postalPrefixes: string[];
   upcomingDates: string[]; // ISO-datum
 }
 
@@ -76,13 +78,23 @@ export const getAreasWithDates = cache(async function getAreasWithDates(dateCoun
         leadTimeDays: a.leadTimeDays,
         blockedDates,
         fullDates,
+        postalPrefixes: safeStringList(a.postalCodePrefixesJson),
         upcomingDates: upcomingDeliveryDates(config, dateCount).map(toISODate),
       };
     })
   );
 });
 
-/** Spärrade datum från admin — bara giltiga ISO-datum släpps igenom. */
+function safeStringList(json: string): string[] {
+  try {
+    const arr = JSON.parse(json);
+    return Array.isArray(arr) ? arr.filter((x) => typeof x === "string" && x.length > 0) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Spärrade datum från admin – bara giltiga ISO-datum släpps igenom. */
 export function safeBlockedDates(json: string): string[] {
   try {
     const arr = JSON.parse(json);
@@ -106,14 +118,14 @@ export function safeWeekdays(json: string): number[] {
 }
 
 /**
- * "torsdagar" / "tisdagar och torsdagar" — unionen av alla aktiva områdens
+ * "torsdagar" / "tisdagar och torsdagar" – unionen av alla aktiva områdens
  * leveransveckodagar, för publik copy (t.ex. footern). Tom sträng om
  * inget område har dagar konfigurerade. Leveransdagar är data, aldrig
  * hårdkodad text.
  */
-// React.cache: samma request anropar detta från hero, footer och sida — en DB-fråga, inte tre.
+// React.cache: samma request anropar detta från hero, footer och sida – en DB-fråga, inte tre.
 export const getDeliveryDaysLabel = cache(async function getDeliveryDaysLabel(): Promise<string> {
-  // Footern ligger på varje sida — ett databasfel här får aldrig fälla sidan.
+  // Footern ligger på varje sida – ett databasfel här får aldrig fälla sidan.
   let areas: { weekdaysJson: string }[] = [];
   try {
     areas = await prisma.deliveryArea.findMany({ where: { active: true }, select: { weekdaysJson: true } });

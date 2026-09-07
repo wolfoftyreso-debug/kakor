@@ -4,7 +4,7 @@ import { emailConfig } from "@/lib/config";
 
 // E-postabstraktion: orderlogiken känner bara till sendEmail().
 // Provider byts via EMAIL_PROVIDER utan att någon affärslogik ändras.
-// Regel: e-postfel får ALDRIG fälla orderflödet — allt loggas i EmailLog.
+// Regel: e-postfel får ALDRIG fälla orderflödet – allt loggas i EmailLog.
 
 export interface EmailMessage {
   to: string;
@@ -67,7 +67,7 @@ class ResendProvider implements EmailProvider {
 function getProvider(): EmailProvider {
   // Miljöspärr: riktiga utskick sker ENDAST i Vercel production (eller
   // lokal körning utanför Vercel). Preview-deployer kan aldrig råka mejla
-  // riktiga kunder — logiken och loggningen testas ändå via log-providern.
+  // riktiga kunder – logiken och loggningen testas ändå via log-providern.
   const onVercel = !!process.env.VERCEL;
   const isProduction = process.env.VERCEL_ENV === "production";
   if (onVercel && !isProduction) return new LogProvider();
@@ -77,7 +77,7 @@ function getProvider(): EmailProvider {
 }
 
 /**
- * Skickar e-post och loggar leveransstatus. Kastar aldrig —
+ * Skickar e-post och loggar leveransstatus. Kastar aldrig –
  * returnerar true/false så att anroparen kan fortsätta oavsett.
  */
 export async function sendEmail(msg: EmailMessage): Promise<boolean> {

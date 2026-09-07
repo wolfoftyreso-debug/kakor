@@ -1,4 +1,4 @@
-// Numrerade steg ("Så fungerar det") — samma komponent på startsidan och
+// Numrerade steg ("Så fungerar det") – samma komponent på startsidan och
 // prenumerationssidan så att rytm, typografi och mobilvy alltid är identiska.
 export interface StepItem {
   title: string;

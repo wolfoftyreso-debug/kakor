@@ -15,7 +15,7 @@ export default function ErrorPage({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Serverfelet är redan fångat server-side (Sentry/loggar) — detta är
+    // Serverfelet är redan fångat server-side (Sentry/loggar) – detta är
     // bara för lokal felsökning i webbläsaren.
     console.error(error);
   }, [error]);

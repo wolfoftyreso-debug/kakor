@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { ProductForm } from "../ProductForm";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin — redigera produkt", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – redigera produkt", robots: { index: false } };
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdminPage();

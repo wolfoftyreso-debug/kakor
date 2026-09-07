@@ -1,6 +1,6 @@
-// Kunskapsinnehåll per produkt — generell, verifierbar bakkunskap
+// Kunskapsinnehåll per produkt – generell, verifierbar bakkunskap
 // (synonymer, servering, förvaringsråd). Här får det ALDRIG stå
-// verksamhetsfakta (produktionssätt, tider, löften) — sådant styrs av
+// verksamhetsfakta (produktionssätt, tider, löften) – sådant styrs av
 // verksamheten. Sökdata (Semrush, se-databasen, 2026-09) motiverar urvalet:
 // "kolakakor" 33 100 sök/mån, "kolasnittar" 22 200, "snittar" 8 100,
 // "chokladsnittar" 8 100, "mandelkubb" 4 400, "mandelkubbar" 4 400,
@@ -13,7 +13,7 @@ export interface ProductKnowledge {
   aka?: string;
   /** Synonym i sidtiteln, inom parentes: "Kolasnittar (kolakakor)". */
   titleAka?: string;
-  /** Vanliga frågor — renderas synligt och som FAQPage-schema. */
+  /** Vanliga frågor – renderas synligt och som FAQPage-schema. */
   faqs?: { q: string; a: string }[];
 }
 
@@ -23,11 +23,11 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
     titleAka: "kolakakor",
     heading: "Om kolasnittar",
     paragraphs: [
-      "Kolasnittar kallas ofta även kolakakor eller kolakex — en av de mest älskade klassikerna i svenska kakburkar. Den karaktäristiska sega kolasmaken kommer från sirap och smör som karamelliseras i ugnen, och snittarna skärs traditionellt diagonalt medan kakan fortfarande är varm.",
-      "Sega kolasnittar får sin konsistens av just sirapen: ju mer sirap i förhållande till mjöl, desto segare kärna, medan kanterna blir spröda. En liten mängd salt lyfter kolasmaken — därför bakas våra kolasnittar med keltiskt salt i degen.",
+      "Kolasnittar kallas ofta även kolakakor eller kolakex – en av de mest älskade klassikerna i svenska kakburkar. Den karaktäristiska sega kolasmaken kommer från sirap och smör som karamelliseras i ugnen, och snittarna skärs traditionellt diagonalt medan kakan fortfarande är varm.",
+      "Sega kolasnittar får sin konsistens av just sirapen: ju mer sirap i förhållande till mjöl, desto segare kärna, medan kanterna blir spröda. En liten mängd salt lyfter kolasmaken – därför bakas våra kolasnittar med keltiskt salt i degen.",
       "Kolasnittar hör till familjen snittkakor: degen rullas till längder, plattas till, gräddas och skärs i sneda bitar. Samma teknik används för chokladsnittar, vilket gör de två sorterna till ett naturligt par på fikabordet.",
-      "Kolasnittar med flingsalt eller havssalt har blivit en modern favorit: saltet lyfter kolasmaken och gör kakan mindre söt. Våra kolasnittar saltas i degen med keltiskt salt i stället för att strös ovanpå — samma balans, men jämnt fördelad i varje bit. Vill ni ha choklad till kolan är chokladsnittarna den naturliga följeslagaren.",
-      "Förvaringstips: kolasnittar håller sig bäst i en tät burk i rumstemperatur, gärna med bakplåtspapper mellan lagren så att de inte fastnar i varandra. De går utmärkt att frysa — låt dem tina i rumstemperatur en stund före serveringen.",
+      "Kolasnittar med flingsalt eller havssalt har blivit en modern favorit: saltet lyfter kolasmaken och gör kakan mindre söt. Våra kolasnittar saltas i degen med keltiskt salt i stället för att strös ovanpå – samma balans, men jämnt fördelad i varje bit. Vill ni ha choklad till kolan är chokladsnittarna den naturliga följeslagaren.",
+      "Förvaringstips: kolasnittar håller sig bäst i en tät burk i rumstemperatur, gärna med bakplåtspapper mellan lagren så att de inte fastnar i varandra. De går utmärkt att frysa – låt dem tina i rumstemperatur en stund före serveringen.",
     ],
     faqs: [
       {
@@ -48,11 +48,11 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
       },
       {
         q: "Hur länge håller kolasnittar?",
-        a: "I tät burk i rumstemperatur håller de sig fina i flera veckor. I frysen håller de i flera månader — tina i rumstemperatur före serveringen.",
+        a: "I tät burk i rumstemperatur håller de sig fina i flera veckor. I frysen håller de i flera månader – tina i rumstemperatur före serveringen.",
       },
       {
         q: "Kan vi beställa kolasnittar till företaget?",
-        a: "Ja — kolasnittar säljs per kilo till företag i Tyresö, Nacka, Haninge och Huddinge, med leverans på områdets leveransdag och betalning mot faktura. Blanda gärna med mandelkubb och chokladsnittar i samma order.",
+        a: "Ja – kolasnittar säljs per kilo till företag i Tyresö, Nacka, Haninge och Huddinge, med leverans på områdets leveransdag och betalning mot faktura. Blanda gärna med mandelkubb och chokladsnittar i samma beställning.",
       },
     ],
   },
@@ -61,10 +61,10 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
     titleAka: "mandelkubbar",
     heading: "Om mandelkubb",
     paragraphs: [
-      "Mandelkubb — eller mandelkubbar i plural — är en rejäl svensk klassiker: en mör, kompakt kaka smaksatt med mandel och ofta en ton av bittermandel. Den har en naturlig plats bredvid en kopp svart kaffe och är en av de kaksorter som oftast förknippas med klassiskt svenskt kondis.",
-      "Till skillnad från de tunna snittkakorna är mandelkubben en formad kaka med ordentlig tuggmotstånd — mer kaka per bit och mer mättande. Det gör den till ett bra val när fikat ska räcka länge, till exempel i personalrummet eller på ett längre möte.",
+      "Mandelkubb – eller mandelkubbar i plural – är en rejäl svensk klassiker: en mör, kompakt kaka smaksatt med mandel och ofta en ton av bittermandel. Den har en naturlig plats bredvid en kopp svart kaffe och är en av de kaksorter som oftast förknippas med klassiskt svenskt kondis.",
+      "Till skillnad från de tunna snittkakorna är mandelkubben en formad kaka med ordentlig tuggmotstånd – mer kaka per bit och mer mättande. Det gör den till ett bra val när fikat ska räcka länge, till exempel i personalrummet eller på ett längre möte.",
       "Mandelkubb och mandelkakor förväxlas ibland. Mandelkakor är ett samlingsnamn för alla småkakor med mandel, medan mandelkubben är just den höga, kubbformade kakan med ägg och mandel i degen.",
-      "Förvaringstips: mandelkubb håller sig mör i tät burk i rumstemperatur. Den tål frysning mycket bra — frys i tät påse och låt tina i rumstemperatur, så smakar den som ny.",
+      "Förvaringstips: mandelkubb håller sig mör i tät burk i rumstemperatur. Den tål frysning mycket bra – frys i tät påse och låt tina i rumstemperatur, så smakar den som ny.",
     ],
     faqs: [
       {
@@ -73,7 +73,7 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
       },
       {
         q: "Innehåller mandelkubb nötter?",
-        a: "Mandelkubb innehåller mandel, som räknas till nötter i allergensammanhang. Fullständig ingrediensförteckning och allergener finns på produktsidan och under Ingredienser & allergener.",
+        a: "Mandelkubb innehåller mandel, som räknas till nötter i allergensammanhang. Fullständig ingrediensförteckning och allergener finns på produktsidan och under Ingredienser och allergener.",
       },
       {
         q: "Hur länge håller mandelkubb?",
@@ -85,16 +85,16 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
     aka: "chokladiga snittkakor",
     heading: "Om chokladsnittar",
     paragraphs: [
-      "Chokladsnittar är kolasnittarnas chokladiga syskon — en skuren småkaka på mördeg med kakao, ofta toppad med pärlsocker. Snittkakor är en egen familj i det svenska kakbaket: degen kavlas i längder, grädds och skärs i diagonala bitar.",
-      "Våra chokladsnittar bakas med både mörk choklad och kakao, vilket ger en djupare chokladkaraktär än snittar med enbart kakao. Ljus sirap ger den runda sötman och en seg kärna — samma princip som i kolasnittarna, men med chokladen i fokus.",
-      "Chokladsnittar med sirap är den klassiska varianten: den ljusa sirapen ger seg kärna och rund sötma, precis som i kolasnittarna. Det är så våra bakas — snittkakor på mördeg med choklad, kakao och ljus sirap.",
+      "Chokladsnittar är kolasnittarnas chokladiga syskon – en skuren småkaka på mördeg med kakao, ofta toppad med pärlsocker. Snittkakor är en egen familj i det svenska kakbaket: degen kavlas i längder, grädds och skärs i diagonala bitar.",
+      "Våra chokladsnittar bakas med både mörk choklad och kakao, vilket ger en djupare chokladkaraktär än snittar med enbart kakao. Ljus sirap ger den runda sötman och en seg kärna – samma princip som i kolasnittarna, men med chokladen i fokus.",
+      "Chokladsnittar med sirap är den klassiska varianten: den ljusa sirapen ger seg kärna och rund sötma, precis som i kolasnittarna. Det är så våra bakas – snittkakor på mördeg med choklad, kakao och ljus sirap.",
       "Chokladsnittar är vår chokladkaka till kaffet: chokladig utan att vara tung, och lätt att dela ut på ett fat till många.",
       "Förvaringstips: förvara i tät burk i rumstemperatur, separera lagren med bakplåtspapper. Chokladsnittar går bra att frysa och tinar snabbt i rumstemperatur.",
     ],
     faqs: [
       {
         q: "Vad är skillnaden mellan chokladsnittar och kolasnittar?",
-        a: "Samma bakteknik — snittade längder — men chokladsnittar bakas med choklad och kakao i degen medan kolasnittar får sin smak av karamelliserad sirap och smör. Beställ gärna båda så att fikat får en ljus och en mörk sort.",
+        a: "Samma bakteknik – snittade längder – men chokladsnittar bakas med choklad och kakao i degen medan kolasnittar får sin smak av karamelliserad sirap och smör. Beställ gärna båda så att fikat får en ljus och en mörk sort.",
       },
       {
         q: "Hur länge håller chokladsnittar?",
@@ -102,24 +102,24 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
       },
       {
         q: "Kan vi beställa chokladsnittar till kontoret?",
-        a: "Ja — chokladsnittar säljs per kilo till företag i Tyresö, Nacka, Haninge och Huddinge, med leverans på områdets leveransdag och betalning mot faktura.",
+        a: "Ja – chokladsnittar säljs per kilo till företag i Tyresö, Nacka, Haninge och Huddinge, med leverans på områdets leveransdag och betalning mot faktura.",
       },
     ],
   },
   "prova-pa-paket": {
     heading: "Om prova-på-paketet",
     paragraphs: [
-      "Prova-på-paketet är det enkla sättet att låta arbetsplatsen smaka hela sortimentet innan ni bestämmer favorit: 0,5 kg vardera av mandelkubb, kolasnittar och chokladsnittar — 1,5 kg gammaldags småkakor på riktigt smör.",
+      "Prova-på-paketet är det enkla sättet att låta arbetsplatsen smaka hela sortimentet innan ni bestämmer favorit: 0,5 kg vardera av mandelkubb, kolasnittar och chokladsnittar – 1,5 kg gammaldags småkakor på riktigt smör.",
       "Tre sorter ger också en bra spridning på fikabordet: en mör och mättande kaka (mandelkubb), en seg kolakaka (kolasnittar) och en chokladkaka (chokladsnittar). När ni vet vad som går åt först är det lätt att beställa den sorten per kilo nästa gång.",
     ],
     faqs: [
       {
         q: "Hur många personer räcker prova-på-paketet till?",
-        a: "Räkna med 3–5 småkakor per person till en fika. Hur många kakor 1,5 kg ger beror på sorten — snittar är lätta och mandelkubb tyngre — så paketet är ett bra sätt att se hur långt det räcker hos just er.",
+        a: "Räkna med 3–5 småkakor per person till en fika. Hur många kakor 1,5 kg ger beror på sorten – snittar är lätta och mandelkubb tyngre – så paketet är ett bra sätt att se hur långt det räcker hos just er.",
       },
       {
-        q: "Kan vi blanda paketet med kakor per kilo i samma order?",
-        a: "Ja. Lägg paketet i korgen och komplettera med valfri sort per kilo — allt levereras tillsammans på områdets leveransdag och faktureras på samma faktura.",
+        q: "Kan vi blanda paketet med kakor per kilo i samma beställning?",
+        a: "Ja. Lägg paketet i korgen och komplettera med valfri sort per kilo – allt levereras tillsammans på områdets leveransdag och faktureras på samma faktura.",
       },
     ],
   },

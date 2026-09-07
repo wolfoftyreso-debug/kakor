@@ -1,7 +1,7 @@
 "use client";
 
 // Bildyta. Om en riktig bild (t.ex. produktens bildreferens i /public) finns
-// visas den via next/image (responsiva storlekar, WebP/AVIF, lazy) — annars,
+// visas den via next/image (responsiva storlekar, WebP/AVIF, lazy) – annars,
 // eller om filen saknas, en varsam platshållare i varumärkets färger tills
 // foton enligt designpaketets shot list levereras.
 // Inga AI-genererade eller lånade foton används.
@@ -17,14 +17,14 @@ export function ImageSlot({
   decorative = false,
   sizes = "(max-width: 860px) 100vw, 50vw",
 }: {
-  /** Beskrivning för skärmläsare/alt-text, t.ex. "Kolasnittar — närbild". */
+  /** Beskrivning för skärmläsare/alt-text, t.ex. "Kolasnittar – närbild". */
   label: string;
   /** Sökväg till riktig bild (frivillig). Trasig/saknad bild faller tillbaka till platshållaren. */
   src?: string;
   circle?: boolean;
   /** true för sidans LCP-bild (hero): eager + hög fetch-prioritet. Övriga lazy-laddas. */
   priority?: boolean;
-  /** Bilden upprepar synlig text (t.ex. råvaruruta med namn under) — tom alt för skärmläsare. */
+  /** Bilden upprepar synlig text (t.ex. råvaruruta med namn under) – tom alt för skärmläsare. */
   decorative?: boolean;
   /** Hint till bildoptimeringen om hur bred bilden visas (CSS-bredd). */
   sizes?: string;
@@ -34,7 +34,7 @@ export function ImageSlot({
 
   if (showImage) {
     return (
-      // fill kräver en positionerad förälder — wrappern fyller containern.
+      // fill kräver en positionerad förälder – wrappern fyller containern.
       <span style={{ position: "relative", display: "block", width: "100%", height: "100%", minHeight: "inherit" }}>
         <Image
           src={src}

@@ -1,7 +1,7 @@
 "use client";
 
 // Köpbox på produktsidan: antal + lägg i korgen + gå till beställning.
-// Priset här är endast visning — servern räknar alltid om vid beställning.
+// Priset här är endast visning – servern räknar alltid om vid beställning.
 // På mobil följer en kompakt köpbar med i botten när själva boxen scrollat
 // ur bild, så att "Lägg i korgen" alltid är ett tumtryck bort.
 
@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart, MAX_UNITS } from "@/lib/cart";
 import { formatOre } from "@/lib/money";
-import { priceSuffix, qtyLabel } from "@/lib/units";
+import { priceSuffix, qtyLabel, unitLabel } from "@/lib/units";
 import type { ProductCardData } from "@/components/ProductCard";
 
 export function ProductBuyBox({ product, deliveryDays }: { product: ProductCardData; deliveryDays?: string }) {
@@ -23,7 +23,7 @@ export function ProductBuyBox({ product, deliveryDays }: { product: ProductCardD
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
       ([entry]) => {
-        // Baren visas först när boxen lämnat viewporten uppåt — inte när
+        // Baren visas först när boxen lämnat viewporten uppåt – inte när
         // sidan laddas med boxen synlig (ingen dubblerad CTA).
         setStickyVisible(!entry.isIntersecting && entry.boundingClientRect.top < 0);
       },
@@ -51,7 +51,7 @@ export function ProductBuyBox({ product, deliveryDays }: { product: ProductCardD
       <div ref={boxRef} className="card" style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 14, boxShadow: "var(--shadow)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
           <span className="section-label">BESTÄLL</span>
-          {/* Priset följer valt antal — á-priset visas som hint när fler än en valts. */}
+          {/* Priset följer valt antal – á-priset visas som hint när fler än en valts. */}
           <span style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 700 }}>
             {total}
             {kg === 1 ? priceSuffix(product.unit) : ""}{" "}
@@ -62,7 +62,7 @@ export function ProductBuyBox({ product, deliveryDays }: { product: ProductCardD
             </span>
           </span>
         </div>
-        {/* Fritt antal — riktig stepper i stället för fasta förval. */}
+        {/* Fritt antal – riktig stepper i stället för fasta förval. */}
         <div
           className="stepper"
           role="group"
@@ -71,15 +71,27 @@ export function ProductBuyBox({ product, deliveryDays }: { product: ProductCardD
           <button type="button" aria-label={`Minska ${product.name}`} disabled={kg <= 1} onClick={() => setKg(Math.max(1, kg - 1))}>
             −
           </button>
-          <div className="stepper-value" aria-live="polite">
-            {qtyLabel(kg, product.unit)}
-          </div>
+          <label className="stepper-value stepper-input">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={MAX_UNITS}
+              value={kg}
+              aria-label={`Antal ${unitLabel(product.unit)}`}
+              onChange={(e) => {
+                const n = parseInt(e.target.value, 10);
+                setKg(Number.isFinite(n) ? Math.min(MAX_UNITS, Math.max(1, n)) : 1);
+              }}
+            />
+            <span aria-hidden="true">{unitLabel(product.unit)}</span>
+          </label>
           <button type="button" aria-label={`Öka ${product.name}`} disabled={kg >= MAX_UNITS} onClick={() => setKg(Math.min(MAX_UNITS, kg + 1))}>
             +
           </button>
         </div>
         <button type="button" className="btn btn-primary" style={{ padding: 15 }} onClick={add}>
-          {/* Knappen bär det uträknade priset — kunden ser vad valet kostar innan klicket. */}
+          {/* Knappen bär det uträknade priset – kunden ser vad valet kostar innan klicket. */}
           Lägg i korgen · {total}
         </button>
         <Link href="/bestall" className="btn btn-butter" style={{ padding: 14, textAlign: "center" }}>

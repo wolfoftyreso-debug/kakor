@@ -1,5 +1,5 @@
 // Renderar en JSON-LD-graf. All schema-generering sker i src/lib/seo/schema.ts
-// (schema-motorn) — komponenter bygger aldrig egna lösa JSON-objekt.
+// (schema-motorn) – komponenter bygger aldrig egna lösa JSON-objekt.
 
 export function JsonLd({ data }: { data: Record<string, unknown> }) {
   return (

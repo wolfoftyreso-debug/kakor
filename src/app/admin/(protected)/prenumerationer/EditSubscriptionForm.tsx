@@ -10,7 +10,7 @@ interface ProductOption {
   unit: string;
 }
 
-/** Ändra sorter, mängder och intervall — gäller från nästa leverans. */
+/** Ändra sorter, mängder och intervall – gäller från nästa leverans. */
 export function EditSubscriptionForm({
   subscriptionId,
   frequency,

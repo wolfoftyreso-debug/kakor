@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 
 // Kapacitet per leveransdag räknas i kilo: lösvikt rakt av, paket via
-// paketvikten. Priset påverkas aldrig — det här är packvolym.
+// paketvikten. Priset påverkas aldrig – det här är packvolym.
 
 export interface KgLine {
   weightKg: number;
@@ -19,7 +19,7 @@ export function totalKg(lines: KgLine[]): number {
 }
 
 /**
- * Bokade kilo per ISO-datum i ett område. Alla ej avbrutna ordrar räknas —
+ * Bokade kilo per ISO-datum i ett område. Alla ej avbrutna ordrar räknas –
  * även levererade, eftersom dagens kapacitet är det som packas den dagen.
  * `client` kan vara en transaktion (kapacitetskontroll under radlås).
  */

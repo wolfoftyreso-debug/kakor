@@ -25,7 +25,7 @@ export function SiteHeader() {
   const toggleRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
 
-  // Headern överlever klientnavigering — menyn ska inte ligga kvar över
+  // Headern överlever klientnavigering – menyn ska inte ligga kvar över
   // nästa sida efter klick på Beställ/Korg/logotyp. Escape stänger också.
   useEffect(() => {
     setOpen(false);
@@ -58,9 +58,9 @@ export function SiteHeader() {
         Hoppa till innehåll
       </a>
       <div className="top-banner" role="region" aria-label="Leveransområden och betalning">
-        {/* Lång text på desktop, kort på mobil — samma fakta, inga radbrytningar. */}
+        {/* Lång text på desktop, kort på mobil – samma fakta, inga radbrytningar. */}
         <span className="banner-long">
-          Vi levererar företagsfika i <strong>Tyresö, Nacka, Haninge och Huddinge</strong> — betalning
+          Vi levererar företagsfika i <strong>Tyresö, Nacka, Haninge och Huddinge</strong> – betalning
           mot faktura.
         </span>
         <span className="banner-short">
@@ -121,7 +121,7 @@ export function SiteHeader() {
         <div
           className="header-actions"
           style={{ display: "flex", alignItems: "center", gap: 16 }}
-          // Mobil: EN knapp — "Beställ" när korgen är tom, "Korg N" när den har
+          // Mobil: EN knapp – "Beställ" när korgen är tom, "Korg N" när den har
           // innehåll (CSS-styrt via attributen så att SSR och klient matchar).
           data-cart={totalKg > 0 ? "full" : "empty"}
         >
@@ -134,7 +134,7 @@ export function SiteHeader() {
             href="/bestall"
             className="cart-link"
             style={{
-              // Inline-badge bredvid texten — aldrig absolut positionerad,
+              // Inline-badge bredvid texten – aldrig absolut positionerad,
               // så den kan varken täcka bokstäverna eller grannelementen.
               display: "inline-flex",
               alignItems: "flex-start",
@@ -219,7 +219,7 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
-            {/* Menyn slutar i handling (mönster: lululemon/Etsy-drawers) —
+            {/* Menyn slutar i handling (mönster: lululemon/Etsy-drawers) –
                 primär CTA + korgen, inte bara länkar. */}
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
               <Link href="/bestall" className="btn btn-primary" style={{ flex: 1, textAlign: "center", padding: 14 }} onClick={() => setOpen(false)}>

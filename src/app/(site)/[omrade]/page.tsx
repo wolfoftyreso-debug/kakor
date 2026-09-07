@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FaqList } from "@/components/FaqList";
 import { notFound } from "next/navigation";
 import { AREA_CONTENT } from "@/lib/area-content";
 import { sharePreview } from "@/lib/seo/meta";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { ImageSlot } from "@/components/ImageSlot";
-import { fromISODate, weekdayName, formatDeliveryDate, capitalizeFirst } from "@/lib/dates";
+import { fromISODate, weekdayName, formatDeliveryDate, capitalizeFirst, listSv } from "@/lib/dates";
 import { invoiceConfig } from "@/lib/config";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -43,7 +44,7 @@ export default async function AreaPage({ params }: Props) {
   const area = areas.find((a) => a.slug === content.slug);
   const nextDate = area?.upcomingDates[0] ? fromISODate(area.upcomingDates[0]) : null;
   const weekdayLabel = area
-    ? [...new Set(area.weekdays)].map(weekdayName).join(" och ")
+    ? listSv([...new Set(area.weekdays)].map(weekdayName))
     : null;
 
   const path = `/${content.slug}`;
@@ -81,7 +82,7 @@ export default async function AreaPage({ params }: Props) {
               Beställ till {content.name}
             </Link>
             <Link href="/bestall?typ=aterkommande" className="btn btn-butter" style={{ padding: "15px 26px" }}>
-              Fikaprenumeration
+              Starta fikaprenumeration
             </Link>
           </div>
         </div>
@@ -100,9 +101,9 @@ export default async function AreaPage({ params }: Props) {
           style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}
         >
           <div className="card" style={{ padding: 24 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
+            <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: "inherit" }}>
               Leveransdag i {content.name}
-            </div>
+            </h2>
             <div
               style={{
                 fontFamily: "var(--font-serif)",
@@ -111,13 +112,13 @@ export default async function AreaPage({ params }: Props) {
                 color: "var(--red)",
               }}
             >
-              {weekdayLabel ? capitalizeFirst(weekdayLabel) : "—"}
+              {weekdayLabel ? capitalizeFirst(weekdayLabel) : "–"}
             </div>
             <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 8, lineHeight: 1.55 }}>
               {nextDate ? (
                 <>
                   Nästa tillgängliga leverans:{" "}
-                  <strong>{capitalizeFirst(formatDeliveryDate(nextDate))}</strong>.
+                  <strong>{formatDeliveryDate(nextDate)}</strong>.
                 </>
               ) : (
                 "Tillgängliga dagar visas i kassan."
@@ -125,16 +126,16 @@ export default async function AreaPage({ params }: Props) {
             </div>
           </div>
           <div className="card" style={{ padding: 24 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Så levererar vi</div>
+            <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: "inherit" }}>Så levererar vi</h2>
             <div style={{ fontSize: "13.5px", color: "var(--brown-2)", lineHeight: 1.65 }}>
               Under dagen, till bemannade företagsadresser. Se till att någon kan ta emot leveransen
-              — reception, personalrum eller lastkaj.
+              – reception, personalrum eller lastkaj.
             </div>
           </div>
           <div className="card" style={{ padding: 24 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Betalning</div>
+            <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: "inherit" }}>Betalning</h2>
             <div style={{ fontSize: "13.5px", color: "var(--brown-2)", lineHeight: 1.65 }}>
-              Alltid mot faktura. Fakturan skapas när ni beställer och mejlas direkt — förfallodag{" "}
+              Alltid mot faktura. Fakturan skapas när ni beställer och mejlas direkt – förfallodag{" "}
               {invoiceConfig.paymentTermsDays} dagar efter leveransen. Inga kort, inga konton.
             </div>
           </div>
@@ -155,7 +156,7 @@ export default async function AreaPage({ params }: Props) {
               style={{ overflow: "hidden", textDecoration: "none", color: "var(--text)" }}
             >
               <div className="card-media" style={{ height: 170 }}>
-                <ImageSlot label={`${p.name} — närbild`} src={p.imageRef || undefined} />
+                <ImageSlot label={`${p.name} – närbild`} src={p.imageRef || undefined} />
                 {p.badge && <span className="product-badge">{p.badge}</span>}
               </div>
               <div style={{ padding: "16px 18px" }}>
@@ -198,19 +199,7 @@ export default async function AreaPage({ params }: Props) {
       </section>
 
       <section className="container-narrow" style={{ padding: "56px 24px" }}>
-        <h2 style={{ fontSize: "clamp(22px, 3vw, 28px)", marginBottom: 20 }}>
-          Vanliga frågor — {content.name}
-        </h2>
-        <div>
-          {content.faqs.map((f) => (
-            <div key={f.q} style={{ borderBottom: "1px solid var(--border)", padding: "16px 4px" }}>
-              <div style={{ fontSize: "15.5px", fontWeight: 700 }}>{f.q}</div>
-              <div style={{ fontSize: 14, lineHeight: 1.65, color: "var(--brown-2)", marginTop: 6, maxWidth: "65ch" }}>
-                {f.a}
-              </div>
-            </div>
-          ))}
-        </div>
+        <FaqList heading={`Vanliga frågor – ${content.name}`} items={content.faqs} />
         {content.moreLink && (
           <div style={{ marginTop: 18, fontSize: "14.5px" }}>
             <Link href={content.moreLink.href} style={{ fontWeight: 700 }}>

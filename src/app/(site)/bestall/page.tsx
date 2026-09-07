@@ -29,7 +29,7 @@ export default async function BestallPage() {
         data={graph(
           webPageNode({
             path: "/bestall",
-            title: "Beställ kakor",
+            title: "Beställ kakor till företaget mot faktura",
             description: String(metadata.description),
           })
         )}

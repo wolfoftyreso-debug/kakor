@@ -9,12 +9,12 @@ import { InfoPageSeo } from "@/components/InfoPageSeo";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Ingredienser & allergener",
+  title: "Ingredienser och allergener",
   description:
     "Fullständiga ingredienser och allergener för Sockerbagarens kakor: riktigt smör, vetemjöl, strösocker och traditionella råvaror.",
   alternates: { canonical: "/ingredienser" },
   ...sharePreview({
-    title: "Ingredienser & allergener",
+    title: "Ingredienser och allergener",
     description:
       "Fullständiga ingredienser och allergener för Sockerbagarens kakor: riktigt smör, vetemjöl, strösocker och traditionella råvaror.",
     path: "/ingredienser",
@@ -31,17 +31,16 @@ export default async function IngredienserPage() {
     <>
     <InfoPageSeo
       path="/ingredienser"
-      name="Ingredienser & allergener"
-      title="Ingredienser & allergener"
+      name="Ingredienser och allergener"
+      title="Ingredienser och allergener"
       description={String(metadata.description)}
     />
     <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
       <h1 className="h-display page-title">
-        Ingredienser &amp; allergener
+        Ingredienser och allergener
       </h1>
       <p className="lede">
-        Smör ska smaka smör. Våra kakor bakas på riktigt smör, vanligt strösocker och kvalitativa
-        traditionella råvaror. Allergener är markerade i fetstil i varje förteckning.
+        Smör ska smaka smör. Våra kakor bakas på riktigt smör, vanligt strösocker och traditionella råvaror av hög kvalitet. Allergener är markerade i fetstil i varje förteckning.
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "20px 0 36px" }}>
         <span className="badge-butter">RIKTIGT SMÖR</span>
@@ -95,7 +94,7 @@ export default async function IngredienserPage() {
       </div>
 
       <p style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 28, maxWidth: "60ch" }}>
-        Ovan finns hela innehållet för varje kaksort — allt ni behöver veta inför en beställning.
+        Ovan finns hela innehållet för varje kaksort – allt ni behöver veta inför en beställning.
         Beställ direkt i webbshoppen, så skapas fakturan vid ordern och mejlas till er.
       </p>
     </div>

@@ -24,7 +24,7 @@ export function Reveal() {
     );
     els.forEach((el) => {
       const r = el.getBoundingClientRect();
-      // Det som redan syns vid sidladdning ska aldrig fasas in — bara det nedanför.
+      // Det som redan syns vid sidladdning ska aldrig fasas in – bara det nedanför.
       if (r.top < window.innerHeight) el.classList.add("in");
       else io.observe(el);
     });

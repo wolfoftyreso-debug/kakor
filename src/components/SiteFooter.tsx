@@ -76,15 +76,15 @@ export async function SiteFooter() {
           />
           <FooterCol
             title="LEVERANS"
-            links={AREAS.map((a) => ({ href: `/${a.slug}`, label: a.name }))}
+            links={[{ href: "/leverans", label: "Så levererar vi" }, ...AREAS.map((a) => ({ href: `/${a.slug}`, label: a.name }))]}
           />
           <FooterCol
             title="INFORMATION"
             links={[
               { href: "/fika-till-jobbet", label: "Guide: fika till jobbet" },
               { href: "/julfika", label: "Julfika på jobbet" },
-              { href: "/ingredienser", label: "Ingredienser & allergener" },
-              { href: "/villkor", label: "Leverans- & köpvillkor" },
+              { href: "/ingredienser", label: "Ingredienser och allergener" },
+              { href: "/villkor", label: "Leverans- och köpvillkor" },
               { href: "/integritet", label: "Integritetspolicy" },
               { href: "/om", label: "Om Sockerbagaren" },
             ]}
@@ -100,13 +100,17 @@ export async function SiteFooter() {
 
 function FooterCol({ title, links }: { title: string; links: { href: string; label: string }[] }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: "13.5px" }}>
-      <div style={{ fontWeight: 700, color: "var(--bg)", fontSize: 12, letterSpacing: 2 }}>{title}</div>
-      {links.map((l) => (
-        <Link key={l.href} href={l.href} className="footer-link">
-          {l.label}
-        </Link>
-      ))}
+    <div style={{ fontSize: "13.5px" }}>
+      <h2 style={{ fontWeight: 700, color: "var(--bg)", fontSize: 12, letterSpacing: 2, margin: "0 0 10px", fontFamily: "inherit" }}>{title}</h2>
+      <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+        {links.map((l) => (
+          <li key={l.href}>
+            <Link href={l.href} className="footer-link">
+              {l.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

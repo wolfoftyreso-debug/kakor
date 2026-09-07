@@ -17,7 +17,7 @@ export function MarkInvoicePaidButton({ orderId }: { orderId: string }) {
           startTransition(async () => setResult(await markOrderPaid(orderId, "")));
         }}
       >
-        {pending ? "Sparar…" : "Markera betald"}
+        {pending ? "Sparar…" : "Markera som betald"}
       </button>
       {result && !result.ok && (
         <span role="alert" className="error-text" style={{ fontSize: 12 }}>

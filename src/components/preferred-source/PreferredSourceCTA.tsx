@@ -1,21 +1,21 @@
 "use client";
 
 // =====================================================================
-// GOOGLE PREFERRED SOURCES — officiell implementation.
+// GOOGLE PREFERRED SOURCES – officiell implementation.
 //
 // Använder Googles officiella knapp (publisher.js + [google-add-preferred-
 // source-btn]) och den officiella deeplinken till källinställningarna som
 // script-fri reservväg. Ingen egen "Google-knapp" ritas, ingen bekräftelse
 // simuleras och inget "Google rekommenderar oss" påstås.
 //
-// Aktiveras ENDAST när NEXT_PUBLIC_PREFERRED_SOURCES=true — staging- och
+// Aktiveras ENDAST när NEXT_PUBLIC_PREFERRED_SOURCES=true – staging- och
 // utvecklingsmiljöer visar ingenting (ingen domänläcka).
 //
 // Visas efter levererat värde (orderbekräftelse, prenumerationsbekräftelse)
-// — aldrig som popup på landningssidor.
+// – aldrig som popup på landningssidor.
 //
 // Mätning: preferred_source_impression + preferred_source_click.
-// KLICK ≠ BEKRÄFTELSE — någon "confirmed"-händelse skickas inte eftersom
+// KLICK ≠ BEKRÄFTELSE – någon "confirmed"-händelse skickas inte eftersom
 // Googles bekräftelse inte kan observeras tillförlitligt från sidan.
 // =====================================================================
 
@@ -32,7 +32,7 @@ export type PreferredSourcePlacement =
 const ENABLED = process.env.NEXT_PUBLIC_PREFERRED_SOURCES === "true";
 
 function deeplink(): string {
-  // Domännivå (kravet från Google) — kataloger stöds inte.
+  // Domännivå (kravet från Google) – kataloger stöds inte.
   const domain = typeof window !== "undefined" ? window.location.hostname : "";
   return `https://www.google.com/preferences/source?q=${encodeURIComponent(domain)}`;
 }
@@ -66,7 +66,7 @@ export function PreferredSourceCTA({ placement }: { placement: PreferredSourcePl
         textAlign: "center",
       }}
     >
-      {/* Officiellt script — next/script deduplicerar via id, laddas lazy så
+      {/* Officiellt script – next/script deduplicerar via id, laddas lazy så
           att det aldrig påverkar LCP. Om Google fallerar renderas ingen knapp
           och sidan fortsätter fungera; deeplinken nedan finns alltid. */}
       <Script

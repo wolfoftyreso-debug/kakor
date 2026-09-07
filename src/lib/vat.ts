@@ -24,11 +24,11 @@ export function foodVatNotice(todayIso: string, productsAtTempRate: number): { u
   if (todayIso > FOOD_VAT_TEMP_END) {
     return {
       urgent: true,
-      text: `Den tillfälliga livsmedelsmomsen på 6 % upphörde ${FOOD_VAT_TEMP_END}. ${productsAtTempRate} produkt(er) ligger fortfarande på 6 % — ändra till 12 % under Produkter.`,
+      text: `Den tillfälliga livsmedelsmomsen på 6 % upphörde ${FOOD_VAT_TEMP_END}. ${productsAtTempRate} produkt(er) ligger fortfarande på 6 % – ändra till 12 % under Produkter.`,
     };
   }
   return {
     urgent,
-    text: `${productsAtTempRate} produkt(er) har 6 % moms (tillfälligt sänkt livsmedelsmoms t.o.m. ${FOOD_VAT_TEMP_END}). Från 2028-01-01 gäller 12 % igen — ändra under Produkter.`,
+    text: `${productsAtTempRate} produkt(er) har 6 % moms (tillfälligt sänkt livsmedelsmoms t.o.m. ${FOOD_VAT_TEMP_END}). Från 2028-01-01 gäller 12 % igen – ändra under Produkter.`,
   };
 }

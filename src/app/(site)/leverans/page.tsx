@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { getAreasWithDates } from "@/lib/products";
-import { capitalizeFirst, formatDeliveryDate, fromISODate, weekdayName, listSv } from "@/lib/dates";
+import { formatDeliveryDate, fromISODate, weekdayName, listSv } from "@/lib/dates";
 import { ImageSlot } from "@/components/ImageSlot";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -38,15 +38,15 @@ const LEVERANS_FAQS = [
   },
   {
     q: "Kan ni leverera en viss tid?",
-    a: "Nej — leveransen kommer under dagen på områdets leveransdag. Adressen behöver vara bemannad: reception, personalrum eller lastkaj.",
+    a: "Nej – leveransen kommer under dagen på områdets leveransdag. Adressen behöver vara bemannad: reception, personalrum eller lastkaj.",
   },
   {
     q: "Hur snabbt kan vi få leverans?",
-    a: "Kassan visar nästa tillgängliga leveransdag för ert område direkt när ni väljer datum. Beställ i tid — leveransdagarna är fasta per område.",
+    a: "Kassan visar nästa tillgängliga leveransdag för ert område direkt när ni väljer datum. Beställ i tid – leveransdagarna är fasta per område.",
   },
   {
     q: "Vad kostar leveransen?",
-    a: "Ingen separat leveransavgift läggs på i webbshoppen — ni betalar priset per kilo respektive per paket plus moms, precis som kassan visar innan ni skickar beställningen.",
+    a: "Ingen separat leveransavgift läggs på i webbshoppen – ni betalar priset per kilo respektive per paket plus moms, precis som kassan visar innan ni skickar beställningen.",
   },
 ];
 
@@ -71,7 +71,7 @@ export default async function LeveransPage() {
       <PageHeader
         eyebrow="Leverans"
         title="Fikaleverans i södra Stockholm"
-        lede="Fasta leveransdagar per område. Leveransen kommer under dagen — vi kan inte lova exakt klockslag, så någon behöver finnas på plats för att ta emot den: reception, personalrum eller lastkaj."
+        lede="Fasta leveransdagar per område. Leveransen kommer under dagen – vi kan inte lova exakt klockslag, så någon behöver finnas på plats för att ta emot den: reception, personalrum eller lastkaj."
         facts={[
           { label: "Områden", value: "Tyresö, Nacka, Haninge, Huddinge" },
           { label: "Leveransdag", value: listSv([...new Set(areas.flatMap((a) => a.weekdays))].map(weekdayName)) || "Se område" },
@@ -99,7 +99,7 @@ export default async function LeveransPage() {
             {a.upcomingDates[0] && (
               <div style={{ fontSize: "13.5px", marginTop: 4 }}>
                 Nästa:{" "}
-                <strong>{capitalizeFirst(formatDeliveryDate(fromISODate(a.upcomingDates[0])))}</strong>
+                <strong>{formatDeliveryDate(fromISODate(a.upcomingDates[0]))}</strong>
               </div>
             )}
           </div>

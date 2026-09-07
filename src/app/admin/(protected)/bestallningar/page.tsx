@@ -14,7 +14,7 @@ import {
 } from "@/components/admin/StatusPills";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin — beställningar", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – beställningar", robots: { index: false } };
 
 const FILTERS: { key: string; label: string }[] = [
   { key: "alla", label: "Alla" },
@@ -133,12 +133,12 @@ export default async function OrdersPage({
           <table className="data-table">
             <thead>
               <tr>
-                <th>Order</th>
-                <th>Kund</th>
-                <th>Datum</th>
-                <th>Leveransdatum</th>
-                <th>Belopp</th>
-                <th>Status</th>
+                <th scope="col">Order</th>
+                <th scope="col">Kund</th>
+                <th scope="col">Beställd</th>
+                <th scope="col">Leveransdag</th>
+                <th scope="col">Belopp</th>
+                <th scope="col">Status</th>
               </tr>
             </thead>
             <tbody>

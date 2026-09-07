@@ -6,10 +6,10 @@ import { isoDateSchema } from "@/lib/validation";
 import { addDays, fromISODate, toISODate, todayInStockholm } from "@/lib/dates";
 
 // Bokföringsexport: fakturor och kreditfakturor för en period som CSV
-// (semikolon, decimalkomma, UTF-8 med BOM — öppnas direkt i svensk Excel och
+// (semikolon, decimalkomma, UTF-8 med BOM – öppnas direkt i svensk Excel och
 // importeras i de flesta bokföringsprogram). Belopp per momssats så att
 // konteringen 6/12/25 % blir rätt. Kreditfakturor har negativa belopp.
-// Kräver inloggad admin — route handlers omfattas inte av layoutens skydd.
+// Kräver inloggad admin – route handlers omfattas inte av layoutens skydd.
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +20,7 @@ function kr(ore: number): string {
 }
 function csvCell(v: string): string {
   // Formelinjektion: ett företagsnamn som "=HYPERLINK(...)" eller "-2+3|cmd"
-  // får inte köras när kalkylprogrammet öppnar filen — neutralisera med
+  // får inte köras när kalkylprogrammet öppnar filen – neutralisera med
   // apostrof, som Excel/LibreOffice tolkar som text.
   const safe = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
   return /[;"\n\r']/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
@@ -31,14 +31,14 @@ function perRate(snapshotJson: string, sign: 1 | -1) {
   try {
     for (const line of parseSnapshot(snapshotJson).lines) {
       const v = Math.round((line.lineTotalOre * line.vatRateBp) / 10000);
-      // Produktschemat tillåter bara 6/12/25 % — andra satser kan inte förekomma.
+      // Produktschemat tillåter bara 6/12/25 % – andra satser kan inte förekomma.
       if (line.vatRateBp in net) {
         net[line.vatRateBp] += sign * line.lineTotalOre;
         vat[line.vatRateBp] += sign * v;
       }
     }
   } catch {
-    /* korrupt snapshot — raden exporteras ändå med totaler */
+    /* korrupt snapshot – raden exporteras ändå med totaler */
   }
   return { net, vat };
 }
