@@ -11,7 +11,7 @@ export async function TrustStrip({ band = false }: { band?: boolean }) {
       icon: <IconTruck />,
       text: deliveryDays ? `Leverans ${deliveryDays} i södra Stockholm` : "Fasta leveransdagar i södra Stockholm",
     },
-    { icon: <IconLeaf />, text: "Riktigt smör, inga genvägar" },
+    { icon: <IconLeaf />, text: "Leveransen ingår – inga avgifter" },
   ];
   return (
     <ul className={`trust-strip${band ? " trust-strip--band" : ""}`} aria-label="Så handlar ni hos oss">

@@ -9,9 +9,17 @@ export default function NotFound() {
       <p style={{ color: "var(--text-2)", marginBottom: 28 }}>
         Kanske är ni sugna på kakor i stället?
       </p>
-      <Link href="/" className="btn btn-primary btn-lg">
-        Till startsidan
-      </Link>
+      <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+        <Link href="/kakor" className="btn btn-outline btn-lg">
+          Se kakorna
+        </Link>
+        <Link href="/bestall" className="btn btn-primary btn-lg">
+          Beställ
+        </Link>
+      </div>
+      <p style={{ marginTop: 18, fontSize: 14 }}>
+        <Link href="/">Till startsidan</Link>
+      </p>
     </div>
   );
 }

@@ -72,8 +72,9 @@ export default function VillkorPage() {
         <section>
           <h2>Betalning och faktura</h2>
           <p>
-            Betalning sker mot faktura. Fakturan skapas när ni skickar beställningen, mejlas till
-            angiven faktura-e-post och kan även laddas ner som PDF. Betalningsvillkor:{" "}
+            Betalning sker mot faktura. Fakturan skapas när ni skickar beställningen, mejlas som
+            PDF till angiven faktura-e-post och kan även laddas ner via länken i orderbekräftelsen.
+            E-faktura via Peppol erbjuds inte i dagsläget. Betalningsvillkor:{" "}
             {invoiceConfig.paymentTermsDays} dagar netto räknat från leveransdagen – ni betalar aldrig före
             leverans. Förfallodatum står på fakturan. Vid försenad betalning
             utgår dröjsmålsränta enligt räntelagen samt förseningsersättning enligt lagen om
@@ -96,10 +97,13 @@ export default function VillkorPage() {
           <h2>Fikaprenumeration</h2>
           <p>
             Fikaprenumerationen löper tills vidare utan bindningstid. Inför varje leverans skapas
-            en vanlig order med faktura enligt valt intervall, några dagar före leveransdagen. Ni
-            pausar, ändrar eller avslutar när ni vill genom att svara på bekräftelsemejlet; en
-            ändring som meddelas efter att en order redan skapats gäller från nästa leverans.
-            Priset per leverans följer aktuellt pris och framgår av varje faktura.
+            en vanlig order med faktura enligt valt intervall, några dagar före leveransdagen, och
+            ni får en orderbekräftelse för varje leverans. Ni pausar, ändrar eller avslutar när ni
+            vill genom att svara på bekräftelsemejlet; en ändring som meddelas efter att en order
+            redan skapats gäller från nästa leverans, och den redan skapade ordern avbokas enligt
+            reglerna under Avbokning och ändringar. Infaller en leveransdag på en helgdag flyttas
+            leveransen eller utgår, och ni meddelas i förväg. Priset per leverans följer aktuellt
+            pris och framgår av varje faktura.
           </p>
         </section>
         <section>
@@ -109,8 +113,8 @@ export default function VillkorPage() {
             {String(orderPolicy.changeCutoffHour).padStart(2, "0")}.00 {orderPolicy.changeCutoffWorkdays === 1 ? "en arbetsdag" : `${(["", "en", "två", "tre", "fyra", "fem", "sex", "sju", "åtta", "nio", "tio"] as const)[orderPolicy.changeCutoffWorkdays] ?? orderPolicy.changeCutoffWorkdays} arbetsdagar`} före
             leveransdagen: svara på orderbekräftelsen med ordernumret. Den exakta tidpunkten står i
             er orderbekräftelse. Därefter är beställningen packad och planerad i körningen och
-            faktureras i sin helhet. För prenumerationer gäller samma gräns för att pausa eller ändra
-            nästa leverans.
+            faktureras i sin helhet. För prenumerationer gäller samma gräns för en order som redan
+            skapats; paus, ändring och avslut av själva prenumerationen gäller från nästa leverans.
           </p>
         </section>
         <section>

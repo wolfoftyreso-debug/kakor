@@ -21,7 +21,7 @@ import { ImageSlot } from "@/components/ImageSlot";
 import { formatOre, calculateTotals } from "@/lib/money";
 import { effectiveVatRateBp } from "@/lib/vat";
 import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/units";
-import { capitalizeFirst, formatDeliveryDate, fromISODate, toISODate, upcomingDeliveryDates, changeDeadline, formatDeadline } from "@/lib/dates";
+import { capitalizeFirst, formatDeliveryDate, fromISODate, toISODate, upcomingDeliveryDates, changeDeadline, formatDeadline, isoWeekday, weekdayName } from "@/lib/dates";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 import { newIdempotencyKey } from "@/lib/idempotency";
 import { isValidOrgNumber } from "@/lib/orgnumber";
@@ -314,6 +314,10 @@ export function CheckoutFlow({
     }))
   );
 
+  // Momssatsen visas i kontrollsteget ("Moms 6 %") när alla rader har samma sats.
+  const vatRates = new Set(activeLines.map((l) => effectiveVatRateBp(l.product.vatRateBp ?? 1200, deliveryDate ?? "")));
+  const vatRateLabel = vatRates.size === 1 ? `${String([...vatRates][0] / 100).replace(".", ",")}\u00a0%` : "";
+
   const selectedArea = areas.find((a) => a.slug === areaSlug) ?? null;
 
   // Leveransdagarna räknas om på klienten (från områdets veckodagar +
@@ -392,7 +396,30 @@ export function CheckoutFlow({
     });
   };
 
+  // Fältfel direkt när kunden lämnar fältet (org.nr, postnummer, e-post) –
+  // inte först vid inskick efter elva ifyllda fält på en mobil.
+  const validateField = (key: string) => {
+    const all = computeStep3Errors();
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (all[key]) next[key] = all[key];
+      else delete next[key];
+      return next;
+    });
+  };
+
   const validateStep3 = (): boolean => {
+    const e = computeStep3Errors();
+    setErrors(e);
+    if (Object.keys(e).length > 0) {
+      requestAnimationFrame(() =>
+        headingRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+      );
+    }
+    return Object.keys(e).length === 0;
+  };
+
+  const computeStep3Errors = (): Record<string, string> => {
     const e: Record<string, string> = {};
     if (form.companyName.trim().length < 2) e.companyName = "Ange företagsnamn";
     if (!/^\d{6}-?\d{4}$/.test(form.orgNumber.trim()))
@@ -414,13 +441,7 @@ export function CheckoutFlow({
     }
     if (form.deliveryCity.trim().length < 2) e.deliveryCity = "Ange ort";
     if (form.deliveryInstruction.length > 500) e.deliveryInstruction = "Max 500 tecken";
-    setErrors(e);
-    if (Object.keys(e).length > 0) {
-      requestAnimationFrame(() =>
-        headingRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
-      );
-    }
-    return Object.keys(e).length === 0;
+    return e;
   };
 
   // Servern kan returnera fältfel – visa dem i det steg där felet hör hemma.
@@ -476,7 +497,7 @@ export function CheckoutFlow({
           ? await fetch("/api/subscriptions", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...common, frequency: interval, firstDeliveryDate: deliveryDate }),
+              body: JSON.stringify({ ...common, frequency: interval, firstDeliveryDate: deliveryDate, billingAddress: form.billingAddress.trim() }),
             })
           : await fetch("/api/orders", {
               method: "POST",
@@ -696,8 +717,10 @@ export function CheckoutFlow({
           <h1 tabIndex={-1} style={{ outline: "none", fontSize: 32, marginBottom: 6 }}>Välj kakor</h1>
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 28px" }}>
             {hasPackageProducts
-              ? "Lösvikt säljs per kilo och paket per styck. Blanda fritt."
-              : "Sorterna säljs per kilo. Blanda fritt."}
+              ? "Lösvikt säljs per helt kilo och paket per styck – blanda fritt. "
+              : "Sorterna säljs per helt kilo – blanda fritt. "}
+            Räkna 3–5 småkakor per person till fikat.{" "}
+            <Link href="/fika-till-jobbet" target="_blank" rel="noopener">Hur mycket behöver ni?</Link>
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {products.map((p) => (
@@ -887,7 +910,17 @@ export function CheckoutFlow({
                 style={{ textAlign: "center" }}
                 onClick={() => setAreaSlug(a.slug)}
               >
-                {a.name}
+                <div style={{ fontWeight: 700 }}>{a.name}</div>
+                {(a.weekdays.length > 0 || a.postalPrefixes.length > 0) && (
+                  <div className="choice-sub" style={{ marginTop: 2 }}>
+                    {[
+                      a.weekdays.length > 0 ? a.weekdays.map((w) => `${capitalizeFirst(weekdayName(w))}ar`).join(", ") : "",
+                      a.postalPrefixes.length > 0 ? `postnr ${a.postalPrefixes.slice(0, 3).map((p) => `${p}…`).join(", ")}` : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -899,6 +932,14 @@ export function CheckoutFlow({
           {!selectedArea && (
             <p style={{ fontSize: 14, color: "var(--text-2)", margin: "0 0 16px" }}>
               Välj område först så visar vi tillgängliga leveransdagar.
+            </p>
+          )}
+          {selectedArea && upcomingDates.length > 0 && (
+            <p style={{ fontSize: 14, color: "var(--text-2)", margin: "0 0 12px" }}>
+              {selectedArea.leadTimeDays > 0
+                ? `Vi packar i förväg och behöver ${selectedArea.leadTimeDays === 1 ? "en dag" : `${selectedArea.leadTimeDays} dagar`} på oss – ${formatDeliveryDate(fromISODate(upcomingDates[0]))} är den tidigaste dagen vi kan lova.`
+                : `Tidigaste leverans: ${formatDeliveryDate(fromISODate(upcomingDates[0]))}.`}
+              {mode === "RECURRING" ? " Infaller en leverans på en helgdag hör vi av oss – den flyttas eller utgår." : ""}
             </p>
           )}
           {selectedArea && (
@@ -974,10 +1015,10 @@ export function CheckoutFlow({
           >
             <div className="form-grid">
               <Field label="Företagsnamn" value={form.companyName} error={errors.companyName} onChange={(v) => setField("companyName", v)} placeholder="Företaget AB" autoComplete="organization" />
-              <Field label="Organisationsnummer" value={form.orgNumber} error={errors.orgNumber} onChange={(v) => setField("orgNumber", v)} placeholder="556677-8899" />
+              <Field label="Organisationsnummer" value={form.orgNumber} error={errors.orgNumber} onChange={(v) => setField("orgNumber", v)} onBlur={() => validateField("orgNumber")} placeholder="556677-8899" hint="Tio siffror – står på företagets fakturor och registreringsbevis." inputMode="numeric" />
               <Field label="Kontaktperson" value={form.contactName} error={errors.contactName} onChange={(v) => setField("contactName", v)} placeholder="För- och efternamn" autoComplete="name" />
-              <Field label="Telefon" value={form.phone} error={errors.phone} onChange={(v) => setField("phone", v)} placeholder="07X-XXX XX XX" type="tel" autoComplete="tel" />
-              <Field label="E-post" value={form.email} error={errors.email} onChange={(v) => setField("email", v)} placeholder="namn@foretaget.se" type="email" autoComplete="email" />
+              <Field label="Telefon" value={form.phone} error={errors.phone} onChange={(v) => setField("phone", v)} onBlur={() => validateField("phone")} placeholder="07X-XXX XX XX" type="tel" autoComplete="tel" hint="Används bara om något krånglar vid leveransen." />
+              <Field label="E-post" value={form.email} error={errors.email} onChange={(v) => setField("email", v)} onBlur={() => validateField("email")} placeholder="namn@foretaget.se" type="email" autoComplete="email" hint="Hit går orderbekräftelsen." />
               <div style={{ display: "flex", flexDirection: "column", gap: 10, justifyContent: "flex-end" }}>
                 <label className="checkbox-label">
                   <input
@@ -988,20 +1029,20 @@ export function CheckoutFlow({
                   Använd samma e-post för faktura
                 </label>
                 {!sameEmail && (
-                  <Field label="Faktura-e-post" value={form.invoiceEmail} error={errors.invoiceEmail} onChange={(v) => setField("invoiceEmail", v)} placeholder="faktura@foretaget.se" type="email" />
+                  <Field label="Faktura-e-post" value={form.invoiceEmail} error={errors.invoiceEmail} onChange={(v) => setField("invoiceEmail", v)} onBlur={() => validateField("invoiceEmail")} placeholder="faktura@foretaget.se" type="email" hint="Hit går fakturan som PDF." />
                 )}
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
                 <Field label="Leveransadress" value={form.deliveryAddress} error={errors.deliveryAddress} onChange={(v) => setField("deliveryAddress", v)} placeholder="Gatuadress" autoComplete="street-address" />
               </div>
-              <Field label="Postnummer" value={form.deliveryPostalCode} error={errors.deliveryPostalCode} onChange={(v) => setField("deliveryPostalCode", v)} placeholder="135 48" autoComplete="postal-code" />
+              <Field label="Postnummer" value={form.deliveryPostalCode} error={errors.deliveryPostalCode} onChange={(v) => setField("deliveryPostalCode", v)} onBlur={() => validateField("deliveryPostalCode")} placeholder="135 48" autoComplete="postal-code" inputMode="numeric" />
               <Field label="Ort" value={form.deliveryCity} error={errors.deliveryCity} onChange={(v) => setField("deliveryCity", v)} placeholder="Tyresö" autoComplete="address-level2" />
               <div style={{ gridColumn: "1 / -1" }}>
-                <Field label="Referens / märkning (frivilligt)" value={form.reference} error={errors.reference} onChange={(v) => setField("reference", v)} placeholder="T.ex. kostnadsställe" />
+                <Field label="Er referens på fakturan (frivilligt)" value={form.reference} error={errors.reference} onChange={(v) => setField("reference", v)} placeholder="T.ex. kostnadsställe eller beställarens namn" hint="Skrivs ut som ”Er referens” på fakturan. Lämnas fältet tomt står kontaktpersonen som referens." />
               </div>
-              {mode !== "RECURRING" && (
-                <label className="field" style={{ gridColumn: "1 / -1" }} htmlFor="falt-fakturaadress">
-                  Fakturaadress om annan än leveransadressen (frivilligt)
+              {(
+                <div className={`field${errors.billingAddress ? " field-error" : ""}`} style={{ gridColumn: "1 / -1" }}>
+                  <label htmlFor="falt-fakturaadress">Fakturaadress om annan än leveransadressen (frivilligt)</label>
                   <textarea
                     id="falt-fakturaadress"
                     rows={2}
@@ -1017,10 +1058,10 @@ export function CheckoutFlow({
                       {errors.billingAddress}
                     </span>
                   )}
-                </label>
+                </div>
               )}
-              <label className="field" style={{ gridColumn: "1 / -1" }} htmlFor="falt-kommentar">
-                Kommentar till leveransen (frivilligt)
+              <div className={`field${errors.deliveryInstruction ? " field-error" : ""}`} style={{ gridColumn: "1 / -1" }}>
+                <label htmlFor="falt-kommentar">Kommentar till leveransen (frivilligt)</label>
                 <textarea
                   id="falt-kommentar"
                   rows={2}
@@ -1037,7 +1078,7 @@ export function CheckoutFlow({
                     {errors.deliveryInstruction}
                   </span>
                 )}
-              </label>
+              </div>
               {/* Honeypot – osynligt för människor, autofylls av botar. */}
               <div className="hp-field" aria-hidden="true">
                 <label htmlFor="falt-extra">Lämna tomt</label>
@@ -1099,7 +1140,15 @@ export function CheckoutFlow({
               </div>
             ))}
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "var(--text-2)" }}>
-              <span>Moms</span>
+              <span>Summa exkl. moms</span>
+              <span>{formatOre(totals.subtotalOre)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "var(--text-2)" }}>
+              <span>Leverans</span>
+              <span>Ingår · 0{"\u00a0"}kr</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "var(--text-2)" }}>
+              <span>Moms{vatRateLabel ? ` ${vatRateLabel}` : ""}</span>
               <span>{formatOre(totals.vatOre)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 16 }}>
@@ -1135,14 +1184,32 @@ export function CheckoutFlow({
               {form.deliveryCity}
             </div>
             <div style={{ color: "var(--text-2)" }}>
-              {form.contactName} · {form.email} · Faktura till {sameEmail ? form.email : form.invoiceEmail}
-              {mode !== "RECURRING" && form.billingAddress.trim() ? <> · Fakturaadress: {form.billingAddress.trim()}</> : null}
+              {form.contactName} · {form.phone} · {form.email}
             </div>
+            <div style={{ color: "var(--text-2)" }}>
+              Faktura till {sameEmail ? form.email : form.invoiceEmail}
+              {form.billingAddress.trim() ? <> · Fakturaadress: {form.billingAddress.trim()}</> : null}
+              {form.reference.trim() ? <> · Er referens: {form.reference.trim()}</> : null}
+            </div>
+            {form.deliveryInstruction.trim() ? (
+              <div style={{ color: "var(--text-2)" }}>Leveransanvisning: {form.deliveryInstruction.trim()}</div>
+            ) : null}
           </div>
           <div className="info-box" style={{ marginBottom: 28 }}>
-            {mode === "RECURRING"
-              ? "Betalning sker mot faktura – en faktura per leverans. Ingen bindningstid."
-              : "Betalning sker mot faktura."}
+            {mode === "RECURRING" ? (
+              <>
+                <strong>Betalning sker mot faktura</strong> – en faktura per leverans, {paymentTermsDays} dagar efter leveransen. Ingen
+                bindningstid. Beloppet gäller dagens priser; priset som gäller vid varje leverans står på fakturan.
+              </>
+            ) : (
+              <>
+                <strong>Betalning sker mot faktura</strong> som mejlas till {sameEmail ? form.email : form.invoiceEmail} och förfaller {paymentTermsDays} dagar
+                efter leveransen.
+                {deadlineText(deliveryDate) ? <> Ändringar och avbokning kostnadsfritt till {deadlineText(deliveryDate)} – svara på orderbekräftelsen.</> : null}
+              </>
+            )}{" "}
+            Genom att skicka beställningen godkänner ni våra{" "}
+            <Link href="/villkor" target="_blank" rel="noopener">köpvillkor</Link> (öppnas i ny flik).
           </div>
           {TURNSTILE_SITE_KEY && (
             <div style={{ marginBottom: 20 }}>
@@ -1242,8 +1309,13 @@ export function CheckoutFlow({
             <strong>Vad händer nu?</strong>
             <ol style={{ margin: "6px 0 0", paddingLeft: 22 }}>
               <li>Ni får en bekräftelse till er e-post.</li>
-              <li>Inför varje leverans skapas en beställning med faktura som mejlas till er.</li>
-              <li>Ingen bindningstid – svara på bekräftelsemejlet så pausar eller avslutar vi.</li>
+              <li>
+                {result.nextDate
+                  ? `Första leverans ${formatDeliveryDate(fromISODate(result.nextDate))}, sedan ${intervalLabel(result.interval).toLowerCase()} på ${weekdayName(isoWeekday(fromISODate(result.nextDate)))}ar.`
+                  : "Leveransdagarna står i bekräftelsen."}{" "}
+                Några dagar före varje leverans mejlas en orderbekräftelse med faktura.
+              </li>
+              <li>Ingen bindningstid – svara på bekräftelsemejlet så pausar, ändrar eller avslutar vi. Ändringar gäller från nästa leverans.</li>
             </ol>
           </div>
           <PreferredSourceCTA placement="subscription_success" />
@@ -1262,39 +1334,55 @@ function Field({
   label,
   value,
   onChange,
+  onBlur,
   error,
+  hint,
   placeholder,
   type = "text",
   autoComplete,
+  inputMode,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: () => void;
   error?: string;
+  /** Kort hjälptext under fältet – varför vi frågar, eller var uppgiften finns. */
+  hint?: string;
   placeholder?: string;
   type?: string;
   autoComplete?: string;
+  inputMode?: "numeric" | "tel" | "email" | "text";
 }) {
-  const id = "falt-" + label.toLowerCase().replace(/[^a-z0-9åäö]+/g, "-");
+  // Stabilt id oberoende av etikettens längd/parenteser – E2E och skärmläsare.
+  const id = "falt-" + label.toLowerCase().split(" (")[0].split(" på ")[0].split(" / ")[0].replace(/[^a-z0-9åäö]+/g, "-").replace(/-+$/, "");
+  const describedBy = [error ? `${id}-fel` : "", hint ? `${id}-hjalp` : ""].filter(Boolean).join(" ") || undefined;
   return (
-    <label className={`field${error ? " field-error" : ""}`} htmlFor={id}>
-      {label}
+    <div className={`field${error ? " field-error" : ""}`}>
+      <label htmlFor={id}>{label}</label>
       <input
         id={id}
         type={type}
         value={value}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        inputMode={inputMode}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         aria-invalid={!!error}
-        aria-describedby={error ? `${id}-fel` : undefined}
+        aria-describedby={describedBy}
       />
       {error && (
         <span id={`${id}-fel`} className="error-text">
           {error}
         </span>
       )}
-    </label>
+      {hint && !error && (
+        <span id={`${id}-hjalp`} className="field-hint">
+          {hint}
+        </span>
+      )}
+    </div>
   );
 }
 

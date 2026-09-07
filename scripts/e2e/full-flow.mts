@@ -69,7 +69,7 @@ async function fillForm(page: any, overrides: Record<string, string> = {}) {
   for (const [label, val] of Object.entries(v)) await page.getByLabel(label, { exact: true }).fill(val);
 }
 async function pickAreaAndDate(page: any, recurring: boolean) {
-  await page.getByRole("radio", { name: "Tyresö", exact: true }).click();
+  await page.getByRole("radio", { name: /^Tyresö/ }).click();
   await page.locator("button.choice-btn", { hasText: recurring ? "Första leverans" : "under dagen" }).first().click();
 }
 function apiPayload(overrides: Record<string, unknown> = {}) {
@@ -160,7 +160,7 @@ try {
   check("e-postlogg: orderbekräftelse + faktura + adminavisering", types.includes("ORDER_CONFIRMATION") && types.includes("INVOICE") && types.includes("ADMIN_NEW_ORDER"), types.join(","));
   check("e-postlogg: inga FAILED", mails.every((e) => e.status !== "FAILED"), mails.map((e) => e.status).join(","));
   const pdf = await pdfText(`/faktura/${orderA.invoice.downloadToken}`);
-  check("faktura-PDF: nummer, 6 % moms, villkor från leverans, företag", pdf.status === 200 && pdf.text.includes(orderA.invoice.invoiceNumber) && pdf.text.includes("Moms 6 %") && pdf.text.includes("dagar netto från leverans") && pdf.text.includes("Flödesbolaget AB") && pdf.text.includes("Planerad leverans"));
+  check("faktura-PDF: nummer, 6 % moms, villkor från leverans, företag", pdf.status === 200 && pdf.text.includes(orderA.invoice.invoiceNumber) && pdf.text.includes("Moms 6 %") && pdf.text.includes("dagar från leverans") && pdf.text.includes("Leveransadress") && pdf.text.includes("exkl. moms") && pdf.text.includes("Flödesbolaget AB") && pdf.text.includes("Planerad leverans"));
 } catch (e: any) { check("1. engångsköp", false, e.message.slice(0, 200)); }
 
 // ---------------- 2. Idempotens via API ----------------

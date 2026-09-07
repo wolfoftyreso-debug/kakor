@@ -39,7 +39,7 @@ export async function SiteFooter() {
               </div>
             </div>
             <div style={{ fontSize: "13.5px", lineHeight: 1.7 }}>
-              {invoiceConfig.companyName}
+              Sockerbagaren drivs av {invoiceConfig.companyName}
               <br />
               Org.nr {invoiceConfig.orgNumber}
               <br />
