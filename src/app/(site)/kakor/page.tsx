@@ -27,11 +27,11 @@ export const metadata: Metadata = {
 };
 
 // Renderas synligt längst ner på sidan + som FAQPage-schema (samma text).
-// Svaren är generell bakkunskap — inga verksamhetslöften.
+// Svaren är generell bakkunskap – inga verksamhetslöften.
 const KAKOR_FAQS = [
   {
     q: "Hur förvarar man småkakor bäst?",
-    a: "I en tät burk i rumstemperatur, gärna med bakplåtspapper mellan lagren. Undvik kylskåp — kakor tar lätt smak och mister sin konsistens i kyla.",
+    a: "I en tät burk i rumstemperatur, gärna med bakplåtspapper mellan lagren. Undvik kylskåp – kakor tar lätt smak och mister sin konsistens i kyla.",
   },
   {
     q: "Hur länge håller kakor i rumstemperatur?",
@@ -39,10 +39,10 @@ const KAKOR_FAQS = [
   },
   {
     q: "Hur länge håller kakor i frysen?",
-    a: "Småkakor tål frysning mycket bra. Frys i tät påse eller burk och låt tina i rumstemperatur — konsistens och smak håller sig i flera månader.",
+    a: "Småkakor tål frysning mycket bra. Frys i tät påse eller burk och låt tina i rumstemperatur – konsistens och smak håller sig i flera månader.",
   },
   {
-    q: "Vilka är sju sorters kakor?",
+    q: "Vad är sju sorters kakor?",
     a: "En klassisk svensk kaffebjudningstradition: minst sju olika småkakor på bordet. Mandelkubb, kolasnittar och chokladsnittar är tre av klassikerna som ofta ingår.",
   },
   {
@@ -51,7 +51,7 @@ const KAKOR_FAQS = [
   },
   {
     q: "Hur mycket kakor går det åt per person?",
-    a: "Räkna ungefär 3–5 småkakor per person till en fika. Hur många kakor ett kilo ger beror på sorten — snittar är lätta och mandelkubb tyngre — så välj gärna prova-på-paketet första gången och se hur långt det räcker hos er.",
+    a: "Räkna ungefär 3–5 småkakor per person till en fika. Hur många kakor ett kilo ger beror på sorten – snittar är lätta och mandelkubb tyngre – så välj gärna prova-på-paketet första gången och se hur långt det räcker hos er.",
   },
 ];
 
@@ -96,14 +96,13 @@ export default async function KakorPage() {
         >
           <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)" }}>Gammaldags småkakor på riktigt smör</h1>
           <div style={{ fontSize: 14, color: "var(--text-2)" }}>
-            Säljs per kilo eller paket · blanda fritt i samma order
+            Säljs per kilo eller paket · blanda fritt i samma beställning
           </div>
         </div>
         <p className="lede" style={{ margin: "0 0 28px" }}>
-          Klassiska svenska smörkakor efter recept från Svenskt konditorlexikon 1957 — kolasnittar,
-          mandelkubb och chokladsnittar bakade på riktigt smör, vanligt strösocker och kvalitativa
-          traditionella råvaror. Kaffekakor och fikabröd per kilo till arbetsplatser i Tyresö, Nacka, Haninge och
-          Huddinge — betalning sker alltid mot faktura.
+          Klassiska svenska smörkakor efter recept från Svenskt konditorlexikon 1957 – kolasnittar,
+          mandelkubb och chokladsnittar bakade på riktigt smör, vanligt strösocker och traditionella råvaror av hög kvalitet. Kaffekakor och fikabröd per kilo till arbetsplatser i Tyresö, Nacka, Haninge och
+          Huddinge – betalning sker alltid mot faktura.
         </p>
         <div
           style={{
@@ -128,18 +127,18 @@ export default async function KakorPage() {
         <p style={{ margin: "20px 0 0", fontSize: 14.5 }}>
           Osäkra på hur mycket ni behöver?{" "}
           <Link href="/fika-till-jobbet" style={{ fontWeight: 600 }}>
-            Guide: fika till jobbet — mängder per person, fredagsfika och möten
+            Guide: fika till jobbet – mängder per person, fredagsfika och möten
           </Link>{" "}
           · <Link href="/julfika" style={{ fontWeight: 600 }}>Julfika på jobbet</Link>
         </p>
 
-        {/* FAQ före sidans avslutande CTA-band — sidan ska sluta i handling. */}
+        {/* FAQ före sidans avslutande CTA-band – sidan ska sluta i handling. */}
         <FaqList heading="Vanliga frågor om småkakor" items={KAKOR_FAQS} />
       </div>
 
       <section className="cta-band">
         <h2 className="h-section" style={{ marginBottom: 20 }}>
-          Blanda sorterna fritt — vi levererar till er arbetsplats
+          Blanda sorterna fritt – vi levererar till er arbetsplats
         </h2>
         <Link href="/bestall" className="btn btn-primary btn-lg">
           Beställ kakor

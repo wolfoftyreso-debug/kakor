@@ -5,7 +5,7 @@ import { AREA_CONTENT } from "@/lib/area-content";
 import { CONTENT_DATES } from "@/lib/seo/content-dates";
 
 // Dynamisk sitemap: produktsidorna hämtas ur databasen med RIKTIGA
-// lastModified (produktens updatedAt) — datum fejkas aldrig per deploy.
+// lastModified (produktens updatedAt) – datum fejkas aldrig per deploy.
 // Om databasen är onåbar levereras de statiska sidorna ändå.
 export const dynamic = "force-dynamic";
 

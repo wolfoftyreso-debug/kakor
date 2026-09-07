@@ -26,8 +26,8 @@ export class OrderError extends Error {
 // Missbruksspärrar som håller över serverless-instanser: en publik endpoint
 // som utfärdar löpnumrerade fakturor och mejlar dem får inte kunna användas
 // som spam-/nätfiskerelä. Riktiga kunder når aldrig taken.
-// Nycklarna är det som är unikt per BESTÄLLARE (kontakt-e-post) — inte den
-// delade fakturainkorgen — och org.nr-taket är högt nog för koncerner med
+// Nycklarna är det som är unikt per BESTÄLLARE (kontakt-e-post) – inte den
+// delade fakturainkorgen – och org.nr-taket är högt nog för koncerner med
 // många beställande enheter. Avbrutna ordrar räknas inte (en omlagd order ska
 // inte bränna kvoten). Taken kan höjas via env utan kodändring.
 const ABUSE_WINDOW_MS = 24 * 3600_000;
@@ -66,13 +66,13 @@ export async function assertNotAbusive(input: { email: string; invoiceEmail: str
 /**
  * En momsfaktura utan säljarens momsregistreringsnummer och betalningsväg är
  * inte ett giltigt kunddokument (ML 17 kap. 24 §). I produktion stängs
- * beställningen därför tills uppgifterna är verifierade i miljön — i stället
+ * beställningen därför tills uppgifterna är verifierade i miljön – i stället
  * för att löpnummer förbrukas på fakturor som ingen kan betala.
  */
 export function assertInvoicingConfigured() {
   if (process.env.VERCEL_ENV !== "production") return;
   // Bankgiro och momsnummer krävs på fakturan (ML 17 kap.), e-postadressen
-  // krävs synlig för kunden (e-handelslagen 8 §) — utan dem säljer vi inte.
+  // krävs synlig för kunden (e-handelslagen 8 §) – utan dem säljer vi inte.
   if (!isVerifiedValue(invoiceConfig.bankgiro) || !isVerifiedValue(invoiceConfig.vatNumber) || !isVerifiedValue(invoiceConfig.email)) {
     console.error("[faktura] beställning stoppad: INVOICE_BANKGIRO/INVOICE_VAT_NUMBER/INVOICE_EMAIL är inte verifierade i miljön");
     throw new OrderError(
@@ -83,7 +83,7 @@ export function assertInvoicingConfigured() {
   }
 }
 
-/** Samma nyckel måste bära samma beställning — annars är det inte en retry. */
+/** Samma nyckel måste bära samma beställning – annars är det inte en retry. */
 function sameOrderPayload(
   existing: { items: { productId: string | null; weightKg: number }[]; deliveryDate: Date; companyName: string; orgNumber: string; email: string; invoiceEmail: string; deliveryAddress: string; deliveryPostalCode: string; deliveryCity: string; reference: string; billingAddress: string; deliveryInstruction: string },
   input: CheckoutInput
@@ -108,7 +108,7 @@ function sameOrderPayload(
 
 const IDEMPOTENCY_MISMATCH = () =>
   new OrderError(
-    "Den här beställningen har redan skickats med andra uppgifter — ladda om sidan och försök igen.",
+    "Den här beställningen har redan skickats med andra uppgifter – ladda om sidan och försök igen.",
     undefined,
     "IDEMPOTENCY_MISMATCH"
   );
@@ -121,7 +121,7 @@ export interface CreateOrderOptions {
 }
 
 /**
- * Skapar order + faktura atomiskt. Priser hämtas ALLTID från databasen —
+ * Skapar order + faktura atomiskt. Priser hämtas ALLTID från databasen –
  * klienten skickar bara produkt-id och vikt. E-post skickas efter commit;
  * misslyckad e-post påverkar aldrig ordern (order persistence först).
  */
@@ -153,7 +153,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
     const compact = input.deliveryPostalCode.replace(/\s/g, "");
     if (!prefixes.some((p) => compact.startsWith(p.replace(/\s/g, "")))) {
       throw new OrderError(
-        `Postnumret verkar inte ligga i ${area.name} — kontrollera adressen eller välj rätt område`,
+        `Postnumret verkar inte ligga i ${area.name} – kontrollera adressen eller välj rätt område`,
         "deliveryPostalCode"
       );
     }
@@ -166,9 +166,9 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
     blockedDates: safeBlockedDates(area.blockedDatesJson),
   };
   // Prenumerationsordrar genereras i förväg av motorn och kan ligga närmare i
-  // tiden än kundens cutoff — de datumvalideras vid prenumerationsstart istället.
+  // tiden än kundens cutoff – de datumvalideras vid prenumerationsstart istället.
   if (!options.subscription && !isValidDeliveryDate(deliveryDate, areaConfig)) {
-    throw new OrderError("Leveransdagen är inte tillgänglig — välj en ny dag", "deliveryDate");
+    throw new OrderError("Leveransdagen är inte tillgänglig – välj en ny dag", "deliveryDate");
   }
 
   const productIds = input.items.map((i) => i.productId);
@@ -178,7 +178,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
   const productById = new Map(products.map((p) => [p.id, p]));
 
   // Kapacitetstak per dag: prenumerationsordrar är planerad volym och räknas
-  // in men stoppas aldrig — de skulle annars tyst falla bort ur generatorn.
+  // in men stoppas aldrig – de skulle annars tyst falla bort ur generatorn.
   // Kontrollen körs snabbt här (tydligt fel utan att bränna löpnummer) och
   // en gång till INUTI transaktionen under radlås på området, så att två
   // samtidiga beställningar inte båda passerar samma lediga kilon.
@@ -193,7 +193,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
     const booked = (await bookedKgByDate(area.id, [iso], client)).get(iso) ?? 0;
     if (booked + thisKg > area.maxKgPerDay) {
       throw new OrderError(
-        `${capitalizeFirst(formatDeliveryDate(deliveryDate))} är fullbokad i ${area.name} — välj en annan leveransdag`,
+        `${capitalizeFirst(formatDeliveryDate(deliveryDate))} är fullbokad i ${area.name} – välj en annan leveransdag`,
         "deliveryDate",
         "DAY_FULL"
       );
@@ -203,7 +203,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
 
   const lines = input.items.map((item) => {
     const product = productById.get(item.productId);
-    if (!product) throw new OrderError("En produkt i beställningen finns inte längre", "items");
+    if (!product) throw new OrderError("En sort i beställningen finns inte längre", "items");
     // Vikten är medvetet INTE begränsad till weightOptionsJson: alternativen är
     // snabbval i UI:t, checkoutens stepper tillåter valfritt helt kilo.
     // Taken sätts av valideringen: 1–100 kg per rad, max 30 rader.
@@ -223,13 +223,13 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
   );
   if (input.expectedTotalOre !== undefined && input.expectedTotalOre !== totals.totalOre) {
     throw new OrderError(
-      "Priset har uppdaterats sedan ni började beställa — kontrollera den nya summan och skicka igen.",
+      "Priset har uppdaterats sedan ni började beställa – kontrollera den nya summan och skicka igen.",
       undefined,
       "PRICE_CHANGED"
     );
   }
 
-  // Svensk dag, inte UTC — en order kl 00–02 sommartid ska inte fakturadateras föregående dag.
+  // Svensk dag, inte UTC – en order kl 00–02 sommartid ska inte fakturadateras föregående dag.
   const invoiceDate = todayInStockholm();
   // Förfallodagen räknas från LEVERANSDAGEN, inte fakturadatumet: fakturan
   // skapas vid beställningen men kunden ska aldrig behöva betala före leverans.
@@ -240,7 +240,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
   try {
     created = await runCreateTransaction();
   } catch (e) {
-    // Kapplöpning på idempotensnyckeln: en parallell förfrågan hann först —
+    // Kapplöpning på idempotensnyckeln: en parallell förfrågan hann först –
     // returnera den order som redan skapades.
     if (
       input.idempotencyKey &&

@@ -66,7 +66,7 @@ export function ProductForm({
         </select>
       </label>
       <label className="field">
-        Paketvikt (gram — endast styckvaror, 0 för lösvikt)
+        Paketvikt (gram – endast styckvaror, 0 för lösvikt)
         <input
           name="packageWeightGrams"
           type="number"
@@ -92,11 +92,11 @@ export function ProductForm({
         <input name="imageRef" defaultValue={initial.imageRef} placeholder="/images/kolasnittar.jpg" />
       </label>
       <label className="field">
-        Etikett på produktkortet (t.ex. Bästsäljare — tom för ingen)
+        Etikett på produktkortet (t.ex. Bästsäljare – tom för ingen)
         <input name="badge" defaultValue={initial.badge} maxLength={30} placeholder="Bästsäljare" />
       </label>
       <label className="field">
-        Ca antal kakor per kilo (frivilligt — visas på produktsidan)
+        Ca antal kakor per kilo (frivilligt – visas på produktsidan)
         <input name="piecesPerKgApprox" type="number" min="1" max="500" defaultValue={initial.piecesPerKgApprox} placeholder="Räkna en riktig sats innan du fyller i" />
       </label>
       <label className="field">

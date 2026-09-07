@@ -4,7 +4,7 @@ import { fromISODate, toISODate } from "@/lib/dates";
 import { sv } from "zod/locales";
 
 // Zods egna felmeddelanden ("Too big: expected number to be <=100") når kunden
-// via fieldErrors — svenska som förval, våra egna meddelanden går före.
+// via fieldErrors – svenska som förval, våra egna meddelanden går före.
 z.config(sv());
 
 // Kalenderriktigt datum: "2026-13-45" (Invalid Date → RangeError → 500) och
@@ -17,19 +17,19 @@ export const isoDateSchema = (message: string) =>
     .refine((s) => {
       const d = fromISODate(s);
       return !Number.isNaN(d.getTime()) && toISODate(d) === s;
-    }, "Ogiltigt datum");
+    }, "Välj en leveransdag i listan");
 
-// Server-side validering — frontendvalidering är UX, inte säkerhet.
+// Server-side validering – frontendvalidering är UX, inte säkerhet.
 
 // Enradsfält: radbrytningar/tabbar/kontrolltecken kollapsas till mellanslag
-// INNAN längdkontrollen — annars bryter "Bolag\n".repeat(20) faktura-PDF:en,
+// INNAN längdkontrollen – annars bryter "Bolag\n".repeat(20) faktura-PDF:en,
 // e-posten och adminlistorna (verifierat: 3-sidig PDF av en enradsfaktura).
 const singleLine = (min: number, minMessage: string, max: number) =>
   z
     .string()
     // \p{Cc} = kontrolltecken, \p{Cf} = osynliga formattecken (zero-width, RTL-override).
     .transform((s) => s.replace(/[\p{Cc}\p{Cf}\s]+/gu, " ").trim())
-    .pipe(z.string().min(min, minMessage).max(max));
+    .pipe(z.string().min(min, minMessage).max(max, `Högst ${max} tecken`));
 
 // Flerradsfält: radbrytningar tillåts men övriga kontrolltecken tas bort och
 // antalet rader begränsas (fakturans adressblock har fast höjd).
@@ -47,10 +47,10 @@ const multiLine = (max: number, maxLines: number) =>
         .join("\n")
         .trim()
     )
-    .pipe(z.string().max(max))
+    .pipe(z.string().max(max, `Högst ${max} tecken`))
     .default("");
 
-// E-post normaliseras till gemener vid lagring — då fungerar dygnsspärrar och
+// E-post normaliseras till gemener vid lagring – då fungerar dygnsspärrar och
 // uppslag med vanlig likhet i alla databaser (SQLite i demo, Postgres i prod).
 const emailSchema = (message: string) =>
   z.string().trim().email(message).max(200).transform((s) => s.toLowerCase());
@@ -60,7 +60,7 @@ const emailSchema = (message: string) =>
 // Nyckeln är medvetet intetsägande ("website" autofylls av lösenordshanterare).
 const honeypotSchema = z.string().max(0, "Kontrollera uppgifterna").optional();
 
-// Svenska organisationsnummer har Luhn-kontrollsiffra — ett formatriktigt men
+// Svenska organisationsnummer har Luhn-kontrollsiffra – ett formatriktigt men
 // påhittat nummer (556677-8899 är t.ex. ogiltigt) ska inte kunna faktureras.
 export function isValidOrgNumber(value: string): boolean {
   const digits = value.replace(/\D/g, "");
@@ -81,7 +81,7 @@ export function isValidOrgNumber(value: string): boolean {
  * Ser numret ut som ett personnummer (ÅÅMMDD-XXXX) snarare än ett organisations-
  * nummer? Organisationsnummer har alltid 20–99 i position 3–4; personnummer har
  * en månad 01–12. Enskilda firmor använder personnummer som organisationsnummer
- * och är legitima företagskunder, så det här är en flagga för admin — inte ett stopp.
+ * och är legitima företagskunder, så det här är en flagga för admin – inte ett stopp.
  */
 export function looksLikePersonalNumber(value: string): boolean {
   const digits = value.replace(/\D/g, "");
@@ -94,7 +94,7 @@ const orgNumberSchema = z
   .string()
   .trim()
   .regex(/^\d{6}-?\d{4}$/, "Ange organisationsnummer i formatet 556677-8899")
-  .refine(isValidOrgNumber, "Organisationsnumret verkar inte stämma — kontrollera siffrorna")
+  .refine(isValidOrgNumber, "Organisationsnumret verkar inte stämma – kontrollera siffrorna")
   .transform((v) => (v.includes("-") ? v : `${v.slice(0, 6)}-${v.slice(6)}`));
 
 const postalCodeSchema = z
@@ -107,10 +107,10 @@ const phoneSchema = z
   .trim()
   .min(6, "Ange ett telefonnummer")
   .max(25)
-  .regex(/^[0-9+\-() ]+$/, "Ogiltigt telefonnummer");
+  .regex(/^[0-9+\-() ]+$/, "Ange ett telefonnummer med siffror, t.ex. 08-123 45 67");
 
 // strictObject: okända fält (t.ex. klientskickade priser) avvisas i stället
-// för att tyst strippas — API-kontraktet är exakt.
+// för att tyst strippas – API-kontraktet är exakt.
 export const orderItemInputSchema = z.strictObject({
   productId: z.string().min(1),
   weightKg: z.number().int("Antal anges i hela enheter (kilo eller paket)").min(1, "Minst 1 per rad").max(100, "Högst 100 per rad"),
@@ -124,7 +124,7 @@ const itemsSchema = z
   .max(30, "För många orderrader")
   .refine(
     (items) => new Set(items.map((i) => i.productId)).size === items.length,
-    "Samma produkt får bara förekomma en gång"
+    "Samma sort får bara förekomma en gång"
   );
 
 const idempotencyKeySchema = z.string().regex(/^[a-zA-Z0-9-]{16,64}$/);
@@ -133,7 +133,7 @@ const idempotencyKeySchema = z.string().regex(/^[a-zA-Z0-9-]{16,64}$/);
 const turnstileTokenSchema = z.string().max(4096).optional();
 
 export const checkoutSchema = z.strictObject({
-  // Skydd mot dubbelbeställning — klienten genererar en nyckel per försök.
+  // Skydd mot dubbelbeställning – klienten genererar en nyckel per försök.
   idempotencyKey: idempotencyKeySchema.optional(),
   items: itemsSchema,
   areaSlug: z.string().min(1, "Välj leveransområde"),
@@ -154,7 +154,7 @@ export const checkoutSchema = z.strictObject({
   reference: singleLine(0, "", 120).default(""),
   billingAddress: multiLine(300, 4),
 
-  // Belopp kunden såg när hen bekräftade — servern räknar alltid själv, men
+  // Belopp kunden såg när hen bekräftade – servern räknar alltid själv, men
   // avviker summorna (pris ändrat i admin under tiden) avvisas ordern så att
   // kunden får bekräfta det nya priset i stället för att faktureras tyst.
   expectedTotalOre: z.number().int().min(0).optional(),
@@ -176,7 +176,7 @@ export const subscriptionSchema = z.strictObject({
   orgNumber: orgNumberSchema,
   contactName: singleLine(2, "Ange kontaktperson", 120),
   email: emailSchema("Ange en giltig e-postadress"),
-  // Chauffören behöver ett nummer även på prenumerationsleveranser — samma krav som checkouten.
+  // Chauffören behöver ett nummer även på prenumerationsleveranser – samma krav som checkouten.
   phone: phoneSchema,
 
   deliveryAddress: singleLine(3, "Ange leveransadress", 200),

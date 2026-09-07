@@ -8,12 +8,12 @@ import { highlightAllergens } from "@/lib/allergens";
 import { PrintButton } from "@/components/admin/PrintButton";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin — etiketter", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – etiketter", robots: { index: false } };
 
 // Etikett för färdigförpackade livsmedel (förordning (EU) 1169/2011 och
 // LIVSFS 2014:4): beteckning, ingrediensförteckning med allergener framhävda,
 // nettokvantitet, bäst före-datum, förvaringsanvisning och ansvarig
-// livsmedelsföretagare. Datumet skrivs för hand per sats — det hittas inte på.
+// livsmedelsföretagare. Datumet skrivs för hand per sats – det hittas inte på.
 export default async function LabelPage({
   params,
   searchParams,
@@ -64,7 +64,7 @@ export default async function LabelPage({
 
       {!product.ingredients && (
         <p className="error-text no-print" role="alert">
-          Produkten saknar ingrediensförteckning — fyll i den under Redigera innan etiketten skrivs ut.
+          Produkten saknar ingrediensförteckning – fyll i den under Redigera innan etiketten skrivs ut.
         </p>
       )}
 

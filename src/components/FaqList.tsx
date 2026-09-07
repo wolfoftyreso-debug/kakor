@@ -1,4 +1,4 @@
-// Design 2.0: en FAQ-komponent för alla sidor (native details/summary —
+// Design 2.0: en FAQ-komponent för alla sidor (native details/summary –
 // fungerar utan JS, rubriknivå bevaras för skärmläsare). Samma markup som
 // matas till FAQPage-schemat så att synligt innehåll och schema aldrig glider isär.
 export function FaqList({

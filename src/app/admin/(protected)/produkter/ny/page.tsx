@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/auth/guard";
 import { ProductForm } from "../ProductForm";
 
-export const metadata: Metadata = { title: "Admin — ny produkt", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – ny produkt", robots: { index: false } };
 
 export default async function NewProductPage() {
   await requireAdminPage();

@@ -27,7 +27,7 @@ export function AreaForm({
   const action = saveArea.bind(null, areaId);
   const [state, formAction, pending] = useActionState(action, null);
   const [weekdayInput, setWeekdayInput] = useState(weekdays);
-  // Siffror är lätta att skriva fel — visa dagnamnen live så att "4" tydligt betyder torsdag.
+  // Siffror är lätta att skriva fel – visa dagnamnen live så att "4" tydligt betyder torsdag.
   const weekdayLabels = weekdayInput
     .split(",")
     .map((v) => parseInt(v.trim(), 10))

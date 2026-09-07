@@ -18,7 +18,7 @@ import { remainingByLine } from "@/lib/invoice/credit";
 import { looksLikePersonalNumber } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin — orderdetalj", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – orderdetalj", robots: { index: false } };
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdminPage();
@@ -105,7 +105,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <div className="section-label" style={{ marginBottom: 10 }}>KUND</div>
           <strong>{order.companyName}</strong> · {order.orgNumber}
           {looksLikePersonalNumber(order.orgNumber) && (
-            <span className="pill pill-neutral" style={{ marginLeft: 8, fontSize: 11.5 }} title="Organisationsnumret har personnummerformat — troligen enskild firma. Vi säljer bara till näringsidkare; kontrollera vid tvekan.">
+            <span className="pill pill-neutral" style={{ marginLeft: 8, fontSize: 11.5 }} title="Organisationsnumret har personnummerformat – troligen enskild firma. Vi säljer bara till näringsidkare; kontrollera vid tvekan.">
               Enskild firma?
             </span>
           )}
@@ -131,7 +131,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           {order.deliveredAt && (
             <div style={{ marginTop: 8, fontSize: 13.5 }}>
               Levererad {formatTimestamp(order.deliveredAt)}
-              {order.deliveryNote ? ` — ${order.deliveryNote}` : ""}
+              {order.deliveryNote ? ` – ${order.deliveryNote}` : ""}
             </div>
           )}
           <div className="section-label" style={{ margin: "14px 0 6px" }}>FAKTURERING</div>

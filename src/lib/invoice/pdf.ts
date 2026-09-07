@@ -5,7 +5,7 @@ import { qtyLabel } from "@/lib/units";
 import { SIGILL_PNG_BASE64 } from "@/lib/invoice/sigill-png";
 import { isVerifiedValue } from "@/lib/config";
 
-// PDF-faktura — renderas enbart från fakturans snapshot (historiskt dokument).
+// PDF-faktura – renderas enbart från fakturans snapshot (historiskt dokument).
 // Diskret varumärkesfärg, standardtypsnitt (Helvetica) för stabil server-side-rendering.
 
 const BROWN = "#3B281B";
@@ -18,7 +18,7 @@ const W = 595.28; // A4 pt
 const CONTENT_W = W - M * 2;
 
 // pdfkit ritar med WinAnsi-Helvetica: Intl:s minustecken (U+2212) och smala
-// mellanslag (U+202F) finns inte där och blir " — använd ASCII-minus och
+// mellanslag (U+202F) finns inte där och blir " – använd ASCII-minus och
 // vanligt mellanslag i PDF:en.
 function pdfMoney(ore: number): string {
   return formatOre(ore).replace(/\u2212/g, "-").replace(/[\u202f\u00a0]/g, " ");
@@ -90,7 +90,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
           ["Förfallodatum", (snapshot.dueDate)],
           ["Betalningsvillkor", `${snapshot.paymentTermsDays} dagar netto från leverans`],
           ["Ordernummer", snapshot.orderNumber],
-          // Fakturan utfärdas vid beställning — leveransen ligger framåt i tiden.
+          // Fakturan utfärdas vid beställning – leveransen ligger framåt i tiden.
           ["Planerad leverans", (snapshot.deliveryDate)],
         ];
     let ry = y;
@@ -140,7 +140,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
       y += 26;
       doc.moveTo(M, y).lineTo(W - M, y).lineWidth(0.5).stroke(BORDER);
     }
-    // Summering + betalningsblock behöver ~200 pt — bryt sida om de inte får plats.
+    // Summering + betalningsblock behöver ~200 pt – bryt sida om de inte får plats.
     if (y + 200 > PAGE_BOTTOM + 60) {
       doc.addPage();
       y = M;
@@ -150,7 +150,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
     y += 12;
     const sumX = M + 300;
     const sumW = W - M - sumX;
-    // Beskattningsunderlag och moms per momssats (ML 17 kap. 24 §) — en rad
+    // Beskattningsunderlag och moms per momssats (ML 17 kap. 24 §) – en rad
     // per sats om raderna har olika satser, annars som förut.
     const byRate = new Map<number, { net: number; vat: number }>();
     for (const line of snapshot.lines) {
@@ -194,7 +194,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
       const partial = snapshot.creditKind === "PARTIAL";
       doc.text(
         partial
-          ? `Denna kreditfaktura krediterar faktura ${snapshot.creditsInvoiceNumber} delvis — raderna ovan.`
+          ? `Denna kreditfaktura krediterar faktura ${snapshot.creditsInvoiceNumber} delvis – raderna ovan.`
           : `Denna kreditfaktura krediterar faktura ${snapshot.creditsInvoiceNumber} i sin helhet.`,
         M + 12,
         y + 24
@@ -214,7 +214,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
         { width: CONTENT_W - 24, lineBreak: false }
       );
     } else {
-      // Platshållare ("[EJ VERIFIERAT …]") får aldrig hamna på en kundfaktura —
+      // Platshållare ("[EJ VERIFIERAT …]") får aldrig hamna på en kundfaktura –
       // saknas verifierat bankgiro skrivs en neutral rad tills värdet är satt.
       doc.text(
         isVerifiedValue(snapshot.seller.bankgiro)
@@ -246,7 +246,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
       isVerifiedValue(s.email) ? s.email : "",
       isVerifiedValue(s.phone) ? s.phone : "",
     ].filter(Boolean);
-    // F-skatt-texten är också en verksamhetsuppgift — aldrig platshållare på kundfaktura.
+    // F-skatt-texten är också en verksamhetsuppgift – aldrig platshållare på kundfaktura.
     const footerParts2 = [
       isVerifiedValue(s.vatNumber) ? `Momsreg.nr ${s.vatNumber}` : "",
       isVerifiedValue(s.fSkatt) ? s.fSkatt : "",

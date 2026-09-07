@@ -1,4 +1,4 @@
-// Sentry-konfiguration — MEDVETET endast server-side (instrumentation.ts).
+// Sentry-konfiguration – MEDVETET endast server-side (instrumentation.ts).
 // Klient-SDK:n kostar ~80 kB First Load JS; för denna skala är serverfelen
 // (checkout, PDF, cron, admin-actions) de kritiska att fånga. DSN är en
 // publik identifierare (ingen hemlighet). SENTRY_DSN i miljön vinner;
@@ -10,7 +10,7 @@ export const SENTRY_DSN =
 
 export const SENTRY_ENABLED =
   SENTRY_DSN !== "" &&
-  // Endast i deployade miljöer — lokal utveckling och tester ska inte rapportera.
+  // Endast i deployade miljöer – lokal utveckling och tester ska inte rapportera.
   // VERCEL finns server-side; NEXT_PUBLIC_VERCEL_ENV exponeras av Vercel i klienten.
   (!!process.env.VERCEL ||
     !!process.env.NEXT_PUBLIC_VERCEL_ENV ||

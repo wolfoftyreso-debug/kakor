@@ -31,8 +31,8 @@ const isIndexable = !process.env.VERCEL || process.env.VERCEL_ENV === "productio
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "Sockerbagaren — Riktigt fika till jobbet",
-    template: "%s — Sockerbagaren",
+    default: "Sockerbagaren – riktigt fika till jobbet",
+    template: "%s – Sockerbagaren",
   },
   description: siteConfig.description,
   robots: isIndexable ? undefined : { index: false, follow: false },
@@ -47,19 +47,19 @@ export const metadata: Metadata = {
         url: "/og.jpg",
         width: 1200,
         height: 630,
-        alt: "Sockerbagaren — riktigt fika till jobbet",
+        alt: "Sockerbagaren – riktigt fika till jobbet",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sockerbagaren — Riktigt fika till jobbet",
+    title: "Sockerbagaren – riktigt fika till jobbet",
     description: siteConfig.description,
     images: ["/og.jpg"],
   },
   applicationName: "Sockerbagaren",
   appleWebApp: { title: "Sockerbagaren" },
-  // iOS auto-länkar annars nummerlika strängar — org.nr 556677-8899 skulle
+  // iOS auto-länkar annars nummerlika strängar – org.nr 556677-8899 skulle
   // bli en falsk telefonlänk. Riktiga telefonlänkar sätts explicit med tel:.
   formatDetection: { telephone: false },
   // Search Console-verifiering via meta-tagg, utan kodändring: sätt

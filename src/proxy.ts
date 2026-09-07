@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 const IS_DEV = process.env.NODE_ENV !== "production";
 // Vercels förhandsgranskningsverktyg (endast preview-deployer, aldrig produktion).
 const IS_VERCEL_PREVIEW = !!process.env.VERCEL && process.env.VERCEL_ENV !== "production";
-// Cloudflare Turnstile (robotskydd i kassan) — bara när nyckel finns.
+// Cloudflare Turnstile (robotskydd i kassan) – bara när nyckel finns.
 const TURNSTILE = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 const TURNSTILE_HOST = "https://challenges.cloudflare.com";
 
@@ -36,7 +36,7 @@ function buildCsp(nonce: string): string {
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${scriptExtra}`,
-    // React sätter style-attribut inline (style={{…}}) — kräver 'unsafe-inline' för stilar.
+    // React sätter style-attribut inline (style={{…}}) – kräver 'unsafe-inline' för stilar.
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com${IS_VERCEL_PREVIEW ? " https://vercel.live https://vercel.com" : ""}`,
     "font-src 'self' data:",

@@ -25,14 +25,14 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       "Företagsfika i Tyresö: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Tyresö",
     heroText:
-      "Vi levererar fika direkt till arbetsplatser i Tyresö — kontor, verkstäder, butiker och kliniker. Kakorna levereras från Radiovägen i Tyresö, så leveransen kommer från grannskapet.",
+      "Vi levererar fika direkt till arbetsplatser i Tyresö – kontor, verkstäder, butiker och kliniker. Kakorna levereras från Radiovägen i Tyresö, så leveransen kommer från grannskapet.",
     midHeading: "Företagsfika i Tyresö",
     midText:
-      "Fredagsfika på kontoret vid Tyresö centrum, kundmöte i Bollmora eller personalrum i Trollbäcken — vi levererar samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
+      "Fredagsfika på kontoret vid Tyresö centrum, kundmöte i Bollmora eller personalrum i Trollbäcken – vi levererar samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
     faqs: [
       {
         q: "Vilka delar av Tyresö levererar ni till?",
-        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) — Bollmora, Trollbäcken, Tyresö strand, Lindalen och övriga områden med företagsadresser.",
+        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) – Bollmora, Trollbäcken, Tyresö strand, Lindalen och övriga områden med företagsadresser.",
       },
       {
         q: "När kommer leveransen?",
@@ -44,7 +44,7 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       },
       {
         q: "Hur fungerar betalningen?",
-        a: "Allt sker direkt i webbshoppen — fakturan skapas när ordern läggs och mejlas till den fakturaadress ni anger.",
+        a: "Allt sker direkt i webbshoppen – fakturan skapas när ni skickar beställningen och mejlas till den faktura-e-post ni anger.",
       },
     ],
   },
@@ -56,14 +56,14 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       "Företagsfika i Nacka: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Nacka",
     heroText:
-      "Vi levererar fika direkt till arbetsplatser i Nacka — kontor, verkstäder, butiker och kliniker. Vi utgår från lagret i grannkommunen Tyresö, så leveransen kommer från närområdet.",
+      "Vi levererar fika direkt till arbetsplatser i Nacka – kontor, verkstäder, butiker och kliniker. Vi utgår från lagret i grannkommunen Tyresö, så leveransen kommer från närområdet.",
     midHeading: "Företagsfika i Nacka",
     midText:
-      "Fredagsfika på kontoret i Sickla, kundmöte i Nacka strand eller personalrum i Orminge — vi levererar samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
+      "Fredagsfika på kontoret i Sickla, kundmöte i Nacka strand eller personalrum i Orminge – vi levererar samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
     faqs: [
       {
         q: "Vilka delar av Nacka levererar ni till?",
-        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) — Sickla, Nacka strand, Saltsjöbaden, Orminge, Älta och övriga områden med företagsadresser.",
+        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) – Sickla, Nacka strand, Saltsjöbaden, Orminge, Älta och övriga områden med företagsadresser.",
       },
       {
         q: "När kommer leveransen?",
@@ -74,8 +74,8 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
         a: "Beställ i kassan så visar vi nästa tillgängliga leveransdag för Nacka.",
       },
       {
-        q: "Kan vi blanda olika kakor i samma order?",
-        a: "Ja — välj mängd per sort och blanda fritt i samma leverans.",
+        q: "Kan vi blanda olika kakor i samma beställning?",
+        a: "Ja – välj mängd per sort och blanda fritt i samma leverans.",
       },
     ],
   },
@@ -87,14 +87,14 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       "Företagsfika i Haninge: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Haninge",
     heroText:
-      "Vi levererar fika direkt till arbetsplatser i Haninge — kontor, verkstäder, butiker och kliniker. Vi utgår från lagret i grannkommunen Tyresö, så leveransen kommer från närområdet.",
+      "Vi levererar fika direkt till arbetsplatser i Haninge – kontor, verkstäder, butiker och kliniker. Vi utgår från lagret i grannkommunen Tyresö, så leveransen kommer från närområdet.",
     midHeading: "Företagsfika i Haninge",
     midText:
-      "Fredagsfika på kontoret i Handen, kundmöte i Vega eller personalrum i Västerhaninge — vi levererar samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
+      "Fredagsfika på kontoret i Handen, kundmöte i Vega eller personalrum i Västerhaninge – vi levererar samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
     faqs: [
       {
         q: "Vilka delar av Haninge levererar ni till?",
-        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) — Handen, Vega, Brandbergen, Jordbro, Västerhaninge och övriga områden med företagsadresser.",
+        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) – Handen, Vega, Brandbergen, Jordbro, Västerhaninge och övriga områden med företagsadresser.",
       },
       {
         q: "När kommer leveransen?",
@@ -105,8 +105,8 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
         a: "Beställ i kassan så visar vi nästa tillgängliga leveransdag för Haninge.",
       },
       {
-        q: "Kan vi blanda olika kakor i samma order?",
-        a: "Ja — välj mängd per sort och blanda fritt i samma leverans.",
+        q: "Kan vi blanda olika kakor i samma beställning?",
+        a: "Ja – välj mängd per sort och blanda fritt i samma leverans.",
       },
     ],
   },
@@ -118,14 +118,14 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       "Företagsfika i Huddinge: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
     heroHeading: "Kakor till företag i Huddinge",
     heroText:
-      "Vi levererar fika direkt till arbetsplatser i Huddinge — kontor, verkstäder, butiker och kliniker. Vi utgår från lagret i Tyresö i södra Stockholm, så leveransen kommer från närområdet.",
+      "Vi levererar fika direkt till arbetsplatser i Huddinge – kontor, verkstäder, butiker och kliniker. Vi utgår från lagret i Tyresö i södra Stockholm, så leveransen kommer från närområdet.",
     midHeading: "Företagsfika i Huddinge",
     midText:
-      "Fredagsfika på kontoret i Kungens kurva, kundmöte i Flemingsberg eller personalrum i Skogås — vi levererar samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
+      "Fredagsfika på kontoret i Kungens kurva, kundmöte i Flemingsberg eller personalrum i Skogås – vi levererar samma sortiment till alla arbetsplatser i kommunen. Återkommande behov? Låt fikat dyka upp av sig självt med en fikaprenumeration.",
     faqs: [
       {
         q: "Vilka delar av Huddinge levererar ni till?",
-        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) — Huddinge centrum, Kungens kurva, Flemingsberg, Skogås, Trångsund och övriga områden med företagsadresser.",
+        a: "Företagsadresser i hela kommunen (kassan bekräftar postnumret) – Huddinge centrum, Kungens kurva, Flemingsberg, Skogås, Trångsund och övriga områden med företagsadresser.",
       },
       {
         q: "När kommer leveransen?",
@@ -136,8 +136,8 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
         a: "Beställ i kassan så visar vi nästa tillgängliga leveransdag för Huddinge.",
       },
       {
-        q: "Kan vi blanda olika kakor i samma order?",
-        a: "Ja — välj mängd per sort och blanda fritt i samma leverans.",
+        q: "Kan vi blanda olika kakor i samma beställning?",
+        a: "Ja – välj mängd per sort och blanda fritt i samma leverans.",
       },
     ],
   },

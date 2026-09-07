@@ -4,18 +4,18 @@ import { invoiceConfig, isVerifiedValue, orderPolicy } from "@/lib/config";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 
 export const metadata: Metadata = {
-  title: "Leverans- & köpvillkor",
+  title: "Leverans- och köpvillkor",
   description: "Leverans-, köp- och fakturavillkor för beställningar hos Sockerbagaren.",
   alternates: { canonical: "/villkor" },
   ...sharePreview({
-    title: "Leverans- & köpvillkor",
+    title: "Leverans- och köpvillkor",
     description:
       "Leverans-, köp- och fakturavillkor för beställningar hos Sockerbagaren.",
     path: "/villkor",
   }),
 };
 
-// Senast innehållsändrad — uppdateras manuellt vid verklig villkorsändring,
+// Senast innehållsändrad – uppdateras manuellt vid verklig villkorsändring,
 // aldrig automatiskt per deploy.
 const CONTENT_UPDATED = "2026-09-02";
 
@@ -24,17 +24,17 @@ export default function VillkorPage() {
     <>
     <InfoPageSeo
       path="/villkor"
-      name="Leverans- & köpvillkor"
-      title="Leverans- & köpvillkor"
+      name="Leverans- och köpvillkor"
+      title="Leverans- och köpvillkor"
       description={String(metadata.description)}
       dateModified={CONTENT_UPDATED}
     />
     <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
       <h1 className="h-display page-title">
-        Leverans- &amp; köpvillkor
+        Leverans- och köpvillkor
       </h1>
       <p className="meta">
-        Uppdaterad {CONTENT_UPDATED}
+        Uppdaterad <time dateTime={CONTENT_UPDATED}>{CONTENT_UPDATED}</time>
       </p>
       <div style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch", display: "flex", flexDirection: "column", gap: 18 }}>
         <section>
@@ -46,7 +46,7 @@ export default function VillkorPage() {
             för att hen är behörig att beställa för det angivna företaget (organisationsnumret). Vi
             förbehåller oss rätten att neka en beställning. Ingen kortbetalning sker på
             webbplatsen. Eftersom vi endast säljer till näringsidkare gäller inte konsumentköplagen
-            eller distansavtalslagen, och någon ångerrätt finns inte — se i stället avsnittet om
+            eller distansavtalslagen, och någon ångerrätt finns inte – se i stället avsnittet om
             avbokning nedan.
           </p>
         </section>
@@ -63,18 +63,18 @@ export default function VillkorPage() {
           <h2>Leverans och risk</h2>
           <p>
             Vi levererar på fasta leveransdagar per område, till bemannade företagsadresser i
-            Tyresö, Nacka, Haninge och Huddinge. Leveransen sker under dagen — vi anger inte
+            Tyresö, Nacka, Haninge och Huddinge. Leveransen sker under dagen – vi anger inte
             exakt klockslag, så någon behöver finnas på plats för att ta emot leveransen. Vald
             leveransdag framgår av orderbekräftelsen. Risken för varan övergår till er när den
             överlämnats på den angivna adressen.
           </p>
         </section>
         <section>
-          <h2>Betalning &amp; faktura</h2>
+          <h2>Betalning och faktura</h2>
           <p>
             Betalning sker mot faktura. Fakturan skapas när ni skickar beställningen, mejlas till
             angiven faktura-e-post och kan även laddas ner som PDF. Betalningsvillkor:{" "}
-            {invoiceConfig.paymentTermsDays} dagar netto räknat från leveransdagen — ni betalar aldrig före
+            {invoiceConfig.paymentTermsDays} dagar netto räknat från leveransdagen – ni betalar aldrig före
             leverans. Förfallodatum står på fakturan. Vid försenad betalning
             utgår dröjsmålsränta enligt räntelagen samt förseningsersättning enligt lagen om
             ersättning för inkassokostnader. Avbryts en fakturerad beställning krediteras fakturan
@@ -103,10 +103,10 @@ export default function VillkorPage() {
           </p>
         </section>
         <section>
-          <h2>Avbokning &amp; ändringar</h2>
+          <h2>Avbokning och ändringar</h2>
           <p>
             Ändringar och avbokningar görs kostnadsfritt fram till kl.{" "}
-            {String(orderPolicy.changeCutoffHour).padStart(2, "0")}.00 {orderPolicy.changeCutoffWorkdays === 1 ? "en arbetsdag" : `${orderPolicy.changeCutoffWorkdays} arbetsdagar`} före
+            {String(orderPolicy.changeCutoffHour).padStart(2, "0")}.00 {orderPolicy.changeCutoffWorkdays === 1 ? "en arbetsdag" : `${(["", "en", "två", "tre", "fyra", "fem", "sex", "sju", "åtta", "nio", "tio"] as const)[orderPolicy.changeCutoffWorkdays] ?? orderPolicy.changeCutoffWorkdays} arbetsdagar`} före
             leveransdagen: svara på orderbekräftelsen med ordernumret. Den exakta tidpunkten står i
             er orderbekräftelse. Därefter är beställningen packad och planerad i körningen och
             faktureras i sin helhet. För prenumerationer gäller samma gräns för att pausa eller ändra

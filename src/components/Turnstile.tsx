@@ -4,7 +4,7 @@ import Script from "next/script";
 import { useEffect, useRef } from "react";
 
 // Cloudflare Turnstile-widget (robotskydd). Renderas ENDAST när
-// NEXT_PUBLIC_TURNSTILE_SITE_KEY finns — annars returnerar kassan null och
+// NEXT_PUBLIC_TURNSTILE_SITE_KEY finns – annars returnerar kassan null och
 // servern verifierar inget. Explicit rendering så att widgeten kan
 // återställas efter ett serverfel (nytt `resetKey`).
 
@@ -24,7 +24,7 @@ export function Turnstile({ onToken, resetKey = 0 }: { onToken: (token: string |
   const ref = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const onTokenRef = useRef(onToken);
-  // Senaste callbacken i en ref — uppdateras i en effekt, aldrig under render.
+  // Senaste callbacken i en ref – uppdateras i en effekt, aldrig under render.
   useEffect(() => {
     onTokenRef.current = onToken;
   }, [onToken]);

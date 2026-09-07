@@ -7,7 +7,7 @@ import { priceSuffix } from "@/lib/units";
 import { ProductActiveToggle } from "./ProductActiveToggle";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin — produkter", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – produkter", robots: { index: false } };
 
 export default async function ProductsPage() {
   await requireAdminPage();
@@ -22,7 +22,7 @@ export default async function ProductsPage() {
         </Link>
       </div>
       <p style={{ color: "var(--text-2)", fontSize: 13.5, margin: "0 0 20px", maxWidth: "70ch" }}>
-        Prisändringar påverkar bara nya beställningar — historiska ordrar och fakturor behåller
+        Prisändringar påverkar bara nya beställningar – historiska ordrar och fakturor behåller
         sina belopp.
       </p>
 
@@ -30,13 +30,13 @@ export default async function ProductsPage() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Produkt</th>
-              <th>Pris</th>
-              <th>Förval</th>
-              <th>Allergener</th>
-              <th>Ordning</th>
-              <th>Status</th>
-              <th></th>
+              <th scope="col">Produkt</th>
+              <th scope="col">Pris</th>
+              <th scope="col">Förval</th>
+              <th scope="col">Allergener</th>
+              <th scope="col">Ordning</th>
+              <th scope="col">Status</th>
+              <th scope="col"><span className="visually-hidden">Åtgärder</span></th>
             </tr>
           </thead>
           <tbody>

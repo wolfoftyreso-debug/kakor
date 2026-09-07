@@ -9,7 +9,7 @@ import { PrintButton } from "@/components/admin/PrintButton";
 import { totalKg as orderKg } from "@/lib/orders/capacity";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin — leveranser", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – leveranser", robots: { index: false } };
 
 // Leveransvyn: verksamhetens arbetsverktyg under leveransdagen.
 // Grupperad per datum, byggd för mobil.
@@ -27,7 +27,7 @@ export default async function DeliveriesPage({
       visa === "levererade"
         ? { deliveryStatus: "DELIVERED", status: { not: "CANCELLED" } }
         : {
-            // Alla olevererade — även äldre än en vecka, annars försvinner
+            // Alla olevererade – även äldre än en vecka, annars försvinner
             // glömda ordrar ur den enda vy verksamheten packar från.
             deliveryStatus: "PENDING",
             status: { not: "CANCELLED" },
@@ -78,17 +78,17 @@ export default async function DeliveriesPage({
 
       {sortedKeys.map((dateKey) => {
         const dayOrders = groups.get(dateKey)!;
-        // Lösvikt och paket summeras separat — "12 kg + 2 paket" är packlistans sanning.
+        // Lösvikt och paket summeras separat – "12 kg + 2 paket" är packlistans sanning.
         const allItems = dayOrders.flatMap((o) => o.items);
         const totalKg = allItems.filter((i) => i.unit !== "paket").reduce((s, i) => s + i.weightKg, 0);
         const totalPaket = allItems.filter((i) => i.unit === "paket").reduce((s, i) => s + i.weightKg, 0);
         const dayTotal = [
-          totalKg > 0 ? `${totalKg} kg` : null,
-          totalPaket > 0 ? `${totalPaket} paket` : null,
+          totalKg > 0 ? `${totalKg} kg` : null,
+          totalPaket > 0 ? `${totalPaket} paket` : null,
         ]
           .filter(Boolean)
           .join(" + ") || "0 kg";
-        // Bakplan: hur mycket av varje sort dagen kräver — det är vad som ska
+        // Bakplan: hur mycket av varje sort dagen kräver – det är vad som ska
         // finnas i lager/bakas i sats, inte "12 kg totalt".
         const perProduct = new Map<string, { name: string; unit: string; qty: number; orders: number }>();
         for (const o of dayOrders) {
@@ -111,7 +111,7 @@ export default async function DeliveriesPage({
         }
         const capacityNote = [...byArea.values()]
           .filter((a) => a.max > 0)
-          .map((a) => `${a.name} ${Math.round(a.kg * 10) / 10} av ${a.max} kg${a.kg >= a.max ? " — FULLT" : ""}`)
+          .map((a) => `${a.name} ${Math.round(a.kg * 10) / 10} av ${a.max} kg${a.kg >= a.max ? " – FULLT" : ""}`)
           .join(" · ");
         return (
           <section key={dateKey} style={{ marginBottom: 32 }}>
@@ -125,7 +125,7 @@ export default async function DeliveriesPage({
               }}
             >
               {capitalizeFirst(formatDeliveryDate(dayOrders[0].deliveryDate))} {dateKey.slice(0, 4)}
-              {visa !== "levererade" && dateKey < toISODate(today) ? " — FÖRSENAD, ej markerad levererad" : ""}
+              {visa !== "levererade" && dateKey < toISODate(today) ? " – FÖRSENAD, ej markerad levererad" : ""}
             </h2>
             <div style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 14 }}>
               {dayOrders.length} leverans{dayOrders.length === 1 ? "" : "er"} · {dayTotal} totalt
@@ -133,14 +133,14 @@ export default async function DeliveriesPage({
             {visa !== "levererade" && bakplan.length > 0 && (
               <div className="card bakplan" style={{ padding: "12px 18px", marginBottom: 14, background: "var(--butter-soft)" }}>
                 <div className="section-label" style={{ marginBottom: 6 }}>
-                  BAKPLAN — PER SORT
+                  BAKPLAN – PER SORT
                   {capacityNote ? <span style={{ fontWeight: 400, letterSpacing: 0, textTransform: "none", marginLeft: 10 }}>{capacityNote}</span> : null}
                 </div>
                 <div style={{ display: "flex", gap: "6px 22px", flexWrap: "wrap", fontSize: 14 }}>
                   {bakplan.map((b) => (
                     <span key={`${b.name}|${b.unit}`}>
                       <strong>{qtyLabel(b.qty, b.unit)}</strong> {b.name}{" "}
-                      <span style={{ color: "var(--text-2)", fontSize: 12.5 }}>({b.orders} order{b.orders === 1 ? "" : "s"})</span>
+                      <span style={{ color: "var(--text-2)", fontSize: 12.5 }}>({b.orders} {b.orders === 1 ? "order" : "ordrar"})</span>
                     </span>
                   ))}
                 </div>

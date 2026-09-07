@@ -2,7 +2,7 @@
 
 // Sajtens ENDA beställningsflöde: Kakor -> Leverans -> Uppgifter ->
 // Kontrollera -> Tack. Engångsköp och återkommande leverans är samma
-// funnel och samma varukorg — köpläget väljs i leveranssteget
+// funnel och samma varukorg – köpläget väljs i leveranssteget
 // (produkt först, leveranssätt sedan), och submit grenar mot
 // /api/orders respektive /api/subscriptions.
 //
@@ -89,7 +89,7 @@ type SubmitResult =
   | ({ kind: "order"; orderNumber: string; invoiceUrl: string; deliveryDate: string; totalOre: number } & ResultCommon)
   | ({ kind: "subscription"; number: string; nextDate: string; interval: RecurrenceInterval; totalOre: number } & ResultCommon);
 
-// Pågående flödesdata (steg, leveransval, formulär) — sessionStorage så att
+// Pågående flödesdata (steg, leveransval, formulär) – sessionStorage så att
 // reload/back/avstickare inte kastar bort något. Korgen bor i localStorage.
 const FLOW_STORAGE_KEY = "sb_checkout_v1";
 
@@ -129,12 +129,12 @@ export function CheckoutFlow({
   const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
-  // Robotskydd (Cloudflare Turnstile) — bara när sajtnyckel finns i env.
+  // Robotskydd (Cloudflare Turnstile) – bara när sajtnyckel finns i env.
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaReset, setCaptchaReset] = useState(0);
   const [flowRestored, setFlowRestored] = useState(false);
   const headingRef = useRef<HTMLDivElement>(null);
-  // EN nyckel per beställningsförsök — behålls även om kunden går tillbaka
+  // EN nyckel per beställningsförsök – behålls även om kunden går tillbaka
   // och fram igen, så att ett tappat svar + nytt "Skicka" aldrig ger två
   // ordrar/prenumerationer. Nollställs först när ett försök lyckats.
   const idempotencyKey = useRef<string>("");
@@ -167,7 +167,7 @@ export function CheckoutFlow({
           setAreaSlug(typeof s.areaSlug === "string" ? s.areaSlug : null);
           setDeliveryDate(typeof s.deliveryDate === "string" ? s.deliveryDate : null);
           if (s.form && typeof s.form === "object") {
-            // Bara kända fält med strängvärden — sessionStorage är opålitlig input.
+            // Bara kända fält med strängvärden – sessionStorage är opålitlig input.
             const safe = Object.fromEntries(
               Object.entries(s.form).filter(([k, v]) => k in EMPTY_FORM && typeof v === "string")
             ) as Partial<FormState>;
@@ -180,7 +180,7 @@ export function CheckoutFlow({
         }
       }
     } catch {
-      // korrupt lagring — starta från steg 1
+      // korrupt lagring – starta från steg 1
     }
     setFlowRestored(true);
   }, []);
@@ -198,7 +198,7 @@ export function CheckoutFlow({
       };
       sessionStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify(stored));
     } catch {
-      // privat läge — flödet funkar ändå under sessionen
+      // privat läge – flödet funkar ändå under sessionen
     }
   };
   useEffect(() => {
@@ -208,7 +208,7 @@ export function CheckoutFlow({
   }, [flowRestored, result, step, areaSlug, deliveryDate, form, sameEmail]);
 
   // /bestall?typ=aterkommande (från prenumerations-CTA:er) förväljer
-  // återkommande leverans — appliceras efter att korgen hydrerats så att
+  // återkommande leverans – appliceras efter att korgen hydrerats så att
   // lagrat läge inte skriver över kundens avsikt.
   useEffect(() => {
     if (!cart.hydrated || presetApplied.current) return;
@@ -220,7 +220,7 @@ export function CheckoutFlow({
   }, [cart]);
 
   // Produkter som inte längre finns i sortimentet (inaktiverade i admin)
-  // rensas ur korgen — annars räknar headerns badge något kunden inte ser.
+  // rensas ur korgen – annars räknar headerns badge något kunden inte ser.
   const removeLine = cart.remove;
   useEffect(() => {
     if (!cart.hydrated) return;
@@ -260,7 +260,7 @@ export function CheckoutFlow({
     (s, l) => s + lineWeightGrams(l.kg, l.product.unit, l.product.packageWeightGrams),
     0
   );
-  // Räknas per render (fyra rader — billigt): priset ingår då alltid, så
+  // Räknas per render (fyra rader – billigt): priset ingår då alltid, så
   // en prisändring som hämtas via router.refresh() slår igenom i summan.
   const totals = calculateTotals(
     activeLines.map((l) => ({
@@ -273,7 +273,7 @@ export function CheckoutFlow({
   const selectedArea = areas.find((a) => a.slug === areaSlug) ?? null;
 
   // Leveransdagarna räknas om på klienten (från områdets veckodagar +
-  // framförhållning) i stället för att lita på listan från sidladdningen —
+  // framförhållning) i stället för att lita på listan från sidladdningen –
   // annars visar steg 2 samma passerade datum som servern just avvisade.
   const upcomingDates = useMemo(
     () =>
@@ -299,7 +299,7 @@ export function CheckoutFlow({
       setDeliveryDate(null);
       if (step >= 3) {
         setStep(2);
-        setGlobalError("Leveransområdet är inte längre tillgängligt — välj område igen.");
+        setGlobalError("Leveransområdet är inte längre tillgängligt – välj område igen.");
       }
     }
   }, [flowRestored, areaSlug, areas, step]);
@@ -307,12 +307,12 @@ export function CheckoutFlow({
   useEffect(() => {
     // Rensa valt datum om området byts eller datumet inte längre erbjuds
     // (t.ex. fliken låg öppen över framförhållningsgränsen). Står kunden
-    // längre fram i flödet leds hen tillbaka till dagvalet — aldrig en död Skicka-knapp.
+    // längre fram i flödet leds hen tillbaka till dagvalet – aldrig en död Skicka-knapp.
     if (selectedArea && deliveryDate && !upcomingDates.includes(deliveryDate)) {
       setDeliveryDate(null);
       if (step >= 3) {
         setStep(2);
-        setGlobalError("Leveransdagen är inte längre tillgänglig — välj en ny dag.");
+        setGlobalError("Leveransdagen är inte längre tillgänglig – välj en ny dag.");
       }
     }
   }, [selectedArea, upcomingDates, deliveryDate, step]);
@@ -320,7 +320,7 @@ export function CheckoutFlow({
   // Tomkorgsvakt: hamnar kunden i steg 2–4 utan varor (korgen tömd i en
   // annan flik, eller återställt flöde med utgången korg) renderas en
   // åtgärdsbar empty state i stället för döda knappar. Deriverad direkt
-  // från korgen — kan inte försvinna i någon effekt-race.
+  // från korgen – kan inte försvinna i någon effekt-race.
   const cartEmptiedMidFlow =
     flowRestored && cart.hydrated && !result && step >= 2 && step <= 4 && activeLines.length === 0;
 
@@ -369,7 +369,7 @@ export function CheckoutFlow({
     return Object.keys(e).length === 0;
   };
 
-  // Servern kan returnera fältfel — visa dem i det steg där felet hör hemma.
+  // Servern kan returnera fältfel – visa dem i det steg där felet hör hemma.
   const stepForFields = (fields: Record<string, string>): number => {
     if (Object.keys(fields).some((k) => k === "items" || k.startsWith("items."))) return 1;
     if (fields.areaSlug || fields.deliveryDate || fields.firstDeliveryDate || fields.frequency)
@@ -411,7 +411,7 @@ export function CheckoutFlow({
       deliveryInstruction: form.deliveryInstruction.trim(),
       invoiceEmail: (sameEmail ? form.email : form.invoiceEmail).trim(),
       reference: form.reference.trim(),
-      // Beloppet kunden bekräftade — servern avvisar om priset hunnit ändras.
+      // Beloppet kunden bekräftade – servern avvisar om priset hunnit ändras.
       expectedTotalOre: totals.totalOre,
       ...(honeypot ? { sb_extra: honeypot } : {}),
       ...(captchaToken ? { turnstileToken: captchaToken } : {}),
@@ -429,12 +429,12 @@ export function CheckoutFlow({
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ ...common, deliveryDate, billingAddress: form.billingAddress.trim() }),
             });
-      // Ett HTML-svar (gateway-timeout, för stor body) är inte ett nätverksfel —
+      // Ett HTML-svar (gateway-timeout, för stor body) är inte ett nätverksfel –
       // säg vad som hände i stället för "kontrollera uppkopplingen".
       const isJson = (res.headers.get("content-type") ?? "").includes("application/json");
       const data = isJson
         ? await res.json()
-        : { ok: false, error: `Servern svarade med fel ${res.status} — försök igen om en liten stund.` };
+        : { ok: false, error: `Servern svarade med fel ${res.status} – försök igen om en liten stund.` };
       if (data.ok) {
         idempotencyKey.current = "";
         idempotencyFingerprint.current = "";
@@ -475,26 +475,26 @@ export function CheckoutFlow({
         try {
           sessionStorage.removeItem(FLOW_STORAGE_KEY);
         } catch {
-          // lagring otillgänglig — inget att rensa
+          // lagring otillgänglig – inget att rensa
         }
         cart.clear();
         goTo(5);
       } else {
         track("order_failed", { mode, reason: data.code ?? "validation" });
-        setGlobalError(data.error ?? "Något gick fel");
+        setGlobalError(data.error ?? "Något gick fel – försök igen om en stund.");
         if (data.code === "IDEMPOTENCY_MISMATCH") {
-          // Nyckeln bär en annan payload — rotera så nästa försök går igenom.
+          // Nyckeln bär en annan payload – rotera så nästa försök går igenom.
           idempotencyKey.current = newIdempotencyKey();
           idempotencyFingerprint.current = fingerprint;
           saveFlow();
         }
         if (data.code === "PRICE_CHANGED" || data.fields?.items) {
-          // Priser/sortiment har ändrats sedan sidladdningen — hämta färska
+          // Priser/sortiment har ändrats sedan sidladdningen – hämta färska
           // produkter så att summan och stale-rensningen speglar servern.
           router.refresh();
         }
         if (data.code === "CAPTCHA_FAILED" || data.fields?.turnstileToken) {
-          // Token förbrukad/ogiltig — ny widget så kunden kan försöka igen.
+          // Token förbrukad/ogiltig – ny widget så kunden kan försöka igen.
           setCaptchaToken(null);
           setCaptchaReset((n) => n + 1);
         }
@@ -504,7 +504,7 @@ export function CheckoutFlow({
           if (itemKey && !fields.items) fields.items = fields[itemKey];
           setErrors(fields);
           goTo(stepForFields(fields));
-          // goTo nollställer globalError — sätt det EFTER, och lyft fält som
+          // goTo nollställer globalError – sätt det EFTER, och lyft fält som
           // inte har något synligt formulärfält (t.ex. "_" eller sb_extra) dit,
           // annars blir felet osynligt.
           const knownFields = new Set([...Object.keys(EMPTY_FORM), "items", "areaSlug", "deliveryDate", "firstDeliveryDate", "frequency", "turnstileToken"]);
@@ -524,7 +524,7 @@ export function CheckoutFlow({
       }
     } catch {
       track("order_failed", { mode, reason: "network" });
-      setGlobalError("Kunde inte skicka beställningen — kontrollera uppkopplingen och försök igen.");
+      setGlobalError("Kunde inte skicka beställningen – kontrollera uppkopplingen och försök igen.");
     } finally {
       setSubmitting(false);
     }
@@ -549,12 +549,17 @@ export function CheckoutFlow({
   return (
     <div
       // Steg 1 SSR-renderas och är synligt direkt (LCP, utan JS). Ett lagrat
-      // flöde (reload på steg 2–4) återställs efter hydration — ett kort
+      // flöde (reload på steg 2–4) återställs efter hydration – ett kort
       // blink i det sällsynta fallet är bättre än en tom sida i det vanliga.
       className="container-narrow checkout-root"
       style={{ padding: "40px 24px 100px" }}
       ref={headingRef}
     >
+      {step <= 4 && (
+        <div className="eyebrow" style={{ marginBottom: 10 }}>
+          Kassa
+        </div>
+      )}
       {step <= 4 && (
         <ol className="progress-steps" aria-label="Beställningssteg">
           {STEP_LABELS.map((label, i) => {
@@ -606,7 +611,7 @@ export function CheckoutFlow({
         <div className="card" style={{ padding: "36px 28px", textAlign: "center", display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
           <h1 tabIndex={-1} style={{ outline: "none", fontSize: 26, margin: 0 }}>Er varukorg är tom.</h1>
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: 0, maxWidth: "44ch" }}>
-            Välj era favoriter så ordnar vi resten — allt ni redan fyllt i finns kvar.
+            Välj era favoriter så ordnar vi resten – allt ni redan fyllt i finns kvar.
           </p>
           <button type="button" className="btn btn-primary btn-lg" onClick={() => goTo(1)}>
             Välj kakor
@@ -617,7 +622,7 @@ export function CheckoutFlow({
       {/* Inga aktiva områden: säg det i stället för ett tomt val och en död knapp. */}
       {areas.length === 0 && step <= 4 && (
         <div role="status" className="info-box" style={{ marginBottom: 20 }}>
-          Vi tar just nu inte emot beställningar — inget leveransområde är öppet. Prova igen om en stund.
+          Vi tar just nu inte emot beställningar – inget leveransområde är öppet. Prova igen om en stund.
         </div>
       )}
 
@@ -672,11 +677,11 @@ export function CheckoutFlow({
             ))}
           </div>
           {errors.items && <p className="error-text" style={{ marginTop: 12 }}>{errors.items}</p>}
-          {/* Sticky i botten på mobil — nästa steg är alltid ett tumtryck bort. */}
+          {/* Sticky i botten på mobil – nästa steg är alltid ett tumtryck bort. */}
           <div className="checkout-total-bar">
             <div>
               <div style={{ fontSize: 13, color: "var(--text-2)" }}>Totalt inkl. moms</div>
-              <div className="total-amount" style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 700 }}>
+              <div className="total-amount" aria-live="polite" style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 700 }}>
                 {formatWeightKg(totalWeightGrams)} · {formatOre(totals.totalOre)}
               </div>
             </div>
@@ -709,8 +714,8 @@ export function CheckoutFlow({
             onEdit={() => goTo(1)}
           />
 
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>En gång eller återkommande?</div>
-          <div
+          <div id="grp-lage" style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>En gång eller återkommande?</div>
+          <div role="radiogroup" aria-labelledby="grp-lage"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
@@ -721,33 +726,33 @@ export function CheckoutFlow({
             <button
               type="button"
               className={`choice-btn${mode === "ONE_TIME" ? " selected" : ""}`}
-              aria-pressed={mode === "ONE_TIME"}
+              role="radio" aria-checked={mode === "ONE_TIME"}
               onClick={() => {
                 cart.setPurchaseMode("ONE_TIME");
                 track("purchase_mode_selected", { mode: "ONE_TIME" });
               }}
             >
               <div style={{ fontWeight: 700, fontSize: 15 }}>Engångsbeställning</div>
-              <div className="choice-sub">En leverans, en faktura — klart.</div>
+              <div className="choice-sub">En leverans, en faktura – klart.</div>
             </button>
             <button
               type="button"
               className={`choice-btn${mode === "RECURRING" ? " selected" : ""}`}
-              aria-pressed={mode === "RECURRING"}
+              role="radio" aria-checked={mode === "RECURRING"}
               onClick={() => {
                 cart.setPurchaseMode("RECURRING");
                 track("purchase_mode_selected", { mode: "RECURRING" });
               }}
             >
               <div style={{ fontWeight: 700, fontSize: 15 }}>Fikaprenumeration</div>
-              <div className="choice-sub">Samma beställning kommer automatiskt — ingen bindningstid.</div>
+              <div className="choice-sub">Samma beställning kommer automatiskt – ingen bindningstid.</div>
             </button>
           </div>
 
           {mode === "RECURRING" && (
             <>
-              <div style={{ fontWeight: 700, fontSize: 15, margin: "18px 0 12px" }}>Hur ofta?</div>
-              <div
+              <div id="grp-intervall" style={{ fontWeight: 700, fontSize: 15, margin: "18px 0 12px" }}>Hur ofta?</div>
+              <div role="radiogroup" aria-labelledby="grp-intervall"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
@@ -760,7 +765,7 @@ export function CheckoutFlow({
                     key={iv.value}
                     type="button"
                     className={`choice-btn${interval === iv.value ? " selected" : ""}`}
-                    aria-pressed={interval === iv.value}
+                    role="radio" aria-checked={interval === iv.value}
                     style={{ textAlign: "center", padding: "16px 14px" }}
                     onClick={() => cart.setRecurrenceInterval(iv.value)}
                   >
@@ -771,13 +776,13 @@ export function CheckoutFlow({
               </div>
               <div className="info-box-muted" style={{ marginBottom: 14, fontSize: "13.5px" }}>
                 Inför varje leverans skapas en vanlig order med faktura som mejlas till er. Ingen
-                bindningstid — pausa eller avsluta när ni vill.
+                bindningstid – pausa eller avsluta när ni vill.
               </div>
             </>
           )}
 
-          <div style={{ fontWeight: 700, fontSize: 15, margin: "18px 0 12px" }}>Vilket område?</div>
-          <div
+          <div id="grp-omrade" style={{ fontWeight: 700, fontSize: 15, margin: "18px 0 12px" }}>Vilket område?</div>
+          <div role="radiogroup" aria-labelledby="grp-omrade"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
@@ -790,7 +795,7 @@ export function CheckoutFlow({
                 key={a.slug}
                 type="button"
                 className={`choice-btn${areaSlug === a.slug ? " selected" : ""}`}
-                aria-pressed={areaSlug === a.slug}
+                role="radio" aria-checked={areaSlug === a.slug}
                 style={{ textAlign: "center" }}
                 onClick={() => setAreaSlug(a.slug)}
               >
@@ -800,7 +805,7 @@ export function CheckoutFlow({
           </div>
           {errors.areaSlug && <p className="error-text">{errors.areaSlug}</p>}
 
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>
+          <div id="grp-datum" style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>
             {mode === "RECURRING" ? "När vill ni ha första leveransen?" : "När vill ni ha leveransen?"}
           </div>
           {!selectedArea && (
@@ -809,13 +814,13 @@ export function CheckoutFlow({
             </p>
           )}
           {selectedArea && (
-            <div className="date-grid" style={{ marginBottom: 16 }}>
+            <div className="date-grid" role="radiogroup" aria-labelledby="grp-datum" style={{ marginBottom: 16 }}>
               {upcomingDates.map((d) => (
                 <button
                   key={d}
                   type="button"
                   className={`choice-btn${deliveryDate === d ? " selected" : ""}`}
-                  aria-pressed={deliveryDate === d}
+                  role="radio" aria-checked={deliveryDate === d}
                   onClick={() => setDeliveryDate(d)}
                 >
                   <div style={{ fontWeight: 700, fontSize: 15 }}>
@@ -845,7 +850,7 @@ export function CheckoutFlow({
               disabled={!areaSlug || !deliveryDate}
               onClick={() => goTo(3)}
             >
-              Fortsätt till företagsuppgifter
+              Fortsätt till uppgifter
             </button>
           </div>
         </>
@@ -854,7 +859,7 @@ export function CheckoutFlow({
       {/* STEG 3: UPPGIFTER */}
       {step === 3 && !cartEmptiedMidFlow && (
         <>
-          <h1 tabIndex={-1} style={{ outline: "none", fontSize: 32, marginBottom: 6 }}>Företagsuppgifter</h1>
+          <h1 tabIndex={-1} style={{ outline: "none", fontSize: 32, marginBottom: 6 }}>Era uppgifter</h1>
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 20px" }}>
             Vi behöver bara det som krävs för leverans och faktura.
           </p>
@@ -913,7 +918,7 @@ export function CheckoutFlow({
                     id="falt-fakturaadress"
                     rows={2}
                     maxLength={300}
-                    placeholder="T.ex. Box 123, 135 22 Tyresö — lämna tomt så står leveransadressen på fakturan"
+                    placeholder="T.ex. Box 123, 135 22 Tyresö – lämna tomt så står leveransadressen på fakturan"
                     value={form.billingAddress}
                     onChange={(e) => setField("billingAddress", e.target.value)}
                     aria-invalid={!!errors.billingAddress}
@@ -945,7 +950,7 @@ export function CheckoutFlow({
                   </span>
                 )}
               </label>
-              {/* Honeypot — osynligt för människor, autofylls av botar. */}
+              {/* Honeypot – osynligt för människor, autofylls av botar. */}
               <div className="hp-field" aria-hidden="true">
                 <label htmlFor="falt-extra">Lämna tomt</label>
                 <input
@@ -960,11 +965,11 @@ export function CheckoutFlow({
               </div>
             </div>
             <div className="info-box-muted" style={{ margin: "20px 0 28px" }}>
-              <strong>Betalning sker mot faktura.</strong> Ingen kortbetalning behövs — fakturan
+              <strong>Betalning sker mot faktura.</strong> Ingen kortbetalning behövs – fakturan
               skapas {mode === "RECURRING" ? "inför varje leverans" : "när ni skickar beställningen"} och
               mejlas till er faktura-e-post.
               {mode !== "RECURRING" && deadlineText(deliveryDate) ? (
-                <> Ändringar och avbokning senast {deadlineText(deliveryDate)} — därefter faktureras ordern.</>
+                <> Ändringar och avbokning senast {deadlineText(deliveryDate)} – därefter faktureras beställningen.</>
               ) : null}{" "}
               Genom att beställa godkänner ni våra{" "}
               <Link href="/villkor" target="_blank" rel="noopener">köpvillkor</Link> (öppnas i ny flik).
@@ -974,7 +979,7 @@ export function CheckoutFlow({
                 Tillbaka
               </button>
               <button type="submit" className="btn btn-primary btn-lg">
-                Kontrollera order
+                Kontrollera beställningen
               </button>
             </div>
           </form>
@@ -984,10 +989,10 @@ export function CheckoutFlow({
       {/* STEG 4: KONTROLLERA */}
       {step === 4 && !cartEmptiedMidFlow && (
         <>
-          <h1 tabIndex={-1} style={{ outline: "none", fontSize: 32, marginBottom: 28 }}>Kontrollera er order</h1>
+          <h1 tabIndex={-1} style={{ outline: "none", fontSize: 32, marginBottom: 28 }}>Kontrollera er beställning</h1>
           <div className="card" style={{ padding: "24px 26px", display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <div className="section-label">KAKOR</div>
+              <h2 className="section-label" style={{ margin: 0, fontSize: "inherit" }}>KAKOR</h2>
               <EditStepLink onClick={() => goTo(1)} />
             </div>
             {summaryLines.map((l) => (
@@ -1018,23 +1023,23 @@ export function CheckoutFlow({
           </div>
           <div className="card" style={{ padding: "24px 26px", display: "flex", flexDirection: "column", gap: 8, marginBottom: 20, fontSize: "14.5px", lineHeight: 1.6 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <div className="section-label">LEVERANS</div>
+              <h2 className="section-label" style={{ margin: 0, fontSize: "inherit" }}>LEVERANS</h2>
               <EditStepLink onClick={() => goTo(2)} />
             </div>
             <div>
               {mode === "RECURRING"
-                ? `Fikaprenumeration — ${intervalLabel(interval).toLowerCase()}`
+                ? `Fikaprenumeration – ${intervalLabel(interval).toLowerCase()}`
                 : "Engångsbeställning"}
             </div>
             <div>
               {selectedArea?.name} ·{" "}
               {deliveryDate
                 ? `${mode === "RECURRING" ? "första leverans " : ""}${formatDeliveryDate(fromISODate(deliveryDate))}`
-                : "—"}
+                : "–"}
             </div>
             <div style={{ color: "var(--text-2)" }}>Leverans under dagen till bemannad företagsadress.</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 10 }}>
-              <div className="section-label">FÖRETAG</div>
+              <h2 className="section-label" style={{ margin: 0, fontSize: "inherit" }}>FÖRETAG</h2>
               <EditStepLink onClick={() => goTo(3)} />
             </div>
             <div>
@@ -1048,7 +1053,7 @@ export function CheckoutFlow({
           </div>
           <div className="info-box" style={{ marginBottom: 28 }}>
             {mode === "RECURRING"
-              ? "Betalning sker mot faktura — en faktura per leverans. Ingen bindningstid."
+              ? "Betalning sker mot faktura – en faktura per leverans. Ingen bindningstid."
               : "Betalning sker mot faktura."}
           </div>
           {TURNSTILE_SITE_KEY && (
@@ -1088,7 +1093,7 @@ export function CheckoutFlow({
             <div className="success-mark" aria-hidden="true">✓</div>
             <h1 tabIndex={-1} style={{ outline: "none", fontSize: 34, marginBottom: 10 }}>Tack! Vi har tagit emot er beställning.</h1>
             <div className="mono" style={{ fontSize: 13, letterSpacing: 1, color: "var(--text-2)", marginBottom: 6 }}>
-              ORDER {result.orderNumber}
+              ORDERNUMMER {result.orderNumber}
             </div>
             <p style={{ fontSize: 14.5, color: "var(--text-2)", margin: "0 0 28px" }}>
               Orderbekräftelsen skickas till <strong>{result.email}</strong>
@@ -1099,21 +1104,20 @@ export function CheckoutFlow({
             lines={result.lines}
             totalOre={result.totalOre}
             totalLabel="Totalt inkl. moms"
-            delivery={`${result.areaName} · ${result.deliveryDate ? capitalizeFirst(formatDeliveryDate(fromISODate(result.deliveryDate))) : "vald leveransdag"} · under dagen`}
+            delivery={`${result.areaName} · ${result.deliveryDate ? formatDeliveryDate(fromISODate(result.deliveryDate)) : "vald leveransdag"} · under dagen`}
             address={result.address}
           />
           <div className="info-box-muted" style={{ padding: "22px 24px", fontSize: "14.5px", lineHeight: 1.8 }}>
             <strong>Vad händer nu?</strong>
-            <br />
-            1. Orderbekräftelse och faktura mejlas nu — fakturan förfaller {paymentTermsDays} dagar efter leveransen.
-            <br />
-            2. Vi packar och levererar på vald leveransdag.
-            <br />
-            3. Något att ändra? Svara på orderbekräftelsen{result.deliveryDate ? ` senast ${deadlineText(result.deliveryDate)}` : ""}.
+            <ol style={{ margin: "6px 0 0", paddingLeft: 22 }}>
+              <li>Orderbekräftelse och faktura mejlas nu – fakturan förfaller {paymentTermsDays} dagar efter leveransen.</li>
+              <li>Vi packar och levererar på vald leveransdag.</li>
+              <li>Något att ändra? Svara på orderbekräftelsen{result.deliveryDate ? ` senast ${deadlineText(result.deliveryDate)}` : ""}.</li>
+            </ol>
           </div>
           <div style={{ textAlign: "center", marginTop: 24 }}>
             <a href={result.invoiceUrl} className="btn btn-outline" target="_blank" rel="noopener">
-              Ladda ner faktura (PDF, ny flik)
+              Ladda ner fakturan (PDF, öppnas i ny flik)
             </a>
           </div>
           <PreferredSourceCTA placement="result_success" />
@@ -1146,12 +1150,11 @@ export function CheckoutFlow({
           />
           <div className="info-box-muted" style={{ padding: "22px 24px", fontSize: "14.5px", lineHeight: 1.8 }}>
             <strong>Vad händer nu?</strong>
-            <br />
-            1. Ni får en bekräftelse till er e-post.
-            <br />
-            2. Inför varje leverans skapas en order med faktura som mejlas till er.
-            <br />
-            3. Ingen bindningstid — svara på bekräftelsemejlet så pausar eller avslutar vi.
+            <ol style={{ margin: "6px 0 0", paddingLeft: 22 }}>
+              <li>Ni får en bekräftelse till er e-post.</li>
+              <li>Inför varje leverans skapas en beställning med faktura som mejlas till er.</li>
+              <li>Ingen bindningstid – svara på bekräftelsemejlet så pausar eller avslutar vi.</li>
+            </ol>
           </div>
           <PreferredSourceCTA placement="subscription_success" />
           <div style={{ textAlign: "center", marginTop: 28 }}>
@@ -1205,7 +1208,7 @@ function Field({
   );
 }
 
-// Tack-sidans sammanfattning (mönster: Shopify/adidas orderbekräftelse —
+// Tack-sidans sammanfattning (mönster: Shopify/adidas orderbekräftelse –
 // rader med bild, leverans, adress; kunden ska kunna kontrollera allt utan mejlet).
 function ResultSummary({
   lines,

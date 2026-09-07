@@ -1,11 +1,11 @@
 "use client";
 
-// Varukorg — klientbaserad fram till checkout, sparas i localStorage så att
+// Varukorg – klientbaserad fram till checkout, sparas i localStorage så att
 // den överlever navigation och refresh. Priserna här är endast visning;
 // servern räknar alltid om från databasen vid beställning.
 //
 // EN korg för hela sajten: engångsköp och återkommande leverans är inte två
-// flöden utan ett köpläge (purchaseMode) på samma varukorg — kunden väljer
+// flöden utan ett köpläge (purchaseMode) på samma varukorg – kunden väljer
 // först VAD, sedan HUR (Mobbin-mönstret från t.ex. Hims/Walmart där
 // prenumeration är ett attribut på ordern, inte en egen butik).
 
@@ -30,7 +30,7 @@ interface CartContextValue {
   subtotalOre: number;
   purchaseMode: PurchaseMode;
   recurrenceInterval: RecurrenceInterval;
-  /** true när localStorage lästs — guards ska inte agera på o-hydrerat state. */
+  /** true när localStorage lästs – guards ska inte agera på o-hydrerat state. */
   hydrated: boolean;
   addKg: (product: Omit<CartLine, "kg">, kg: number) => void;
   setKg: (productId: string, kg: number) => void;
@@ -49,7 +49,7 @@ const STORAGE_KEY = "sb_cart_v2";
 
 const INTERVALS: RecurrenceInterval[] = ["WEEKLY", "BIWEEKLY", "MONTHLY"];
 
-/** Serverns tak per orderrad (validation.ts) — korgen får aldrig överskrida det. */
+/** Serverns tak per orderrad (validation.ts) – korgen får aldrig överskrida det. */
 export const MAX_UNITS = 100;
 
 // localStorage är opålitlig input (manipulerad/korrupt): varje fält
@@ -107,7 +107,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch {
-      // korrupt lagring — börja om med tom korg
+      // korrupt lagring – börja om med tom korg
     }
     setHydrated(true);
 
@@ -123,7 +123,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (INTERVALS.includes(parsed.recurrenceInterval as RecurrenceInterval))
           setRecurrenceIntervalState(parsed.recurrenceInterval as RecurrenceInterval);
       } catch {
-        // korrupt — behåll nuvarande
+        // korrupt – behåll nuvarande
       }
     };
     window.addEventListener("storage", onStorage);
@@ -135,13 +135,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!hydrated) return;
     try {
       const serialized = JSON.stringify({ lines, purchaseMode, recurrenceInterval });
-      // Skriv bara när något ändrats — annars triggar varje flikstart ett
+      // Skriv bara när något ändrats – annars triggar varje flikstart ett
       // storage-event (och en re-render) i alla andra flikar.
       if (serialized === lastWritten.current) return;
       lastWritten.current = serialized;
       localStorage.setItem(STORAGE_KEY, serialized);
     } catch {
-      // t.ex. privat läge — korgen funkar ändå under sessionen
+      // t.ex. privat läge – korgen funkar ändå under sessionen
     }
   }, [lines, purchaseMode, recurrenceInterval, hydrated]);
 

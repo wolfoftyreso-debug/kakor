@@ -12,7 +12,7 @@ import { SendReminderButton } from "./SendReminderButton";
 import { ExportForm } from "./ExportForm";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin — fakturor", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin – fakturor", robots: { index: false } };
 
 const FILTERS = [
   { key: "alla", label: "Alla" },
@@ -41,7 +41,7 @@ export default async function InvoicesPage({
       where.order = { status: { not: "CANCELLED" } };
       break;
     case "forfallna":
-      // OVERDUE lagras aldrig — härleds ur förfallodatum + status.
+      // OVERDUE lagras aldrig – härleds ur förfallodatum + status.
       where.status = "UNPAID";
       where.dueDate = { lt: today };
       where.order = { status: { not: "CANCELLED" } };
@@ -76,7 +76,7 @@ export default async function InvoicesPage({
     <>
       <h1 style={{ fontSize: 26, marginBottom: 6 }}>Fakturor</h1>
       <p style={{ color: "var(--text-2)", fontSize: 14, margin: "0 0 20px" }}>
-        Enkel reskontra — obetalt i listan: <strong>{formatOre(unpaidSum)}</strong>
+        Enkel reskontra – obetalt i listan: <strong>{formatOre(unpaidSum)}</strong>
       </p>
 
       <ExportForm />
@@ -101,14 +101,14 @@ export default async function InvoicesPage({
           <table className="data-table">
             <thead>
               <tr>
-                <th>Faktura</th>
-                <th>Order</th>
-                <th>Kund</th>
-                <th>Fakturadatum</th>
-                <th>Förfaller</th>
-                <th>Belopp</th>
-                <th>Status</th>
-                <th></th>
+                <th scope="col">Faktura</th>
+                <th scope="col">Order</th>
+                <th scope="col">Kund</th>
+                <th scope="col">Fakturadatum</th>
+                <th scope="col">Förfaller</th>
+                <th scope="col">Belopp</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span className="visually-hidden">Åtgärder</span></th>
               </tr>
             </thead>
             <tbody>

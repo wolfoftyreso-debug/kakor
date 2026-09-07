@@ -13,7 +13,7 @@ export function ProductActiveToggle({ productId, active, name }: { productId: st
         style={{ padding: "8px 12px", fontSize: 12.5, minHeight: 36 }}
         disabled={pending}
         onClick={() => {
-          // Inaktivering rensar produkten ur kunders varukorgar — bekräfta.
+          // Inaktivering rensar produkten ur kunders varukorgar – bekräfta.
           if (active && !window.confirm(`Inaktivera ${name}? Den försvinner från sajten och ur pågående varukorgar.`)) return;
           startTransition(async () => setResult(await setProductActive(productId, !active)));
         }}

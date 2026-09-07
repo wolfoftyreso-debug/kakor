@@ -1,5 +1,5 @@
 // Central konfiguration. Juridiska uppgifter som ännu inte verifierats av
-// verksamheten ligger som tydligt markerade platshållare — de hittas inte på.
+// verksamheten ligger som tydligt markerade platshållare – de hittas inte på.
 
 function env(name: string, fallback: string): string {
   const v = process.env[name];
@@ -23,7 +23,7 @@ export const siteConfig = {
   name: "Sockerbagaren",
   url: resolveSiteUrl(),
   description:
-    "Klassiska småkakor bakade på riktiga råvaror — levererade direkt till företag i Tyresö, Nacka, Haninge och Huddinge. Betalning mot faktura.",
+    "Klassiska småkakor bakade på riktiga råvaror – levererade direkt till företag i Tyresö, Nacka, Haninge och Huddinge. Betalning mot faktura.",
 };
 
 // Avbokning/ändring: senast kl. HH, N arbetsdagar före leveransdagen.
@@ -57,7 +57,7 @@ export const emailConfig = {
   provider: env("EMAIL_PROVIDER", "log"),
   resendApiKey: env("RESEND_API_KEY", ""),
   from: env("EMAIL_FROM", "Sockerbagaren <order@sockerbagaren.se>"),
-  // Svarsadress för "svara på det här mejlet" — måste vara en bevakad låda.
+  // Svarsadress för "svara på det här mejlet" – måste vara en bevakad låda.
   replyTo: env("EMAIL_REPLY_TO", ""),
   // Intern avisering vid ny order (tom = ingen).
   adminNotify: env("ADMIN_NOTIFY_EMAIL", ""),

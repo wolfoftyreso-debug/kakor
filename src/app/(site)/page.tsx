@@ -23,11 +23,11 @@ const HOME_DESCRIPTION =
   "Fika till jobbet: kolasnittar, mandelkubb och chokladsnittar på riktigt smör, levererade till företag i Tyresö, Nacka, Haninge och Huddinge. Mot faktura.";
 
 export const metadata: Metadata = {
-  title: { absolute: "Sockerbagaren — Fika till jobbet i södra Stockholm" },
+  title: { absolute: "Sockerbagaren – fika till jobbet i södra Stockholm" },
   description: HOME_DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Sockerbagaren — Fika till jobbet i södra Stockholm",
+    title: "Sockerbagaren – fika till jobbet i södra Stockholm",
     description: HOME_DESCRIPTION,
     url: "/",
     siteName: "Sockerbagaren",
@@ -41,7 +41,7 @@ const STEPS = [
   { title: "Välj kakor", text: "Blanda sorter och mängder som det passar er." },
   { title: "Välj leveransdag", text: "Vi visar tillgängliga leveransdagar för ert område." },
   { title: "Vi levererar", text: "Leverans under dagen till er bemannade adress." },
-  { title: "Ni får faktura", text: "Ingen kortbetalning — fakturan mejlas direkt och förfaller först efter leveransen." },
+  { title: "Ni får faktura", text: "Ingen kortbetalning – fakturan mejlas direkt och förfaller först efter leveransen." },
 ];
 
 const INGREDIENTS: { name: string; src?: string }[] = [
@@ -56,19 +56,19 @@ const INGREDIENTS: { name: string; src?: string }[] = [
 const FAQS = [
   {
     q: "Hur betalar vi?",
-    a: `All betalning sker mot faktura. Fakturan skapas när ni skickar beställningen och mejlas direkt till er faktura-e-post. Förfallodag ${invoiceConfig.paymentTermsDays} dagar efter leveransen — ni betalar aldrig före leverans.`,
+    a: `All betalning sker mot faktura. Fakturan skapas när ni skickar beställningen och mejlas direkt till er faktura-e-post. Förfallodag ${invoiceConfig.paymentTermsDays} dagar efter leveransen – ni betalar aldrig före leverans.`,
   },
   {
-    q: "Vart levererar ni?",
+    q: "Var levererar ni?",
     a: "Vi levererar lokalt till företag i Tyresö, Nacka, Haninge och Huddinge.",
   },
   {
     q: "När kommer leveransen?",
     a: "Vi levererar under dagen på områdets leveransdag, till bemannade företagsadresser. Se till att någon kan ta emot leveransen.",
   },
-  { q: "Kan vi blanda olika kakor?", a: "Ja — lägg flera sorter i samma order och välj mängd per sort." },
+  { q: "Kan vi blanda olika kakor?", a: "Ja – lägg flera sorter i samma beställning och välj mängd per sort." },
   {
-    q: "Hur funkar fikaprenumerationen?",
+    q: "Hur fungerar fikaprenumerationen?",
     a: "Ni väljer kakor, mängd och intervall. Leveransen kommer på er leveransdag, och ni kan pausa eller avsluta enkelt.",
   },
   {
@@ -80,7 +80,7 @@ const FAQS = [
 export default async function HomePage() {
   const [products, areas] = await Promise.all([getActiveProducts(), getAreasWithDates(1)]);
   // Flytande kortet på hero-bilden visar produkten med etikett (t.ex. Bästsäljare)
-  // — eller första produkten om ingen etikett satts i admin.
+  // – eller första produkten om ingen etikett satts i admin.
   const featured = products.find((p) => p.badge) ?? products[0];
 
   // Sidgraf från schema-motorn: WebPage + produktlista + produktentiteter
@@ -88,8 +88,8 @@ export default async function HomePage() {
   const pageGraph = graph(
     webPageNode({
       path: "/",
-      title: "Sockerbagaren — Riktigt fika till jobbet",
-      description: siteConfig.description,
+      title: "Sockerbagaren – fika till jobbet i södra Stockholm",
+      description: HOME_DESCRIPTION,
       mainEntityId: `${siteConfig.url.replace(/\/$/, "")}/#products`,
     }),
     productListNode("/", products),
@@ -107,7 +107,7 @@ export default async function HomePage() {
           <div className="eyebrow">Bakat med recept från Svenskt konditorlexikon 1957</div>
           <h1 className="h-display">Riktigt fika till jobbet.</h1>
           <p className="lede" style={{ margin: 0, maxWidth: "46ch" }}>
-            Kolasnittar, mandelkubb och chokladsnittar bakade på riktigt smör — levererade
+            Kolasnittar, mandelkubb och chokladsnittar bakade på riktigt smör – levererade
             direkt till företag i Tyresö, Nacka, Haninge och Huddinge.
           </p>
           <div className="hero-actions">
@@ -150,7 +150,7 @@ export default async function HomePage() {
         <div className="section-head">
           <div>
             <h2 className="h-section">Våra kakor</h2>
-            <p>Säljs per kilo eller paket — blanda fritt i samma order.</p>
+            <p>Säljs per kilo eller paket – blanda fritt i samma beställning.</p>
           </div>
           <Link href="/kakor" className="section-link">
             Alla kakor →
@@ -169,7 +169,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* RECEPT 1957 — sajtens sanna ursprung som redaktionellt band */}
+      {/* RECEPT 1957 – sajtens sanna ursprung som redaktionellt band */}
       <section className="band-1957 on-dark">
         <div className="container section-y inner">
           <div className="year" aria-hidden="true">1957</div>
@@ -177,9 +177,9 @@ export default async function HomePage() {
             <div className="rule-label">Recepten</div>
             <h2 className="h-section">Bakat efter Svenskt konditorlexikon 1957.</h2>
             <p>
-              Våra tre sorter bakas efter recepten i konditorernas egen handbok från 1957 — så som
+              Våra tre sorter bakas efter recepten i konditorernas egen handbok från 1957 – så som
               småkakor bakades innan margarin och tillsatser blev standard: smör, socker, vetemjöl,
-              ägg, mandel, choklad och sirap — och inte mycket mer. Hela ingrediensförteckningen
+              ägg, mandel, choklad och sirap – och inte mycket mer. Hela ingrediensförteckningen
               står på varje sort.
             </p>
             <Link href="/om" className="section-link">
@@ -199,8 +199,7 @@ export default async function HomePage() {
             <div className="eyebrow">Råvarorna</div>
             <h2 className="h-section">Smör ska smaka smör.</h2>
             <p style={{ fontSize: "16.5px", lineHeight: 1.65, margin: 0, maxWidth: "48ch", color: "var(--brown-2)" }}>
-              Våra kakor bakas på riktigt smör, vanligt strösocker och kvalitativa traditionella
-              råvaror. Inga onödiga tillsatser, inga genvägar för att få industrikakor att likna
+              Våra kakor bakas på riktigt smör, vanligt strösocker och traditionella råvaror av hög kvalitet. Inga onödiga tillsatser, inga genvägar för att få industrikakor att likna
               hembakat.
             </p>
             <Link href="/ingredienser" className="section-link" style={{ alignSelf: "flex-start", borderColor: "var(--text)" }}>
@@ -218,7 +217,7 @@ export default async function HomePage() {
             {INGREDIENTS.map(({ name, src }) => (
               <Link key={name} href="/ingredienser" className="ingredient-tile">
                 <span className="tile-img">
-                  {/* Namnet står under bilden — bilden är dekorativ för skärmläsare. */}
+                  {/* Namnet står under bilden – bilden är dekorativ för skärmläsare. */}
                   <ImageSlot label={name} src={src} circle decorative />
                 </span>
                 <span className="tile-name">{name}</span>
@@ -234,7 +233,7 @@ export default async function HomePage() {
         <div className="section-head">
           <div>
             <h2 className="h-section">Så fungerar det</h2>
-            <p>Fyra steg — inga konton, inga kort.</p>
+            <p>Fyra steg – inga konton, inga kort.</p>
           </div>
         </div>
         <Steps items={STEPS} />
@@ -258,7 +257,7 @@ export default async function HomePage() {
             </div>
             <h2 className="h-section">Fika som bara dyker upp.</h2>
             <p style={{ fontSize: "16.5px", lineHeight: 1.65, margin: 0, maxWidth: "46ch", color: "var(--footer-text)" }}>
-              Välj kakor, mängd och hur ofta — så står fikat på plats utan att någon behöver komma
+              Välj kakor, mängd och hur ofta – så står fikat på plats utan att någon behöver komma
               ihåg det. Pausa eller avsluta enkelt.
             </p>
             <div>
@@ -279,7 +278,7 @@ export default async function HomePage() {
           <div className="eyebrow">Företagsfika</div>
           <h2 className="h-section">Fika för arbetsplatser</h2>
           <p style={{ fontSize: 16, lineHeight: 1.65, margin: 0, maxWidth: "50ch", color: "var(--brown-2)" }}>
-            Kontor, verkstäder, byggföretag, kliniker och butiker — alla arbetsplatser där personal
+            Kontor, verkstäder, byggföretag, kliniker och butiker – alla arbetsplatser där personal
             och besökare fikar. Beställ till fredagsfikat, mötet eller personalrummet. Ni får
             faktura, vi sköter resten.
           </p>
@@ -288,7 +287,7 @@ export default async function HomePage() {
           </Link>
           <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10, fontSize: 15, color: "var(--brown-2)" }}>
             {[
-              "Betalning mot faktura — inga kort",
+              "Betalning mot faktura – inga kort",
               "Fikaprenumeration när ni vill slippa komma ihåg",
               "Leverans under dagen till bemannad adress",
             ].map((t) => (

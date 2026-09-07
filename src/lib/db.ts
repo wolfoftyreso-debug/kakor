@@ -4,10 +4,10 @@ import { PrismaClient } from "@prisma/client";
 //
 // Vercel serverless + Neon:
 //  - DATABASE_URL ska vara Neons POOLADE anslutningssträng (-pooler-värd)
-//    med ?pgbouncer=true — Prisma stänger då av prepared statements som
+//    med ?pgbouncer=true – Prisma stänger då av prepared statements som
 //    inte fungerar genom PgBouncers transaction mode. Poolen skyddar mot
 //    connection exhaustion när många funktioner kör samtidigt.
-//  - Klienten skapas LAZY vid första användningen — aldrig vid import.
+//  - Klienten skapas LAZY vid första användningen – aldrig vid import.
 //    `next build` samlar page-data genom att importera routes, och en
 //    import-tids-konstruktion skulle göra builden databasberoende
 //    (CI/Vercel bygger utan DATABASE_URL). Saknad konfiguration ger
@@ -15,14 +15,14 @@ import { PrismaClient } from "@prisma/client";
 //  - Instansen återanvänds per process (varm lambda återanvänder
 //    anslutningen; nya instanser öppnar via poolern).
 //  - Migrations går mot DIRECT_DATABASE_URL (se prisma/schema.prisma) och
-//    körs ALDRIG från runtime — endast från deploy-steget/CLI.
+//    körs ALDRIG från runtime – endast från deploy-steget/CLI.
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function createClient(): PrismaClient {
   const url = process.env.DATABASE_URL;
   if (!url) {
-    // Fail-fast med tydligt fel — utan hemligheter i meddelandet.
+    // Fail-fast med tydligt fel – utan hemligheter i meddelandet.
     throw new Error(
       "DATABASE_URL är inte satt. Sätt Neons poolade anslutningssträng i miljön (se .env.example och DEPLOYMENT.md)."
     );

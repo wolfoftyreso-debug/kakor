@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { sendPaymentReminder, type ActionResult } from "@/app/admin/actions";
 
-/** Påminnelse direkt från reskontran — visas bara på förfallna fakturor. */
+/** Påminnelse direkt från reskontran – visas bara på förfallna fakturor. */
 export function SendReminderButton({ orderId }: { orderId: string }) {
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<ActionResult | null>(null);

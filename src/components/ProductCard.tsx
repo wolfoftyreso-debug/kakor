@@ -20,7 +20,7 @@ export interface ProductCardData {
   imageRef: string;
   /** Kort etikett från admin, t.ex. "Bästsäljare". Tom sträng = ingen. */
   badge: string;
-  /** Momssats i baspunkter (1200 = 12 %) — klientens summering speglar serverns. */
+  /** Momssats i baspunkter (1200 = 12 %) – klientens summering speglar serverns. */
   vatRateBp: number;
 }
 
@@ -41,10 +41,10 @@ export function ProductCard({
       <Link
         href={`/kakor/${product.slug}`}
         className="card-media"
-        aria-label={`${product.name} — läs mer`}
+        aria-label={`${product.name} – läs mer`}
         tabIndex={-1}
       >
-        <ImageSlot label={`${product.name} — närbild`} src={product.imageRef || undefined} />
+        <ImageSlot label={`${product.name} – närbild`} src={product.imageRef || undefined} />
         {product.badge && <span className="product-badge">{product.badge}</span>}
       </Link>
       <div className="product-body">
@@ -52,7 +52,7 @@ export function ProductCard({
           <Heading className="product-title">
             <Link href={`/kakor/${product.slug}`}>{product.name}</Link>
           </Heading>
-          {/* Priset följer valt antal — á-priset visas som hint när fler än en valts. */}
+          {/* Priset följer valt antal – á-priset visas som hint när fler än en valts. */}
           <div className="product-price">
             <span>
               {formatOre(kg * product.pricePerKgOre)}
@@ -71,7 +71,7 @@ export function ProductCard({
           {product.allergens} <Link href="/ingredienser">Alla ingredienser</Link>
         </div>
         <div className="product-actions">
-          {/* Fritt antal — riktig stepper i stället för fasta förval. */}
+          {/* Fritt antal – riktig stepper i stället för fasta förval. */}
           <div
             className="stepper"
             role="group"

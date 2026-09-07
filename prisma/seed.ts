@@ -12,7 +12,7 @@ const products = [
     slug: "mandelkubb",
     name: "Mandelkubb",
     description:
-      "Mör, mandeldoftande och rejäl — en tät svensk klassiker med gyllene, lätt knaprig yta och mjuk, smörig kärna. Generös med mandeln och med en rund sötma som gör sig perfekt till kaffet.",
+      "Mör, mandeldoftande och rejäl – en tät svensk klassiker med gyllene, lätt knaprig yta och mjuk, smörig kärna. Generös med mandeln och med en rund sötma som gör sig perfekt till kaffet.",
     pricePerKgOre: 29500,
     ingredients:
       "Vetemjöl, smör, socker, mandel, ägg, bakpulver, keltiskt salt.",
@@ -24,7 +24,7 @@ const products = [
     slug: "kolasnittar",
     name: "Kolasnittar",
     description:
-      "Vår bästsäljare — nötig, med toner av brynt smör och knäck och en vuxen sälta. Härligt frasig klassisk småkaka med seg kärna och lätt smörfriterad botten.",
+      "Vår bästsäljare – nötig, med toner av brynt smör och knäck och en vuxen sälta. Härligt frasig klassisk småkaka med seg kärna och lätt smörfriterad botten.",
     pricePerKgOre: 29500,
     ingredients: "Vetemjöl, smör, socker, ljus sirap, vaniljsocker, bikarbonat, keltiskt salt.",
     allergens: "Innehåller vete, smör (mjölk). Kan innehålla spår av mandel.",
@@ -36,7 +36,7 @@ const products = [
     slug: "chokladsnittar",
     name: "Chokladsnittar",
     description:
-      "Djup chokladkaraktär av mörk choklad och kakao — härligt frasiga snittar med seg kärna, rund sötma av ljus sirap och en fin sälta som lyfter chokladen.",
+      "Djup chokladkaraktär av mörk choklad och kakao – härligt frasiga snittar med seg kärna, rund sötma av ljus sirap och en fin sälta som lyfter chokladen.",
     pricePerKgOre: 29500,
     ingredients:
       "Vetemjöl, smör, socker, mörk choklad, kakao, ljus sirap, vaniljsocker, bakpulver, keltiskt salt.",
@@ -46,17 +46,17 @@ const products = [
   },
   {
     // Styckvara: säljs per paket (pricePerKgOre = pris per paket).
-    // Startpris = 1,5 kg × startpriset 295 kr/kg — bekräftas/ändras i admin.
+    // Startpris = 1,5 kg × startpriset 295 kr/kg – bekräftas/ändras i admin.
     slug: "prova-pa-paket",
     name: "Prova-på-paket",
     description:
-      "1,5 kg småkakor — 0,5 kg vardera av mandelkubb, kolasnittar och chokladsnittar. Hela sortimentet i en beställning: det enkla sättet att låta arbetsplatsen provsmaka och hitta sin favorit.",
+      "1,5 kg småkakor – 0,5 kg vardera av mandelkubb, kolasnittar och chokladsnittar. Hela sortimentet i en beställning: det enkla sättet att låta arbetsplatsen provsmaka och hitta sin favorit.",
     pricePerKgOre: 44250,
     unit: "paket",
     packageWeightGrams: 1500,
     weightOptionsJson: "[1,2]",
     ingredients:
-      "Innehåller alla tre kaksorterna — fullständig ingrediensförteckning per sort finns under Ingredienser & allergener.",
+      "Innehåller alla tre kaksorterna – fullständig ingrediensförteckning per sort finns under Ingredienser & allergener.",
     allergens: "Innehåller vete, mandel, ägg, smör (mjölk). Kan innehålla spår av soja.",
     imageRef: "/images/prova-pa-paket.jpg",
     sortOrder: 4,
@@ -64,7 +64,7 @@ const products = [
 ];
 
 // Leveransdagar per område: endast torsdag (4) just nu (verksamhetens
-// uppgift, aug 2026) — ändras i admin -> Inställningar utan kodändring.
+// uppgift, aug 2026) – ändras i admin -> Inställningar utan kodändring.
 const areas = [
   { slug: "tyreso", name: "Tyresö", postalCodePrefixesJson: '["135"]', weekdaysJson: "[4]", sortOrder: 1 },
   { slug: "nacka", name: "Nacka", postalCodePrefixesJson: '["131", "132", "133", "138"]', weekdaysJson: "[4]", sortOrder: 2 },
@@ -77,7 +77,7 @@ async function main() {
     await prisma.product.upsert({
       where: { slug: p.slug },
       // Livsmedelsmoms: tillfälligt 6 % 2026-04-01–2027-12-31 (riksdagsbeslut
-      // 2025/26:SkU9), därefter 12 % igen — ändras i admin → Produkter.
+      // 2025/26:SkU9), därefter 12 % igen – ändras i admin → Produkter.
       create: { weightOptionsJson: "[1,2,3]", vatRateBp: FOOD_VAT_RATE_BP, ...p },
       update: {}, // rör aldrig befintlig produktdata vid om-seed
     });
@@ -117,7 +117,7 @@ async function main() {
     /byt-mig|losenord/i.test(adminPassword) ||
     adminPassword.length < 12;
   if (adminCount === 0 && looksLikeExample && adminEmail) {
-    console.warn("Seed: ADMIN_EMAIL/ADMIN_PASSWORD ser ut som exempelvärden — ingen admin skapad. Kör npm run admin:create med riktiga värden.");
+    console.warn("Seed: ADMIN_EMAIL/ADMIN_PASSWORD ser ut som exempelvärden – ingen admin skapad. Kör npm run admin:create med riktiga värden.");
   }
   if (adminCount === 0 && adminEmail && adminPassword && !looksLikeExample) {
     await prisma.adminUser.create({

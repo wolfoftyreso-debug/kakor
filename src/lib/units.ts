@@ -1,5 +1,5 @@
 // Försäljningsenheter. Lösviktsprodukter säljs per helt kilo ("kg"),
-// styckvaror per paket ("paket" — t.ex. prova-på-paketet på 1,5 kg).
+// styckvaror per paket ("paket" – t.ex. prova-på-paketet på 1,5 kg).
 // All beloppsmatematik är antal × á-pris oavsett enhet; det här är enbart
 // presentation + sanna viktsummor.
 
@@ -24,7 +24,7 @@ export function lineWeightGrams(qty: number, unit: string, packageWeightGrams: n
   return unit === "paket" ? qty * packageWeightGrams : qty * 1000;
 }
 
-/** "1,5 kg" / "3 kg" — svensk decimalkomma, utan onödiga decimaler. */
+/** "1,5 kg" / "3 kg" – svensk decimalkomma, utan onödiga decimaler. */
 export function formatWeightKg(grams: number): string {
   const kg = grams / 1000;
   const text = Number.isInteger(kg) ? String(kg) : kg.toLocaleString("sv-SE", { maximumFractionDigits: 2 });

@@ -5,7 +5,7 @@
 import { useId } from "react";
 
 export function LogoSigill({ size = 44 }: { size?: number }) {
-  // Unika id:n för bågbanorna — sigillet kan förekomma flera gånger per sida.
+  // Unika id:n för bågbanorna – sigillet kan förekomma flera gånger per sida.
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const top = `arcTop${uid}`;
   const bot = `arcBot${uid}`;

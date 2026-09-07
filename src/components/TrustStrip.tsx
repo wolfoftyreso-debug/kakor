@@ -2,7 +2,7 @@ import { IconInvoice, IconLeaf, IconTruck } from "@/components/Icons";
 import { getDeliveryDaysLabel } from "@/lib/products";
 
 // Tre korta, sanna löften under hero/CTA. Leveransdagarna hämtas ur
-// områdenas inställningar (data) — aldrig hårdkodade i text.
+// områdenas inställningar (data) – aldrig hårdkodade i text.
 export async function TrustStrip({ band = false }: { band?: boolean }) {
   const deliveryDays = await getDeliveryDaysLabel();
   const items = [

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   }),
 };
 
-// Senast innehållsändrad — uppdateras manuellt vid verklig policyändring.
+// Senast innehållsändrad – uppdateras manuellt vid verklig policyändring.
 const CONTENT_UPDATED = "2026-09-02";
 
 export default function IntegritetPage() {
@@ -32,7 +32,7 @@ export default function IntegritetPage() {
     <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
       <h1 className="h-display page-title">Integritetspolicy</h1>
       <p className="meta">
-        Uppdaterad {CONTENT_UPDATED}
+        Uppdaterad <time dateTime={CONTENT_UPDATED}>{CONTENT_UPDATED}</time>
       </p>
       <div style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch", display: "flex", flexDirection: "column", gap: 18 }}>
         <section>
@@ -84,10 +84,10 @@ export default function IntegritetPage() {
           <h2>Cookies och lokal lagring</h2>
           <p>
             {process.env.NEXT_PUBLIC_GA4_ID
-              ? "Webbplatsen kan använda Google Analytics 4 för pseudonymiserad besöksstatistik — men bara om ni godkänner det i bannern. Utan samtycke laddas inget Google-script och inga statistikcookies sätts. "
+              ? "Webbplatsen kan använda Google Analytics 4 för pseudonymiserad besöksstatistik – men bara om ni godkänner det i bannern. Utan samtycke laddas inget Google-script och inga statistikcookies sätts. "
               : "Webbplatsen använder inga spårnings- eller marknadsföringscookies. "}
             Varukorgen och ert cookieval lagras i webbläsarens lokala lagring och en nödvändig
-            sessionskaka används enbart för administratörens inloggning — ingen av dessa kräver
+            sessionskaka används enbart för administratörens inloggning – ingen av dessa kräver
             samtycke.
           </p>
           {process.env.NEXT_PUBLIC_GA4_ID ? <ConsentReset /> : null}

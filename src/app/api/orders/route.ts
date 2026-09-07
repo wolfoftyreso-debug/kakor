@@ -6,7 +6,7 @@ import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { describeError } from "@/lib/log";
 import { clientIp, verifyTurnstile } from "@/lib/turnstile";
 
-// Vercel: PDF-rendering + mejl kan ta tid — standard 10 s räcker inte på kalla starter.
+// Vercel: PDF-rendering + mejl kan ta tid – standard 10 s räcker inte på kalla starter.
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   const daily = limit.ok ? await rateLimit(clientKey(req.headers, "checkout-dygn"), { limit: 40, windowMs: 24 * 3600_000 }) : limit;
   if (!limit.ok || !daily.ok) {
     return NextResponse.json(
-      { ok: false, error: "För många försök — vänta en stund och försök igen" },
+      { ok: false, error: "För många försök – vänta en stund och försök igen" },
       { status: 429, headers: { "Retry-After": String(limit.ok ? daily.retryAfterSeconds : limit.retryAfterSeconds) } }
     );
   }
@@ -36,13 +36,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Robotskydd (Cloudflare Turnstile) — no-op utan nycklar.
+  // Robotskydd (Cloudflare Turnstile) – no-op utan nycklar.
   const captcha = await verifyTurnstile(parsed.data.turnstileToken, clientIp(req.headers));
   if (!captcha.ok) {
     return NextResponse.json(
       {
         ok: false,
-        error: "Robotkontrollen gick inte igenom — försök igen.",
+        error: "Robotkontrollen gick inte igenom – försök igen.",
         code: "CAPTCHA_FAILED",
         fields: { turnstileToken: "Bekräfta att ni inte är en robot" },
       },
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        error: `Beställningen kunde inte genomföras — ingen order har skapats. Försök igen om en liten stund. Referens: ${ref}`,
+        error: `Beställningen kunde inte genomföras – ingen order har skapats. Försök igen om en liten stund. Referens: ${ref}`,
       },
       { status: 500 }
     );

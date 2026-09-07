@@ -16,7 +16,7 @@ export function MarkDeliveredInline({ orderId }: { orderId: string }) {
         style={{ padding: "12px 16px", fontSize: 13, minHeight: 44 }}
         onClick={() => setShowNote(true)}
       >
-        Markera levererad
+        Markera som levererad
       </button>
     );
   }
@@ -45,7 +45,7 @@ export function MarkDeliveredInline({ orderId }: { orderId: string }) {
         disabled={pending}
         onClick={() => startTransition(async () => setResult(await markOrderDelivered(orderId, note)))}
       >
-        {pending ? "Sparar…" : "Klar — levererad"}
+        {pending ? "Sparar…" : "Klar – levererad"}
       </button>
       {result && !result.ok && (
         <span role="alert" className="error-text" style={{ fontSize: 12.5, flexBasis: "100%" }}>

@@ -29,7 +29,7 @@ export interface InvoiceSnapshot {
   lines: {
     productName: string;
     weightKg: number; // antal enheter
-    /** "kg" | "paket". Saknas i äldre snapshots — tolkas då som "kg". */
+    /** "kg" | "paket". Saknas i äldre snapshots – tolkas då som "kg". */
     unit?: string;
     unitPricePerKgOre: number;
     vatRateBp: number;
@@ -54,7 +54,7 @@ export interface InvoiceSnapshot {
 
 // Validerat vid läsning: skyddar PDF-renderingen mot schemadrift och
 // korrupt lagrad JSON (fel upptäcks som ett tydligt fel, inte en trasig PDF).
-// Parternas identitet ska aldrig tyst bli tom sträng — korrupt data ska ge ett fel.
+// Parternas identitet ska aldrig tyst bli tom sträng – korrupt data ska ge ett fel.
 const str = z.string();
 const opt = z.string().catch("");
 const snapshotSchema = z.object({

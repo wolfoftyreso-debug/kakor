@@ -32,7 +32,7 @@ export const ids = {
 };
 
 /**
- * Kanonisk organisationsentitet — EN entitet med ETT stabilt @id
+ * Kanonisk organisationsentitet – EN entitet med ETT stabilt @id
  * återanvänds överallt (publisher, seller, breadcrumb-hem osv).
  * Typen är Organization, INTE Bakery/LocalBusiness: verksamheten har
  * inget bageri/besökslokal att deklarera (verksamhetens uppgift).
@@ -108,7 +108,7 @@ export interface WebPageOptions {
   breadcrumbs?: Crumb[];
   /** @id till sidans huvudentitet, om en sådan finns. */
   mainEntityId?: string;
-  /** T.ex. "CollectionPage" — annars WebPage. */
+  /** T.ex. "CollectionPage" – annars WebPage. */
   pageType?: "WebPage" | "CollectionPage";
   dateModified?: string; // ISO-datum, endast vid verklig innehållsändring
 }
@@ -132,14 +132,14 @@ export function webPageNode(opts: WebPageOptions): JsonLdNode {
 
 /**
  * Produktentitet från databasen. Kanonisk entitets-URL är produktens egen
- * sida (/kakor/<slug>) — samma @id återanvänds överallt där produkten
+ * sida (/kakor/<slug>) – samma @id återanvänds överallt där produkten
  * refereras. Priset är sajtens faktiska försäljningspris (per kilo).
- * Inga ratings/recensioner — sådana finns inte verifierade.
+ * Inga ratings/recensioner – sådana finns inte verifierade.
  */
 // Google vill ha flera bildformat (1:1, 4:3, 16:9) för produktresultat. Vi
 // levererar de varianter som finns i /public/images: <namn>-square.jpg,
 // <namn>-og.jpg (1200×630) och originalbilden. Saknas en variant hoppas den
-// över — inga länkar till filer som inte finns.
+// över – inga länkar till filer som inte finns.
 const PRODUCT_IMAGE_VARIANTS: Record<string, string[]> = {
   "/images/kolasnittar.jpg": ["/images/kolasnittar-square.jpg", "/images/kolasnittar.jpg", "/images/kolasnittar-og.jpg"],
   "/images/mandelkubb.jpg": ["/images/mandelkubb-square.jpg", "/images/mandelkubb.jpg", "/images/mandelkubb-og.jpg"],
@@ -167,11 +167,11 @@ export function productNode(product: ProductCardData): JsonLdNode {
       priceCurrency: "SEK",
       price: (product.pricePerKgOre / 100).toFixed(2),
       url: `${SITE()}/kakor/${product.slug}`,
-      // Endast företagskunder, endast Sverige — så att sökmotorer inte visar
+      // Endast företagskunder, endast Sverige – så att sökmotorer inte visar
       // priset som ett konsumentpris.
       eligibleCustomerType: "https://schema.org/Business",
       eligibleRegion: { "@type": "Country", name: "SE" },
-      // B2B-pris per kilo, exklusive moms — måste deklareras så att priset
+      // B2B-pris per kilo, exklusive moms – måste deklareras så att priset
       // i sökresultat inte utger sig för att vara konsumentpris inkl. moms.
       priceSpecification: {
         "@type": "UnitPriceSpecification",
@@ -210,13 +210,13 @@ export function productListNode(path: string, products: ProductCardData[]): Json
 }
 
 /**
- * FAQPage-nod — används ENDAST för frågor/svar som faktiskt visas på sidan,
+ * FAQPage-nod – används ENDAST för frågor/svar som faktiskt visas på sidan,
  * med exakt samma text. Aldrig påhittade frågor.
  */
 /**
  * Artikelnod för kunskaps-/guidesidor: rubrik, publicerings- och ändringsdatum,
  * bild och utgivare (organisationen). Datumen sätts av verksamheten vid
- * verklig innehållsändring — aldrig byggtid.
+ * verklig innehållsändring – aldrig byggtid.
  */
 export function articleNode(opts: {
   path: string;
@@ -254,7 +254,7 @@ export function faqNode(path: string, faqs: { q: string; a: string }[]): JsonLdN
   };
 }
 
-/** Bygger en @graph av noder — en <script>-tagg per sida. */
+/** Bygger en @graph av noder – en <script>-tagg per sida. */
 export function graph(...nodes: (JsonLdNode | null | undefined)[]): JsonLdNode {
   return {
     "@context": "https://schema.org",

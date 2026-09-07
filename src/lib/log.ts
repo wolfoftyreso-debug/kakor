@@ -1,5 +1,5 @@
 // Loggning utan personuppgifter: Prismas valideringsfel bäddar in hela
-// anropets args (kunddata) i meddelandet — logga därför bara namn, kod och
+// anropets args (kunddata) i meddelandet – logga därför bara namn, kod och
 // ett avkortat meddelande.
 export function describeError(e: unknown): Record<string, unknown> | string {
   if (e instanceof Error) {

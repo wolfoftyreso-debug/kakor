@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { qtyLabel } from "@/lib/units";
 import {
   addOrderNote,
   cancelOrder,
@@ -39,7 +40,7 @@ export function OrderActions({
   deliveryStatus: string;
   /** Avbruten order med faktura men utan kreditfaktura (t.ex. efter ett avbrutet anrop). */
   needsCreditNote?: boolean;
-  /** Fakturarader med återstående (ej krediterad) mängd — för delkreditering. */
+  /** Fakturarader med återstående (ej krediterad) mängd – för delkreditering. */
   creditLines?: { lineIndex: number; productName: string; unit: string; unitPriceOre: number; remaining: number }[];
 }) {
   const [pending, startTransition] = useTransition();
@@ -52,7 +53,7 @@ export function OrderActions({
   const creditSelection = creditable
     .map((l) => ({ lineIndex: l.lineIndex, qty: parseInt(creditQty[l.lineIndex] ?? "", 10) }))
     .filter((l) => Number.isInteger(l.qty) && l.qty > 0);
-  // Varje åtgärd ger synlig feedback — en knapp som "gör ingenting" är ett fel.
+  // Varje åtgärd ger synlig feedback – en knapp som "gör ingenting" är ett fel.
   const [feedback, setFeedback] = useState<ActionResult | null>(null);
 
   const run = (fn: () => Promise<ActionResult>) =>
@@ -61,7 +62,7 @@ export function OrderActions({
       try {
         setFeedback(await fn());
       } catch {
-        setFeedback({ ok: false, error: "Åtgärden misslyckades — ladda om sidan och försök igen" });
+        setFeedback({ ok: false, error: "Åtgärden misslyckades – ladda om sidan och försök igen" });
       }
     });
 
@@ -195,7 +196,7 @@ export function OrderActions({
               <label key={l.lineIndex} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, marginBottom: 8 }}>
                 <span style={{ flex: 1 }}>
                   {l.productName}{" "}
-                  <span style={{ color: "var(--text-2)" }}>(återstår {l.remaining} {l.unit})</span>
+                  <span style={{ color: "var(--text-2)" }}>(återstår {qtyLabel(l.remaining, l.unit)})</span>
                 </span>
                 <input
                   type="number"

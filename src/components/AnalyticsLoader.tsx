@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { CONSENT_EVENT, readConsent } from "./CookieConsent";
 
 // Laddar gtag först efter samtycke. Vid återkallat samtycke avaktiveras
-// mätningen (window['ga-disable-<id>']) — scriptet kan inte laddas ur, men
+// mätningen (window['ga-disable-<id>']) – scriptet kan inte laddas ur, men
 // skickar inget mer.
 export function AnalyticsLoader({ id, nonce }: { id: string; nonce?: string }) {
   const [granted, setGranted] = useState(false);

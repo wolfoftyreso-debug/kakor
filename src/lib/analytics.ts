@@ -1,7 +1,7 @@
 "use client";
 
 // Tunn eventspårning. Skickar till GA4 om gtag finns (laddas env-gated i
-// AnalyticsScript), annars no-op. Får aldrig kasta — analys får inte
+// AnalyticsScript), annars no-op. Får aldrig kasta – analys får inte
 // påverka sajtens funktion. Ingen PII skickas i event-parametrar.
 
 type Params = Record<string, string | number | boolean>;
@@ -25,7 +25,7 @@ export function track(event: string, params: Params = {}): void {
   }
 }
 
-/** Grov klassning av varifrån besökaren kom — ingen URL sparas (ingen PII). */
+/** Grov klassning av varifrån besökaren kom – ingen URL sparas (ingen PII). */
 export function referrerClass(): string {
   try {
     const ref = document.referrer;

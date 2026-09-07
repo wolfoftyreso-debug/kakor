@@ -16,8 +16,8 @@ export function sharePreview({
   path,
   image,
 }: SharePreviewInput): Pick<Metadata, "openGraph" | "twitter"> {
-  const fullTitle = `${title} — Sockerbagaren`;
-  const img = image ?? { url: "/og.jpg", alt: "Sockerbagaren — riktigt fika till jobbet" };
+  const fullTitle = `${title} – Sockerbagaren`;
+  const img = image ?? { url: "/og.jpg", alt: "Sockerbagaren – riktigt fika till jobbet" };
   return {
     openGraph: {
       title: fullTitle,

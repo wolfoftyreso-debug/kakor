@@ -1,6 +1,6 @@
 // Allergenraden lagras som fritext i admin ("Innehåller vete, smör (mjölk).
 // Kan innehålla spår av mandel."). Alla ytor som visar den som chips måste
-// tolka den PÅ SAMMA SÄTT — annars uppstår inkonsekvenser som "Smör (mjölk)."
+// tolka den PÅ SAMMA SÄTT – annars uppstår inkonsekvenser som "Smör (mjölk)."
 // med kvarhängande punkt på en sida men inte en annan.
 //
 // Spår-allergener märks "(spår)" så att skillnaden mellan "innehåller" och
@@ -33,7 +33,7 @@ const ALLERGEN_WORDS = [
 
 /** Delar upp en ingrediensrad i segment där allergener markeras (för <strong>). */
 export function highlightAllergens(ingredients: string): { text: string; allergen: boolean }[] {
-  // Längsta ordet först — annars matchar "soja" i "sojalecitin" bara halva ordet.
+  // Längsta ordet först – annars matchar "soja" i "sojalecitin" bara halva ordet.
   const words = [...ALLERGEN_WORDS].sort((x, y) => y.length - x.length);
   const pattern = new RegExp(`(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "giu");
   const out: { text: string; allergen: boolean }[] = [];
