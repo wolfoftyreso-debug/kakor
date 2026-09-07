@@ -7,7 +7,7 @@ import { renderInvoicePdf } from "@/lib/invoice/pdf";
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: string }> }) {
   const { token } = await ctx.params;
   if (!/^[a-f0-9]{48}$/.test(token)) {
-    return new NextResponse("Ogiltig länk", { status: 404 });
+    return NextResponse.redirect(new URL("/faktura-saknas", _req.url), 302);
   }
   // Samma länkformat för faktura och kreditfaktura (egna token-serier).
   const invoice = await prisma.invoice.findUnique({ where: { downloadToken: token } });
@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: str
     : credit
       ? { snapshotJson: credit.snapshotJson, number: credit.creditNumber, filename: `kreditfaktura-${credit.creditNumber}.pdf` }
       : null;
-  if (!doc) return new NextResponse("Fakturan hittades inte", { status: 404 });
+  if (!doc) return NextResponse.redirect(new URL("/faktura-saknas", _req.url), 302);
 
   const snapshot = parseSnapshot(doc.snapshotJson);
   const pdf = await renderInvoicePdf(snapshot, doc.number);

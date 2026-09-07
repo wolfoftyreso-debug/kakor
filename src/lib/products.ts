@@ -45,6 +45,8 @@ export interface AreaWithDates {
   blockedDates: string[];
   /** Datum där kapacitetstaket redan är nått – visas inte i kassan. */
   fullDates: string[];
+  /** Postnummerprefix (tom = ingen spärr) – kassan varnar direkt i steg 3. */
+  postalPrefixes: string[];
   upcomingDates: string[]; // ISO-datum
 }
 
@@ -76,11 +78,21 @@ export const getAreasWithDates = cache(async function getAreasWithDates(dateCoun
         leadTimeDays: a.leadTimeDays,
         blockedDates,
         fullDates,
+        postalPrefixes: safeStringList(a.postalCodePrefixesJson),
         upcomingDates: upcomingDeliveryDates(config, dateCount).map(toISODate),
       };
     })
   );
 });
+
+function safeStringList(json: string): string[] {
+  try {
+    const arr = JSON.parse(json);
+    return Array.isArray(arr) ? arr.filter((x) => typeof x === "string" && x.length > 0) : [];
+  } catch {
+    return [];
+  }
+}
 
 /** Spärrade datum från admin – bara giltiga ISO-datum släpps igenom. */
 export function safeBlockedDates(json: string): string[] {

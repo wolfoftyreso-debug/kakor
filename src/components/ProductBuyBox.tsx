@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart, MAX_UNITS } from "@/lib/cart";
 import { formatOre } from "@/lib/money";
-import { priceSuffix, qtyLabel } from "@/lib/units";
+import { priceSuffix, qtyLabel, unitLabel } from "@/lib/units";
 import type { ProductCardData } from "@/components/ProductCard";
 
 export function ProductBuyBox({ product, deliveryDays }: { product: ProductCardData; deliveryDays?: string }) {
@@ -71,9 +71,21 @@ export function ProductBuyBox({ product, deliveryDays }: { product: ProductCardD
           <button type="button" aria-label={`Minska ${product.name}`} disabled={kg <= 1} onClick={() => setKg(Math.max(1, kg - 1))}>
             −
           </button>
-          <div className="stepper-value" aria-live="polite">
-            {qtyLabel(kg, product.unit)}
-          </div>
+          <label className="stepper-value stepper-input">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={MAX_UNITS}
+              value={kg}
+              aria-label={`Antal ${unitLabel(product.unit)}`}
+              onChange={(e) => {
+                const n = parseInt(e.target.value, 10);
+                setKg(Number.isFinite(n) ? Math.min(MAX_UNITS, Math.max(1, n)) : 1);
+              }}
+            />
+            <span aria-hidden="true">{unitLabel(product.unit)}</span>
+          </label>
           <button type="button" aria-label={`Öka ${product.name}`} disabled={kg >= MAX_UNITS} onClick={() => setKg(Math.min(MAX_UNITS, kg + 1))}>
             +
           </button>

@@ -24,6 +24,8 @@ import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/un
 import { capitalizeFirst, formatDeliveryDate, fromISODate, toISODate, upcomingDeliveryDates, changeDeadline, formatDeadline } from "@/lib/dates";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 import { newIdempotencyKey } from "@/lib/idempotency";
+import { isValidOrgNumber } from "@/lib/orgnumber";
+import { unitLabel } from "@/lib/units";
 import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/Turnstile";
 import { track } from "@/lib/analytics";
 
@@ -92,6 +94,8 @@ type SubmitResult =
 // Pågående flödesdata (steg, leveransval, formulär) – sessionStorage så att
 // reload/back/avstickare inte kastar bort något. Korgen bor i localStorage.
 const FLOW_STORAGE_KEY = "sb_checkout_v1";
+// Senaste lyckade beställning – så att Tack-sidan överlever en omladdning.
+const RESULT_STORAGE_KEY = "sb_last_result_v1";
 
 interface StoredFlow {
   step: number;
@@ -128,6 +132,13 @@ export function CheckoutFlow({
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Sekunder kvar innan nästa försök tillåts (Retry-After vid 429).
+  const [retryAfter, setRetryAfter] = useState(0);
+  useEffect(() => {
+    if (retryAfter <= 0) return;
+    const t = setTimeout(() => setRetryAfter((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [retryAfter]);
   const [result, setResult] = useState<SubmitResult | null>(null);
   // Robotskydd (Cloudflare Turnstile) – bara när sajtnyckel finns i env.
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -182,8 +193,40 @@ export function CheckoutFlow({
     } catch {
       // korrupt lagring – starta från steg 1
     }
+    // Omladdning av Tack-sidan (URL:en bär ?kvitto=1): visa kvittot igen.
+    // Ett vanligt besök på /bestall startar alltid en ny beställning.
+    try {
+      const rawResult = sessionStorage.getItem(RESULT_STORAGE_KEY);
+      const wantsReceipt = new URLSearchParams(window.location.search).get("kvitto") === "1";
+      if (rawResult && wantsReceipt && !sessionStorage.getItem(FLOW_STORAGE_KEY)) {
+        const r = JSON.parse(rawResult) as SubmitResult;
+        if (r && (r.kind === "order" || r.kind === "subscription")) {
+          setResult(r);
+          setStep(5);
+        }
+      }
+    } catch {
+      // ingen kvittokopia – inget att visa
+    }
     setFlowRestored(true);
   }, []);
+
+  // Webbläsarens bakåt/framåt ska gå mellan stegen, inte lämna kassan.
+  useEffect(() => {
+    if (!flowRestored) return;
+    if (typeof window === "undefined") return;
+    window.history.replaceState({ ...(window.history.state ?? {}), sbStep: step }, "");
+    const onPop = (e: PopStateEvent) => {
+      const st = (e.state as { sbStep?: unknown } | null)?.sbStep;
+      if (typeof st === "number" && st >= 1 && st <= 4) {
+        setStep(st);
+        setGlobalError(null);
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowRestored]);
 
   const saveFlow = () => {
     try {
@@ -197,6 +240,7 @@ export function CheckoutFlow({
         idempotencyFingerprint: idempotencyFingerprint.current,
       };
       sessionStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify(stored));
+      sessionStorage.removeItem(RESULT_STORAGE_KEY);
     } catch {
       // privat läge – flödet funkar ändå under sessionen
     }
@@ -325,6 +369,9 @@ export function CheckoutFlow({
     flowRestored && cart.hydrated && !result && step >= 2 && step <= 4 && activeLines.length === 0;
 
   const goTo = (s: number) => {
+    if (typeof window !== "undefined" && s >= 1 && s <= 4 && s !== step) {
+      window.history.pushState({ ...(window.history.state ?? {}), sbStep: s }, "");
+    }
     setStep(s);
     setGlobalError(null);
     setNotice(null);
@@ -350,6 +397,8 @@ export function CheckoutFlow({
     if (form.companyName.trim().length < 2) e.companyName = "Ange företagsnamn";
     if (!/^\d{6}-?\d{4}$/.test(form.orgNumber.trim()))
       e.orgNumber = "Ange organisationsnummer i formatet 556677-8899";
+    else if (!isValidOrgNumber(form.orgNumber.trim()))
+      e.orgNumber = "Organisationsnumret verkar inte stämma – kontrollera siffrorna";
     if (form.contactName.trim().length < 2) e.contactName = "Ange kontaktperson";
     if (!/^[0-9+\-() ]{6,25}$/.test(form.phone.trim())) e.phone = "Ange ett telefonnummer";
     if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) e.email = "Ange en giltig e-postadress";
@@ -358,6 +407,11 @@ export function CheckoutFlow({
     if (form.deliveryAddress.trim().length < 3) e.deliveryAddress = "Ange leveransadress";
     if (!/^\d{3}\s?\d{2}$/.test(form.deliveryPostalCode.trim()))
       e.deliveryPostalCode = "Ange postnummer i formatet 135 48";
+    else if (selectedArea && selectedArea.postalPrefixes.length > 0) {
+      const compact = form.deliveryPostalCode.replace(/\s/g, "");
+      if (!selectedArea.postalPrefixes.some((pfx) => compact.startsWith(pfx.replace(/\s/g, ""))))
+        e.deliveryPostalCode = `Postnumret verkar inte ligga i ${selectedArea.name} – kontrollera adressen eller byt område i steg 2`;
+    }
     if (form.deliveryCity.trim().length < 2) e.deliveryCity = "Ange ort";
     if (form.deliveryInstruction.length > 500) e.deliveryInstruction = "Max 500 tecken";
     setErrors(e);
@@ -453,7 +507,7 @@ export function CheckoutFlow({
           address: `${common.deliveryAddress}, ${common.deliveryPostalCode} ${common.deliveryCity}`,
           areaName: selectedArea?.name ?? "",
         };
-        setResult(
+        const newResult: SubmitResult =
           mode === "RECURRING"
             ? {
                 kind: "subscription",
@@ -470,8 +524,8 @@ export function CheckoutFlow({
                 deliveryDate: data.deliveryDate,
                 totalOre: data.totalOre,
                 ...resultCommon,
-              }
-        );
+              };
+        setResult(newResult);
         try {
           sessionStorage.removeItem(FLOW_STORAGE_KEY);
         } catch {
@@ -479,8 +533,18 @@ export function CheckoutFlow({
         }
         cart.clear();
         goTo(5);
+        try {
+          sessionStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify(newResult));
+          window.history.replaceState({ ...(window.history.state ?? {}), sbStep: 5 }, "", "/bestall?kvitto=1");
+        } catch {
+          // lagring otillgänglig – kvittot finns i mejlet
+        }
       } else {
         track("order_failed", { mode, reason: data.code ?? "validation" });
+        if (res.status === 429) {
+          const wait = Math.min(300, Math.max(5, parseInt(res.headers.get("Retry-After") ?? "30", 10) || 30));
+          setRetryAfter(wait);
+        }
         setGlobalError(data.error ?? "Något gick fel – försök igen om en stund.");
         if (data.code === "IDEMPOTENCY_MISMATCH") {
           // Nyckeln bär en annan payload – rotera så nästa försök går igenom.
@@ -661,9 +725,21 @@ export function CheckoutFlow({
                   >
                     −
                   </button>
-                  <div className="stepper-value" aria-live="polite">
-                    {qtyLabel(qtyFor(p.id), p.unit)}
-                  </div>
+                  <label className="stepper-value stepper-input">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={MAX_UNITS}
+                      value={qtyFor(p.id)}
+                      aria-label={`Antal ${unitLabel(p.unit)} ${p.name}`}
+                      onChange={(e) => {
+                        const n = parseInt(e.target.value, 10);
+                        setQty(p, Number.isFinite(n) ? Math.min(MAX_UNITS, Math.max(0, n)) : 0);
+                      }}
+                    />
+                    <span aria-hidden="true">{unitLabel(p.unit)}</span>
+                  </label>
                   <button
                     type="button"
                     aria-label={`Öka ${p.name}`}
@@ -673,6 +749,18 @@ export function CheckoutFlow({
                     +
                   </button>
                 </div>
+                {/* Utanför steppern och med reserverad plats: "+"-knappen får aldrig flytta sig
+                    när raden läggs till (ett dubbelklick skulle annars träffa "Ta bort"). */}
+                <button
+                  type="button"
+                  className="stepper-remove"
+                  style={{ visibility: qtyFor(p.id) > 0 ? "visible" : "hidden" }}
+                  aria-hidden={qtyFor(p.id) === 0 || undefined}
+                  tabIndex={qtyFor(p.id) > 0 ? 0 : -1}
+                  onClick={() => setQty(p, 0)}
+                >
+                  Ta bort
+                </button>
               </div>
             ))}
           </div>
@@ -680,7 +768,7 @@ export function CheckoutFlow({
           {/* Sticky i botten på mobil – nästa steg är alltid ett tumtryck bort. */}
           <div className="checkout-total-bar">
             <div>
-              <div style={{ fontSize: 13, color: "var(--text-2)" }}>Totalt inkl. moms</div>
+              <div style={{ fontSize: 13, color: "var(--text-2)" }}>{totalKg === 0 ? "Korgen är tom – välj kakor ovan" : "Totalt inkl. moms"}</div>
               <div className="total-amount" aria-live="polite" style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 700 }}>
                 {formatWeightKg(totalWeightGrams)} · {formatOre(totals.totalOre)}
               </div>
@@ -1073,10 +1161,12 @@ export function CheckoutFlow({
             <button
               type="button"
               className="btn btn-send btn-lg"
-              disabled={submitting || !areaSlug || !deliveryDate || activeLines.length === 0 || (!!TURNSTILE_SITE_KEY && !captchaToken)}
+              disabled={submitting || retryAfter > 0 || !areaSlug || !deliveryDate || activeLines.length === 0 || (!!TURNSTILE_SITE_KEY && !captchaToken)}
               onClick={submit}
             >
-              {submitting
+              {retryAfter > 0
+                ? `Vänta ${retryAfter} s innan nästa försök`
+                : submitting
                 ? "Skickar…"
                 : mode === "RECURRING"
                   ? `Skicka beställning · ${formatOre(totals.totalOre)} per leverans`

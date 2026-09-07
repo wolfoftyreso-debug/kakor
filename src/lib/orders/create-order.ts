@@ -70,7 +70,10 @@ export async function assertNotAbusive(input: { email: string; invoiceEmail: str
  * för att löpnummer förbrukas på fakturor som ingen kan betala.
  */
 export function assertInvoicingConfigured() {
-  if (process.env.VERCEL_ENV !== "production") return;
+  // Gäller i Vercel Production och överallt där sajten är konfigurerad med den
+  // riktiga domänen – aldrig i demo/preview/tester, som får använda platshållare.
+  const liveDomain = /sockerbagaren\.se/i.test(process.env.SITE_URL ?? "");
+  if (process.env.VERCEL_ENV !== "production" && !liveDomain) return;
   // Bankgiro och momsnummer krävs på fakturan (ML 17 kap.), e-postadressen
   // krävs synlig för kunden (e-handelslagen 8 §) – utan dem säljer vi inte.
   if (!isVerifiedValue(invoiceConfig.bankgiro) || !isVerifiedValue(invoiceConfig.vatNumber) || !isVerifiedValue(invoiceConfig.email)) {

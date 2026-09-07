@@ -487,9 +487,11 @@ export async function saveProduct(
   productId: string | null,
   _prev: { error: string } | null,
   formData: FormData
-): Promise<{ error: string } | null> {
+): Promise<{ error: string; values?: Record<string, string> } | null> {
   await requireAdmin();
-  if (productId !== null && !idSchema.safeParse(productId).success) return { error: "Ogiltigt produkt-id" };
+  // Vid fel skickas de inskrivna värdena tillbaka så att formuläret inte tömmer sig.
+  const values = Object.fromEntries([...formData.entries()].map(([k, v]) => [k, typeof v === "string" ? v : ""]));
+  if (productId !== null && !idSchema.safeParse(productId).success) return { error: "Ogiltigt produkt-id", values };
   const parsed = productSchema.safeParse({
     name: formData.get("name"),
     slug: formData.get("slug"),
@@ -508,7 +510,7 @@ export async function saveProduct(
     active: formData.get("active") === "on",
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Kontrollera fälten" };
+    return { error: parsed.error.issues[0]?.message ?? "Kontrollera fälten", values };
   }
   const d = parsed.data;
   const data = {
@@ -541,10 +543,10 @@ export async function saveProduct(
       await prisma.product.create({ data });
     }
   } catch {
-    return { error: "Kunde inte spara – kontrollera att slug är unik." };
+    return { error: "Kunde inte spara – kontrollera att slug är unik.", values };
   }
   revalidatePath("/admin/produkter");
-  redirect("/admin/produkter");
+  redirect(`/admin/produkter?sparad=${encodeURIComponent(d.name)}`);
 }
 
 export async function setProductActive(productId: string, active: boolean): Promise<ActionResult> {
@@ -588,9 +590,10 @@ export async function saveArea(
   areaId: string,
   _prev: { error?: string; saved?: string } | null,
   formData: FormData
-): Promise<{ error?: string; saved?: string } | null> {
+): Promise<{ error?: string; saved?: string; values?: Record<string, string> } | null> {
   await requireAdmin();
   if (!idSchema.safeParse(areaId).success) return { error: "Ogiltigt områdes-id" };
+  const values = Object.fromEntries([...formData.entries()].map(([k, v]) => [k, typeof v === "string" ? v : ""]));
   const parsed = areaSchema.safeParse({
     weekdays: formData.get("weekdays"),
     leadTimeDays: formData.get("leadTimeDays"),
@@ -599,7 +602,7 @@ export async function saveArea(
     maxKgPerDay: formData.get("maxKgPerDay") ?? 0,
     active: formData.get("active") === "on",
   });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Kontrollera fälten" };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Kontrollera fälten", values };
   const d = parsed.data;
   const today = toISODate(todayInStockholm());
   const blockedDates = [...new Set(d.blockedDates)].filter((iso) => iso >= today).sort();
@@ -628,7 +631,7 @@ export async function saveArea(
 const subscriptionUpdateSchema = z.object({
   frequency: z.enum(SUBSCRIPTION_FREQUENCY),
   items: z
-    .array(z.object({ productId: z.string().cuid(), weightKg: z.coerce.number().int().min(1).max(100) }))
+    .array(z.object({ productId: z.string().cuid(), weightKg: z.coerce.number().int().min(1, "Minst 1 per rad").max(100, "Högst 100 per rad") }))
     .min(1, "Minst en sort")
     .max(30),
 });

@@ -16,10 +16,10 @@ export const metadata: Metadata = { title: "Admin – leveranser", robots: { ind
 export default async function DeliveriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ visa?: string }>;
+  searchParams: Promise<{ visa?: string; klar?: string }>;
 }) {
   await requireAdminPage();
-  const { visa = "kommande" } = await searchParams;
+  const { visa = "kommande", klar } = await searchParams;
   const today = todayInStockholm();
 
   const orders = await prisma.order.findMany({
@@ -70,13 +70,18 @@ export default async function DeliveriesPage({
         </div>
       </div>
 
+      {klar && (
+        <div role="status" className="info-box" style={{ marginBottom: 16, fontSize: 14 }}>
+          {klar} är markerad som levererad – kunden har fått leveransbekräftelse.
+        </div>
+      )}
       {sortedKeys.length === 0 && (
         <p style={{ color: "var(--text-2)" }}>
           {visa === "levererade" ? "Inga levererade ordrar ännu." : "Inga kommande leveranser."}
         </p>
       )}
 
-      {sortedKeys.map((dateKey) => {
+      {sortedKeys.map((dateKey, dayIndex) => {
         const dayOrders = groups.get(dateKey)!;
         // Lösvikt och paket summeras separat – "12 kg + 2 paket" är packlistans sanning.
         const allItems = dayOrders.flatMap((o) => o.items);
@@ -130,6 +135,11 @@ export default async function DeliveriesPage({
             <div style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 14 }}>
               {dayOrders.length} leverans{dayOrders.length === 1 ? "" : "er"} · {dayTotal} totalt
             </div>
+            {/* De två närmaste dagarna är öppna; resten hopfällda så att sidan inte blir kilometerlång. */}
+            <details open={dayIndex < 2 || undefined} className="day-details">
+              <summary style={{ cursor: "pointer", fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>
+                {dayIndex < 2 ? "Dölj" : "Visa"} dagens {dayOrders.length} leverans{dayOrders.length === 1 ? "" : "er"}
+              </summary>
             {visa !== "levererade" && bakplan.length > 0 && (
               <div className="card bakplan" style={{ padding: "12px 18px", marginBottom: 14, background: "var(--butter-soft)" }}>
                 <div className="section-label" style={{ marginBottom: 6 }}>
@@ -193,7 +203,7 @@ export default async function DeliveriesPage({
                       Följesedel
                     </Link>
                     {o.deliveryStatus === "PENDING" ? (
-                      <MarkDeliveredInline orderId={o.id} />
+                      <MarkDeliveredInline orderId={o.id} orderNumber={o.orderNumber} />
                     ) : (
                       <span className="pill pill-ok">Levererad</span>
                     )}
@@ -201,6 +211,7 @@ export default async function DeliveriesPage({
                 </div>
               ))}
             </div>
+            </details>
           </section>
         );
       })}

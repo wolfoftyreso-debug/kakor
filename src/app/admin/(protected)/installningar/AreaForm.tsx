@@ -26,6 +26,8 @@ export function AreaForm({
 }) {
   const action = saveArea.bind(null, areaId);
   const [state, formAction, pending] = useActionState(action, null);
+  // Efter ett valideringsfel: visa det som skrevs in, inte de sparade värdena.
+  const v = state?.values;
   const [weekdayInput, setWeekdayInput] = useState(weekdays);
   // Siffror är lätta att skriva fel – visa dagnamnen live så att "4" tydligt betyder torsdag.
   const weekdayLabels = weekdayInput
@@ -53,17 +55,17 @@ export function AreaForm({
       </label>
       <label className="field">
         Framförhållning (dagar)
-        <input name="leadTimeDays" type="number" min="0" max="30" defaultValue={leadTimeDays} required />
+        <input name="leadTimeDays" type="number" min="0" max="30" defaultValue={v?.leadTimeDays ?? leadTimeDays} required />
       </label>
       <label className="field">
         Postnummerprefix (frivilligt)
-        <input name="postalPrefixes" defaultValue={postalPrefixes} placeholder="135,136" />
+        <input name="postalPrefixes" defaultValue={v?.postalPrefixes ?? postalPrefixes} placeholder="135,136" />
       </label>
       <label className="field">
         Spärrade datum för det här området (frivilligt)
         <textarea
           name="blockedDates"
-          defaultValue={blockedDates}
+          defaultValue={v?.blockedDates ?? blockedDates}
           rows={3}
           placeholder={"2026-12-17\n2026-12-24"}
           style={{ fontFamily: "var(--font-mono, monospace)", fontSize: 13 }}
@@ -75,13 +77,13 @@ export function AreaForm({
       </label>
       <label className="field">
         Max kilo per leveransdag (0 = ingen gräns)
-        <input name="maxKgPerDay" type="number" min="0" max="100000" defaultValue={maxKgPerDay} />
+        <input name="maxKgPerDay" type="number" min="0" max="100000" defaultValue={v?.maxKgPerDay ?? maxKgPerDay} />
         <span style={{ fontSize: 12.5, color: "var(--text-2)" }}>
           Lösvikt plus paketvikt. Fulla dagar döljs i kassan; prenumerationer räknas in men stoppas inte.
         </span>
       </label>
       <label className="checkbox-label">
-        <input type="checkbox" name="active" defaultChecked={active} />
+        <input type="checkbox" name="active" defaultChecked={v ? v.active === "on" : active} />
         Aktivt leveransområde
       </label>
       {state?.error && (

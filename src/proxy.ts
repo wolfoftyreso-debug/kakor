@@ -53,6 +53,14 @@ function buildCsp(nonce: string): string {
 }
 
 export function proxy(req: NextRequest) {
+  // /Kakor/Kolasnittar → /kakor/kolasnittar: en länk som skrivits av för hand
+  // ska inte ge 404 (fakturatoken och API-vägar är redan gemener).
+  const { pathname } = req.nextUrl;
+  if (/[A-Z]/.test(pathname) && !pathname.startsWith("/_next") && !pathname.startsWith("/api")) {
+    const url = req.nextUrl.clone();
+    url.pathname = pathname.toLowerCase();
+    return NextResponse.redirect(url, 308);
+  }
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = buildCsp(nonce);
 

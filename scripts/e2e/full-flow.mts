@@ -9,7 +9,7 @@
 import { chromium } from "playwright-core";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import { prisma } from "../../src/lib/db";
-import { addDays, toISODate } from "../../src/lib/dates";
+import { addDays, fromISODate, toISODate } from "../../src/lib/dates";
 
 const B = process.env.BASE ?? "http://127.0.0.1:3122";
 // OBS: Prisma läser .env vid import, så process.env.CRON_SECRET kan vara
@@ -69,7 +69,7 @@ async function fillForm(page: any, overrides: Record<string, string> = {}) {
   for (const [label, val] of Object.entries(v)) await page.getByLabel(label, { exact: true }).fill(val);
 }
 async function pickAreaAndDate(page: any, recurring: boolean) {
-  await page.getByRole("button", { name: "Tyresö", exact: true }).click();
+  await page.getByRole("radio", { name: "Tyresö", exact: true }).click();
   await page.locator("button.choice-btn", { hasText: recurring ? "Första leverans" : "under dagen" }).first().click();
 }
 function apiPayload(overrides: Record<string, unknown> = {}) {
@@ -135,17 +135,17 @@ try {
   await page.getByRole("button", { name: "Öka Kolasnittar" }).click({ clickCount: 2 });
   await page.getByRole("button", { name: "Öka Mandelkubb" }).click();
   await page.getByRole("button", { name: "Fortsätt till leverans" }).click();
-  await page.getByRole("button", { name: /Engångsbeställning/ }).click();
+  await page.getByRole("radio", { name: /Engångsbeställning/ }).click();
   await pickAreaAndDate(page, false);
-  await page.getByRole("button", { name: "Fortsätt till företagsuppgifter" }).click();
+  await page.getByRole("button", { name: "Fortsätt till uppgifter" }).click();
   await fillForm(page);
-  await page.getByRole("button", { name: "Kontrollera order" }).click();
+  await page.getByRole("button", { name: "Kontrollera beställningen" }).click();
   const s4 = await page.textContent("body");
   check("steg 4 visar rader, ordertyp och pris", s4!.includes("Kolasnittar") && s4!.includes("Mandelkubb") && s4!.includes("Engångsbeställning") && /Skicka beställning · /.test(s4!));
   await page.getByRole("button", { name: /Skicka beställning/ }).click();
   await page.waitForSelector("text=Vi har tagit emot er beställning", { timeout: 30000 });
   const body = await page.textContent("body");
-  const m = body!.match(/ORDER (SB-\d+)/);
+  const m = body!.match(/ORDERNUMMER (SB-\d+)/);
   check("tack-sida med ordernummer och leverans", !!m && body!.includes("Flödesvägen 1") && /dagar efter leveransen/.test(body!), m?.[1] ?? "");
   const invoiceLink = await page.locator('a[href^="/faktura/"]').first().getAttribute("href").catch(() => null);
   check("tack-sida länkar till fakturan", !!invoiceLink, invoiceLink ?? "saknas");
@@ -186,13 +186,13 @@ try {
   await page.waitForURL("**/bestall?typ=aterkommande");
   await page.getByRole("button", { name: "Öka Chokladsnittar" }).click();
   await page.getByRole("button", { name: "Fortsätt till leverans" }).click();
-  const pressed = await page.getByRole("button", { name: /^Fikaprenumeration/ }).getAttribute("aria-pressed");
+  const pressed = await page.getByRole("radio", { name: /^Fikaprenumeration/ }).getAttribute("aria-checked");
   check("prenumeration förvald från /prenumeration", pressed === "true");
-  await page.getByRole("button", { name: /Varannan vecka/ }).click();
+  await page.getByRole("radio", { name: /Varannan vecka/ }).click();
   await pickAreaAndDate(page, true);
-  await page.getByRole("button", { name: "Fortsätt till företagsuppgifter" }).click();
+  await page.getByRole("button", { name: "Fortsätt till uppgifter" }).click();
   await fillForm(page, { "E-post": `pren-${RUN}@testbolaget.se`, "Företagsnamn": "Prenumerantbolaget AB" });
-  await page.getByRole("button", { name: "Kontrollera order" }).click();
+  await page.getByRole("button", { name: "Kontrollera beställningen" }).click();
   const s4 = await page.textContent("body");
   check("steg 4 visar intervall och pris per leverans", s4!.includes("varannan vecka") && s4!.includes("per leverans"));
   await page.getByRole("button", { name: /Skicka beställning/ }).click();
@@ -212,7 +212,9 @@ try {
 section("4. Cron — prenumerationsgenerering");
 try {
   const sub = await prisma.subscription.findUniqueOrThrow({ where: { number: subNumber } });
-  const target = nextDeliveryDate(today, 1);
+  // Rent datum (UTC-midnatt) som motorn: en tidsstämpel mitt på dagen hamnar
+  // annars EFTER horisonten "idag + 3" när leveransdagen är horisontens sista dag.
+  const target = fromISODate(toISODate(nextDeliveryDate(today, 1)));
   const withinHorizon = target <= addDays(today, 3);
   await prisma.subscription.update({ where: { id: sub.id }, data: { nextDeliveryDate: target } });
   const noAuth = await fetch(B + "/api/cron/generate-subscription-orders");
@@ -434,8 +436,8 @@ try {
   check("trasig JSON → 400", badJson.status === 400);
   const inactiveArea = await post("/api/orders", apiPayload({ deliveryDate: validDate, deliveryPostalCode: "111 22", deliveryCity: "Stockholm" }));
   check("postnummer utanför området → 400", inactiveArea.status === 400, `${inactiveArea.status} ${String(inactiveArea.data?.error ?? "").slice(0, 60)}`);
-  const f404 = await fetch(B + "/faktura/" + "a".repeat(48));
-  check("okänd fakturatoken → 404", f404.status === 404);
+  const f404 = await fetch(B + "/faktura/" + "a".repeat(48), { redirect: "manual" });
+  check("okänd fakturatoken → egen sida (302 till /faktura-saknas)", f404.status === 302 && (f404.headers.get("location") ?? "").includes("/faktura-saknas"));
   const p404 = await fetch(B + "/kakor/finns-inte");
   check("okänd produkt → 404-sida", p404.status === 404 && /Sidan finns inte|hittades inte|404/i.test(await p404.text()));
   const robots = await (await fetch(B + "/robots.txt")).text();

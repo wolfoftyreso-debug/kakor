@@ -31,28 +31,30 @@ export function ProductForm({
 }) {
   const action = saveProduct.bind(null, productId);
   const [state, formAction, pending] = useActionState(action, null);
+  // Efter ett valideringsfel: visa det som skrevs in, inte de sparade värdena.
+  const v = state?.values;
 
   return (
     <form action={formAction} className="form-grid" style={{ maxWidth: 720 }}>
       <label className="field">
         Namn
-        <input name="name" defaultValue={initial.name} required maxLength={80} />
+        <input name="name" defaultValue={v?.name ?? initial.name} required maxLength={80} />
       </label>
       <label className="field">
         Slug (URL)
-        <input name="slug" defaultValue={initial.slug} required pattern="[a-z0-9-]{2,60}" />
+        <input name="slug" defaultValue={v?.slug ?? initial.slug} required pattern="[a-z0-9-]{2,60}" />
       </label>
       <label className="field" style={{ gridColumn: "1 / -1" }}>
         Beskrivning
-        <textarea name="description" defaultValue={initial.description} rows={2} required style={{ resize: "vertical" }} />
+        <textarea name="description" defaultValue={v?.description ?? initial.description} rows={2} required style={{ resize: "vertical" }} />
       </label>
       <label className="field">
         Pris per enhet (kr)
-        <input name="priceKr" type="number" step="0.01" min="0" defaultValue={initial.priceKr} required />
+        <input name="priceKr" type="number" step="0.01" min="0" defaultValue={v?.priceKr ?? initial.priceKr} required />
       </label>
       <label className="field">
         Momssats
-        <select name="vatRateBp" defaultValue={String(initial.vatRateBp)}>
+        <select name="vatRateBp" defaultValue={v?.vatRateBp ?? String(initial.vatRateBp)}>
           <option value="600">6 % (livsmedel, tillfälligt sänkt t.o.m. 2027-12-31)</option>
           <option value="1200">12 % (livsmedel ordinarie, restaurang/catering)</option>
           <option value="2500">25 % (övrigt)</option>
@@ -60,7 +62,7 @@ export function ProductForm({
       </label>
       <label className="field">
         Säljs per
-        <select name="unit" defaultValue={initial.unit}>
+        <select name="unit" defaultValue={v?.unit ?? initial.unit}>
           <option value="kg">kilo (lösvikt)</option>
           <option value="paket">paket (styckvara)</option>
         </select>
@@ -72,39 +74,39 @@ export function ProductForm({
           type="number"
           min="0"
           max="100000"
-          defaultValue={initial.packageWeightGrams}
+          defaultValue={v?.packageWeightGrams ?? initial.packageWeightGrams}
         />
       </label>
       <label className="field">
         Förvalt antal i antalsväljaren (första värdet används som start)
-        <input name="weightOptions" defaultValue={initial.weightOptions} required placeholder="1,2,3" />
+        <input name="weightOptions" defaultValue={v?.weightOptions ?? initial.weightOptions} required placeholder="1,2,3" />
       </label>
       <label className="field" style={{ gridColumn: "1 / -1" }}>
         Ingredienser
-        <textarea name="ingredients" defaultValue={initial.ingredients} rows={2} style={{ resize: "vertical" }} />
+        <textarea name="ingredients" defaultValue={v?.ingredients ?? initial.ingredients} rows={2} style={{ resize: "vertical" }} />
       </label>
       <label className="field" style={{ gridColumn: "1 / -1" }}>
         Allergener
-        <input name="allergens" defaultValue={initial.allergens} placeholder="Innehåller vete, smör (mjölk)." />
+        <input name="allergens" defaultValue={v?.allergens ?? initial.allergens} placeholder="Innehåller vete, smör (mjölk)." />
       </label>
       <label className="field">
         Bildreferens (sökväg i /public)
-        <input name="imageRef" defaultValue={initial.imageRef} placeholder="/images/kolasnittar.jpg" />
+        <input name="imageRef" defaultValue={v?.imageRef ?? initial.imageRef} placeholder="/images/kolasnittar.jpg" />
       </label>
       <label className="field">
         Etikett på produktkortet (t.ex. Bästsäljare – tom för ingen)
-        <input name="badge" defaultValue={initial.badge} maxLength={30} placeholder="Bästsäljare" />
+        <input name="badge" defaultValue={v?.badge ?? initial.badge} maxLength={30} placeholder="Bästsäljare" />
       </label>
       <label className="field">
         Ca antal kakor per kilo (frivilligt – visas på produktsidan)
-        <input name="piecesPerKgApprox" type="number" min="1" max="500" defaultValue={initial.piecesPerKgApprox} placeholder="Räkna en riktig sats innan du fyller i" />
+        <input name="piecesPerKgApprox" type="number" min="1" max="500" defaultValue={v?.piecesPerKgApprox ?? initial.piecesPerKgApprox} placeholder="Räkna en riktig sats innan du fyller i" />
       </label>
       <label className="field">
         Sorteringsordning
-        <input name="sortOrder" type="number" min="0" max="999" defaultValue={initial.sortOrder} />
+        <input name="sortOrder" type="number" min="0" max="999" defaultValue={v?.sortOrder ?? initial.sortOrder} />
       </label>
       <label className="checkbox-label" style={{ gridColumn: "1 / -1" }}>
-        <input type="checkbox" name="active" defaultChecked={initial.active} />
+        <input type="checkbox" name="active" defaultChecked={v ? v.active === "on" : initial.active} />
         Aktiv (visas och kan beställas)
       </label>
       {state?.error && (

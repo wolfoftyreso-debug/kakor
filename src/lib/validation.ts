@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { SUBSCRIPTION_FREQUENCY } from "@/lib/status";
 import { fromISODate, toISODate } from "@/lib/dates";
+import { isValidOrgNumber } from "@/lib/orgnumber";
 import { sv } from "zod/locales";
 
 // Zods egna felmeddelanden ("Too big: expected number to be <=100") når kunden
@@ -60,22 +61,7 @@ const emailSchema = (message: string) =>
 // Nyckeln är medvetet intetsägande ("website" autofylls av lösenordshanterare).
 const honeypotSchema = z.string().max(0, "Kontrollera uppgifterna").optional();
 
-// Svenska organisationsnummer har Luhn-kontrollsiffra – ett formatriktigt men
-// påhittat nummer (556677-8899 är t.ex. ogiltigt) ska inte kunna faktureras.
-export function isValidOrgNumber(value: string): boolean {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length !== 10) return false;
-  let sum = 0;
-  for (let i = 0; i < 10; i++) {
-    let d = Number(digits[i]);
-    if (i % 2 === 0) {
-      d *= 2;
-      if (d > 9) d -= 9;
-    }
-    sum += d;
-  }
-  return sum % 10 === 0;
-}
+export { isValidOrgNumber } from "@/lib/orgnumber";
 
 /**
  * Ser numret ut som ett personnummer (ÅÅMMDD-XXXX) snarare än ett organisations-

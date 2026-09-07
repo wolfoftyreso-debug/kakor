@@ -9,12 +9,18 @@ import { ProductActiveToggle } from "./ProductActiveToggle";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin – produkter", robots: { index: false } };
 
-export default async function ProductsPage() {
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ sparad?: string }> }) {
   await requireAdminPage();
+  const { sparad } = await searchParams;
   const products = await prisma.product.findMany({ orderBy: { sortOrder: "asc" } });
 
   return (
     <>
+      {sparad && (
+        <div role="status" className="info-box" style={{ marginBottom: 16, fontSize: 14 }}>
+          {sparad} är sparad.
+        </div>
+      )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
         <h1 style={{ fontSize: 26 }}>Produkter</h1>
         <Link href="/admin/produkter/ny" className="btn btn-primary" style={{ padding: "10px 18px", fontSize: 14 }}>

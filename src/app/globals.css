@@ -2022,3 +2022,44 @@ html.js .reveal.in {
     border-color: #000;
   }
 }
+
+/* Redigerbart antal i steppern: skriv 15 i stället för 15 tryck. */
+.stepper-input {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  cursor: text;
+}
+.stepper-input input {
+  width: 3.2em;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  text-align: right;
+  padding: 0;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.stepper-input input::-webkit-outer-spin-button,
+.stepper-input input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.stepper-input input:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.stepper-remove {
+  background: none;
+  border: none;
+  color: var(--red);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 6px 8px;
+  min-height: 44px;
+}
