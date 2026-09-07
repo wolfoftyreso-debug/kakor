@@ -8,16 +8,23 @@ import { capitalizeFirst, changeDeadline, formatDeadline, formatDeliveryDateWith
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { looksLikePersonalNumber } from "@/lib/validation";
+import { isVerifiedValue } from "@/lib/config";
+import { FREQUENCY_LABELS } from "@/lib/status";
 
 // Transaktionell e-post vid order: orderbekräftelse till kontakt-e-post och
 // faktura (med PDF-bilaga + nedladdningslänk) till faktura-e-post.
 // Anropas EFTER att ordern är sparad. Fel loggas men kastas aldrig vidare.
 
+export interface OrderEmailOptions {
+  /** Extra rader till kunden (flyttad leveransdag, sort som utgått …). */
+  customerNotes?: string[];
+}
+
 /** Skickar orderbekräftelse + faktura. Returnerar true bara när båda gick iväg. */
-export async function sendOrderEmails(orderId: string): Promise<boolean> {
+export async function sendOrderEmails(orderId: string, options: OrderEmailOptions = {}): Promise<boolean> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { items: true, invoice: true, deliveryArea: true },
+    include: { items: true, invoice: true, deliveryArea: true, subscription: { select: { number: true, frequency: true } } },
   });
   if (!order || !order.invoice) return false;
 
@@ -29,11 +36,28 @@ export async function sendOrderEmails(orderId: string): Promise<boolean> {
     .join("\n");
   const deliveryDay = capitalizeFirst(formatDeliveryDateWithYear(order.deliveryDate));
   const invoiceUrl = `${siteConfig.url}/faktura/${order.invoice.downloadToken}`;
+  const sub = order.subscription;
+  const frequencyLabel = sub ? (FREQUENCY_LABELS[sub.frequency as keyof typeof FREQUENCY_LABELS] ?? sub.frequency).toLowerCase() : "";
 
-  const confirmationText = `Tack för er beställning!
+  // Ändringsfristen: för prenumerationsordrar skapas ordern bara några dagar
+  // före leverans, och runt helgdagar kan fristen redan ha passerat när mejlet
+  // går iväg. Då ska mejlet säga det – inte ange ett datum som redan är förbi.
+  const deadline = changeDeadline(order.deliveryDate, orderPolicy.changeCutoffWorkdays, orderPolicy.changeCutoffHour);
+  const deadlinePassed = deadline.getTime() <= Date.now();
+  const changeLine = sub
+    ? deadlinePassed
+      ? "Den här leveransen är redan planerad i körningen och går inte att ändra. Vill ni ändra, pausa eller avsluta prenumerationen? Svara på det här mejlet – ändringen gäller från nästa leverans."
+      : `Ändringar eller avbokning av den här leveransen: svara på det här mejlet senast ${formatDeadline(deadline)}. Vill ni ändra mängd, pausa eller avsluta prenumerationen? Svara på samma mejl – ändringen gäller från nästa leverans.`
+    : deadlinePassed
+      ? "Leveransen är planerad i körningen och kan inte längre ändras eller avbokas kostnadsfritt. Stämmer något inte? Svara på det här mejlet så löser vi det."
+      : `Ändringar eller avbokning: svara på det här mejlet senast ${formatDeadline(deadline)}. Därefter är ordern packad och faktureras.`;
+  const notes = (options.customerNotes ?? []).filter((n) => n.trim().length > 0);
+  const notesBlock = notes.length > 0 ? `\nOBS\n${notes.map((n) => `  ${n}`).join("\n")}\n` : "";
 
-Ordernummer: ${order.orderNumber}
+  const confirmationText = `${sub ? `Nästa leverans i er fikaprenumeration är på gång.` : "Tack för er beställning!"}
 
+Ordernummer: ${order.orderNumber}${sub ? `\nFikaprenumeration: ${sub.number} (${frequencyLabel})` : ""}
+${notesBlock}
 KAKOR
 ${lines}
 
@@ -43,9 +67,9 @@ Totalt inkl. moms: ${formatOre(order.totalOre)}
 
 LEVERANS
 ${order.deliveryAddress}, ${order.deliveryPostalCode} ${order.deliveryCity}
-Leveransdag: ${deliveryDay}
+Leveransdag: ${deliveryDay}${order.deliveryInstruction ? `\nLeveransanvisning: ${order.deliveryInstruction}` : ""}
 Vi levererar under dagen – se till att någon finns på plats för att ta emot leveransen.
-Ändringar eller avbokning: svara på det här mejlet senast ${formatDeadline(changeDeadline(order.deliveryDate, orderPolicy.changeCutoffWorkdays, orderPolicy.changeCutoffHour))}. Därefter är ordern packad och faktureras.
+${changeLine}
 
 FAKTURA
 Betalning sker mot faktura. Fakturan skapas nu och skickas till ${order.invoiceEmail}. Förfallodatum ${formatLongDate(order.invoice.dueDate)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen).
@@ -58,7 +82,9 @@ Sockerbagaren`;
 
   const confirmationPromise = sendEmail({
     to: order.email,
-    subject: `Orderbekräftelse ${order.orderNumber} – Sockerbagaren`,
+    subject: sub
+      ? `Fikaleverans ${formatDeliveryDateWithYear(order.deliveryDate)} (${sub.number}) – Sockerbagaren`
+      : `Orderbekräftelse ${order.orderNumber} – Sockerbagaren`,
     text: confirmationText,
     type: "ORDER_CONFIRMATION",
     orderId: order.id,
@@ -81,13 +107,22 @@ Sockerbagaren`;
     console.error("PDF-bilaga kunde inte genereras:", e);
   }
 
-  const invoiceText = `Faktura ${order.invoice.invoiceNumber} från Sockerbagaren (${order.orderNumber})
+  // Betalningsuppgifter i själva mejlet när de är verifierade – mottagaren ska
+  // kunna betala även om bilagan saknas. Platshållare skrivs aldrig ut.
+  const paymentLines = [
+    isVerifiedValue(invoiceConfig.bankgiro) ? `Bankgiro: ${invoiceConfig.bankgiro}` : "",
+    `Referens vid betalning: ${order.invoice.invoiceNumber}`,
+    `Säljare: ${invoiceConfig.companyName}, org.nr ${invoiceConfig.orgNumber}`,
+  ].filter(Boolean);
+  const invoiceText = `Faktura ${order.invoice.invoiceNumber} från Sockerbagaren (order ${order.orderNumber}${sub ? `, fikaprenumeration ${sub.number}` : ""})
 
 Belopp att betala: ${formatOre(order.totalOre)} inkl. moms
-Förfallodatum: ${formatLongDate(order.invoice.dueDate)}
+Förfallodatum: ${formatLongDate(order.invoice.dueDate)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen ${formatLongDate(order.deliveryDate)})
+${paymentLines.join("\n")}
 
 ${attachments ? "Fakturan bifogas som PDF." : ""}
 Ladda ner fakturan: ${invoiceUrl}
+Länken fungerar tills vidare – spara mejlet. Behöver ni en ny kopia senare: svara på det här mejlet med fakturanumret.
 
 Vänliga hälsningar
 Sockerbagaren`;
@@ -107,7 +142,7 @@ Sockerbagaren`;
     ? Promise.resolve(false)
     : sendEmail({
       to: emailConfig.adminNotify,
-      subject: `Ny order ${order.orderNumber} – ${order.companyName} (${formatOre(order.totalOre)})`,
+      subject: `${sub ? `Prenumerationsorder ${order.orderNumber} (${sub.number})` : `Ny order ${order.orderNumber}`} – ${order.companyName} (${formatOre(order.totalOre)})`,
       text: `Ny beställning via webben.
 
 Order: ${order.orderNumber}
@@ -135,13 +170,16 @@ Admin: ${siteConfig.url}/admin/bestallningar/${order.id}`,
 export async function sendDeliveryConfirmationEmail(orderId: string): Promise<boolean> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { items: true, invoice: true },
+    include: { items: true, invoice: { include: { creditNotes: true } } },
   });
   if (!order || order.deliveryStatus !== "DELIVERED") return false;
   const lines = order.items.map((i) => `  ${i.productName}: ${qtyLabel(i.weightKg, i.unit)}`).join("\n");
+  // Belopp efter eventuell delkreditering – aldrig originalbeloppet när en del krediterats.
+  const credited = order.invoice?.creditNotes.reduce((s, c) => s + c.totalOre, 0) ?? 0; // negativt
+  const toPay = order.invoice ? Math.max(0, order.invoice.totalOre + credited) : 0;
   const invoicePart =
-    order.invoice && order.paymentStatus !== "PAID" && order.invoice.status !== "CREDITED"
-      ? `\nFAKTURA\nFaktura ${order.invoice.invoiceNumber} på ${formatOre(order.totalOre)} inkl. moms förfaller ${formatLongDate(order.invoice.dueDate)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen).\nLadda ner fakturan: ${siteConfig.url}/faktura/${order.invoice.downloadToken}\n`
+    order.invoice && order.paymentStatus !== "PAID" && order.invoice.status !== "CREDITED" && toPay > 0
+      ? `\nFAKTURA\nFaktura ${order.invoice.invoiceNumber} på ${formatOre(toPay)} inkl. moms${credited !== 0 ? ` (efter kreditering ${formatOre(-credited)})` : ""} förfaller ${formatLongDate(order.invoice.dueDate)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen).\nLadda ner fakturan: ${siteConfig.url}/faktura/${order.invoice.downloadToken}\n`
       : "";
   const text = `Nu är kakorna levererade!
 
@@ -194,7 +232,7 @@ Vi har ännu inte sett någon betalning för faktura ${invoice.invoiceNumber} (o
 
 Belopp att betala: ${formatOre(toPay)} inkl. moms
 Förfallodatum: ${due}${overdue ? " (passerat)" : ""}
-${credited !== 0 ? `Beloppet är efter kreditering (${formatOre(-credited)}).\n` : ""}
+${credited !== 0 ? `Beloppet är efter kreditering med kreditfaktura ${invoice.creditNotes.map((c) => c.creditNumber).join(", ")} (${formatOre(-credited)}). Den bifogade fakturan visar ursprungsbeloppet.\n` : ""}
 ${attachments ? "Fakturan bifogas på nytt som PDF." : ""}
 Ladda ner fakturan: ${siteConfig.url}/faktura/${invoice.downloadToken}
 

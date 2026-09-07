@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
+import { formatOre } from "@/lib/money";
+import { toISODate } from "@/lib/dates";
 
 // Säker fakturanedladdning: 48 tecken slumpad token, ingen inloggning krävs.
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: string }> }) {
@@ -10,8 +12,22 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: str
     return NextResponse.redirect(new URL("/faktura-saknas", _req.url), 302);
   }
   // Samma länkformat för faktura och kreditfaktura (egna token-serier).
-  const invoice = await prisma.invoice.findUnique({ where: { downloadToken: token } });
+  const invoice = await prisma.invoice.findUnique({ where: { downloadToken: token }, include: { creditNotes: { orderBy: { createdAt: "asc" } } } });
   const credit = invoice ? null : await prisma.creditNote.findUnique({ where: { downloadToken: token } });
+  // En faktura som hämtas efter kreditering ska bära det på dokumentet – annars
+  // ser en krediterad faktura fullt betalbar ut i mottagarens arkiv.
+  let statusNote: string | undefined;
+  if (invoice && invoice.creditNotes.length > 0) {
+    const credited = invoice.creditNotes.reduce((s, c) => s + c.totalOre, 0); // negativt
+    const numbers = invoice.creditNotes.map((c) => c.creditNumber).join(", ");
+    const last = invoice.creditNotes[invoice.creditNotes.length - 1];
+    statusNote =
+      invoice.status === "CREDITED"
+        ? `Krediterad ${toISODate(last.createdAt)} genom kreditfaktura ${numbers} – ska inte betalas`
+        : `Delvis krediterad (kreditfaktura ${numbers}) – återstår ${formatOre(Math.max(0, invoice.totalOre + credited)).replace(/[\u202f\u00a0]/g, " ")}`;
+  } else if (invoice && invoice.status === "PAID") {
+    statusNote = "Betald";
+  }
   const doc = invoice
     ? { snapshotJson: invoice.snapshotJson, number: invoice.invoiceNumber, filename: `faktura-${invoice.invoiceNumber}.pdf` }
     : credit
@@ -20,7 +36,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: str
   if (!doc) return NextResponse.redirect(new URL("/faktura-saknas", _req.url), 302);
 
   const snapshot = parseSnapshot(doc.snapshotJson);
-  const pdf = await renderInvoicePdf(snapshot, doc.number);
+  const pdf = await renderInvoicePdf(snapshot, doc.number, { statusNote });
 
   return new NextResponse(new Uint8Array(pdf), {
     headers: {

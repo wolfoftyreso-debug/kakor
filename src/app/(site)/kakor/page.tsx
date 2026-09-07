@@ -51,7 +51,7 @@ const KAKOR_FAQS = [
   },
   {
     q: "Hur mycket kakor går det åt per person?",
-    a: "Räkna ungefär 3–5 småkakor per person till en fika. Hur många kakor ett kilo ger beror på sorten – snittar är lätta och mandelkubb tyngre – så välj gärna prova-på-paketet första gången och se hur långt det räcker hos er.",
+    a: "Räkna ungefär 3–5 småkakor per person till en fika. Hur många kakor ett kilo ger beror på sorten – snittar är lätta och mandelkubb tyngre – så prova-på-paketet är ett bra första köp för ett mindre gäng. Är ni fler, lägg till hela kilon av den sort ni tror mest på.",
   },
 ];
 

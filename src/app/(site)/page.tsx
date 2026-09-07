@@ -1,4 +1,4 @@
-import { invoiceConfig } from "@/lib/config";
+import { orderPolicy, invoiceConfig } from "@/lib/config";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
@@ -66,7 +66,16 @@ const FAQS = [
     q: "När kommer leveransen?",
     a: "Vi levererar under dagen på områdets leveransdag, till bemannade företagsadresser. Se till att någon kan ta emot leveransen.",
   },
-  { q: "Kan vi blanda olika kakor?", a: "Ja – lägg flera sorter i samma beställning och välj mängd per sort." },
+  { q: "Kan vi blanda olika kakor?", a: "Ja – lägg flera sorter i samma beställning och välj mängd per sort. Minsta mängd är ett kilo per sort, eller ett paket." },
+  {
+    q: "Hur mycket ska vi beställa?",
+    a: "Räkna 3–5 småkakor per person till en fika. Guiden Fika till jobbet hjälper er räkna på ert kontor, och prova-på-paketet är ett enkelt första köp för ett mindre gäng.",
+  },
+  { q: "Kostar leveransen något?", a: "Nej, leveransen ingår i priset. Inga avgifter tillkommer utöver det som står i kassan." },
+  {
+    q: "Kan vi ändra eller avboka?",
+    a: `Ja, kostnadsfritt fram till kl. ${String(orderPolicy.changeCutoffHour).padStart(2, "0")}.00 ${orderPolicy.changeCutoffWorkdays === 1 ? "en arbetsdag" : `${(["", "en", "två", "tre", "fyra", "fem", "sex", "sju", "åtta", "nio", "tio"] as const)[orderPolicy.changeCutoffWorkdays] ?? orderPolicy.changeCutoffWorkdays} arbetsdagar`} före leveransdagen – svara på orderbekräftelsen. Exakt tidpunkt står i bekräftelsen.`,
+  },
   {
     q: "Hur fungerar fikaprenumerationen?",
     a: "Ni väljer kakor, mängd och intervall. Leveransen kommer på er leveransdag, och ni kan pausa eller avsluta enkelt.",

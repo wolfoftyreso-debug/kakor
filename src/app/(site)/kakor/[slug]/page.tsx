@@ -170,6 +170,10 @@ export default async function ProductPage({ params }: Props) {
                 <dd>Tät burk i rumstemperatur, tål frysning</dd>
               </div>
               <div className="spec-row">
+                <dt>Hållbarhet</dt>
+                <dd>Bäst före-datum står på förpackningen</dd>
+              </div>
+              <div className="spec-row">
                 <dt>Leverans</dt>
                 <dd>{deliveryDays ? `${deliveryDays} i Tyresö, Nacka, Haninge och Huddinge` : "Fasta dagar per område"}</dd>
               </div>

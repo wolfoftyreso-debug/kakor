@@ -138,9 +138,16 @@ export async function issueCreditNoteInTx(
   }
 
   const today = todayInStockholm();
+  // Vad som återstår på fakturan efter DENNA kreditering – står på kreditfakturan
+  // så att mottagaren inte behöver leta i mejlet.
+  const previouslyCredited = invoice.creditNotes.reduce((s, c) => s + c.totalOre, 0); // negativt
+  const remainingToPayOre = closes ? 0 : Math.max(0, invoice.totalOre + previouslyCredited - totals.totalOre);
   const snapshot: InvoiceSnapshot = {
     ...original,
     lines,
+    remainingToPayOre,
+    creditedInvoiceTotalOre: invoice.totalOre,
+    creditedInvoiceDate: original.invoiceDate,
     subtotalOre: totals.subtotalOre,
     vatOre: totals.vatOre,
     totalOre: totals.totalOre,
@@ -218,7 +225,7 @@ Ladda ner kreditfakturan: ${siteConfig.url}/faktura/${credit.downloadToken}
 
 Vänliga hälsningar
 Sockerbagaren`;
-  return sendEmail({
+  const sent = await sendEmail({
     to: invoice.order.invoiceEmail,
     subject: `Kreditfaktura ${credit.creditNumber} – Sockerbagaren`,
     text,
@@ -226,6 +233,19 @@ Sockerbagaren`;
     type: "CREDIT_NOTE",
     orderId: invoice.orderId,
   });
+  // Beställaren (kontakt-e-post) ska också få veta att leveransen krediterats –
+  // det är oftast den personen som reklamerade eller avbokade.
+  if (invoice.order.email.toLowerCase() !== invoice.order.invoiceEmail.toLowerCase()) {
+    await sendEmail({
+      to: invoice.order.email,
+      subject: `Kreditfaktura ${credit.creditNumber} – Sockerbagaren`,
+      text: `Kopia till er som beställare – kreditfakturan har skickats till ${invoice.order.invoiceEmail}.\n\n${text}`,
+      attachments,
+      type: "CREDIT_NOTE",
+      orderId: invoice.orderId,
+    });
+  }
+  return sent;
 }
 
 /** Fristående variant (egen transaktion + mejl). Idempotent för hel kreditering. */

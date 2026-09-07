@@ -21,9 +21,11 @@ import { sendEmail } from "@/lib/email";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
+import { sendSubscriptionChangeEmail } from "@/lib/subscriptions/emails";
+import { snapToWeekday, upcomingDeliveryDates } from "@/lib/dates";
 import { formatOre } from "@/lib/money";
 import { fromISODate, todayInStockholm, isoWeekday, weekdayName, toISODate, swedishHolidayName, formatLongDate } from "@/lib/dates";
-import { canTransitionOrder, SUBSCRIPTION_FREQUENCY } from "@/lib/status";
+import { canTransitionOrder, SUBSCRIPTION_FREQUENCY, FREQUENCY_LABELS as SUBSCRIPTION_FREQUENCY_LABELS } from "@/lib/status";
 
 async function requireAdmin() {
   const admin = await getAdmin();
@@ -392,11 +394,40 @@ export async function setSubscriptionStatus(
   // Server actions är publika endpoints – TS-unionen skyddar inte i runtime.
   const parsed = z.enum(["ACTIVE", "PAUSED", "CANCELLED"]).safeParse(status);
   if (!parsed.success) return { error: "Ogiltig status" };
-  const current = await prisma.subscription.findUnique({ where: { id }, select: { status: true } });
+  const current = await prisma.subscription.findUnique({ where: { id }, include: { deliveryArea: true } });
   if (!current) return { error: "Prenumerationen finns inte" };
   if (current.status === "CANCELLED") return { error: "En avslutad prenumeration kan inte återaktiveras" };
-  await prisma.subscription.update({ where: { id }, data: { status: parsed.data } });
+  if (current.status === parsed.data) return null;
+
+  const data: { status: string; nextDeliveryDate?: Date } = { status: parsed.data };
+  if (parsed.data === "ACTIVE" && current.status === "PAUSED" && current.deliveryArea) {
+    // Återupptagen prenumeration får aldrig en order med en dags varsel: nästa
+    // leverans sätts tidigast till den dag kassan skulle erbjuda (framförhållning
+    // + helgdagar), på prenumerationens veckodag.
+    const area = current.deliveryArea;
+    const config = { weekdays: safeWeekdays(area.weekdaysJson), leadTimeDays: area.leadTimeDays, blockedDates: safeBlockedDates(area.blockedDatesJson) };
+    const earliest = upcomingDeliveryDates(config, 1)[0];
+    if (earliest && current.nextDeliveryDate.getTime() < earliest.getTime()) {
+      data.nextDeliveryDate = snapToWeekday(earliest, config.weekdays);
+    }
+  }
+  await prisma.subscription.update({ where: { id }, data });
+  const kind = parsed.data === "PAUSED" ? "PAUSED" : parsed.data === "ACTIVE" ? "RESUMED" : "CANCELLED";
+  await sendSubscriptionChangeEmail(id, kind).catch(() => false);
   revalidatePath("/admin/prenumerationer");
+  if (parsed.data !== "ACTIVE") {
+    // Paus/avslut stoppar inte ordrar som redan skapats – visa dem så att de kan avbokas separat.
+    const pending = await prisma.order.findMany({
+      where: { subscriptionId: id, status: { not: "CANCELLED" }, deliveryStatus: { not: "DELIVERED" }, deliveryDate: { gte: todayInStockholm() } },
+      select: { orderNumber: true, deliveryDate: true },
+      orderBy: { deliveryDate: "asc" },
+    });
+    if (pending.length > 0) {
+      return {
+        error: `Sparat och kunden är mejlad. OBS: ${pending.map((o) => `${o.orderNumber} (${toISODate(o.deliveryDate)})`).join(", ")} är redan skapad och levereras/faktureras om den inte avbokas under Beställningar.`,
+      };
+    }
+  }
   return null;
 }
 
@@ -428,6 +459,7 @@ export async function setSubscriptionNextDate(id: string, isoDate: string): Prom
     where: { id },
     data: { nextDeliveryDate: date },
   });
+  if (sub.status === "ACTIVE") await sendSubscriptionChangeEmail(id, "DATE_CHANGED").catch(() => false);
   revalidatePath("/admin/prenumerationer");
   return null;
 }
@@ -671,6 +703,8 @@ export async function updateSubscriptionContents(
     })
     .join(", ");
   console.log(`[admin] ${maskEmail(admin.email)} ändrade ${sub.number}: ${d.frequency}; ${summary}`);
+  const frequencyLabel = (SUBSCRIPTION_FREQUENCY_LABELS[d.frequency as keyof typeof SUBSCRIPTION_FREQUENCY_LABELS] ?? d.frequency).toLowerCase();
+  const mailed = await sendSubscriptionChangeEmail(id, "UPDATED", `${summary} – ${frequencyLabel}`).catch(() => false);
   revalidatePath("/admin/prenumerationer");
-  return { ok: true, message: `Sparat – gäller från nästa leverans: ${summary}` };
+  return { ok: true, message: `Sparat – gäller från nästa leverans: ${summary}.${mailed ? " Kunden har fått en bekräftelse." : " Bekräftelsemejlet till kunden kunde inte skickas."}` };
 }

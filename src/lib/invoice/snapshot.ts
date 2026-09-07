@@ -26,6 +26,10 @@ export interface InvoiceSnapshot {
   };
   orderNumber: string;
   deliveryDate: string; // ISO-datum
+  /** Leveransadress (rad, postnr, ort) – köpare med flera driftsställen behöver den på fakturan. */
+  deliveryAddress?: string;
+  /** Prenumerationsgenererad order: prenumerationsnumret (avtalsreferens på fakturan). */
+  subscriptionNumber?: string;
   lines: {
     productName: string;
     weightKg: number; // antal enheter
@@ -50,6 +54,11 @@ export interface InvoiceSnapshot {
   creditKind?: "FULL" | "PARTIAL";
   /** Endast på kreditfakturor: anledning (visas på PDF:en). */
   creditReason?: string;
+  /** Endast på kreditfakturor: vad som återstår att betala på originalfakturan efter denna kreditering. */
+  remainingToPayOre?: number;
+  /** Endast på kreditfakturor: originalfakturans belopp och datum. */
+  creditedInvoiceTotalOre?: number;
+  creditedInvoiceDate?: string;
 }
 
 // Validerat vid läsning: skyddar PDF-renderingen mot schemadrift och
@@ -80,6 +89,8 @@ const snapshotSchema = z.object({
   }),
   orderNumber: str,
   deliveryDate: str,
+  deliveryAddress: z.string().optional(),
+  subscriptionNumber: z.string().optional(),
   lines: z.array(
     z.object({
       productName: str,
@@ -101,6 +112,9 @@ const snapshotSchema = z.object({
   creditsInvoiceNumber: z.string().optional(),
   creditKind: z.enum(["FULL", "PARTIAL"]).optional(),
   creditReason: z.string().optional(),
+  remainingToPayOre: z.number().int().optional(),
+  creditedInvoiceTotalOre: z.number().int().optional(),
+  creditedInvoiceDate: z.string().optional(),
 });
 
 export function parseSnapshot(json: string): InvoiceSnapshot {

@@ -126,7 +126,7 @@ export default async function FikaTillJobbetPage() {
           Tumregeln är <strong>3–5 småkakor per person</strong>. Tre räcker när fikat har annat
           tilltugg också, fem när kakorna är det enda som bjuds eller när fikat drar ut på tiden.
           Hur många kakor ett kilo ger beror på sorten – snittar är lätta, mandelkubb tyngre – så
-          första gången är prova-på-paketet det säkraste sättet att se vad som går åt hos er.
+          första gången är prova-på-paketet det säkraste sättet att se vad som går åt hos ett mindre gäng. Är ni fler, komplettera med hela kilon av den sort ni tror mest på.
         </p>
         <p className="pull">Tre kakor per person när fikat har annat tilltugg, fem när kakorna är det enda som bjuds.</p>
         <table style={{ marginTop: 18 }}>
