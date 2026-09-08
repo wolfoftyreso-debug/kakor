@@ -2086,3 +2086,66 @@ html.js .reveal.in {
   padding: 6px 8px;
   min-height: 44px;
 }
+
+/* ---------- Folkets nästa småkaka ---------- */
+.poll-section { margin: 8px 0 12px; }
+.poll { display: flex; flex-direction: column; gap: 18px; }
+.poll-title { font-family: var(--font-serif); font-size: clamp(22px, 3vw, 28px); line-height: 1.15; margin: 0; }
+.poll-lede { margin: 0; color: var(--text-2); font-size: 15.5px; line-height: 1.6; max-width: 58ch; }
+.poll-deadline { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: 0.2px; color: var(--text-2); }
+.poll-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.poll-card {
+  display: flex; flex-direction: column; text-align: left; padding: 0; margin: 0;
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-lg, 12px);
+  overflow: hidden; cursor: pointer; color: inherit; font: inherit;
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.poll-card:hover { border-color: var(--text-2); transform: translateY(-1px); }
+.poll-card:focus-visible { outline: 3px solid var(--butter); outline-offset: 2px; }
+.poll-card.selected { border-color: var(--text); box-shadow: 0 0 0 2px var(--text) inset, 0 8px 24px rgba(59, 40, 27, 0.10); }
+.poll-card-media { display: block; position: relative; height: clamp(160px, 40vw, 210px); background: var(--section-tint); }
+.poll-card-media > span { position: absolute; inset: 0; }
+.poll-card-body { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 16px; }
+.poll-card-name { font-family: var(--font-serif); font-size: 20px; font-weight: 700; }
+.poll-card-desc { font-size: 14px; color: var(--text-2); line-height: 1.5; }
+.poll-card-tradition { font-size: 12.5px; color: var(--text-2); font-style: italic; }
+.poll-card-pick { margin-top: 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: var(--red); }
+.poll-card.selected .poll-card-pick { color: var(--text); }
+.poll-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.poll-hint { font-size: 13.5px; color: var(--text-2); }
+.poll-thanks { outline: none; }
+.poll-thanks .poll-title { animation: poll-in 360ms ease-out; }
+@keyframes poll-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .poll-thanks .poll-title { animation: none; } .poll-card { transition: none; } }
+.poll-results { display: flex; flex-direction: column; gap: 10px; }
+.poll-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.poll-bars li { display: flex; flex-direction: column; gap: 5px; }
+.poll-bar-label { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; }
+.poll-bars li.mine .poll-bar-label::after { content: "din röst"; font-size: 12px; font-weight: 600; color: var(--text-2); margin-left: 8px; order: 1; }
+.poll-bar-pct { font-variant-numeric: tabular-nums; }
+.poll-bar-track { display: block; height: 10px; border-radius: 6px; background: var(--section-tint); overflow: hidden; }
+.poll-bar-fill { display: block; height: 100%; background: var(--text); border-radius: 6px; transition: width 600ms ease; }
+.poll-bars li.mine .poll-bar-fill { background: var(--red); }
+.poll-total { margin: 0; font-size: 13.5px; color: var(--text-2); }
+.poll-signup { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: var(--section-tint); border-radius: var(--radius); }
+.poll-signup-label { font-size: 14px; font-weight: 600; }
+.poll-signup-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.poll-signup-row input { flex: 1 1 200px; border: 1.5px solid var(--input-border); border-radius: var(--radius); padding: 11px 13px; font-size: 15px; background: var(--surface); color: var(--text); }
+.poll-signup-done { margin: 0; font-size: 14.5px; font-weight: 600; }
+.poll-more { margin: 14px 0 0; }
+.poll--done { padding: 22px 24px; border: 1.5px solid var(--border); border-radius: var(--radius-lg, 12px); background: var(--surface); }
+.poll-nudge { margin: 20px 0 0; font-size: 14.5px; color: var(--text-2); }
+.poll-nudge--compact { margin: 12px 0 0; font-size: 13.5px; }
+.poll-timeline { list-style: none; margin: 0 0 8px; padding: 0 0 0 18px; border-left: 2px solid var(--border); display: flex; flex-direction: column; gap: 14px; }
+.poll-timeline li { position: relative; display: flex; flex-direction: column; gap: 2px; }
+.poll-timeline li::before { content: ""; position: absolute; left: -24px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--text); }
+.poll-timeline li.muted::before { background: var(--border); }
+.poll-timeline li.muted { color: var(--text-2); }
+.poll-timeline-label { font-size: 12.5px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-2); }
+.poll-mission { display: grid; gap: 10px; margin: 0 0 24px; }
+.poll-mission div { display: grid; grid-template-columns: 110px 1fr; gap: 12px; }
+.poll-mission dt { font-weight: 700; }
+.poll-mission dd { margin: 0; }
+@media (max-width: 520px) { .poll-mission div { grid-template-columns: 1fr; gap: 2px; } }
+.poll-home { }

@@ -265,3 +265,16 @@ automatiskt — det beslutet är verksamhetens.)
 8. **Smoke**: `SMOKE_EMAIL=<egen låda> npm run smoke -- https://<deploy> --order`,
    avbryt testordern i admin (kreditfaktura utfärdas).
 9. **Domän SIST**: apex + www i Vercel (www → apex-redirect finns i next.config).
+
+## Folkets nästa småkaka (omröstning)
+
+- Tabeller `Poll`, `PollCandidate`, `PollVote`, `PollWinnerSignup`. Seed skapar
+  omgång 1 (Hallongrotta, Dröm, Schackruta, slut Lucia 2026-12-13 23:59 svensk
+  tid) idempotent – befintliga omgångar och röster rörs aldrig av seed.
+- `POST /api/polls/<slug>/vote` sätter den anonyma besökskakan `sb_besok`
+  (httpOnly, 400 dagar). En röst per besökare och omgång via unikt villkor;
+  same-origin-krav, rate limit 10/min och 40/dygn per IP, saltat IP-hash
+  (`CRON_SECRET` som salt) enbart för adminvyn "misstänkt aktivitet".
+- Deadline och status avgörs alltid på servern (`pollState`), aldrig i klienten.
+- Admin: /admin/omrostningar – skapa omgång, kandidater, öppna/stänga, utse
+  vinnare, koppla lanserad produkt ("Folkets val"), lista över aviseringar.

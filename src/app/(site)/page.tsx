@@ -5,6 +5,7 @@ import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { ImageSlot } from "@/components/ImageSlot";
 import { Reveal } from "@/components/Reveal";
+import { PollSection } from "@/components/poll/PollSection";
 import { TrustStrip } from "@/components/TrustStrip";
 import { Steps } from "@/components/Steps";
 import { IconCheck } from "@/components/Icons";
@@ -176,6 +177,21 @@ export default async function HomePage() {
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
+      </section>
+
+      {/* FOLKETS NÄSTA SMÅKAKA – kunderna väljer nästa recept ur boken */}
+      <section id="folkets-kaka" className="container section-y reveal">
+        <div className="rule-label">Folkets nästa småkaka</div>
+        <div className="section-head">
+          <div>
+            <h2 className="h-section">Hjälp oss välja nästa småkaka</h2>
+            <p>Vi väcker recepten ur Svenskt konditorlexikon till liv igen – ett i taget. Ni röstar, vi bakar vinnaren.</p>
+          </div>
+          <Link href="/folkets-kaka" className="section-link">
+            Hela berättelsen →
+          </Link>
+        </div>
+        <PollSection variant="compact" placement="startsida" showLink={false} />
       </section>
 
       {/* RECEPT 1957 – sajtens sanna ursprung som redaktionellt band */}

@@ -105,6 +105,36 @@ async function main() {
     });
   }
 
+  // Folkets nästa småkaka, omgång 1: Hallongrotta, Dröm, Schackruta.
+  // Deadline Luciadagen 13 december 2026 kl. 23:59 svensk tid (CET = UTC+1).
+  // Idempotent: befintlig omgång rörs inte (rösterna får aldrig nollställas).
+  const poll = await prisma.poll.upsert({
+    where: { slug: "folkets-nasta-smakaka-1" },
+    create: {
+      slug: "folkets-nasta-smakaka-1",
+      sequence: 1,
+      title: "Vilken klassiker ska vi baka härnäst?",
+      intro: "Vi vill väcka recepten ur Svenskt konditorlexikon till liv igen. Nu får ni bestämma vilken småkaka som blir nästa i Sockerbagarens sortiment.",
+      deadlineLabel: "Luciadagen den 13 december",
+      startsAt: new Date("2026-09-08T00:00:00.000Z"),
+      endsAt: new Date("2026-12-13T22:59:59.000Z"),
+      status: "ACTIVE",
+    },
+    update: {},
+  });
+  const candidates = [
+    { slug: "hallongrotta", name: "Hallongrotta", displayOrder: 1, description: "Smörig mördeg med en grop hallonsylt i mitten.", tradition: "En av det svenska kakfatets stora klassiker – självskriven på kafferepet." },
+    { slug: "drom", name: "Dröm", displayOrder: 2, description: "Spröd och luftig, bakad med hjorthornssalt, smälter i munnen.", tradition: "Drömmar hör till de sju sorterna sedan generationer." },
+    { slug: "schackruta", name: "Schackruta", displayOrder: 3, description: "Tvåfärgad mördeg med vanilj och kakao, rutad som ett schackbräde.", tradition: "Kafferepets ögonfröjd – lika mycket hantverk som kaka." },
+  ];
+  for (const c of candidates) {
+    await prisma.pollCandidate.upsert({
+      where: { pollId_slug: { pollId: poll.id, slug: c.slug } },
+      create: { pollId: poll.id, ...c },
+      update: {},
+    });
+  }
+
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
   const adminCount = await prisma.adminUser.count();

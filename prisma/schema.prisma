@@ -53,6 +53,7 @@ model Product {
 
   orderItems        OrderItem[]
   subscriptionItems SubscriptionItem[]
+  pollCandidates    PollCandidate[]
 }
 
 model DeliveryArea {
@@ -338,4 +339,83 @@ model OrderEvent {
   createdAt DateTime @default(now())
 
   @@index([orderId])
+}
+
+// ---------- Folkets nästa småkaka ----------
+// Återkommande omröstning: kunderna väljer vilket recept ur Svenskt
+// konditorlexikon som blir nästa i sortimentet. Generisk modell – nya
+// omgångar, kandidater, datum och vinnare skapas i admin utan kodändring.
+
+model Poll {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  /** Löpnummer i serien: "Folkets val #1". */
+  sequence      Int      @default(1)
+  title         String
+  intro         String   @default("")
+  /** Mänsklig etikett för slutdatumet, t.ex. "Luciadagen den 13 december". */
+  deadlineLabel String   @default("")
+  startsAt      DateTime
+  endsAt        DateTime
+  status        String   @default("DRAFT") // DRAFT | ACTIVE | CLOSED
+  winnerCandidateId String?
+  winnerAnnouncedAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  candidates PollCandidate[]
+  votes      PollVote[]
+  signups    PollWinnerSignup[]
+}
+
+model PollCandidate {
+  id              String   @id @default(cuid())
+  pollId          String
+  poll            Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  name            String
+  slug            String
+  description     String   @default("")
+  /** Kort notis om kakans plats i fikatraditionen. */
+  tradition       String   @default("")
+  imageRef        String   @default("")
+  displayOrder    Int      @default(0)
+  /** Sätts när vinnaren lanserats som produkt – ger "Folkets val"-proveniens. */
+  productId       String?
+  product         Product? @relation(fields: [productId], references: [id])
+  /** T.ex. sida/uppslag i Svenskt konditorlexikon. */
+  sourceReference String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  votes PollVote[]
+
+  @@unique([pollId, slug])
+  @@index([pollId, displayOrder])
+}
+
+model PollVote {
+  id          String        @id @default(cuid())
+  pollId      String
+  poll        Poll          @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  candidateId String
+  candidate   PollCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  /** Anonym besökskaka – en röst per besökare och omgång (unikt villkor). */
+  visitorId   String
+  /** Saltat hash av IP – bara för att se misstänkt aktivitet i admin, aldrig rå IP. */
+  ipHash      String        @default("")
+  createdAt   DateTime      @default(now())
+
+  @@unique([pollId, visitorId])
+  @@index([pollId, candidateId])
+  @@index([pollId, ipHash])
+}
+
+model PollWinnerSignup {
+  id        String   @id @default(cuid())
+  pollId    String
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  email     String
+  createdAt DateTime @default(now())
+
+  @@unique([pollId, email])
 }
