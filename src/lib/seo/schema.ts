@@ -68,6 +68,8 @@ export function organizationNode(): JsonLdNode {
       : {}),
     ...(isVerifiedValue(invoiceConfig.vatNumber) ? { vatID: invoiceConfig.vatNumber } : {}),
     taxID: invoiceConfig.orgNumber,
+    // Grundaren enligt berättelsen på /om (verksamhetens uppgift).
+    founder: { "@type": "Person", name: "Tiffany Svensson" },
   };
 }
 

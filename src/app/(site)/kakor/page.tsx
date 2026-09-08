@@ -42,6 +42,10 @@ const KAKOR_FAQS = [
     a: "Småkakor tål frysning mycket bra. Frys i tät påse eller burk och låt tina i rumstemperatur – konsistens och smak håller sig i flera månader.",
   },
   {
+    q: "Var bakas kakorna?",
+    a: "Hos ett litet konditori i Litauen, med några få personer och mycket handarbete, efter våra äldre svenska recept. Direkt efter bakningen kyls och fryses kakorna, precis som förr, och transporteras till vårt lager i Tyresö där vi kontrollerar och packar beställningarna. Kakorna tinar på vägen till er och är redo att ställas fram när de kommer.",
+  },
+  {
     q: "Vad är sju sorters kakor?",
     a: "En klassisk svensk kaffebjudningstradition: minst sju olika småkakor på bordet. Mandelkubb, kolasnittar och chokladsnittar är tre av klassikerna som ofta ingår.",
   },
