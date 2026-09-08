@@ -141,10 +141,12 @@ Vercel-loggarna.
 - I Vercel: lägg till båda domänerna på projektet och peka DNS enligt
   Vercels anvisningar. TLS sköts av Vercel.
 
-## Cron (prenumerationer)
+## Cron (prenumerationer och leveranspåminnelser)
 
 - `vercel.json` schemalägger `GET /api/cron/generate-subscription-orders`
-  dagligen 05:00 UTC. Vercel skickar automatiskt
+  dagligen 05:00 UTC och `GET /api/cron/delivery-reminders` dagligen 12:00 UTC
+  (påminnelse till kontakt-e-posten dagen före leverans; idempotent via
+  e-postloggen, typ `DELIVERY_REMINDER`). Vercel skickar automatiskt
   `Authorization: Bearer <CRON_SECRET>` när variabeln finns i projektet.
 - Endpointen svarar 401 vid fel auth, 503 om `CRON_SECRET` saknas.
 - **Idempotent på databasnivå**: unikhetsvillkoret

@@ -94,6 +94,24 @@ type SubmitResult =
 // Pågående flödesdata (steg, leveransval, formulär) – sessionStorage så att
 // reload/back/avstickare inte kastar bort något. Korgen bor i localStorage.
 const FLOW_STORAGE_KEY = "sb_checkout_v1";
+// Företagsuppgifter som kunden VALT att spara till nästa beställning (localStorage,
+// bara i den här webbläsaren). Aldrig utan kryssrutan.
+const SAVED_DETAILS_KEY = "sb_foretag_v1";
+const SAVED_FIELDS: (keyof FormState)[] = [
+  "companyName", "orgNumber", "contactName", "phone", "email", "invoiceEmail",
+  "deliveryAddress", "deliveryPostalCode", "deliveryCity", "reference", "billingAddress", "deliveryInstruction",
+];
+
+/** Ungefärligt antal kakor per enhet (kg eller paket) – null när admin inte fyllt i. */
+function piecesPerUnit(p: ProductCardData): number | null {
+  if (!p.piecesPerKgApprox || p.piecesPerKgApprox <= 0) return null;
+  if (p.unit === "paket") return p.packageWeightGrams > 0 ? (p.piecesPerKgApprox * p.packageWeightGrams) / 1000 : null;
+  return p.piecesPerKgApprox;
+}
+// Tumregeln från guiden: 3–5 småkakor per person. Förslaget räknar med fyra.
+const PIECES_PER_PERSON_MIN = 3;
+const PIECES_PER_PERSON_MAX = 5;
+const PIECES_PER_PERSON_SUGGEST = 4;
 // Senaste lyckade beställning – så att Tack-sidan överlever en omladdning.
 const RESULT_STORAGE_KEY = "sb_last_result_v1";
 
@@ -128,6 +146,9 @@ export function CheckoutFlow({
   const [deliveryDate, setDeliveryDate] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [sameEmail, setSameEmail] = useState(true);
+  const [saveDetails, setSaveDetails] = useState(false);
+  const [restoredFromSaved, setRestoredFromSaved] = useState(false);
+  const [persons, setPersons] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -208,8 +229,40 @@ export function CheckoutFlow({
     } catch {
       // ingen kvittokopia – inget att visa
     }
+    // Sparade företagsuppgifter (kundens eget val vid en tidigare beställning):
+    // fyll i när inget pågående flöde redan bär uppgifter.
+    try {
+      const hasFlow = !!sessionStorage.getItem(FLOW_STORAGE_KEY);
+      const rawSaved = localStorage.getItem(SAVED_DETAILS_KEY);
+      if (rawSaved && !hasFlow) {
+        const saved = JSON.parse(rawSaved) as Partial<FormState> & { sameEmail?: boolean };
+        const safe = Object.fromEntries(
+          Object.entries(saved).filter(([k, v]) => (SAVED_FIELDS as string[]).includes(k) && typeof v === "string" && v.length <= 500)
+        ) as Partial<FormState>;
+        if (Object.keys(safe).length > 0) {
+          setForm({ ...EMPTY_FORM, ...safe });
+          setSameEmail(saved.sameEmail !== false);
+          setSaveDetails(true);
+          setRestoredFromSaved(true);
+        }
+      }
+    } catch {
+      // lagring otillgänglig eller korrupt – tomt formulär
+    }
     setFlowRestored(true);
   }, []);
+
+  const clearSavedDetails = () => {
+    try {
+      localStorage.removeItem(SAVED_DETAILS_KEY);
+    } catch {
+      // inget att rensa
+    }
+    setForm(EMPTY_FORM);
+    setSameEmail(true);
+    setSaveDetails(false);
+    setRestoredFromSaved(false);
+  };
 
   // Webbläsarens bakåt/framåt ska gå mellan stegen, inte lämna kassan.
   useEffect(() => {
@@ -552,6 +605,17 @@ export function CheckoutFlow({
         } catch {
           // lagring otillgänglig – inget att rensa
         }
+        // Företagsuppgifter till nästa gång – bara när kunden kryssat i det.
+        try {
+          if (saveDetails) {
+            const toSave = Object.fromEntries(SAVED_FIELDS.map((k) => [k, form[k]]));
+            localStorage.setItem(SAVED_DETAILS_KEY, JSON.stringify({ ...toSave, sameEmail }));
+          } else {
+            localStorage.removeItem(SAVED_DETAILS_KEY);
+          }
+        } catch {
+          // lagring otillgänglig – nästa beställning fylls i för hand
+        }
         cart.clear();
         goTo(5);
         try {
@@ -629,6 +693,8 @@ export function CheckoutFlow({
   const modeSummary =
     mode === "RECURRING" ? `Fikaprenumeration · ${intervalLabel(interval).toLowerCase()}` : undefined;
   const hasPackageProducts = products.some((p) => p.unit === "paket");
+  const hasPieceData = products.some((p) => piecesPerUnit(p) !== null);
+  const personCount = /^\d+$/.test(persons) ? Math.min(500, parseInt(persons, 10)) : 0;
 
 
   return (
@@ -722,6 +788,25 @@ export function CheckoutFlow({
             Räkna 3–5 småkakor per person till fikat.{" "}
             <Link href="/fika-till-jobbet" target="_blank" rel="noopener">Hur mycket behöver ni?</Link>
           </p>
+          {hasPieceData && (
+            <div className="info-box-muted" style={{ marginBottom: 18, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 16px" }}>
+              <label htmlFor="antal-personer" style={{ fontWeight: 700, fontSize: 15 }}>Hur många ska fika?</label>
+              <input
+                id="antal-personer"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={500}
+                value={persons}
+                placeholder="t.ex. 25"
+                onChange={(e) => setPersons(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                style={{ width: 96, padding: "9px 12px", border: "1.5px solid var(--input-border)", borderRadius: "var(--radius)", fontSize: 15, background: "var(--surface)" }}
+              />
+              <span style={{ fontSize: 13.5, color: "var(--text-2)" }}>
+                {personCount ? `Vi föreslår mängd per sort nedan, räknat på ${PIECES_PER_PERSON_SUGGEST} kakor per person.` : "Så föreslår vi en mängd per sort."}
+              </span>
+            </div>
+          )}
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {products.map((p) => (
               <div
@@ -739,6 +824,32 @@ export function CheckoutFlow({
                     {formatOre(p.pricePerKgOre)}
                     {priceSuffix(p.unit)} exkl. moms · {p.allergens}
                   </div>
+                  {(() => {
+                    const pieces = piecesPerUnit(p);
+                    if (!pieces) return null;
+                    const qty = qtyFor(p.id);
+                    if (qty > 0) {
+                      const lo = Math.floor((qty * pieces) / PIECES_PER_PERSON_MAX);
+                      const hi = Math.floor((qty * pieces) / PIECES_PER_PERSON_MIN);
+                      return (
+                        <div className="qty-hint" aria-live="polite">
+                          Räcker till ca {lo}–{hi} personer
+                        </div>
+                      );
+                    }
+                    if (personCount) {
+                      const suggested = Math.min(MAX_UNITS, Math.max(1, Math.ceil((personCount * PIECES_PER_PERSON_SUGGEST) / pieces)));
+                      return (
+                        <div className="qty-hint">
+                          Förslag för {personCount} personer: {qtyLabel(suggested, p.unit)}{" "}
+                          <button type="button" className="link-btn" onClick={() => setQty(p, suggested)}>
+                            Lägg i korgen
+                          </button>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
                 <div className="stepper">
                   <button
@@ -992,6 +1103,14 @@ export function CheckoutFlow({
           <p style={{ fontSize: 15, color: "var(--text-2)", margin: "0 0 20px" }}>
             Vi behöver bara det som krävs för leverans och faktura.
           </p>
+          {restoredFromSaved && (
+            <div className="info-box-muted" role="status" style={{ marginBottom: 18, fontSize: 14 }}>
+              Uppgifterna är ifyllda från er förra beställning i den här webbläsaren.{" "}
+              <button type="button" className="link-btn" onClick={clearSavedDetails}>
+                Rensa och börja om
+              </button>
+            </div>
+          )}
           <MiniSummary
             lines={summaryLines}
             totalOre={totals.totalOre}
@@ -1093,6 +1212,10 @@ export function CheckoutFlow({
                 />
               </div>
             </div>
+            <label className="checkbox-label" style={{ marginTop: 18 }}>
+              <input type="checkbox" checked={saveDetails} onChange={(e) => setSaveDetails(e.target.checked)} />
+              Spara företagsuppgifterna i den här webbläsaren till nästa beställning
+            </label>
             <div className="info-box-muted" style={{ margin: "20px 0 28px" }}>
               <strong>Betalning sker mot faktura.</strong> Ingen kortbetalning behövs – fakturan
               skapas {mode === "RECURRING" ? "inför varje leverans" : "när ni skickar beställningen"} och

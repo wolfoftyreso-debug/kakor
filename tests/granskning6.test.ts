@@ -203,3 +203,21 @@ describe("kreditfaktura", () => {
     await prisma.order.update({ where: { id: order.id }, data: { status: "CANCELLED" } });
   });
 });
+
+describe("prismejl till prenumeranter", () => {
+  it("mejlar aktiva prenumeranter med sorten – gammalt pris, nytt pris och nytt belopp per leverans", async () => {
+    const { notifyPriceChangeToSubscribers } = await import("@/lib/subscriptions/emails");
+    const { subscription } = await createSubscription(subInput());
+    const product = await prisma.product.findUniqueOrThrow({ where: { id: productIds[0] } });
+    sent.length = 0;
+    const count = await notifyPriceChangeToSubscribers(product.id, product.pricePerKgOre, product.pricePerKgOre + 1000);
+    expect(count).toBeGreaterThanOrEqual(1);
+    const mail = sent.find((m) => m.type === "SUBSCRIPTION_PRICE_CHANGE" && m.subject.includes(subscription.number));
+    expect(mail).toBeTruthy();
+    expect(mail!.text).toContain(product.name);
+    expect(mail!.text).toContain("Nytt belopp per leverans");
+    // Oförändrat pris ger inget mejl.
+    expect(await notifyPriceChangeToSubscribers(product.id, product.pricePerKgOre, product.pricePerKgOre)).toBe(0);
+    await prisma.subscription.update({ where: { id: subscription.id }, data: { status: "CANCELLED" } });
+  });
+});

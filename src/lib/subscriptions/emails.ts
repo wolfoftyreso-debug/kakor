@@ -2,7 +2,10 @@ import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { emailConfig, siteConfig } from "@/lib/config";
 import { FREQUENCY_LABELS } from "@/lib/status";
-import { capitalizeFirst, formatDeliveryDateWithYear, isoWeekday, weekdayName } from "@/lib/dates";
+import { capitalizeFirst, formatDeliveryDateWithYear, isoWeekday, weekdayName, toISODate } from "@/lib/dates";
+import { calculateTotals, formatOre } from "@/lib/money";
+import { priceSuffix } from "@/lib/units";
+import { effectiveVatRateBp } from "@/lib/vat";
 
 // Kundmejl om själva prenumerationen (inte om enskilda ordrar). Kunden har
 // ingen inloggning: varje ändring verksamheten gör måste bekräftas skriftligt,
@@ -148,4 +151,49 @@ Kunden har inte fått något mejl om detta. Åtgärda i admin och meddela kunden
 ${siteConfig.url}/admin/prenumerationer`,
     type: "ADMIN_SUBSCRIPTION_SKIPPED",
   });
+}
+
+/**
+ * Prisändring på en sort ska aldrig dyka upp först på fakturan: alla aktiva
+ * prenumerationer med sorten får ett mejl med gammalt pris, nytt pris och det
+ * nya beloppet per leverans. Returnerar antal mejlade prenumerationer.
+ */
+export async function notifyPriceChangeToSubscribers(productId: string, oldPriceOre: number, newPriceOre: number): Promise<number> {
+  if (oldPriceOre === newPriceOre) return 0;
+  const subs = await prisma.subscription.findMany({
+    where: { status: "ACTIVE", items: { some: { productId } } },
+    include: { items: { include: { product: true } } },
+  });
+  let sent = 0;
+  for (const sub of subs) {
+    const product = sub.items.find((i) => i.productId === productId)?.product;
+    if (!product) continue;
+    const totals = calculateTotals(
+      sub.items
+        .filter((i) => i.product.active)
+        .map((i) => ({
+          netOre: i.weightKg * i.product.pricePerKgOre,
+          vatRateBp: effectiveVatRateBp(i.product.vatRateBp, toISODate(sub.nextDeliveryDate)),
+        }))
+    );
+    const ok = await sendEmail({
+      to: sub.email,
+      subject: `Nytt pris på ${product.name} från nästa leverans (${sub.number}) – Sockerbagaren`,
+      text: `Hej!
+
+Priset på ${product.name} ändras från ${formatOre(oldPriceOre)}${priceSuffix(product.unit)} till ${formatOre(newPriceOre)}${priceSuffix(product.unit)} exkl. moms.
+
+Det gäller leveranser i er fikaprenumeration ${sub.number} vars orderbekräftelse skickas från och med i dag. En leverans som redan bekräftats behåller sitt pris.
+
+Nytt belopp per leverans: ${formatOre(totals.totalOre)} inkl. moms (${formatOre(totals.subtotalOre)} exkl. moms), enligt dagens sammansättning.
+
+Vill ni ändra mängd, byta sort, pausa eller avsluta? Svara på det här mejlet – ingen bindningstid.
+
+Vänliga hälsningar
+Sockerbagaren`,
+      type: "SUBSCRIPTION_PRICE_CHANGE",
+    });
+    if (ok) sent++;
+  }
+  return sent;
 }

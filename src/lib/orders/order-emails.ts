@@ -4,7 +4,7 @@ import { sendEmail } from "@/lib/email";
 import { emailConfig, siteConfig } from "@/lib/config";
 import { formatOre } from "@/lib/money";
 import { priceSuffix, qtyLabel } from "@/lib/units";
-import { capitalizeFirst, changeDeadline, formatDeadline, formatDeliveryDateWithYear, formatLongDate, todayInStockholm } from "@/lib/dates";
+import { addDays, capitalizeFirst, changeDeadline, formatDeadline, formatDeliveryDate, formatDeliveryDateWithYear, formatLongDate, todayInStockholm } from "@/lib/dates";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { looksLikePersonalNumber } from "@/lib/validation";
@@ -248,4 +248,55 @@ Sockerbagaren`;
     type: "PAYMENT_REMINDER",
     orderId: order.id,
   });
+}
+
+/**
+ * Leveranspåminnelse dagen före till kontakt-e-posten: "i morgon kommer fikat,
+ * se till att någon kan ta emot". Idempotent via e-postloggen – cronen kan
+ * köras flera gånger samma dag utan dubbla mejl. Returnerar antal skickade.
+ */
+export async function sendDeliveryReminders(now = new Date()): Promise<{ sent: number; skipped: number; failed: number }> {
+  const tomorrow = addDays(todayInStockholm(now), 1);
+  const orders = await prisma.order.findMany({
+    where: { deliveryDate: tomorrow, status: { not: "CANCELLED" }, deliveryStatus: { not: "DELIVERED" } },
+    include: { items: true, subscription: { select: { number: true } } },
+    orderBy: { orderNumber: "asc" },
+  });
+  const result = { sent: 0, skipped: 0, failed: 0 };
+  for (const order of orders) {
+    const already = await prisma.emailLog.findFirst({
+      where: { orderId: order.id, type: "DELIVERY_REMINDER", status: "SENT" },
+      select: { id: true },
+    });
+    if (already) {
+      result.skipped++;
+      continue;
+    }
+    const lines = order.items.map((i) => `  ${i.productName}: ${qtyLabel(i.weightKg, i.unit)}`).join("\n");
+    const day = formatDeliveryDate(order.deliveryDate);
+    const ok = await sendEmail({
+      to: order.email,
+      subject: `I morgon kommer fikat – ${day} (${order.orderNumber}) – Sockerbagaren`,
+      text: `Hej!
+
+I morgon, ${day}, levererar vi ${order.subscription ? `nästa leverans i er fikaprenumeration ${order.subscription.number}` : `er beställning ${order.orderNumber}`}.
+
+LEVERANS
+${order.deliveryAddress}, ${order.deliveryPostalCode} ${order.deliveryCity}${order.deliveryInstruction ? `\nLeveransanvisning: ${order.deliveryInstruction}` : ""}
+Vi levererar under dagen – se till att någon finns på plats för att ta emot leveransen.
+
+KAKOR
+${lines}
+
+Stämmer något inte, eller är ingen på plats i morgon? Svara på det här mejlet så snart som möjligt.
+
+Vänliga hälsningar
+Sockerbagaren`,
+      type: "DELIVERY_REMINDER",
+      orderId: order.id,
+    });
+    if (ok) result.sent++;
+    else result.failed++;
+  }
+  return result;
 }

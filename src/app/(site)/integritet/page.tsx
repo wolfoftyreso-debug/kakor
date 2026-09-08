@@ -64,7 +64,9 @@ export default function IntegritetPage() {
             Order- och fakturauppgifter sparas i sju år efter utgången av det räkenskapsår de avser
             (bokföringslagen). Loggar över skickad e-post raderas efter 90 dagar och tekniska
             begränsningsräknare inom ett dygn. Varukorg och pågående beställning lagras endast i er
-            webbläsare tills beställningen skickas.
+            webbläsare tills beställningen skickas. Väljer ni att spara företagsuppgifterna till
+            nästa beställning lagras de bara i er egen webbläsare, aldrig hos oss, tills ni rensar
+            dem i kassan.
           </p>
         </section>
         <section>

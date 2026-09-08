@@ -1,5 +1,5 @@
-import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeCron } from "@/lib/cron-auth";
 import * as Sentry from "@sentry/nextjs";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 import { pruneEmailLogs } from "@/lib/email";
@@ -17,19 +17,8 @@ export const maxDuration = 60;
 // körningar ofarliga.
 
 async function runCron(req: NextRequest): Promise<NextResponse> {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    return NextResponse.json(
-      { ok: false, error: "CRON_SECRET är inte konfigurerad" },
-      { status: 503 }
-    );
-  }
-  const auth = req.headers.get("authorization") ?? "";
-  // Hash före jämförelsen: konstant längd => timingSafeEqual utan tidig avbrytning.
-  const digest = (s: string) => createHash("sha256").update(s).digest();
-  if (!timingSafeEqual(digest(auth), digest(`Bearer ${secret}`))) {
-    return NextResponse.json({ ok: false, error: "Obehörig" }, { status: 401 });
-  }
+  const denied = authorizeCron(req);
+  if (denied) return denied;
   // Städning först och oberoende av generatorn – kastar generatorn ska
   // rate limit-tabellen och e-postloggen ändå inte växa.
   const swept = await sweepRateLimitBuckets().catch(() => 0);
