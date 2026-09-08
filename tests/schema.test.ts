@@ -26,6 +26,7 @@ const product: ProductCardData = {
   imageRef: "/images/kolasnittar.jpg",
   badge: "Bästsäljare",
   vatRateBp: 1200,
+  piecesPerKgApprox: null,
 };
 
 describe("schema-motorn", () => {

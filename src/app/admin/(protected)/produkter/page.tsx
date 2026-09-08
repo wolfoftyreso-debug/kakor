@@ -9,9 +9,10 @@ import { ProductActiveToggle } from "./ProductActiveToggle";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin – produkter", robots: { index: false } };
 
-export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ sparad?: string }> }) {
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ sparad?: string; prismejl?: string }> }) {
   await requireAdminPage();
-  const { sparad } = await searchParams;
+  const { sparad, prismejl } = await searchParams;
+  const notified = prismejl && /^\d{1,5}$/.test(prismejl) ? Number(prismejl) : 0;
   const products = await prisma.product.findMany({ orderBy: { sortOrder: "asc" } });
 
   return (
@@ -19,6 +20,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       {sparad && (
         <div role="status" className="info-box" style={{ marginBottom: 16, fontSize: 14 }}>
           {sparad} är sparad.
+          {notified > 0 ? ` Priset ändrades – ${notified} ${notified === 1 ? "aktiv prenumerant har" : "aktiva prenumeranter har"} fått ett mejl om det nya priset.` : ""}
         </div>
       )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>

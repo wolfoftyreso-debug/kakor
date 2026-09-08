@@ -21,7 +21,7 @@ import { sendEmail } from "@/lib/email";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
-import { sendSubscriptionChangeEmail } from "@/lib/subscriptions/emails";
+import { notifyPriceChangeToSubscribers, sendSubscriptionChangeEmail } from "@/lib/subscriptions/emails";
 import { snapToWeekday, upcomingDeliveryDates } from "@/lib/dates";
 import { formatOre } from "@/lib/money";
 import { fromISODate, todayInStockholm, isoWeekday, weekdayName, toISODate, swedishHolidayName, formatLongDate } from "@/lib/dates";
@@ -568,8 +568,11 @@ export async function saveProduct(
     sortOrder: d.sortOrder,
     active: d.active,
   };
+  let previousPriceOre: number | null = null;
   try {
     if (productId) {
+      const before = await prisma.product.findUnique({ where: { id: productId }, select: { pricePerKgOre: true } });
+      previousPriceOre = before?.pricePerKgOre ?? null;
       await prisma.product.update({ where: { id: productId }, data });
     } else {
       await prisma.product.create({ data });
@@ -577,8 +580,13 @@ export async function saveProduct(
   } catch {
     return { error: "Kunde inte spara – kontrollera att slug är unik.", values };
   }
+  // Prisändring: aktiva prenumeranter med sorten får veta det nu, inte på fakturan.
+  let notified = 0;
+  if (productId && previousPriceOre !== null && previousPriceOre !== data.pricePerKgOre && data.active) {
+    notified = await notifyPriceChangeToSubscribers(productId, previousPriceOre, data.pricePerKgOre).catch(() => 0);
+  }
   revalidatePath("/admin/produkter");
-  redirect(`/admin/produkter?sparad=${encodeURIComponent(d.name)}`);
+  redirect(`/admin/produkter?sparad=${encodeURIComponent(d.name)}${notified > 0 ? `&prismejl=${notified}` : ""}`);
 }
 
 export async function setProductActive(productId: string, active: boolean): Promise<ActionResult> {

@@ -22,6 +22,8 @@ export interface ProductCardData {
   badge: string;
   /** Momssats i baspunkter (1200 = 12 %) – klientens summering speglar serverns. */
   vatRateBp: number;
+  /** Ungefärligt antal kakor per kilo (admin). null = okänt, då visas ingen mängdhjälp. */
+  piecesPerKgApprox: number | null;
 }
 
 export function ProductCard({

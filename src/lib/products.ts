@@ -20,6 +20,7 @@ export const getActiveProducts = cache(async function getActiveProducts(): Promi
     imageRef: p.imageRef,
     badge: p.badge,
     vatRateBp: p.vatRateBp,
+    piecesPerKgApprox: p.piecesPerKgApprox ?? null,
   }));
 });
 
