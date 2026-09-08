@@ -22,7 +22,7 @@ import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 import { notifyPriceChangeToSubscribers, sendSubscriptionChangeEmail } from "@/lib/subscriptions/emails";
-import { snapToWeekday, upcomingDeliveryDates } from "@/lib/dates";
+import { manageUrlFor, resumedNextDate } from "@/lib/subscriptions/manage";
 import { formatOre } from "@/lib/money";
 import { fromISODate, todayInStockholm, isoWeekday, weekdayName, toISODate, swedishHolidayName, formatLongDate } from "@/lib/dates";
 import { canTransitionOrder, SUBSCRIPTION_FREQUENCY, FREQUENCY_LABELS as SUBSCRIPTION_FREQUENCY_LABELS } from "@/lib/status";
@@ -404,12 +404,8 @@ export async function setSubscriptionStatus(
     // Återupptagen prenumeration får aldrig en order med en dags varsel: nästa
     // leverans sätts tidigast till den dag kassan skulle erbjuda (framförhållning
     // + helgdagar), på prenumerationens veckodag.
-    const area = current.deliveryArea;
-    const config = { weekdays: safeWeekdays(area.weekdaysJson), leadTimeDays: area.leadTimeDays, blockedDates: safeBlockedDates(area.blockedDatesJson) };
-    const earliest = upcomingDeliveryDates(config, 1)[0];
-    if (earliest && current.nextDeliveryDate.getTime() < earliest.getTime()) {
-      data.nextDeliveryDate = snapToWeekday(earliest, config.weekdays);
-    }
+    const next = resumedNextDate(current.nextDeliveryDate, current.deliveryArea);
+    if (next.getTime() !== current.nextDeliveryDate.getTime()) data.nextDeliveryDate = next;
   }
   await prisma.subscription.update({ where: { id }, data });
   const kind = parsed.data === "PAUSED" ? "PAUSED" : parsed.data === "ACTIVE" ? "RESUMED" : "CANCELLED";
@@ -715,4 +711,13 @@ export async function updateSubscriptionContents(
   const mailed = await sendSubscriptionChangeEmail(id, "UPDATED", `${summary} – ${frequencyLabel}`).catch(() => false);
   revalidatePath("/admin/prenumerationer");
   return { ok: true, message: `Sparat – gäller från nästa leverans: ${summary}.${mailed ? " Kunden har fått en bekräftelse." : " Bekräftelsemejlet till kunden kunde inte skickas."}` };
+}
+
+/** Kundens personliga hanteringslänk – för att kunna skicka den i ett svar. */
+export async function getSubscriptionManageLink(id: string): Promise<{ url: string } | { error: string }> {
+  await requireAdmin();
+  if (!idSchema.safeParse(id).success) return { error: "Ogiltigt id" };
+  const sub = await prisma.subscription.findUnique({ where: { id }, select: { id: true } });
+  if (!sub) return { error: "Prenumerationen finns inte" };
+  return { url: await manageUrlFor(id) };
 }

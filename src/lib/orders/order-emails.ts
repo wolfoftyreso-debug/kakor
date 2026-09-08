@@ -10,6 +10,7 @@ import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { looksLikePersonalNumber } from "@/lib/validation";
 import { isVerifiedValue } from "@/lib/config";
 import { FREQUENCY_LABELS } from "@/lib/status";
+import { manageUrlFor } from "@/lib/subscriptions/manage";
 
 // Transaktionell e-post vid order: orderbekräftelse till kontakt-e-post och
 // faktura (med PDF-bilaga + nedladdningslänk) till faktura-e-post.
@@ -24,9 +25,10 @@ export interface OrderEmailOptions {
 export async function sendOrderEmails(orderId: string, options: OrderEmailOptions = {}): Promise<boolean> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { items: true, invoice: true, deliveryArea: true, subscription: { select: { number: true, frequency: true } } },
+    include: { items: true, invoice: true, deliveryArea: true, subscription: { select: { id: true, number: true, frequency: true } } },
   });
   if (!order || !order.invoice) return false;
+  const manageLink = order.subscription ? await manageUrlFor(order.subscription.id) : "";
 
   const lines = order.items
     .map(
@@ -46,8 +48,8 @@ export async function sendOrderEmails(orderId: string, options: OrderEmailOption
   const deadlinePassed = deadline.getTime() <= Date.now();
   const changeLine = sub
     ? deadlinePassed
-      ? "Den här leveransen är redan planerad i körningen och går inte att ändra. Vill ni ändra, pausa eller avsluta prenumerationen? Svara på det här mejlet – ändringen gäller från nästa leverans."
-      : `Ändringar eller avbokning av den här leveransen: svara på det här mejlet senast ${formatDeadline(deadline)}. Vill ni ändra mängd, pausa eller avsluta prenumerationen? Svara på samma mejl – ändringen gäller från nästa leverans.`
+      ? `Den här leveransen är redan planerad i körningen och går inte att ändra. Vill ni ändra, pausa eller avsluta prenumerationen? Gör det själv här: ${manageLink} – ändringen gäller från nästa leverans.`
+      : `Ändringar eller avbokning av den här leveransen: svara på det här mejlet senast ${formatDeadline(deadline)}. Vill ni ändra mängd, pausa eller avsluta prenumerationen? Gör det själv här: ${manageLink} – ändringen gäller från nästa leverans.`
     : deadlinePassed
       ? "Leveransen är planerad i körningen och kan inte längre ändras eller avbokas kostnadsfritt. Stämmer något inte? Svara på det här mejlet så löser vi det."
       : `Ändringar eller avbokning: svara på det här mejlet senast ${formatDeadline(deadline)}. Därefter är ordern packad och faktureras.`;

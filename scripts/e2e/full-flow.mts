@@ -342,6 +342,36 @@ try {
   check("reskontra visar Delkredit och 'att betala'", (await page.textContent("body"))!.includes("Delkredit " + cn.creditNumber));
 } catch (e: any) { check("7. delkreditering", false, e.message.slice(0, 200)); }
 
+// ---------------- 7b. Självservice via personlig länk ----------------
+section("7b. Kund — självservice för prenumerationen (mobil)");
+try {
+  const sub = await prisma.subscription.findUniqueOrThrow({ where: { number: subNumber } });
+  check("prenumerationen har hanteringstoken", /^[a-f0-9]{48}$/.test(sub.manageToken ?? ""));
+  const mails = await prisma.emailLog.findMany({ where: { to: `pren-${RUN}@testbolaget.se`, type: "SUBSCRIPTION_CONFIRMATION" } });
+  check("bekräftelsen skickades (länken står i mejltexten)", mails.length >= 1);
+  const bad = await fetch(B + "/prenumeration/hantera/" + "0".repeat(48));
+  check("okänd hanteringslänk → 200 med felsida, noindex", bad.status === 200 && (await bad.text()).includes("Länken hittades inte"));
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  await page.goto(B + `/prenumeration/hantera/${sub.manageToken}`);
+  check("hanteringssidan visar nummer och status", (await page.textContent("body"))!.includes(subNumber) && (await page.textContent("body"))!.includes("Igång"));
+  // Layouten har en tom live-region (korgens toast) – vänta på själva svarstexten.
+  const feedback = (re: RegExp) => page.locator('[role="status"], [role="alert"]').filter({ hasText: re }).first().waitFor({ timeout: 20000 });
+  await page.getByRole("button", { name: "Hoppa över nästa leverans" }).click();
+  await feedback(/hoppas över|redan bekräftad/);
+  const after = await prisma.subscription.findUniqueOrThrow({ where: { number: subNumber } });
+  check("hoppa över flyttar nästa leverans framåt", after.nextDeliveryDate > sub.nextDeliveryDate, `${toISODate(sub.nextDeliveryDate)} → ${toISODate(after.nextDeliveryDate)}`);
+  await page.getByRole("button", { name: "Pausa prenumerationen" }).click();
+  await feedback(/Pausad/);
+  check("pausa via länk → PAUSED", (await prisma.subscription.findUniqueOrThrow({ where: { number: subNumber } })).status === "PAUSED");
+  await page.getByRole("button", { name: "Starta prenumerationen igen" }).click();
+  await feedback(/Igång igen/);
+  check("starta igen via länk → ACTIVE", (await prisma.subscription.findUniqueOrThrow({ where: { number: subNumber } })).status === "ACTIVE");
+  const changeMails = await prisma.emailLog.count({ where: { to: `pren-${RUN}@testbolaget.se`, type: "SUBSCRIPTION_CHANGE" } });
+  check("varje åtgärd bekräftades med mejl", changeMails >= 3, `${changeMails} mejl`);
+  await ctx.close();
+} catch (e: any) { check("7b. självservice", false, e.message.slice(0, 200)); }
+
 // ---------------- 8. Prenumerationsstyrning ----------------
 section("8. Admin — prenumeration: pausa, återaktivera, datum, avsluta");
 try {

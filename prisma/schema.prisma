@@ -269,6 +269,11 @@ model Subscription {
 
   status String @default("ACTIVE") // ACTIVE | PAUSED | CANCELLED
 
+  // Personlig hanteringslänk (48 hex): kunden pausar, hoppar över, ändrar och
+  // avslutar själv via /prenumeration/hantera/<token>. Skapas vid start,
+  // fylls i lazily för äldre prenumerationer när ett mejl ska ut.
+  manageToken String? @unique
+
   items  SubscriptionItem[]
   orders Order[]
 

@@ -13,6 +13,7 @@ import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { describeError } from "@/lib/log";
 import { clientIp, verifyTurnstile } from "@/lib/turnstile";
 import { formatOre } from "@/lib/money";
+import { manageUrlFor } from "@/lib/subscriptions/manage";
 
 // Vercel: PDF-rendering + mejl kan ta tid – standard 10 s räcker inte på kalla starter.
 export const maxDuration = 60;
@@ -102,7 +103,9 @@ Leveransadress: ${subscription.deliveryAddress}, ${subscription.deliveryPostalCo
 Belopp per leverans: ${formatOre(totals.totalOre)} inkl. moms (${formatOre(totals.subtotalOre)} exkl. moms) enligt dagens priser – priset som gäller vid varje leverans står på fakturan.
 
 Några dagar före varje leverans får ni en orderbekräftelse, och fakturan går till ${subscription.invoiceEmail}. Ni betalar per leverans, aldrig i förskott.
-Vill ni pausa, ändra mängd eller avsluta? Svara på det här mejlet så ordnar vi det – ingen bindningstid.
+Vill ni pausa, hoppa över en leverans, ändra mängd eller avsluta? Gör det själv via er personliga länk (spara mejlet – länken är er nyckel):
+${await manageUrlFor(subscription.id)}
+Eller svara på det här mejlet så ordnar vi det. Ingen bindningstid.
 
 Vänliga hälsningar
 Sockerbagaren`;
