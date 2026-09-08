@@ -3,6 +3,7 @@ import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { getActiveProducts } from "@/lib/products";
 import { FaqList } from "@/components/FaqList";
+import { PollNudge } from "@/components/poll/PollNudge";
 import { ProductCard } from "@/components/ProductCard";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -137,6 +138,7 @@ export default async function KakorPage() {
         </p>
 
         {/* FAQ före sidans avslutande CTA-band – sidan ska sluta i handling. */}
+        <PollNudge />
         <FaqList heading="Vanliga frågor om småkakor" items={KAKOR_FAQS} />
       </div>
 

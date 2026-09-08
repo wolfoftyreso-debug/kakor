@@ -3,6 +3,7 @@ import { sharePreview } from "@/lib/seo/meta";
 import { invoiceConfig, orderPolicy } from "@/lib/config";
 import { getActiveProducts, getAreasWithDates } from "@/lib/products";
 import { CheckoutFlow } from "./CheckoutFlow";
+import { PollNudge } from "@/components/poll/PollNudge";
 import { JsonLd } from "@/components/JsonLd";
 import { graph, webPageNode } from "@/lib/seo/schema";
 
@@ -35,6 +36,9 @@ export default async function BestallPage() {
         )}
       />
       <CheckoutFlow products={products} areas={areas} paymentTermsDays={invoiceConfig.paymentTermsDays} changePolicy={orderPolicy} />
+      <div className="container-narrow" style={{ padding: "0 24px 40px" }}>
+        <PollNudge compact />
+      </div>
     </>
   );
 }

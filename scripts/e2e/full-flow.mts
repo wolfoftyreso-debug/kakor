@@ -342,6 +342,59 @@ try {
   check("reskontra visar Delkredit och 'att betala'", (await page.textContent("body"))!.includes("Delkredit " + cn.creditNumber));
 } catch (e: any) { check("7. delkreditering", false, e.message.slice(0, 200)); }
 
+// ---------------- 7a. Folkets nästa småkaka ----------------
+section("7a. Kund — Folkets nästa småkaka (mobil)");
+try {
+  const poll = await prisma.poll.findFirstOrThrow({ where: { status: "ACTIVE" }, include: { candidates: { orderBy: { displayOrder: "asc" } } }, orderBy: { sequence: "desc" } });
+  const before = await prisma.pollVote.count({ where: { pollId: poll.id } });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  const errs: string[] = [];
+  page.on("pageerror", (e) => errs.push(e.message));
+  await page.goto(B + "/folkets-kaka");
+  const body0 = await page.textContent("body");
+  check("sidan visar rubrik, kandidater och deadline – inte resultatet", body0!.includes("Vilken klassiker ska vi baka härnäst") && body0!.includes("Hallongrotta") && body0!.includes("Luciadagen") && !body0!.includes("personer har röstat"));
+  check("rösta-knappen är inaktiv före val", await page.getByRole("button", { name: "Rösta på min favorit" }).isDisabled());
+  await page.getByRole("radio", { name: /Hallongrotta/ }).click();
+  check("vald kandidat markeras med aria-checked", (await page.getByRole("radio", { name: /Hallongrotta/ }).getAttribute("aria-checked")) === "true");
+  await page.getByRole("button", { name: /Jag röstar på hallongrotta/ }).click();
+  await page.waitForSelector("text=Tack! Din röst är räknad", { timeout: 15000 });
+  const body1 = await page.textContent("body");
+  check("efter rösten: tack, ställning och antal", body1!.includes("personer har röstat") || body1!.includes("1 person har röstat"));
+  check("DB: rösten är sparad", (await prisma.pollVote.count({ where: { pollId: poll.id } })) === before + 1);
+  const cookies = await ctx.cookies();
+  check("besökskaka satt (httpOnly)", cookies.some((c) => c.name === "sb_besok" && c.httpOnly));
+  // Kakan är Secure i produktionsbygget; API-anrop utanför webbläsaren skickar den uttryckligen.
+  const visitorCookie = `sb_besok=${cookies.find((c) => c.name === "sb_besok")?.value ?? ""}`;
+  await page.reload();
+  const body2 = await page.textContent("body");
+  check("omladdning: 'Du har redan röstat' och resultatet", body2!.includes("Du har redan röstat") && body2!.includes("har röstat"));
+  await page.goto(B + "/");
+  check("startsidan visar sektionen med resultat för den som röstat", (await page.textContent("body"))!.includes("Hjälp oss välja nästa småkaka"));
+  // API: dubbelröst med samma kaka returnerar första rösten; efter deadline nekas röst.
+  const second = await page.request.post(B + `/api/polls/${poll.slug}/vote`, { data: { candidateId: poll.candidates[1].id }, headers: { "content-type": "application/json", cookie: visitorCookie } });
+  const secondJson = await second.json();
+  check("API: samma besökare igen → already=true, första rösten står", second.status() === 200 && secondJson.already === true && secondJson.candidateId === poll.candidates[0].id);
+  check("DB: ingen extra röst", (await prisma.pollVote.count({ where: { pollId: poll.id } })) === before + 1);
+  const origEnds = poll.endsAt;
+  await prisma.poll.update({ where: { id: poll.id }, data: { endsAt: new Date(Date.now() - 60_000) } });
+  const fresh = await browser.newContext();
+  const beforeLate = await prisma.pollVote.count({ where: { pollId: poll.id } });
+  const late = await fresh.request.post(B + `/api/polls/${poll.slug}/vote`, { data: { candidateId: poll.candidates[0].id }, headers: { "content-type": "application/json" } });
+  check("API: efter deadline → 409, ingen röst", late.status() === 409 && (await prisma.pollVote.count({ where: { pollId: poll.id } })) === beforeLate, `status ${late.status()}`);
+  const closedPage = await fresh.newPage();
+  await closedPage.goto(B + "/folkets-kaka");
+  check("stängd omgång visar avslutat-tillstånd", (await closedPage.textContent("body"))!.includes("Röstningen är avslutad"));
+  await prisma.poll.update({ where: { id: poll.id }, data: { endsAt: origEnds } });
+  await fresh.close();
+  const bad = await page.request.post(B + `/api/polls/${poll.slug}/vote`, { data: { candidateId: "x" }, headers: { "content-type": "application/json" } });
+  check("API: ogiltig kandidat → 400", bad.status() === 400);
+  const signup = await page.request.post(B + `/api/polls/${poll.slug}/signup`, { data: { email: `rost-${RUN}@testbolaget.se` }, headers: { "content-type": "application/json" } });
+  check("avisering sparas", signup.status() === 200 && (await prisma.pollWinnerSignup.count({ where: { pollId: poll.id, email: `rost-${RUN}@testbolaget.se` } })) === 1);
+  check("inga JS-fel på röstningssidan", errs.length === 0, errs.join(" | ").slice(0, 200));
+  await ctx.close();
+} catch (e: any) { check("7a. folkets kaka", false, e.message.slice(0, 200)); }
+
 // ---------------- 7b. Självservice via personlig länk ----------------
 section("7b. Kund — självservice för prenumerationen (mobil)");
 try {
@@ -371,6 +424,19 @@ try {
   check("varje åtgärd bekräftades med mejl", changeMails >= 3, `${changeMails} mejl`);
   await ctx.close();
 } catch (e: any) { check("7b. självservice", false, e.message.slice(0, 200)); }
+
+// ---------------- 7c. Admin — omröstningar ----------------
+section("7c. Admin — omröstningar");
+try {
+  const { page } = admin;
+  await page.goto(B + "/admin/omrostningar");
+  const b = await page.textContent("body");
+  check("adminlistan visar omgången med röster", b!.includes("Folkets val 1") && /\d+ röster/.test(b!));
+  const poll = await prisma.poll.findFirstOrThrow({ where: { status: "ACTIVE" }, orderBy: { sequence: "desc" } });
+  await page.goto(B + `/admin/omrostningar/${poll.id}`);
+  const b2 = await page.textContent("body");
+  check("adminvyn visar resultat, styrning, kandidater och avisering", b2!.includes("Resultat") && b2!.includes("Utse vinnare") && b2!.includes("Hallongrotta") && b2!.includes("vill bli meddelade"));
+} catch (e: any) { check("7c. admin omröstningar", false, e.message.slice(0, 200)); }
 
 // ---------------- 8. Prenumerationsstyrning ----------------
 section("8. Admin — prenumeration: pausa, återaktivera, datum, avsluta");

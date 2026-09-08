@@ -90,7 +90,11 @@ export default function IntegritetPage() {
               : "Webbplatsen använder inga spårnings- eller marknadsföringscookies. "}
             Varukorgen och ert cookieval lagras i webbläsarens lokala lagring och en nödvändig
             sessionskaka används enbart för administratörens inloggning – ingen av dessa kräver
-            samtycke.
+            samtycke. Röstar ni i Folkets nästa småkaka sätts en anonym besökskaka (ett slumptal
+            utan koppling till er person) så att varje besökare kan rösta en gång per omgång;
+            tillsammans med rösten sparas ett saltat hash av er IP-adress, enbart för att kunna
+            upptäcka manipulation. Väljer ni att bli meddelade när vinnaren går att beställa sparar
+            vi den e-postadress ni anger, bara för det syftet, och raderar den när utskicket är gjort.
           </p>
           {process.env.NEXT_PUBLIC_GA4_ID ? <ConsentReset /> : null}
         </section>
