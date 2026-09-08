@@ -9,6 +9,7 @@ import { qtyLabel } from "@/lib/units";
 import { FREQUENCY_LABELS, type SubscriptionFrequency } from "@/lib/status";
 import { SubscriptionActions, GenerateOrdersButton } from "./SubscriptionActions";
 import { EditSubscriptionForm } from "./EditSubscriptionForm";
+import { manageUrlFor } from "@/lib/subscriptions/manage";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,8 @@ export default async function SubscriptionsPage({
       orders: { orderBy: { createdAt: "desc" }, take: 5 },
     },
   });
+  // Kundens personliga hanteringslänk – för att kunna skicka den i ett svar.
+  const manageLinks = new Map(await Promise.all(subscriptions.map(async (s) => [s.id, await manageUrlFor(s.id)] as const)));
 
   return (
     <>
@@ -97,6 +100,15 @@ export default async function SubscriptionsPage({
                   <div style={{ fontSize: 13.5, color: "var(--text-2)", marginTop: 2 }}>
                     {s.contactName} · {s.email}
                     {s.deliveryArea ? ` · ${s.deliveryArea.name}` : ""}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 6 }}>
+                    Kundens hanteringslänk:{" "}
+                    <input
+                      readOnly
+                      value={manageLinks.get(s.id) ?? ""}
+                      aria-label={`Hanteringslänk ${s.number}`}
+                      style={{ width: "min(100%, 420px)", fontSize: 12, padding: "4px 8px", border: "1px solid var(--input-border)", borderRadius: 4, background: "var(--surface)", fontFamily: "var(--font-mono, monospace)" }}
+                    />
                   </div>
                   <div style={{ fontSize: 14, marginTop: 8 }}>
                     {s.items.map((i) => (

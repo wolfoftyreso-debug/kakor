@@ -6,6 +6,7 @@ import { capitalizeFirst, formatDeliveryDateWithYear, isoWeekday, weekdayName, t
 import { calculateTotals, formatOre } from "@/lib/money";
 import { priceSuffix } from "@/lib/units";
 import { effectiveVatRateBp } from "@/lib/vat";
+import { manageUrlFor } from "@/lib/subscriptions/manage";
 
 // Kundmejl om själva prenumerationen (inte om enskilda ordrar). Kunden har
 // ingen inloggning: varje ändring verksamheten gör måste bekräftas skriftligt,
@@ -97,11 +98,12 @@ Några dagar före leveransen får ni en orderbekräftelse med faktura som vanli
     },
   };
   const t = texts[kind];
+  const manage = kind === "CANCELLED" ? "" : `\nHantera prenumerationen själv (pausa, hoppa över, ändra, avsluta): ${await manageUrlFor(sub.id)}\n`;
   return sendEmail({
     to: sub.email,
     subject: t.subject,
     text: `${t.body}
-
+${manage}
 Vänliga hälsningar
 Sockerbagaren`,
     type: "SUBSCRIPTION_CHANGE",
@@ -128,6 +130,7 @@ export async function notifyCustomerSkippedDelivery(
 Nästa leverans planeras till ${formatDeliveryDateWithYear(nextDate)}. Några dagar innan får ni en orderbekräftelse med faktura som vanligt.
 
 Vill ni ha en extra leverans en annan dag? Beställ som vanligt på ${siteConfig.url}/bestall eller svara på det här mejlet.
+Hantera prenumerationen själv: ${await manageUrlFor(sub.id)}
 
 Vänliga hälsningar
 Sockerbagaren`,
@@ -187,7 +190,7 @@ Det gäller leveranser i er fikaprenumeration ${sub.number} vars orderbekräftel
 
 Nytt belopp per leverans: ${formatOre(totals.totalOre)} inkl. moms (${formatOre(totals.subtotalOre)} exkl. moms), enligt dagens sammansättning.
 
-Vill ni ändra mängd, byta sort, pausa eller avsluta? Svara på det här mejlet – ingen bindningstid.
+Vill ni ändra mängd, byta sort, pausa eller avsluta? Gör det själv här: ${await manageUrlFor(sub.id)} – eller svara på det här mejlet. Ingen bindningstid.
 
 Vänliga hälsningar
 Sockerbagaren`,

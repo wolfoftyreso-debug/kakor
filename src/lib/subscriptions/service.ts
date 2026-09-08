@@ -18,6 +18,7 @@ import { assertInvoicingConfigured, assertNotAbusive, createOrder, OrderError } 
 import { describeError } from "@/lib/log";
 import { notifyAdminSkippedSubscription, notifyCustomerSkippedDelivery } from "@/lib/subscriptions/emails";
 import { swedishHolidayName } from "@/lib/dates";
+import { newManageToken } from "@/lib/subscriptions/manage";
 
 // Prenumeration = återkommande order/fakturering – INTE kortdebitering.
 // Motorn genererar vanliga ordrar via samma ordermotor som engångsköp.
@@ -163,6 +164,7 @@ export async function createSubscription(input: SubscriptionInput) {
         data: {
           number,
           idempotencyKey: input.idempotencyKey,
+          manageToken: newManageToken(),
           companyName: input.companyName,
           orgNumber: input.orgNumber,
           contactName: input.contactName,
