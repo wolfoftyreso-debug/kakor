@@ -174,6 +174,10 @@ export default async function ProductPage({ params }: Props) {
                 <dd>Bäst före-datum står på förpackningen</dd>
               </div>
               <div className="spec-row">
+                <dt>Ursprung</dt>
+                <dd>Bakad i Šiauliai, Litauen · packad i Tyresö</dd>
+              </div>
+              <div className="spec-row">
                 <dt>Leverans</dt>
                 <dd>{deliveryDays ? `${deliveryDays} i Tyresö, Nacka, Haninge och Huddinge` : "Fasta dagar per område"}</dd>
               </div>
