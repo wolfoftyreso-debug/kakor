@@ -36,7 +36,7 @@ export default function OmPage() {
         lede="Sockerbagaren började inte med någon stor affärsplan. Det började med ett vardagligt problem på pappas bilverkstad, ett ärvt exemplar av Svenskt konditorlexikon – och en tanke om att en liten del av den svenska fikatraditionen förtjänar att göras ordentligt."
         facts={[
           { label: "Recept", value: "Svenskt konditorlexikon 1957" },
-          { label: "Bakas", value: "Litet konditori i Litauen" },
+          { label: "Bakas", value: "Litet konditori i Šiauliai, Litauen" },
           { label: "Packas", value: "Radiovägen, Tyresö" },
           { label: "Betalning", value: "Alltid mot faktura" },
         ]}
@@ -92,7 +92,7 @@ export default function OmPage() {
         inte vara så enkelt som att bara hitta en stor kakfabrik. Vi letade runt i Europa och kom
         till slut till Litauen, där det fortfarande finns väldigt mycket kunskap kring den här typen
         av bageri- och konditorihantverk. Vi kontaktade flera olika bagerier innan vi hittade ett
-        litet konditori som passade det vi ville göra.
+        litet konditori i Šiauliai som passade det vi ville göra.
       </p>
       <p>
         Det är en liten verksamhet med bara några få personer. De kan producera i större mängder,
