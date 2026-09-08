@@ -45,6 +45,10 @@ const LEVERANS_FAQS = [
     a: "Kassan visar nästa tillgängliga leveransdag för ert område direkt när ni väljer datum. Beställ i tid – leveransdagarna är fasta per område.",
   },
   {
+    q: "Vem levererar?",
+    a: "Vi packar beställningarna på vårt lager i Tyresö och levererar dem antingen själva eller genom ett anlitat bud. Leveransen sker under dagen på områdets leveransdag.",
+  },
+  {
     q: "Vad kostar leveransen?",
     a: "Ingen separat leveransavgift läggs på i webbshoppen – ni betalar priset per kilo respektive per paket plus moms, precis som kassan visar innan ni skickar beställningen.",
   },

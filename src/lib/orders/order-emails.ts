@@ -11,6 +11,7 @@ import { looksLikePersonalNumber } from "@/lib/validation";
 import { isVerifiedValue } from "@/lib/config";
 import { FREQUENCY_LABELS } from "@/lib/status";
 import { manageUrlFor } from "@/lib/subscriptions/manage";
+import { overdueInvoicesFor } from "@/lib/orders/overdue";
 
 // Transaktionell e-post vid order: orderbekräftelse till kontakt-e-post och
 // faktura (med PDF-bilaga + nedladdningslänk) till faktura-e-post.
@@ -140,6 +141,11 @@ Sockerbagaren`;
   // Verksamheten ska inte behöva logga in för att upptäcka en ny order.
   // Alla tre utskick går parallellt: tre seriella 10 s-timeouts + PDF skulle
   // annars kunna passera funktionens tidsgräns efter att ordern redan sparats.
+  // Verksamhetens princip: inga nya leveranser till en kund med förfallen faktura.
+  const overdue = emailConfig.adminNotify ? await overdueInvoicesFor(order.orgNumber, order.id).catch(() => []) : [];
+  const overdueLine = overdue.length > 0
+    ? `\nOBS: kunden har ${overdue.length === 1 ? "en förfallen obetald faktura" : `${overdue.length} förfallna obetalda fakturor`} (${overdue.map((i) => `${i.invoiceNumber} förföll ${formatLongDate(i.dueDate)}, ${formatOre(i.totalOre)}`).join("; ")}). Enligt vår princip levereras inget nytt förrän den är reglerad – avgör i admin.\n`
+    : "";
   const adminPromise = !emailConfig.adminNotify
     ? Promise.resolve(false)
     : sendEmail({
@@ -149,7 +155,7 @@ Sockerbagaren`;
 
 Order: ${order.orderNumber}
 Kund: ${order.companyName} (${order.orgNumber})${looksLikePersonalNumber(order.orgNumber) ? " – OBS: personnummerformat, troligen enskild firma" : ""}
-Kontakt: ${order.contactName}, ${order.email}${order.phone ? `, ${order.phone}` : ""}
+Kontakt: ${order.contactName}, ${order.email}${order.phone ? `, ${order.phone}` : ""}${overdueLine}
 Leverans: ${deliveryDay} – ${order.deliveryAddress}, ${order.deliveryPostalCode} ${order.deliveryCity}${order.deliveryArea ? ` (${order.deliveryArea.name})` : ""}
 ${order.deliveryInstruction ? `Leveransanvisning: ${order.deliveryInstruction}\n` : ""}
 KAKOR
