@@ -16,6 +16,8 @@ import {
 import { OrderActions } from "./OrderActions";
 import { remainingByLine } from "@/lib/invoice/credit";
 import { looksLikePersonalNumber } from "@/lib/validation";
+import { overdueInvoicesFor } from "@/lib/orders/overdue";
+import { formatLongDate as formatDueDate } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin – orderdetalj", robots: { index: false } };
@@ -33,6 +35,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       events: { orderBy: { createdAt: "desc" } },
     },
   });
+  const overdue = order ? await overdueInvoicesFor(order.orgNumber, order.id) : [];
   if (!order) notFound();
   const creditNotes = order.invoice?.creditNotes ?? [];
   const creditedOre = creditNotes.reduce((s, c) => s + c.totalOre, 0); // negativt
@@ -103,6 +106,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
         <section className="card" style={{ padding: "20px 24px", fontSize: 14.5, lineHeight: 1.7 }}>
           <div className="section-label" style={{ marginBottom: 10 }}>KUND</div>
+          {overdue.length > 0 && (
+            <div role="alert" className="error-text" style={{ marginBottom: 10, padding: "10px 12px", border: "1px solid var(--red)", borderRadius: 6, fontWeight: 600 }}>
+              Kunden har {overdue.length === 1 ? "en förfallen obetald faktura" : `${overdue.length} förfallna obetalda fakturor`}:{" "}
+              {overdue.map((i) => `${i.invoiceNumber} (order ${i.order.orderNumber}, förföll ${formatDueDate(i.dueDate)}, ${formatOre(i.totalOre)})`).join("; ")}.
+              Vår princip: inga nya leveranser förrän den är reglerad – skicka påminnelse eller avbryt den här ordern.
+            </div>
+          )}
           <strong>{order.companyName}</strong> · {order.orgNumber}
           {looksLikePersonalNumber(order.orgNumber) && (
             <span className="pill pill-neutral" style={{ marginLeft: 8, fontSize: 11.5 }} title="Organisationsnumret har personnummerformat – troligen enskild firma. Vi säljer bara till näringsidkare; kontrollera vid tvekan.">

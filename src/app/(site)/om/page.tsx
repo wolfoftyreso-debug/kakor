@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/PageHeader";
 export const metadata: Metadata = {
   title: { absolute: "Om Sockerbagaren – det började med en gammal bok" },
   description:
-    "Sockerbagaren började med ett ärvt exemplar av Svenskt konditorlexikon. Gamla recept, riktiga råvaror, ett litet konditori som bakar för hand och den sista biten gjord i Tyresö. Tiffany Svensson berättar.",
+    "Ett litet företag byggt på en enkel idé: riktiga kakor till företagsfikat. Verkstaden, den ärvda boken, konditoriet som bakar för hand, fakturan som enda betalsätt och kunderna som väljer nästa recept. Tiffany Svensson berättar.",
   alternates: { canonical: "/om" },
   ...sharePreview({
     title: "Om Sockerbagaren – det började med en gammal bok",
@@ -33,7 +33,7 @@ export default function OmPage() {
       <PageHeader
         eyebrow="Om oss"
         title="Det började med en gammal bok"
-        lede="Sockerbagaren började inte med en affärsidé. Det började med ett ärvt exemplar av Svenskt konditorlexikon – och en tanke om att en liten del av den svenska fikatraditionen förtjänar att göras ordentligt."
+        lede="Sockerbagaren började inte med någon stor affärsplan. Det började med ett vardagligt problem på pappas bilverkstad, ett ärvt exemplar av Svenskt konditorlexikon – och en tanke om att en liten del av den svenska fikatraditionen förtjänar att göras ordentligt."
         facts={[
           { label: "Recept", value: "Svenskt konditorlexikon 1957" },
           { label: "Bakas", value: "Litet konditori i Litauen" },
@@ -48,6 +48,22 @@ export default function OmPage() {
         <figcaption>Chokladsnittar på plåt – kakorna bakas i omgångar och packas för leverans i Tyresö.</figcaption>
       </figure>
 
+      <h2>Det började med ett vardagligt problem</h2>
+      <p>
+        Min pappa driver bilverkstad och hade länge samma ganska vardagliga problem: det var
+        förvånansvärt svårt att hitta riktigt bra kakor till företagsfikat. Inte fabrikskakor med
+        långa innehållsförteckningar, margarin och en massa tillsatser, utan sådana kakor man
+        faktiskt förknippar med svenskt fika – bakade på smör, mjöl, socker, ägg och andra riktiga
+        råvaror.
+      </p>
+      <p>
+        Så jag började baka. Det som först var något litet för ett konkret behov fungerade väldigt
+        bra. Kakorna blev uppskattade, fler frågade om de också kunde köpa, och verksamheten fick
+        sakta växa därifrån. Sockerbagaren har funnits sedan 2025, och först nu börjar vi öppna upp
+        för fler kunder. Vi gör det fortfarande på vårt sätt.
+      </p>
+
+      <h2>Och med en gammal bok</h2>
       <p>
         När min gammelmormor gick bort ärvde jag Svenskt konditorlexikon, en gammal bok om svensk
         konditortradition som hade funnits i familjen länge. Min gammelmormor och gammelmorfar drev
@@ -61,25 +77,22 @@ export default function OmPage() {
       </p>
       <p>
         Jag tyckte att det var väldigt fint. Och samtidigt lite synd att så mycket av den kunskapen
-        riskerar att försvinna. Där någonstans föddes tanken på Sockerbagaren.
+        riskerar att försvinna. Där någonstans blev det tydligt vad Sockerbagaren skulle vara: inte
+        bara kakor till fikat, utan en liten del av den svenska fikatraditionen, gjord ordentligt.
       </p>
 
       <h2>Gamla recept ska fortfarande smaka som gamla recept</h2>
-      <p>
-        Min idé är egentligen ganska enkel: jag vill ta hand om en liten del av den svenska
-        fikatraditionen och försöka göra den ordentligt.
-      </p>
       <p>
         Vi har därför gått tillbaka till äldre recept och metoder och försökt följa dem så nära det
         är praktiskt möjligt. Inte göra en modern kaka som påminner om originalet, utan försöka
         förstå hur den faktiskt ska bakas, smaka och kännas.
       </p>
       <p>
-        När vi sedan började leta efter någon som kunde baka åt oss upptäckte vi att det inte var så
-        enkelt som att bara hitta en stor kakfabrik. Vi letade runt i Europa och kom till slut till
-        Litauen, där det fortfarande finns väldigt mycket kunskap kring den här typen av bageri- och
-        konditorihantverk. Vi kontaktade flera olika bagerier innan vi hittade ett litet konditori
-        som passade det vi ville göra.
+        När fler ville köpa behövde vi någon som kunde baka i större mängder, och det visade sig
+        inte vara så enkelt som att bara hitta en stor kakfabrik. Vi letade runt i Europa och kom
+        till slut till Litauen, där det fortfarande finns väldigt mycket kunskap kring den här typen
+        av bageri- och konditorihantverk. Vi kontaktade flera olika bagerier innan vi hittade ett
+        litet konditori som passade det vi ville göra.
       </p>
       <p>
         Det är en liten verksamhet med bara några få personer. De kan producera i större mängder,
@@ -93,7 +106,8 @@ export default function OmPage() {
       <p>
         När kakorna är färdigbakade kyls och fryses de snabbt och transporteras till Sverige. De
         kommer till vårt lager på Radiovägen i Tyresö, där vi gör den sista delen själva:
-        kontrollerar, packar om och färdigställer beställningarna innan de går ut till kunderna.
+        kontrollerar, packar om och färdigställer beställningarna. Sedan levererar vi dem antingen
+        själva eller genom ett anlitat bud.
       </p>
       <p>
         Just frysningen är faktiskt också en del av historien. Min gammelmormor frös alltid sina
@@ -109,13 +123,46 @@ export default function OmPage() {
         mer luft. Det finns inget märkvärdigt i det. Det är bara så riktiga kakor fungerar.
       </p>
 
+      <h2>Traditionellt företagande, med modern teknik</h2>
+      <p>
+        I grunden driver vi Sockerbagaren väldigt traditionellt. Vi tror på förtroende mellan
+        företag och kunder. Våra företagskunder beställer sina kakor och får en faktura. Betalas
+        fakturan fortsätter vi leverera precis som vanligt. Skulle en faktura inte betalas gör vi
+        helt enkelt inga ytterligare leveranser förrän den är reglerad. Det är en enkel princip som
+        företag har arbetat efter i generationer och som fortfarande fungerar alldeles utmärkt. Vi
+        vill inte bygga upp onödig administration runt något som egentligen är väldigt enkelt.
+      </p>
+      <p>
+        Däremot har vi lagt mycket arbete på tekniken bakom verksamheten. Vi har byggt vårt eget
+        beställningssystem där kunder kan beställa enstaka leveranser eller sätta upp en{" "}
+        <Link href="/prenumeration">återkommande fikaprenumeration</Link>. Systemet sköter i princip
+        hela administrationen automatiskt – från beställning och kunduppgifter till fakturaunderlag
+        och plockorder. För oss innebär det mindre tid på administration och mer tid på det som
+        faktiskt spelar roll: att packa och leverera bra kakor. När en beställning kommer in får vi
+        vår plockorder, packar beställningen och levererar den. Enkelt.
+      </p>
+
+      <h2>Vi växer i den takt vi klarar av</h2>
+      <p>
+        Sockerbagaren är ett sidoprojekt som drivs parallellt med studier och arbete. Det innebär
+        också att vi inte försöker låtsas vara någonting större än vi är. Vi bakar i begränsade
+        mängder och tar emot så många kunder som vi på ett bra sätt kan leverera till. Därför kan
+        vi inte alltid garantera att alla beställningar kan levereras direkt: kassan visar de
+        leveransdagar som har plats, och vi tar emot order så långt vår kapacitet och våra råvaror
+        räcker. När efterfrågan växer anpassar vi verksamheten successivt. Vi tycker faktiskt att
+        det är ett ganska sunt sätt att bygga företag. Först ser man vad människor verkligen tycker
+        om. Sedan växer man.
+      </p>
+
       <h2>Riktiga råvaror. Inga genvägar.</h2>
       <p>
-        En sak som varit viktig för mig från början är råvarorna. Om man ska baka efter gamla
-        recept tycker jag också att man ska använda riktiga råvaror. Därför använder vi smör –
-        aldrig margarin. Vi försöker undvika artificiella ersättningar och onödiga genvägar och
-        väljer i stället bra, traditionella ingredienser. Så långt det är möjligt väljer konditoriet
-        som bakar åt oss råvaror från lokala producenter och gårdar.
+        En stor del av anledningen till att Sockerbagaren finns är att mycket av det som säljs som
+        småkakor i dag har kommit ganska långt från den produkt det en gång var. Vi vill göra
+        tvärtom. Om man ska baka efter gamla recept tycker jag också att man ska använda riktiga
+        råvaror. Därför använder vi smör – aldrig margarin. Vi försöker undvika artificiella
+        ersättningar och onödiga genvägar och väljer i stället bra, traditionella ingredienser. Så
+        långt det är möjligt väljer konditoriet som bakar åt oss råvaror från lokala producenter
+        och gårdar.
       </p>
       <p>
         För mig handlar det inte om att göra kakorna märkvärdigare än de är. Tvärtom. Mjöl ska vara
@@ -124,6 +171,30 @@ export default function OmPage() {
         består inte av särskilt många ingredienser. Då finns det heller ingenstans för dåliga
         råvaror att gömma sig. Hela listan finns under{" "}
         <Link href="/ingredienser">ingredienser och allergener</Link>.
+      </p>
+
+      <h2>Ett recept i taget</h2>
+      <p>
+        Vi började med några av våra egna favoriter: mandelkubb, kolasnittar och chokladsnittar.
+        Därifrån vill vi långsamt bygga vidare och så småningom återuppliva allt fler av de
+        klassiska recepten ur boken – ett recept i taget. Och vi vill gärna göra det tillsammans
+        med våra kunder. Därför får besökarna på Sockerbagaren{" "}
+        <Link href="/folkets-kaka">rösta fram vilken klassisk småkaka som blir nästa</Link> i vårt
+        sortiment. På så sätt får sortimentet växa organiskt: inte efter någon marknadsavdelnings
+        produktplan, utan efter vilka kakor människor faktiskt saknar och tycker om.
+      </p>
+
+      <h2>Varför vi gör det</h2>
+      <p>
+        Vi gör inte Sockerbagaren för att bygga den största kakfabriken. Vi gör det för att vi
+        tycker om idén. Att baka något ordentligt. Att lämna en låda riktigt bra kakor på ett
+        företag. Att någon ställer fram dem till eftermiddagskaffet och blir lite gladare.
+      </p>
+      <p>
+        Om vi samtidigt kan göra det enkelt för kunden att beställa, enkelt för oss att
+        administrera och bygga en liten verksamhet som fungerar sunt och långsiktigt, då tycker vi
+        att vi har lyckats ganska bra. Sockerbagaren ska helt enkelt vara en positiv liten kraft.
+        Bra råvaror. Bra kakor. Enkel handel. Och förhoppningsvis lite bättre fika.
       </p>
 
       <h2>Sockerbagaren är mitt skolprojekt – men också något mer</h2>
