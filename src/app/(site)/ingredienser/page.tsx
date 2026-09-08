@@ -40,7 +40,7 @@ export default async function IngredienserPage() {
         Ingredienser och allergener
       </h1>
       <p className="lede">
-        Smör ska smaka smör. Våra kakor bakas på riktigt smör, vanligt strösocker och traditionella råvaror av hög kvalitet. Allergener är markerade i fetstil i varje förteckning.
+        Smör ska smaka smör. Våra kakor bakas på riktigt smör – aldrig margarin – vanligt strösocker och traditionella råvaror av hög kvalitet, utan artificiella ersättningar. Så långt det är möjligt väljer konditoriet som bakar åt oss råvaror från lokala producenter och gårdar. Allergener är markerade i fetstil i varje förteckning.
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "20px 0 36px" }}>
         <span className="badge-butter">RIKTIGT SMÖR</span>

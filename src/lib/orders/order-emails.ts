@@ -188,7 +188,7 @@ Order ${order.orderNumber} har lämnats på ${order.deliveryAddress}, ${order.de
 KAKOR
 ${lines}
 
-Förvara kakorna i tät burk eller stängd förpackning i rumstemperatur. Bäst före-datum står på förpackningen.
+Förvara kakorna i tät burk eller stängd förpackning i rumstemperatur – helt tätt behåller de mjukheten, lite luft gör dem sprödare. Bäst före-datum står på förpackningen.
 ${invoicePart}
 Saknas något eller stämmer inte leveransen? Svara på det här mejlet så rättar vi till det.
 

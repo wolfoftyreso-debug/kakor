@@ -167,7 +167,7 @@ export default async function ProductPage({ params }: Props) {
               </div>
               <div className="spec-row">
                 <dt>Förvaring</dt>
-                <dd>Tät burk i rumstemperatur, tål frysning</dd>
+                <dd>Tät burk i rumstemperatur – helt tätt behåller kakan mjukheten, lite luft gör den sprödare. Tål frysning.</dd>
               </div>
               <div className="spec-row">
                 <dt>Hållbarhet</dt>
