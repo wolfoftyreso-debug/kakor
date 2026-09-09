@@ -4,6 +4,7 @@ import { sharePreview } from "@/lib/seo/meta";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 import { PageHeader } from "@/components/PageHeader";
 import { PollSection } from "@/components/poll/PollSection";
+import { FaqList } from "@/components/FaqList";
 import { getPollHistory } from "@/lib/polls/service";
 import { getActiveProducts } from "@/lib/products";
 import { CONTENT_DATES } from "@/lib/seo/content-dates";
@@ -24,6 +25,21 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
+const FAQS = [
+  {
+    q: "Vad är Folkets nästa småkaka?",
+    a: "En omröstning där kunderna väljer vilken klassisk småkaka ur Svenskt konditorlexikon som blir nästa i Sockerbagarens sortiment. Ni röstar, vi bakar vinnaren på riktigt smör.",
+  },
+  {
+    q: "Hur röstar man?",
+    a: "Välj en av kandidaterna på den här sidan och skicka din röst. En röst per person. Resultatet visas när du har röstat – inte före.",
+  },
+  {
+    q: "Vad händer med vinnaren?",
+    a: "Vi bakar fram vår version efter recepttraditionen i boken. När den finns att beställa märks den Folkets val i sortimentet, med året den röstades fram. Därefter öppnar nästa omgång.",
+  },
+];
+
 // Berättelsen och röstningen på en permanent, delbar adress. Rösten och
 // resultatet hanteras av PollSection; sidan bär sammanhanget.
 export default async function FolketsKakaPage() {
@@ -33,7 +49,7 @@ export default async function FolketsKakaPage() {
 
   return (
     <>
-      <InfoPageSeo path="/folkets-kaka" name="Folkets nästa småkaka" title="Folkets nästa småkaka" description={DESCRIPTION} dateModified={CONTENT_DATES["/folkets-kaka"].updated} />
+      <InfoPageSeo path="/folkets-kaka" name="Folkets nästa småkaka" title="Folkets nästa småkaka" description={DESCRIPTION} dateModified={CONTENT_DATES["/folkets-kaka"].updated} faqs={FAQS} />
       <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
         <PageHeader
           eyebrow="Folkets nästa småkaka"
@@ -98,6 +114,7 @@ export default async function FolketsKakaPage() {
           <div><dt>Er roll</dt><dd>Ni hjälper oss bestämma vilket recept vi tar oss an härnäst.</dd></div>
           <div><dt>Resultatet</dt><dd>Sockerbagarens sortiment växer ett klassiskt recept i taget.</dd></div>
         </dl>
+        <FaqList heading="Vanliga frågor om omröstningen" items={FAQS} />
         <div className="actions">
           <Link href="/kakor" className="btn btn-outline">Se kakorna vi bakar i dag</Link>
           <Link href="/bestall" className="btn btn-primary">Beställ till jobbet</Link>

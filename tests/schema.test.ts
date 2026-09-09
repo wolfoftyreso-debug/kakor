@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   breadcrumbNode,
+  DELIVERY_CITIES,
+  faqNode,
   graph,
   ids,
   organizationNode,
@@ -100,8 +102,20 @@ describe("schema-motorn", () => {
     expect(offer.price).toBe("295.00");
     expect(offer.priceCurrency).toBe("SEK");
     expect(offer.seller).toEqual({ "@id": ids.organization() });
+    const shipping = offer.shippingDetails as { shippingDestination: { addressCountry: string; addressLocality: string }[] };
+    expect(shipping.shippingDestination.map((d) => d.addressLocality)).toEqual([...DELIVERY_CITIES]);
+    expect(shipping.shippingDestination.every((d) => d.addressCountry === "SE")).toBe(true);
     expect(node).not.toHaveProperty("aggregateRating");
     expect(node).not.toHaveProperty("review");
+  });
+
+  it("FAQPage speglar exakt de synliga frågorna och är tom-säker", () => {
+    const node = faqNode("/kakor", [{ q: "Hur betalar vi?", a: "Mot faktura." }]);
+    expect(node["@type"]).toBe("FAQPage");
+    const entities = node.mainEntity as { name: string; acceptedAnswer: { text: string } }[];
+    expect(entities).toHaveLength(1);
+    expect(entities[0].name).toBe("Hur betalar vi?");
+    expect(entities[0].acceptedAnswer.text).toBe("Mot faktura.");
   });
 
   it("produktlistan refererar produkter via @id", () => {

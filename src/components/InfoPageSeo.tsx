@@ -1,6 +1,6 @@
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { breadcrumbNode, graph, webPageNode } from "@/lib/seo/schema";
+import { breadcrumbNode, faqNode, graph, webPageNode } from "@/lib/seo/schema";
 
 // Standardpaket för informationssidor: WebPage + BreadcrumbList i grafen
 // och en synlig brödsmulerad som speglar schemat exakt.
@@ -10,6 +10,7 @@ export function InfoPageSeo({
   title,
   description,
   dateModified,
+  faqs,
 }: {
   path: string;
   /** Namn i brödsmuleraden, t.ex. "Om Sockerbagaren". */
@@ -18,6 +19,8 @@ export function InfoPageSeo({
   description?: string;
   /** ISO-datum – sätts ENDAST vid verklig innehållsändring, aldrig per deploy. */
   dateModified?: string;
+  /** Synliga FAQ:er på sidan – samma text som FAQPage-schemat. */
+  faqs?: { q: string; a: string }[];
 }) {
   const crumbs = [
     { name: "Sockerbagaren", path: "/" },
@@ -28,7 +31,8 @@ export function InfoPageSeo({
       <JsonLd
         data={graph(
           webPageNode({ path, title, description, breadcrumbs: crumbs, dateModified }),
-          breadcrumbNode(path, crumbs)
+          breadcrumbNode(path, crumbs),
+          faqs?.length ? faqNode(path, faqs) : null
         )}
       />
       <Breadcrumbs crumbs={crumbs} container="container-narrow" />

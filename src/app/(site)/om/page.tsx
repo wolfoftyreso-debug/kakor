@@ -5,6 +5,7 @@ import { ImageSlot } from "@/components/ImageSlot";
 import { invoiceConfig, isVerifiedValue } from "@/lib/config";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 import { PageHeader } from "@/components/PageHeader";
+import { FaqList } from "@/components/FaqList";
 
 export const metadata: Metadata = {
   title: { absolute: "Om Sockerbagaren – det började med en gammal bok" },
@@ -20,6 +21,21 @@ export const metadata: Metadata = {
   }),
 };
 
+const OM_FAQS = [
+  {
+    q: "Vem står bakom Sockerbagaren?",
+    a: "Sockerbagaren drivs av Landvex AB och grundades 2025 av Tiffany Svensson. Det började som ett sidoprojekt ur ett vardagligt problem på pappas bilverkstad – att hitta riktiga småkakor till företagsfikat.",
+  },
+  {
+    q: "Vad är Svenskt konditorlexikon?",
+    a: "En ärvd bok om svensk konditortradition. Recepten i sortimentet – och de klassiker kunderna röstar fram – kommer ur den boken, inte ur en produktplan.",
+  },
+  {
+    q: "Varför bara faktura?",
+    a: "Vi säljer till företag. Ni beställer, får fakturan mejlad och betalar efter leveransen. Inga kort och inga konton.",
+  },
+];
+
 export default function OmPage() {
   return (
     <>
@@ -28,6 +44,7 @@ export default function OmPage() {
       name="Om Sockerbagaren"
       title="Om Sockerbagaren – det började med en gammal bok"
       description={String(metadata.description)}
+      faqs={OM_FAQS}
     />
     <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
       <PageHeader
@@ -249,6 +266,7 @@ export default function OmPage() {
           </>
         )}
       </p>
+      <FaqList heading="Vanliga frågor om Sockerbagaren" items={OM_FAQS} />
       <div className="actions">
         <Link href="/bestall" className="btn btn-primary">
           Beställ kakor

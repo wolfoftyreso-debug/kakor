@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 
 const TITLE = "Fika till jobbet – hur mycket per person?";
 const DESCRIPTION =
-  "Guide till fika på jobbet: hur många småkakor per person, fredagsfika, mötes- och konferensfika, och hur ni beställer med leverans och faktura.";
+  "Guide till kontorsfika och fika till jobbet: hur många småkakor per person, fredagsfika och mötesfika, och hur ni beställer med leverans mot faktura.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -42,6 +42,10 @@ const CRUMBS = [
 ];
 
 const FAQS = [
+  {
+    q: "Vad är kontorsfika?",
+    a: "Kontorsfika är fika som står framme på arbetsplatsen – kaffe, te och något till, till exempel småkakor. Hos oss beställer företag kakorna per kilo, får dem levererade till kontoret på områdets leveransdag och betalar mot faktura.",
+  },
   {
     q: "Hur många kakor per person ska man räkna med till fika på jobbet?",
     a: "Räkna med 3–5 småkakor per person till en vanlig fika. Är kakorna det enda tilltugget, eller fikat längre (till exempel en eftermiddagskonferens), räkna på 5. Kompletteras fikat med frukt eller smörgås räcker 3.",
@@ -107,7 +111,7 @@ export default async function FikaTillJobbetPage() {
           title="Fika till jobbet – så ordnar ni det utan krångel"
           lede={
             <>
-              Fika på jobbet är enkelt när någon annan har tänkt på mängder, sorter och leverans. Här
+              Fika på jobbet – kontorsfika, fredagsfika, möten – är enkelt när någon annan har tänkt på mängder, sorter och leverans. Här
               är tumreglerna vi använder själva: hur mycket som går åt per person, vad som passar till
               fredagsfika, möten och konferenser, och hur beställningen fungerar med leverans
               {deliveryDays ? ` ${deliveryDays}` : ""} och betalning mot faktura.
@@ -176,13 +180,14 @@ export default async function FikaTillJobbetPage() {
           är lediga. Mer om <Link href="/julfika">julfika och påskfika på jobbet</Link>.
         </p>
 
-        <h2>Kakor till kaffet på kontoret</h2>
+        <h2>Kontorsfika – kakor till kaffet</h2>
         <p>
-          Kaffet på kontoret är oftast löst: maskin eller bryggare, alltid på. Det som saknas är
-          något gott till kaffet. Kaffekakor som kolasnittar, mandelkubb och chokladsnittar är
-          gjorda för just det: de håller sig fräscha i burken hela veckan, tål att stå framme och
-          kräver varken kylskåp eller tallrik. Beställ per kilo, ställ en burk vid kaffemaskinen och
-          fyll på när den börjar sina.
+          Kontorsfika är det som står framme vid kaffemaskinen varje dag: kaffe, te och något att
+          bita i. Kaffet på kontoret är oftast löst. Det som saknas är kakor till kaffet.
+          Kaffekakor som kolasnittar, mandelkubb och chokladsnittar är gjorda för just det: de
+          håller sig fräscha i burken hela veckan, tål att stå framme och kräver varken kylskåp
+          eller tallrik. Beställ per kilo, ställ en burk vid kaffemaskinen och fyll på när den
+          börjar sina.
         </p>
 
         <h2>Bjuda på fika på jobbet</h2>
