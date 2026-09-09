@@ -53,6 +53,10 @@ const LEVERANS_FAQS = [
     q: "Vad kostar leveransen?",
     a: "Ingen separat leveransavgift läggs på i webbshoppen – ni betalar priset per kilo respektive per paket plus moms, precis som kassan visar innan ni skickar beställningen.",
   },
+  {
+    q: "Vad händer om ingen kan ta emot leveransen?",
+    a: "Adressen behöver vara bemannad. Om ingen tar emot kan vi inte lämna kakorna. Svara på orderbekräftelsen – vi meddelar er och erbjuder ny leveransdag eller kreditering.",
+  },
 ];
 
 export default async function LeveransPage() {

@@ -5,16 +5,22 @@ Target-arkitektur (låst):
 ```
 GitHub (source of truth)
    ↓  push
-Vercel (Next.js, serverless, Git-integration)
-   ↓  pooled connection
-Neon PostgreSQL (managed databas)
+Vercel (Next.js, serverless, Git-integration, cron)
+   ↓  Storage → Postgres (skapas i Vercel-dashen, faktureras på Vercel)
    ↓
 sockerbagaren.se (produktionsdomän)
 ```
 
-Detta dokument är driftmanualen för utvecklare och deploy-agent (Grokbot).
+Ingen separat databasleverantör att logga in hos. Databasen skapas under
+projektet **Storage → Create Database** (Frankfurt / `fra1`, kopplad till
+Production). Vercel sätter `DATABASE_URL` och `DIRECT_DATABASE_URL` själv.
+Preview/demo använder SQLite-bygget och får **aldrig** peka på
+produktionsdatabasen.
+
+Detta dokument är driftmanualen för utvecklare och deploy-agent.
 Allt som krävs för drift finns i: repository + environment variables +
-Neon + Vercel. Inga hemliga manuella steg.
+Vercel Storage. Inga hemliga manuella steg utöver Storage-klicket och
+verifierade fakturauppgifter.
 
 ## Development
 

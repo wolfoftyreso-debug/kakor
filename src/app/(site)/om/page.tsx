@@ -125,7 +125,7 @@ export default function OmPage() {
       <h2>Från Litauen till Tyresö</h2>
       <p>
         När kakorna är färdigbakade packas de och fryses direkt, och transporteras frysta till
-        Sverige – rakt in i fryslagret på Radiovägen i Tyresö, hos Mewab och Engelholmsglass.
+        Sverige – rakt in i fryslagret på Radiovägen i Tyresö, hos Mewab och Engelholms Glass.
         Därifrån plockar vi beställningarna själva och levererar dem antingen själva eller genom
         ett anlitat bud.
       </p>
@@ -253,7 +253,7 @@ export default function OmPage() {
         <br />
         Kontor: {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}
         <br />
-        Fryslager: Radiovägen 19, Tyresö (c/o Mewab och Engelholmsglass)
+        Fryslager: Radiovägen 19, Tyresö (c/o Mewab och Engelholms Glass)
         {/* Kontaktvägar visas när verksamheten verifierat dem – platshållare
             renderas aldrig publikt. */}
         {isVerifiedValue(invoiceConfig.email) && (
