@@ -18,8 +18,9 @@ describe("ISO-vecka", () => {
   it("torsdag 10 september 2026 är vecka 37", () => {
     const p = isoWeekParts(fromISODate("2026-09-10"));
     expect(p).toEqual({ year: 2026, week: 37 });
-    expect(isoWeekParam(p.year, p.week)).toBe("2026-W37");
+    expect(isoWeekParam(p.year, p.week)).toBe("2026-w37");
     expect(parseIsoWeekParam("2026-W37")).toEqual(p);
+    expect(parseIsoWeekParam("2026-w37")).toEqual(p);
   });
 
   it("måndagen i vecka 37 är 7 september", () => {

@@ -13,7 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const nav = [
     { href: "/admin", label: "Översikt" },
     { href: "/admin/bestallningar", label: "Beställningar" },
-    { href: "/admin/fakturor", label: "Fakturor" },
+    { href: "/admin/fakturor", label: "Reskontra" },
     { href: "/admin/leveranser", label: "Leveranser" },
     { href: "/admin/lager", label: "Lager" },
     { href: "/admin/prenumerationer", label: "Prenumerationer" },

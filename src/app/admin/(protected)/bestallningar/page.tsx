@@ -76,7 +76,12 @@ export default async function OrdersPage({
   const [orders, totalCount] = await Promise.all([
     prisma.order.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy:
+        filter === "kommande"
+          ? [{ deliveryDate: "asc" }, { companyName: "asc" }]
+          : filter === "levererade"
+            ? [{ deliveryDate: "desc" }, { companyName: "asc" }]
+            : { createdAt: "desc" },
       take: PAGE_SIZE,
       skip: (page - 1) * PAGE_SIZE,
       include: { deliveryArea: true, invoice: true },

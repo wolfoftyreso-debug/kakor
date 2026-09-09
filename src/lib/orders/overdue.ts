@@ -32,3 +32,13 @@ export async function overdueInvoicesFor(orgNumber: string, excludeOrderId?: str
     }))
   );
 }
+
+/** Organisationsnummer med minst en förfallen obetald faktura. */
+export async function overdueOrgNumbers(now = new Date()): Promise<Set<string>> {
+  const today = todayInStockholm(now);
+  const rows = await prisma.invoice.findMany({
+    where: { status: "UNPAID", dueDate: { lt: today }, order: { status: { not: "CANCELLED" } } },
+    select: { order: { select: { orgNumber: true } } },
+  });
+  return new Set(rows.map((r) => r.order.orgNumber));
+}

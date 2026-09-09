@@ -57,6 +57,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           Order <span className="mono">{order.orderNumber}</span>
         </h1>
         <span style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <Link href={`/admin/bestallningar/${order.id}/orderbekraftelse`} style={{ fontSize: 14, fontWeight: 600 }}>
+            Orderbekräftelse (PDF)
+          </Link>
           <Link href={`/admin/bestallningar/${order.id}/foljesedel`} style={{ fontSize: 14, fontWeight: 600 }}>
             Följesedel (utskrift)
           </Link>

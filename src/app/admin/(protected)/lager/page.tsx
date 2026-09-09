@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdminPage } from "@/lib/auth/guard";
-import { formatTimestamp } from "@/lib/dates";
+import { formatDate, formatTimestamp, fromISODate } from "@/lib/dates";
 import { prisma } from "@/lib/db";
 import { formatStockQty, formatSignedGrams, loadStock } from "@/lib/warehouse/inventory";
 import { AdjustForm, MinLevelForm } from "./AdjustForm";
@@ -29,15 +29,16 @@ export default async function LagerPage() {
         </Link>
       </div>
       <p style={{ color: "var(--text-2)", fontSize: 14, margin: "0 0 20px", maxWidth: "72ch" }}>
-        Fysiskt lager är det som ligger i frysen. Reserverat är beställt men inte plockat.
-        Disponibelt = fysiskt minus reserverat. Alla justeringar loggas.
+        Fysiskt lager är det som ligger i frysen. Reserverat till nästa körning är det som ska plockas då.
+        Senare bokningar syns för sig – de bakas i kommande satser, inte ur samma frys. Disponibelt till nästa körning = fysiskt minus nästa körning.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {stock.map((s) => {
-          const deficit = s.availableGrams < 0;
+          const deficit = s.availableNextGrams < 0;
           const negativePhysical = s.physicalGrams < 0;
           const low = s.minGrams > 0 && s.physicalGrams < s.minGrams;
+          const nextLabel = s.nextDeliveryIso ? `Nästa ${formatDate(fromISODate(s.nextDeliveryIso))}` : "Nästa körning";
           return (
             <article key={s.productId} className="card" style={{ padding: "16px 18px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}>
@@ -61,10 +62,11 @@ export default async function LagerPage() {
                 }}
               >
                 <Stat label="Fysiskt" value={formatStockQty(s.physicalGrams, s.unit, s.packageWeightGrams)} warn={negativePhysical} />
-                <Stat label="Reserverat" value={formatStockQty(s.reservedGrams, s.unit, s.packageWeightGrams)} />
+                <Stat label={nextLabel} value={formatStockQty(s.reservedNextGrams, s.unit, s.packageWeightGrams)} />
+                <Stat label="Senare bokningar" value={formatStockQty(s.reservedLaterGrams, s.unit, s.packageWeightGrams)} />
                 <Stat
-                  label="Disponibelt"
-                  value={formatStockQty(s.availableGrams, s.unit, s.packageWeightGrams)}
+                  label="Till nästa körning"
+                  value={formatStockQty(s.availableNextGrams, s.unit, s.packageWeightGrams)}
                   warn={deficit}
                 />
                 <Stat

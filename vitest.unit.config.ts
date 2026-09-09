@@ -12,6 +12,8 @@ export default defineConfig({
       "tests/status.test.ts",
       "tests/units.test.ts",
       "tests/money.test.ts",
+      "tests/aging.test.ts",
+      "tests/route-sort.test.ts",
       "tests/allergens.test.ts",
       "tests/auth.test.ts",
     ],

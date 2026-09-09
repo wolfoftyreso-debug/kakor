@@ -7,6 +7,7 @@ import { priceSuffix, qtyLabel } from "@/lib/units";
 import { addDays, capitalizeFirst, changeDeadline, formatDeadline, formatDeliveryDate, formatDeliveryDateWithYear, formatLongDate, todayInStockholm } from "@/lib/dates";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
+import { renderOrderConfirmationPdf } from "@/lib/orders/confirmation-pdf";
 import { looksLikePersonalNumber } from "@/lib/validation";
 import { isVerifiedValue } from "@/lib/config";
 import { FREQUENCY_LABELS } from "@/lib/status";
@@ -57,6 +58,41 @@ export async function sendOrderEmails(orderId: string, options: OrderEmailOption
   const notes = (options.customerNotes ?? []).filter((n) => n.trim().length > 0);
   const notesBlock = notes.length > 0 ? `\nOBS\n${notes.map((n) => `  ${n}`).join("\n")}\n` : "";
 
+  let confirmationAttachments: { filename: string; content: Buffer; contentType: string }[] | undefined;
+  try {
+    const confirmationPdf = await renderOrderConfirmationPdf({
+      orderNumber: order.orderNumber,
+      email: order.email,
+      invoiceEmail: order.invoiceEmail,
+      companyName: order.companyName,
+      orgNumber: order.orgNumber,
+      contactName: order.contactName,
+      phone: order.phone,
+      reference: order.reference,
+      deliveryAddress: order.deliveryAddress,
+      deliveryPostalCode: order.deliveryPostalCode,
+      deliveryCity: order.deliveryCity,
+      deliveryInstruction: order.deliveryInstruction,
+      deliveryDate: order.deliveryDate,
+      subtotalOre: order.subtotalOre,
+      vatOre: order.vatOre,
+      totalOre: order.totalOre,
+      items: order.items,
+      invoice: order.invoice,
+      subscription: sub ? { number: sub.number, frequency: sub.frequency } : null,
+      customerNotes: notes,
+    });
+    confirmationAttachments = [
+      {
+        filename: `orderbekraftelse-${order.orderNumber}.pdf`,
+        content: confirmationPdf,
+        contentType: "application/pdf",
+      },
+    ];
+  } catch (e) {
+    console.error("Orderbekräftelse-PDF kunde inte genereras:", e);
+  }
+
   const confirmationText = `${sub ? `Nästa leverans i er fikaprenumeration är på gång.` : "Tack för er beställning!"}
 
 Ordernummer: ${order.orderNumber}${sub ? `\nFikaprenumeration: ${sub.number} (${frequencyLabel})` : ""}
@@ -77,7 +113,7 @@ ${changeLine}
 FAKTURA
 Betalning sker mot faktura. Fakturan skapas nu och skickas till ${order.invoiceEmail}. Förfallodatum ${formatLongDate(order.invoice.dueDate)} (${invoiceConfig.paymentTermsDays} dagar efter leveransen).
 Ni kan även ladda ner den här: ${invoiceUrl}
-
+${confirmationAttachments ? "Orderbekräftelsen bifogas som PDF.\n" : ""}
 Frågor? Svara på det här mejlet.
 
 Vänliga hälsningar
@@ -89,6 +125,7 @@ Sockerbagaren`;
       ? `Fikaleverans ${formatDeliveryDateWithYear(order.deliveryDate)} (${sub.number}) – Sockerbagaren`
       : `Orderbekräftelse ${order.orderNumber} – Sockerbagaren`,
     text: confirmationText,
+    attachments: confirmationAttachments,
     type: "ORDER_CONFIRMATION",
     orderId: order.id,
   });

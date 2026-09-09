@@ -3,13 +3,15 @@ import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
-import { addDays, formatDeliveryDate, todayInStockholm, capitalizeFirst, startOfStockholmDay, toISODate } from "@/lib/dates";
+import { formatDeliveryDate, todayInStockholm, capitalizeFirst, startOfStockholmDay, toISODate } from "@/lib/dates";
 import { OrderStatusPill, PaymentStatusPill } from "@/components/admin/StatusPills";
 import { foodVatNotice, FOOD_VAT_RATE_BP } from "@/lib/vat";
 import { loadOpsDashboard } from "@/lib/warehouse/queries";
 import { formatStockQty } from "@/lib/warehouse/inventory";
 import { formatWeightKg } from "@/lib/units";
+import { remainingOre, agingKey, addToAging, emptyAging } from "@/lib/invoice/aging";
 import { DELIVERY_WEEK_STATUS_LABELS, isWeekLockedStatus, type DeliveryWeekStatus } from "@/lib/status";
+import { areaBookingLine } from "@/components/admin/AreaBooking";
 
 export const dynamic = "force-dynamic";
 
@@ -18,65 +20,60 @@ export const metadata: Metadata = { title: "Admin – översikt", robots: { inde
 export default async function AdminDashboard() {
   await requireAdminPage();
   const today = todayInStockholm();
-  const weekAhead = addDays(today, 7);
 
-  const [newOrders, upcomingDeliveries, unpaidInvoices, overdueInvoices, activeSubscriptions, ordersToday, newOrderCount, unpaidCredits, overdueCredits, productsAtTempVat] =
+  const [newOrders, activeSubscriptions, ordersToday, newOrderCount, productsAtTempVat, unpaidLedger] =
     await Promise.all([
       prisma.order.findMany({
         where: { status: "NEW" },
         orderBy: { createdAt: "desc" },
         take: 8,
       }),
-      prisma.order.findMany({
-        where: {
-          status: { not: "CANCELLED" },
-          deliveryStatus: "PENDING",
-          deliveryDate: { gte: today, lte: weekAhead },
-        },
-        orderBy: { deliveryDate: "asc" },
-        take: 8,
-        include: { deliveryArea: true },
-      }),
-      prisma.invoice.aggregate({
-        where: { status: "UNPAID", order: { status: { not: "CANCELLED" } } },
-        _count: true,
-        _sum: { totalOre: true },
-      }),
-      prisma.invoice.aggregate({
-        where: { status: "UNPAID", dueDate: { lt: today }, order: { status: { not: "CANCELLED" } } },
-        _count: true,
-        _sum: { totalOre: true },
-      }),
       prisma.subscription.count({ where: { status: "ACTIVE" } }),
-      // Svenskt dygn (inte UTC-midnatt) – annars saknas ordrar lagda 00–02.
       prisma.order.count({ where: { createdAt: { gte: startOfStockholmDay() } } }),
       prisma.order.count({ where: { status: "NEW" } }),
-      // Delkrediteringar (negativa belopp) på obetalda fakturor – reskontran visar vad som återstår.
-      prisma.creditNote.aggregate({
-        where: { invoice: { status: "UNPAID", order: { status: { not: "CANCELLED" } } } },
-        _sum: { totalOre: true },
-      }),
-      prisma.creditNote.aggregate({
-        where: { invoice: { status: "UNPAID", dueDate: { lt: today }, order: { status: { not: "CANCELLED" } } } },
-        _sum: { totalOre: true },
-      }),
       prisma.product.count({ where: { active: true, vatRateBp: FOOD_VAT_RATE_BP } }),
+      prisma.invoice.findMany({
+        where: { status: "UNPAID", order: { status: { not: "CANCELLED" } } },
+        include: {
+          order: { select: { companyName: true, orgNumber: true } },
+          creditNotes: { select: { totalOre: true } },
+        },
+      }),
     ]);
   const vatNotice = foodVatNotice(toISODate(today), productsAtTempVat);
   const ops = await loadOpsDashboard();
+  const aging = emptyAging();
+  const watch: { company: string; org: string; ore: number }[] = [];
+  const watchMap = new Map<string, { company: string; org: string; ore: number }>();
+  for (const i of unpaidLedger) {
+    const ore = remainingOre(i.totalOre, i.creditNotes);
+    const key = agingKey(i.dueDate, today);
+    addToAging(aging, key, ore);
+    if (key === "overdue" || key === "dueSoon") {
+      const cur = watchMap.get(i.order.orgNumber) ?? { company: i.order.companyName, org: i.order.orgNumber, ore: 0 };
+      cur.ore += ore;
+      watchMap.set(i.order.orgNumber, cur);
+    }
+  }
+  watch.push(...[...watchMap.values()].sort((a, b) => b.ore - a.ore));
 
   const stats = [
     { label: "Nya beställningar", value: String(newOrderCount), href: "/admin/bestallningar?filter=nya" },
     { label: "Beställningar i dag", value: String(ordersToday), href: "/admin/bestallningar" },
     {
       label: "Obetalda fakturor",
-      value: `${unpaidInvoices._count} · ${formatOre((unpaidInvoices._sum.totalOre ?? 0) + (unpaidCredits._sum.totalOre ?? 0))}`,
+      value: `${aging.overdueCount + aging.dueSoonCount + aging.laterCount} · ${formatOre(aging.overdueOre + aging.dueSoonOre + aging.laterOre)}`,
       href: "/admin/fakturor?filter=obetalda",
     },
     {
-      label: "Förfallna fakturor",
-      value: `${overdueInvoices._count} · ${formatOre((overdueInvoices._sum.totalOre ?? 0) + (overdueCredits._sum.totalOre ?? 0))}`,
+      label: "Förfallet",
+      value: `${aging.overdueCount} · ${formatOre(aging.overdueOre)}`,
       href: "/admin/fakturor?filter=forfallna",
+    },
+    {
+      label: "Förfaller inom 7 dagar",
+      value: `${aging.dueSoonCount} · ${formatOre(aging.dueSoonOre)}`,
+      href: "/admin/fakturor?filter=forfaller-snart",
     },
     { label: "Aktiva prenumerationer", value: String(activeSubscriptions), href: "/admin/prenumerationer" },
   ];
@@ -175,7 +172,13 @@ export default async function AdminDashboard() {
                     <span>{s.name}</span>
                     <span>
                       {formatStockQty(s.physicalGrams, s.unit, s.packageWeightGrams)}
-                      <span style={{ color: "var(--text-2)" }}> / {formatStockQty(s.reservedGrams, s.unit, s.packageWeightGrams)} reserverat</span>
+                      <span style={{ color: "var(--text-2)" }}>
+                        {" "}
+                        / {formatStockQty(s.reservedNextGrams, s.unit, s.packageWeightGrams)} till nästa
+                        {s.reservedLaterGrams > 0
+                          ? ` · ${formatStockQty(s.reservedLaterGrams, s.unit, s.packageWeightGrams)} senare`
+                          : ""}
+                      </span>
                     </span>
                   </div>
                 ))}
@@ -194,6 +197,38 @@ export default async function AdminDashboard() {
           </p>
         )}
       </section>
+
+      {ops.upcoming.length > 0 && (
+        <section style={{ marginBottom: 32 }}>
+          <h2 style={{ fontSize: 19, marginBottom: 12 }}>Bokade leveransdagar</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+            {ops.upcoming.map((d) => (
+              <Link
+                key={d.iso}
+                href={`/admin/leveranser/vecka/${d.weekParam}`}
+                className="card"
+                style={{ padding: "14px 16px", textDecoration: "none", color: "var(--text)" }}
+              >
+                <div className="section-label">{d.weekLabel}</div>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 700, margin: "4px 0" }}>
+                  {capitalizeFirst(formatDeliveryDate(d.deliveryDate))}
+                </div>
+                <div style={{ fontSize: 13.5 }}>
+                  {d.orderCount} bokade · {formatWeightKg(d.totalGrams)}
+                </div>
+                {d.byArea.length > 0 && (
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>{areaBookingLine(d.byArea)}</div>
+                )}
+                <div style={{ marginTop: 8 }}>
+                  <span className={`pill ${isWeekLockedStatus(d.status) ? "pill-ok" : "pill-new"}`}>
+                    {isWeekLockedStatus(d.status) ? "Låst" : DELIVERY_WEEK_STATUS_LABELS[d.status as DeliveryWeekStatus] ?? d.status}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
         <section>
@@ -233,32 +268,30 @@ export default async function AdminDashboard() {
         </section>
 
         <section>
-          <h2 style={{ fontSize: 19, marginBottom: 12 }}>Kommande leveranser (7 dagar)</h2>
-          {upcomingDeliveries.length === 0 ? (
-            <p style={{ color: "var(--text-2)", fontSize: 14 }}>Inga leveranser inplanerade.</p>
+          <h2 style={{ fontSize: 19, marginBottom: 12 }}>Reskontra att bevaka</h2>
+          {watch.length === 0 ? (
+            <p style={{ color: "var(--text-2)", fontSize: 14 }}>Inget förfallet eller förfaller inom 7 dagar.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {upcomingDeliveries.map((o) => (
+              {watch.slice(0, 8).map((c) => (
                 <Link
-                  key={o.id}
-                  href={`/admin/bestallningar/${o.id}`}
+                  key={c.org}
+                  href={`/admin/fakturor?filter=obetalda&q=${encodeURIComponent(c.company)}`}
                   className="card"
                   style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text)", display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}
                 >
                   <div>
-                    <strong>{capitalizeFirst(formatDeliveryDate(o.deliveryDate))}</strong>
-                    <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
-                      {o.companyName} · {o.deliveryArea?.name ?? o.deliveryCity}
-                    </div>
+                    <strong>{c.company}</strong>
+                    <div className="mono" style={{ fontSize: 12, color: "var(--text-2)" }}>{c.org}</div>
                   </div>
-                  <span className="mono" style={{ fontSize: 12, alignSelf: "center" }}>{o.orderNumber}</span>
+                  <span style={{ fontWeight: 700 }}>{formatOre(c.ore)}</span>
                 </Link>
               ))}
             </div>
           )}
           <div style={{ marginTop: 12 }}>
-            <Link href="/admin/leveranser" style={{ fontWeight: 700, fontSize: 14 }}>
-              Öppna leveransvyn →
+            <Link href="/admin/fakturor" style={{ fontWeight: 700, fontSize: 14 }}>
+              Öppna reskontran →
             </Link>
           </div>
         </section>

@@ -4,6 +4,7 @@ import { createOrder, OrderError } from "@/lib/orders/create-order";
 import { toISODate, upcomingDeliveryDates } from "@/lib/dates";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
+import { renderOrderConfirmationPdf } from "@/lib/orders/confirmation-pdf";
 import type { CheckoutInput } from "@/lib/validation";
 import { orgNumber } from "./helpers";
 
@@ -166,6 +167,33 @@ describe("order + faktura (golden path)", () => {
   it("genererar en riktig PDF från fakturans snapshot", async () => {
     const { invoice } = await createOrder(checkoutInput(), { skipEmails: true });
     const pdf = await renderInvoicePdf(parseSnapshot(invoice.snapshotJson), invoice.invoiceNumber);
+    expect(pdf.length).toBeGreaterThan(1500);
+    expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+  });
+
+  it("genererar en orderbekräftelse-PDF med ordernummer", async () => {
+    const { order, invoice } = await createOrder(checkoutInput(), { skipEmails: true });
+    const pdf = await renderOrderConfirmationPdf({
+      orderNumber: order.orderNumber,
+      email: order.email,
+      invoiceEmail: order.invoiceEmail,
+      companyName: order.companyName,
+      orgNumber: order.orgNumber,
+      contactName: order.contactName,
+      phone: order.phone,
+      reference: order.reference,
+      deliveryAddress: order.deliveryAddress,
+      deliveryPostalCode: order.deliveryPostalCode,
+      deliveryCity: order.deliveryCity,
+      deliveryInstruction: order.deliveryInstruction,
+      deliveryDate: order.deliveryDate,
+      subtotalOre: order.subtotalOre,
+      vatOre: order.vatOre,
+      totalOre: order.totalOre,
+      items: order.items,
+      invoice: { invoiceNumber: invoice.invoiceNumber, dueDate: invoice.dueDate },
+      subscription: null,
+    });
     expect(pdf.length).toBeGreaterThan(1500);
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
   });

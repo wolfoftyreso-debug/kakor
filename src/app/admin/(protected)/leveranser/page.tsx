@@ -11,6 +11,8 @@ import { PrintButton } from "@/components/admin/PrintButton";
 import { totalKg as orderKg } from "@/lib/orders/capacity";
 import { listUpcomingDayOps } from "@/lib/warehouse/queries";
 import { DELIVERY_WEEK_STATUS_LABELS, isWeekLockedStatus, type DeliveryWeekStatus } from "@/lib/status";
+import { areaBookingLine } from "@/components/admin/AreaBooking";
+import { overdueOrgNumbers } from "@/lib/orders/overdue";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin – leveranser", robots: { index: false } };
@@ -26,6 +28,7 @@ export default async function DeliveriesPage({
   const { visa = "kommande", klar } = await searchParams;
   const today = todayInStockholm();
   const upcomingWeeks = visa === "levererade" ? [] : await listUpcomingDayOps();
+  const overdueOrgs = visa === "levererade" ? new Set<string>() : await overdueOrgNumbers();
 
   const orders = await prisma.order.findMany({
     where:
@@ -100,6 +103,9 @@ export default async function DeliveriesPage({
                 <div style={{ fontSize: 13.5 }}>
                   {d.orderCount} leveranser · {formatWeightKg(d.totalGrams)}
                 </div>
+                {d.byArea.length > 0 && (
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>{areaBookingLine(d.byArea)}</div>
+                )}
                 <div style={{ marginTop: 8 }}>
                   <span className={`pill ${isWeekLockedStatus(d.status) ? "pill-ok" : "pill-new"}`}>
                     {isWeekLockedStatus(d.status) ? "Låst" : DELIVERY_WEEK_STATUS_LABELS[d.status as DeliveryWeekStatus] ?? d.status}
@@ -124,6 +130,12 @@ export default async function DeliveriesPage({
 
       {sortedKeys.map((dateKey, dayIndex) => {
         const dayOrders = groups.get(dateKey)!;
+        dayOrders.sort(
+          (a, b) =>
+            (a.deliveryArea?.sortOrder ?? 99) - (b.deliveryArea?.sortOrder ?? 99) ||
+            a.deliveryPostalCode.localeCompare(b.deliveryPostalCode) ||
+            a.companyName.localeCompare(b.companyName, "sv")
+        );
         // Lösvikt och paket summeras separat – "12 kg + 2 paket" är packlistans sanning.
         const allItems = dayOrders.flatMap((o) => o.items);
         const totalKg = allItems.filter((i) => i.unit !== "paket").reduce((s, i) => s + i.weightKg, 0);
@@ -156,8 +168,12 @@ export default async function DeliveriesPage({
           byArea.set(o.deliveryArea.id, cur);
         }
         const capacityNote = [...byArea.values()]
-          .filter((a) => a.max > 0)
-          .map((a) => `${a.name} ${Math.round(a.kg * 10) / 10} av ${a.max} kg${a.kg >= a.max ? " – FULLT" : ""}`)
+          .sort((a, b) => a.name.localeCompare(b.name, "sv"))
+          .map((a) =>
+            a.max > 0
+              ? `${a.name} ${Math.round(a.kg * 10) / 10} av ${a.max} kg${a.kg >= a.max ? " – FULLT" : ""}`
+              : `${a.name} ${Math.round(a.kg * 10) / 10} kg bokade`
+          )
           .join(" · ");
         return (
           <section key={dateKey} style={{ marginBottom: 32 }}>
@@ -198,14 +214,29 @@ export default async function DeliveriesPage({
               </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {dayOrders.map((o) => (
-                <div key={o.id} className="card" style={{ padding: "16px 18px" }}>
+              {dayOrders.map((o, idx) => {
+                const areaName = o.deliveryArea?.name ?? o.deliveryCity;
+                const prevArea = idx > 0 ? (dayOrders[idx - 1].deliveryArea?.name ?? dayOrders[idx - 1].deliveryCity) : null;
+                const showArea = areaName !== prevArea;
+                return (
+                <div key={o.id}>
+                  {showArea && (
+                    <div className="section-label" style={{ margin: idx === 0 ? "0 0 8px" : "12px 0 8px" }}>
+                      {areaName}
+                    </div>
+                  )}
+                <div className="card" style={{ padding: "16px 18px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                     <div>
                       <strong style={{ fontSize: 16 }}>{o.companyName}</strong>{" "}
                       <span className="mono" style={{ fontSize: 12, color: "var(--text-2)" }}>
                         {o.orderNumber}
                       </span>
+                      {overdueOrgs.has(o.orgNumber) && (
+                        <span className="pill pill-warn" style={{ marginLeft: 8 }}>
+                          Förfallen fordran
+                        </span>
+                      )}
                       <div style={{ fontSize: 13.5, marginTop: 2 }}>
                         {o.deliveryAddress}, {o.deliveryPostalCode} {o.deliveryCity}
                         {o.deliveryArea ? ` · ${o.deliveryArea.name}` : ""}
@@ -253,7 +284,9 @@ export default async function DeliveriesPage({
                     )}
                   </div>
                 </div>
-              ))}
+                </div>
+                );
+              })}
             </div>
             </details>
           </section>

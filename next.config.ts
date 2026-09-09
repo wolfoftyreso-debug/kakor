@@ -61,6 +61,10 @@ const nextConfig: NextConfig = {
         source: "/prenumeration/hantera/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
+      {
+        source: "/demo-underlag/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
     ];
   },
 };

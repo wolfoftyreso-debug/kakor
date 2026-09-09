@@ -326,11 +326,11 @@ export function formatIsoWeekLabel(year: number, week: number): string {
 }
 
 export function isoWeekParam(year: number, week: number): string {
-  return `${year}-W${String(week).padStart(2, "0")}`;
+  return `${year}-w${String(week).padStart(2, "0")}`;
 }
 
 export function parseIsoWeekParam(raw: string): { year: number; week: number } | null {
-  const m = /^(\d{4})-W(\d{2})$/.exec(raw);
+  const m = /^(\d{4})-[Ww](\d{2})$/.exec(raw);
   if (!m) return null;
   const year = Number(m[1]);
   const week = Number(m[2]);
