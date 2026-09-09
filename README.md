@@ -9,6 +9,8 @@ PostgreSQL. Target-miljö: **GitHub → Vercel → Neon PostgreSQL** —
 driftmanualen finns i [DEPLOYMENT.md](DEPLOYMENT.md).
 Designpaketet i [`design/`](design/) är source of truth för UI/UX.
 
+> **Ny i projektet?** Läs `docs/OVERLAMNING.md` först – affären, reglerna, grenarna, deployflödet och det som är öppet.
+
 ## Komma igång
 
 ```bash
