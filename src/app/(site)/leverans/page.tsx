@@ -100,6 +100,16 @@ export default async function LeveransPage() {
             <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 6 }}>
               Leveransdag: {listSv([...new Set(a.weekdays)].map(weekdayName))}
             </div>
+            {a.postalPrefixes.length > 0 && (
+              <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 2 }}>
+                Postnummer: {a.postalPrefixes.map((p) => `${p}xx`).join(", ")}
+              </div>
+            )}
+            {a.leadTimeDays > 0 && (
+              <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 2 }}>
+                Beställ senast {a.leadTimeDays} {a.leadTimeDays === 1 ? "dag" : "dagar"} före
+              </div>
+            )}
             {a.upcomingDates[0] && (
               <div style={{ fontSize: "13.5px", marginTop: 4 }}>
                 Nästa:{" "}
@@ -114,6 +124,34 @@ export default async function LeveransPage() {
         Vi levererar under dagen till bemannade företagsadresser. Se till att någon kan ta emot
         leveransen.
       </div>
+
+      <h2>Så går leveransen till</h2>
+      <p>
+        Kakorna bakas och förpackas hos ett litet konditori i Šiauliai i Litauen och fryses direkt
+        efter bakningen. Därifrån körs de frysta till vårt fryslager på Radiovägen i Tyresö. När er
+        beställning kommer in plockas den där och levereras på områdets leveransdag – antingen av oss
+        själva eller genom ett anlitat bud. Ni får kakorna i förpackningar märkta med sort,
+        ingredienser och bäst före-datum.
+      </p>
+      <p>
+        Leveransen kommer under dagen. Vi kan inte lova ett klockslag, så adressen behöver vara
+        bemannad: reception, personalrum eller lastkaj fungerar bra. Ingen leveransavgift läggs på
+        – priset per kilo respektive per paket är det ni betalar, plus moms.
+      </p>
+
+      <h2>Framförhållning</h2>
+      <p>
+        Vi packar i förväg och visar därför bara leveransdagar som går att hålla. Kassan räknar fram
+        nästa möjliga dag för ert område när ni väljer datum. Behöver ni kakorna till ett bestämt
+        tillfälle: beställ så snart datumet är satt, så länge dagen visas i kassan går den att boka.
+        Beställningar kan ändras eller avbokas fram till den ändringsfrist som står i orderbekräftelsen.
+      </p>
+
+      <h2>Förvaring efter leverans</h2>
+      <p>
+        Förvara kakorna i stängd förpackning eller tät burk i rumstemperatur. Helt tätt behåller
+        kakan sin mjukhet, lite luft gör den sprödare. Kakorna tål frysning.
+      </p>
 
       <h2>Betalning</h2>
       <p>
