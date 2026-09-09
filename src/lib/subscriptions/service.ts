@@ -10,14 +10,16 @@ import {
   toISODate,
   todayInStockholm,
   addDays,
+  upcomingDeliveryDates,
+  swedishHolidayName,
 } from "@/lib/dates";
 import type { SubscriptionInput } from "@/lib/validation";
 import type { SubscriptionFrequency } from "@/lib/status";
 import { safeBlockedDates, safeWeekdays } from "@/lib/products";
 import { assertInvoicingConfigured, assertNotAbusive, createOrder, OrderError } from "@/lib/orders/create-order";
+import { isDeliveryDateClosed, cutoffClosedMessage } from "@/lib/warehouse/closed";
 import { describeError } from "@/lib/log";
 import { notifyAdminSkippedSubscription, notifyCustomerSkippedDelivery } from "@/lib/subscriptions/emails";
-import { swedishHolidayName } from "@/lib/dates";
 import { newManageToken } from "@/lib/subscriptions/manage";
 
 // Prenumeration = återkommande order/fakturering – INTE kortdebitering.
@@ -126,6 +128,21 @@ export async function createSubscription(input: SubscriptionInput) {
   };
   if (!isValidDeliveryDate(firstDate, areaConfig)) {
     throw new OrderError("Leveransdagen är inte tillgänglig – välj en ny dag", "firstDeliveryDate");
+  }
+  if (await isDeliveryDateClosed(firstDate)) {
+    let open: Date | undefined;
+    for (const d of upcomingDeliveryDates(areaConfig, 10)) {
+      if (d.getTime() === firstDate.getTime()) continue;
+      if (!(await isDeliveryDateClosed(d))) {
+        open = d;
+        break;
+      }
+    }
+    throw new OrderError(
+      open ? cutoffClosedMessage(firstDate, open) : "Leveransdagen är stängd – välj en ny dag",
+      "firstDeliveryDate",
+      "CUTOFF"
+    );
   }
 
   const products = await prisma.product.findMany({

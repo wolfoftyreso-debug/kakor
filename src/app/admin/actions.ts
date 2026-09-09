@@ -25,7 +25,10 @@ import { notifyPriceChangeToSubscribers, sendSubscriptionChangeEmail } from "@/l
 import { manageUrlFor, resumedNextDate } from "@/lib/subscriptions/manage";
 import { formatOre } from "@/lib/money";
 import { fromISODate, todayInStockholm, isoWeekday, weekdayName, toISODate, swedishHolidayName, formatLongDate } from "@/lib/dates";
-import { canTransitionOrder, SUBSCRIPTION_FREQUENCY, FREQUENCY_LABELS as SUBSCRIPTION_FREQUENCY_LABELS } from "@/lib/status";
+import { canTransitionOrder, SUBSCRIPTION_FREQUENCY, FREQUENCY_LABELS as SUBSCRIPTION_FREQUENCY_LABELS, isWeekLockedStatus } from "@/lib/status";
+import { applyOrderPick, applyOrderUnpick } from "@/lib/warehouse/inventory";
+import { syncWeekStatusForDate } from "@/lib/warehouse/pick";
+import { recordLateChange } from "@/lib/warehouse/snapshot";
 
 async function requireAdmin() {
   const admin = await getAdmin();
@@ -143,10 +146,18 @@ export async function markOrderDelivered(orderId: string, note: string): Promise
       deliveredAt: new Date(),
       deliveryNote: note || order.deliveryNote,
       status: order.status === "NEW" ? "CONFIRMED" : order.status,
+      pickStatus: "DELIVERED",
     },
   });
   if (res.count !== 1) return { ok: false, error: "Ordern ändrades samtidigt av någon annan – ladda om sidan" };
+  // Lagerprincip: om ordern inte redan plockats dras lagret nu (en gång).
+  if (order.pickStatus === "UNPICKED" || order.pickStatus === "PROBLEM") {
+    await applyOrderPick(orderId, admin.email).catch((e) =>
+      console.error("Lagerdragning vid leverans misslyckades:", e instanceof Error ? e.message : e)
+    );
+  }
   await logEvent(orderId, "DELIVERED", `Markerad som levererad${note ? ` – ${note}` : ""}`, admin.email);
+  await syncWeekStatusForDate(order.deliveryDate).catch(() => {});
   // Kunden får veta att kakorna är framme. Mejlfel stoppar aldrig statusändringen.
   let mailed = false;
   try {
@@ -216,6 +227,9 @@ export async function cancelOrder(orderId: string, note: string): Promise<Action
         await tx.orderEvent.create({
           data: { orderId, type: "CANCELLED", message: `Order avbruten${note ? ` – ${note}` : ""}`, actor: admin.email },
         });
+        if (order.pickStatus === "PICKED" || order.pickStatus === "LOADED" || order.pickStatus === "DELIVERED") {
+          await applyOrderUnpick(orderId, admin.email, tx);
+        }
         if (order.invoice) {
           const credit = await issueCreditNoteInTx(tx, order.invoice.id, admin.email);
           if (credit) {
@@ -235,6 +249,18 @@ export async function cancelOrder(orderId: string, note: string): Promise<Action
     return { ok: false, error: "Ordern kunde inte avbrytas – ingenting har ändrats. Försök igen." };
   }
   const mailed = creditId && !creditReused ? await sendCreditNoteEmail(creditId) : false;
+  const week = await prisma.deliveryWeek.findUnique({ where: { deliveryDate: order.deliveryDate } }).catch(() => null);
+  if (week && isWeekLockedStatus(week.status)) {
+    await recordLateChange(order.deliveryDate, {
+      actor: admin.email,
+      reason: note || "Order avbruten efter cutoff",
+      type: "ORDER_REMOVED",
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      detail: `${order.companyName} avbruten efter låsning`,
+    }).catch(() => {});
+  }
+  await syncWeekStatusForDate(order.deliveryDate).catch(() => {});
   revalidatePath("/admin", "layout");
   return {
     ok: true,

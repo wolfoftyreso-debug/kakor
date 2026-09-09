@@ -19,6 +19,7 @@
     "db:reset": "prisma migrate reset --force",
     "admin:create": "tsx scripts/create-admin.ts",
     "subscriptions:generate": "tsx scripts/generate-subscription-orders.ts",
+    "delivery-weeks:lock": "tsx scripts/lock-delivery-weeks.ts",
     "smoke": "tsx scripts/smoke.ts",
     "seo:crawl": "tsx scripts/seo-crawl.mts",
     "build:vercel": "node scripts/vercel-build.mjs"

@@ -14,6 +14,7 @@ import {
   PaymentStatusPill,
 } from "@/components/admin/StatusPills";
 import { OrderActions } from "./OrderActions";
+import { PickButtons } from "../../leveranser/PickButtons";
 import { remainingByLine } from "@/lib/invoice/credit";
 import { looksLikePersonalNumber } from "@/lib/validation";
 import { overdueInvoicesFor } from "@/lib/orders/overdue";
@@ -77,6 +78,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           </span>
         )}
       </div>
+      {order.status !== "CANCELLED" && (
+        <div className="no-print" style={{ marginBottom: 20 }}>
+          <div className="section-label" style={{ marginBottom: 8 }}>Plock</div>
+          <PickButtons orderId={order.id} pickStatus={order.pickStatus} />
+        </div>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, marginBottom: 24 }}>
         <section className="card" style={{ padding: "20px 24px" }}>

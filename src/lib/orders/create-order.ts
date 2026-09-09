@@ -4,13 +4,15 @@ import { prisma } from "@/lib/db";
 import { calculateTotals } from "@/lib/money";
 import { nextNumber } from "@/lib/numbering";
 import { invoiceConfig, isVerifiedValue } from "@/lib/config";
-import { addDays, capitalizeFirst, formatDeliveryDate, fromISODate, isValidDeliveryDate, toISODate, todayInStockholm } from "@/lib/dates";
+import { addDays, capitalizeFirst, formatDeliveryDate, fromISODate, isValidDeliveryDate, toISODate, todayInStockholm, upcomingDeliveryDates } from "@/lib/dates";
 import { bookedKgByDate, totalKg, type CapacityClient } from "@/lib/orders/capacity";
 import { effectiveVatRateBp } from "@/lib/vat";
 import { safeBlockedDates, safeWeekdays } from "@/lib/products";
 import type { InvoiceSnapshot } from "@/lib/invoice/snapshot";
 import type { CheckoutInput } from "@/lib/validation";
 import { sendOrderEmails } from "@/lib/orders/order-emails";
+import { cutoffClosedMessage, isDeliveryDateClosed } from "@/lib/warehouse/closed";
+import { recordLateChange } from "@/lib/warehouse/snapshot";
 
 export class OrderError extends Error {
   constructor(
@@ -174,6 +176,21 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
   // tiden än kundens cutoff – de datumvalideras vid prenumerationsstart istället.
   if (!options.subscription && !isValidDeliveryDate(deliveryDate, areaConfig)) {
     throw new OrderError("Leveransdagen är inte tillgänglig – välj en ny dag", "deliveryDate");
+  }
+  if (!options.subscription && (await isDeliveryDateClosed(deliveryDate))) {
+    let open: Date | undefined;
+    for (const d of upcomingDeliveryDates(areaConfig, 10)) {
+      if (d.getTime() === deliveryDate.getTime()) continue;
+      if (!(await isDeliveryDateClosed(d))) {
+        open = d;
+        break;
+      }
+    }
+    throw new OrderError(
+      open ? cutoffClosedMessage(deliveryDate, open) : "Leveransdagen är stängd – välj en ny dag",
+      "deliveryDate",
+      "CUTOFF"
+    );
   }
 
   const productIds = input.items.map((i) => i.productId);
@@ -374,6 +391,19 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
     await sendOrderEmails(created.order.id, { customerNotes: options.customerNotes }).catch((e) =>
       console.error("Ordermail misslyckades:", e)
     );
+  }
+
+  // Prenumeration som materialiseras efter cutoff: ordern ska inte tappas,
+  // men den ursprungliga låsta listan får inte tyst ändras.
+  if (options.subscription && (await isDeliveryDateClosed(deliveryDate))) {
+    await recordLateChange(deliveryDate, {
+      actor: "system",
+      reason: "Prenumerationsorder efter cutoff",
+      type: "ORDER_ADDED",
+      orderId: created.order.id,
+      orderNumber: created.order.orderNumber,
+      detail: `${created.order.companyName} · prenumeration ${options.subscription.number ?? options.subscription.id}`,
+    }).catch((e) => console.error("Kunde inte registrera sen prenumerationsorder:", e));
   }
 
   return { ...created, duplicate: false as const };

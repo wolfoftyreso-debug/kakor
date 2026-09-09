@@ -50,16 +50,34 @@ export interface AreaWithDates {
   /** Postnummerprefix (tom = ingen spärr) – kassan varnar direkt i steg 3. */
   postalPrefixes: string[];
   upcomingDates: string[]; // ISO-datum
+  /** Kundtext när närmaste leveransdagen stängts av onsdagscutoff. */
+  cutoffNotice: string | null;
+  cutoffWeekday: number;
+  cutoffHour: number;
 }
 
-import { toISODate, upcomingDeliveryDates, weekdayName } from "@/lib/dates";
+import { toISODate, upcomingDeliveryDates, weekdayName, fromISODate } from "@/lib/dates";
 import { bookedKgByDate } from "@/lib/orders/capacity";
+import { cutoffClosedMessage } from "@/lib/warehouse/cutoff";
+import { getWarehouseClosedDates } from "@/lib/warehouse/closed";
+import { getOpsSettings } from "@/lib/warehouse/settings";
 
 export const getAreasWithDates = cache(async function getAreasWithDates(dateCount = 4): Promise<AreaWithDates[]> {
   const areas = await prisma.deliveryArea.findMany({
     where: { active: true },
     orderBy: { sortOrder: "asc" },
   });
+  let warehouseClosed = new Set<string>();
+  let cutoffWeekday = 3;
+  let cutoffHour = 12;
+  try {
+    warehouseClosed = await getWarehouseClosedDates();
+    const ops = await getOpsSettings();
+    cutoffWeekday = ops.cutoffWeekday;
+    cutoffHour = ops.cutoffHour;
+  } catch {
+    warehouseClosed = new Set();
+  }
   return Promise.all(
     areas.map(async (a) => {
       const weekdays = safeWeekdays(a.weekdaysJson);
@@ -72,16 +90,27 @@ export const getAreasWithDates = cache(async function getAreasWithDates(dateCoun
         const booked = await bookedKgByDate(a.id, candidates);
         fullDates = candidates.filter((d) => (booked.get(d) ?? 0) >= a.maxKgPerDay);
       }
-      const config = { weekdays, leadTimeDays: a.leadTimeDays, blockedDates: [...blockedDates, ...fullDates] };
+      const warehouseClosedList = [...warehouseClosed];
+      const config = { weekdays, leadTimeDays: a.leadTimeDays, blockedDates: [...blockedDates, ...fullDates, ...warehouseClosedList] };
+      const upcoming = upcomingDeliveryDates(config, dateCount).map(toISODate);
+      const natural = upcomingDeliveryDates({ weekdays, leadTimeDays: a.leadTimeDays, blockedDates: [...blockedDates, ...fullDates] }, dateCount + 4);
+      const firstNatural = natural[0];
+      let cutoffNotice: string | null = null;
+      if (firstNatural && warehouseClosed.has(toISODate(firstNatural)) && upcoming[0]) {
+        cutoffNotice = cutoffClosedMessage(firstNatural, fromISODate(upcoming[0]));
+      }
       return {
         slug: a.slug,
         name: a.name,
         weekdays,
         leadTimeDays: a.leadTimeDays,
-        blockedDates,
+        blockedDates: [...blockedDates, ...warehouseClosedList],
         fullDates,
         postalPrefixes: safeStringList(a.postalCodePrefixesJson),
-        upcomingDates: upcomingDeliveryDates(config, dateCount).map(toISODate),
+        upcomingDates: upcoming,
+        cutoffNotice,
+        cutoffWeekday,
+        cutoffHour,
       };
     })
   );

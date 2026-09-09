@@ -306,3 +306,53 @@ export function listSv(items: string[]): string {
 export function formatLongDate(date: Date): string {
   return new Intl.DateTimeFormat("sv-SE", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" }).format(date);
 }
+
+/**
+ * ISO-vecka och ISO-år för ett rent datum (UTC-midnatt).
+ * Vecka 1 är veckan med 4 januari; veckan börjar måndag.
+ */
+export function isoWeekParts(date: Date): { year: number; week: number } {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const year = d.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(year, 0, 1));
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return { year, week };
+}
+
+export function formatIsoWeekLabel(year: number, week: number): string {
+  return `Vecka ${week}`;
+}
+
+export function isoWeekParam(year: number, week: number): string {
+  return `${year}-W${String(week).padStart(2, "0")}`;
+}
+
+export function parseIsoWeekParam(raw: string): { year: number; week: number } | null {
+  const m = /^(\d{4})-W(\d{2})$/.exec(raw);
+  if (!m) return null;
+  const year = Number(m[1]);
+  const week = Number(m[2]);
+  if (week < 1 || week > 53) return null;
+  return { year, week };
+}
+
+/** Måndagen (UTC-midnatt) i given ISO-vecka. */
+export function mondayOfIsoWeek(year: number, week: number): Date {
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const mondayWeek1 = addDays(jan4, 1 - isoWeekday(jan4));
+  return addDays(mondayWeek1, (week - 1) * 7);
+}
+
+export function datesInIsoWeek(year: number, week: number): Date[] {
+  const monday = mondayOfIsoWeek(year, week);
+  return [0, 1, 2, 3, 4, 5, 6].map((i) => addDays(monday, i));
+}
+
+/** "torsdagens" – genitiv för cutoff-meddelanden. */
+export function weekdayGenitive(isoWd: number): string {
+  const name = weekdayName(isoWd);
+  return name ? `${name}ens` : "";
+}
+

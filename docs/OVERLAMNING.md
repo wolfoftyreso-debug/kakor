@@ -41,9 +41,9 @@ Next.js 16.3 (App Router, Turbopack, `src/proxy.ts`), React 19, TypeScript stric
 src/app/(site)/         publika sidor: /, /kakor, /kakor/[slug], /bestall (kassan), /prenumeration,
                         /prenumeration/hantera/[token] (självservice), /leverans, /[omrade] (tyreso…),
                         /fika-till-jobbet, /julfika, /folkets-kaka, /ingredienser, /om, /villkor, /integritet
-src/app/admin/          inloggning, ordrar, reskontra, leveranser (körlista, följesedel), prenumerationer,
-                        produkter (+ etiketter), områden, omröstningar, CSV-export
-src/app/api/            order, cron (generate-subscription-orders, delivery-reminders), polls, health
+src/app/admin/          inloggning, ordrar, reskontra, leveranser (körlista, veckovy, plock, följesedel, historik), lager, prenumerationer,
+                        produkter (+ etiketter), områden, omröstningar, CSV-export, cutoff för leveranslåsning
+src/app/api/            order, cron (generate-subscription-orders, delivery-reminders, lock-delivery-weeks), polls, health
 src/app/llms.txt/       maskinläsbar företagsbeskrivning för AI-sök
 src/lib/                orders/ (skapa, faktura, kredit, mejl, overdue), subscriptions/ (service, manage,
                         emails), polls/, seo/ (schema.ts = JSON-LD-motor med @id, meta.ts, content-dates.ts),
@@ -96,6 +96,7 @@ Senaste omgångarna, alla live på demon:
 6. SEO-revision fem: crawl, sökordsuniversum, intent-karta; områdessidorna omskrivna (68 % → 30 % delad text), leveranssidan utbyggd, H1/brödsmulor på /prenumeration, kortare beskrivningar, bildstorlekar, `foundingDate`, `/llms.txt`, `npm run seo:crawl` i CI.
 7. SEO-revision sex: fraktmål i Product-schema = fyra kommuner (inte hela Sverige), Twitter-kort på startsidan, internlänk till /folkets-kaka, kontorsfika på /fika-till-jobbet, FAQPage på /om och /folkets-kaka, square/OG för prova-på-paketet. Rapport: `docs/SEO-REVISION-6.md`.
 8. SEO-revision sju: MerchantReturnPolicy (ingen ångerrätt), ursprung Litauen i Product-schema, fraktmål som postnummerprefix ur admin, kakor till kontoret på /fika-till-jobbet och /kakor, Plex Mono-webbtypsnitt bort. Rapport: `docs/SEO-REVISION-7.md`.
+9. Lager- och leveransmodul: fysiskt/reserverat/disponibelt per sort, produktionsbehov, leveransvecka per ISO-vecka, onsdagslåsning (konfigurerbar) med immutable snapshot, plocklista, leveranssedlar, driftmejl, historik. Lagerprincip: fysiskt saldo minskas vid plock. Cron `/api/cron/lock-delivery-weeks` varje timme; materialiserar prenumerationer före låsning.
 
 ## 7. Öppna ägarbeslut (blockerar, kan inte lösas i kod)
 
