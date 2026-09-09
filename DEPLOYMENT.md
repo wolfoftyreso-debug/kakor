@@ -252,13 +252,10 @@ automatiskt — det beslutet är verksamhetens.)
    (tillfällig livsmedelsmoms t.o.m. 2027-12-31) — admin-översikten påminner
    när den ska tillbaka till 12 %.
 4. **Fakturauppgifter**: `INVOICE_IBAN`/`INVOICE_BIC` (Revolut SEK, inget bankgiro),
-   `INVOICE_VAT_NUMBER`, `INVOICE_F_SKATT` har koddefault från Bolagsverket och
-   kontouppgifterna. `INVOICE_EMAIL` måste fortfarande sättas – utan den stänger
-   ordermotorn beställningar i produktion (503). E-handelslagen (2002:562) 8 §
-   kräver att namn, adress och e-postadress syns för besökaren — sidfoten visar
-   adressen först när värdet är satt (placeholdern renderas aldrig publikt).
-   Ta bort ev. gamla `[EJ VERIFIERAT]`-värden för moms/bankgiro i Vercel så att
-   koddefaulten gäller.
+   `INVOICE_VAT_NUMBER`, `INVOICE_F_SKATT` och `INVOICE_EMAIL=info@sockerbagaren.se`
+   har koddefault. Ta bort ev. gamla `[EJ VERIFIERAT]`-värden för mejl/moms/bankgiro
+   i Vercel så att defaulten gäller. E-handelslagen (2002:562) 8 §: namn, adress
+   och e-post syns i sidfoten när värdet är verifierat.
 5. **E-post**: Resend-domän verifierad (SPF/DKIM), `EMAIL_PROVIDER=resend`,
    `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` (bevakad låda — obligatorisk),
    `ADMIN_NOTIFY_EMAIL` (intern avisering vid ny order).

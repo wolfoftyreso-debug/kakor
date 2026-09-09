@@ -267,13 +267,12 @@ rollback, smoke tests: **[DEPLOYMENT.md](DEPLOYMENT.md)**.
 Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
 `[EJ VERIFIERAT]` tills verksamheten bekräftat — **inget av det är påhittat**:
 
-- Faktura-e-post, telefonnummer
+- Telefonnummer (visas inte förrän det är satt).
 - Betalning: Revolut-IBAN (inget bankgiro). Momsnr SE559141704201 och F-skatt
   från Bolagsverket. **Skydd:** fakturans PDF skriver aldrig ut
   `[EJ VERIFIERAT]`-platshållare (saknas IBAN/bankgiro blir raden
-  "Betalningsuppgifter meddelas separat", overifierad e-post/telefon utelämnas).
-  I produktion rapporterar `checkEnv()` saknad e-post eller betalningsuppgift
-  som KRITISKT — `INVOICE_EMAIL` måste sättas innan första riktiga ordern.
+  "Betalningsuppgifter meddelas separat"). Mejl: `info@sockerbagaren.se`
+  (faktura, svar, avisering) och `order@sockerbagaren.se` (avsändare).
 - **Slutliga priser** — seedade 295 kr/kg är ett startvärde som ska bekräftas
   eller ändras i admin → Produkter (historiska ordrar påverkas inte)
 - **Produktetikett** (`Product.badge`, t.ex. "Bästsäljare") visas på

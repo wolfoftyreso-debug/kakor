@@ -58,6 +58,12 @@ describe("schema-motorn", () => {
     expect(org.foundingDate).toBe("2025");
     expect(org.vatID).toBe("SE559141704201");
     expect(org.taxID).toBe("559141-7042");
+    expect(org.contactPoint).toEqual({
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      email: "info@sockerbagaren.se",
+      availableLanguage: "sv",
+    });
     expect(org).not.toHaveProperty("servesCuisine");
     expect(org.makesOffer).toEqual({ "@id": ids.service() });
     const logo = org.logo as Record<string, unknown>;

@@ -41,7 +41,7 @@ export const invoiceConfig = {
   address: env("INVOICE_ADDRESS", "Antennvägen 2"),
   postalCode: env("INVOICE_POSTAL_CODE", "135 48"),
   city: env("INVOICE_CITY", "Tyresö"),
-  email: env("INVOICE_EMAIL", "[EJ VERIFIERAT: faktura-e-post]"),
+  email: env("INVOICE_EMAIL", "info@sockerbagaren.se"),
   phone: env("INVOICE_PHONE", "[EJ VERIFIERAT: telefonnummer]"),
   // Inget bankgiro – Landvex tar emot betalning till Revolut (LT-IBAN).
   bankgiro: env("INVOICE_BANKGIRO", ""),
@@ -69,8 +69,8 @@ export const emailConfig = {
   provider: env("EMAIL_PROVIDER", "log"),
   resendApiKey: env("RESEND_API_KEY", ""),
   from: env("EMAIL_FROM", "Sockerbagaren <order@sockerbagaren.se>"),
-  // Svarsadress för "svara på det här mejlet" – måste vara en bevakad låda.
-  replyTo: env("EMAIL_REPLY_TO", ""),
-  // Intern avisering vid ny order (tom = ingen).
-  adminNotify: env("ADMIN_NOTIFY_EMAIL", ""),
+  // Bevakad låda – kunder uppmanas "svara på det här mejlet". Inte no-reply.
+  replyTo: env("EMAIL_REPLY_TO", "info@sockerbagaren.se"),
+  // Intern avisering vid ny order.
+  adminNotify: env("ADMIN_NOTIFY_EMAIL", "info@sockerbagaren.se"),
 };
