@@ -50,7 +50,8 @@ describe("schema-motorn", () => {
     expect(org).not.toHaveProperty("review");
     expect(org).not.toHaveProperty("openingHoursSpecification");
     expect(org).not.toHaveProperty("telephone");
-    expect(org).not.toHaveProperty("foundingDate");
+    // Grundat 2025 är verksamhetens egen uppgift (berättelsen på /om) – inget mer precist än året.
+    expect(org.foundingDate).toBe("2025");
     expect(org).not.toHaveProperty("servesCuisine");
   });
 
