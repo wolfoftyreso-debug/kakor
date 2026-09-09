@@ -129,6 +129,7 @@ Deployment dupliceras inte i CI — det sköter Vercels Git-integration.
 | `NEXT_PUBLIC_PREFERRED_SOURCES` | `true` | (utelämna) | nej |
 | `NEXT_PUBLIC_GA4_ID` | mät-ID om GA används | (utelämna) | nej |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | GSC:s HTML-taggvärde | (utelämna) | nej |
+| `NEXT_PUBLIC_BING_SITE_VERIFICATION` | Bing Webmaster msvalidate.01 | (utelämna) | nej |
 
 Miljövalidering körs vid varje serverstart (`src/instrumentation.ts`):
 saknad `DATABASE_URL` och overifierade fakturauppgifter syns direkt i
@@ -254,7 +255,7 @@ automatiskt — det beslutet är verksamhetens.)
 6. **Cron**: `CRON_SECRET` satt; verifiera första körningen i Vercel → Cron Jobs.
 7. **Sajt**: `SITE_URL=https://sockerbagaren.se`, `NEXT_PUBLIC_GA4_ID` (samtyckes-
    bannern är inbyggd — scriptet laddas först efter "Tillåt"),
-   `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`.
+   `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_BING_SITE_VERIFICATION`.
 7b. **Robotskydd**: skapa en Turnstile-widget i Cloudflare (Managed, gratis),
    sätt `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`. Utan nycklar
    är skyddet av (rate limiting + missbruksspärrar gäller ändå).

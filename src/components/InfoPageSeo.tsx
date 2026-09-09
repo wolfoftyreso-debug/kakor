@@ -11,6 +11,7 @@ export function InfoPageSeo({
   description,
   dateModified,
   faqs,
+  pageType,
 }: {
   path: string;
   /** Namn i brödsmuleraden, t.ex. "Om Sockerbagaren". */
@@ -21,6 +22,7 @@ export function InfoPageSeo({
   dateModified?: string;
   /** Synliga FAQ:er på sidan – samma text som FAQPage-schemat. */
   faqs?: { q: string; a: string }[];
+  pageType?: "WebPage" | "AboutPage";
 }) {
   const crumbs = [
     { name: "Sockerbagaren", path: "/" },
@@ -30,7 +32,7 @@ export function InfoPageSeo({
     <>
       <JsonLd
         data={graph(
-          webPageNode({ path, title, description, breadcrumbs: crumbs, dateModified }),
+          webPageNode({ path, title, description, breadcrumbs: crumbs, dateModified, pageType }),
           breadcrumbNode(path, crumbs),
           faqs?.length ? faqNode(path, faqs) : null
         )}

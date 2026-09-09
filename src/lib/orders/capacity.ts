@@ -97,12 +97,12 @@ export async function bookedKgByDate(
     },
     select: {
       deliveryDate: true,
-      items: { select: { weightKg: true, unit: true, product: { select: { packageWeightGrams: true } } } },
+      items: { select: { weightKg: true, unit: true, packageWeightGrams: true, product: { select: { packageWeightGrams: true } } } },
     },
   });
   for (const o of orders) {
     const key = o.deliveryDate.toISOString().slice(0, 10);
-    const kg = totalKg(o.items.map((i) => ({ weightKg: i.weightKg, unit: i.unit, packageWeightGrams: i.product?.packageWeightGrams })));
+    const kg = totalKg(o.items.map((i) => ({ weightKg: i.weightKg, unit: i.unit, packageWeightGrams: i.packageWeightGrams || i.product?.packageWeightGrams })));
     out.set(key, Math.round(((out.get(key) ?? 0) + kg) * 100) / 100);
   }
   return out;

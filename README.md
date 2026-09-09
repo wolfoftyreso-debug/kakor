@@ -207,6 +207,7 @@ Se [`.env.example`](.env.example). Sammanfattning:
 | `NEXT_PUBLIC_SAME_AS` | profil-URL:er (GBP, hitta.se, LinkedIn) som `sameAs` i Organization-schemat |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile i kassan (båda krävs, annars av) |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Search Console-verifiering |
+| `NEXT_PUBLIC_BING_SITE_VERIFICATION` | Bing Webmaster (msvalidate.01) |
 
 ## Deployment (GitHub → Vercel → Neon)
 
@@ -250,9 +251,10 @@ rollback, smoke tests: **[DEPLOYMENT.md](DEPLOYMENT.md)**.
   (anonymize_ip, inga annonssignaler). `track()` i `src/lib/analytics.ts`
   är no-op utan GA — mätning kan aldrig fälla sajten. Ingen PII i event.
 - **Checklista vid lansering**: verifiera domänen i Google Search Console
-  och skicka in `/sitemap.xml`; kontrollera att sajten dyker upp i Googles
+  och Bing Webmaster, skicka in `/sitemap.xml`; kontrollera att sajten dyker upp i Googles
   källinställningsverktyg (krav för Preferred Sources-knappen); validera
-  JSON-LD i Rich Results Test.
+  JSON-LD i Rich Results Test. Admin → Sök visar vad koden vet och vad som
+  fortfarande är UNKNOWN.
 - Anteckning: `developers.google.com` var inte nåbar från byggmiljön —
   Preferred Sources-implementationen följer den officiella dokumentationens
   mönster verifierat via flera oberoende källor (aug 2026) och bör

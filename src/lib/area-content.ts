@@ -20,9 +20,9 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
   tyreso: {
     slug: "tyreso",
     name: "Tyresö",
-    title: "Kakor till företag i Tyresö",
+    title: "Företagsfika i Tyresö",
     metaDescription:
-      "Företagsfika i Tyresö: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
+      "Företagsfika i Tyresö: kakor till kontoret på riktigt smör. Leverans till Bollmora, Trollbäcken och hela kommunen. Faktura, fasta leveransdagar.",
     heroHeading: "Kakor till företag i Tyresö",
     heroText:
       "Tyresö är vår hemkommun: fryslagret ligger på Radiovägen, och beställningarna till kontor, verkstäder, butiker och kliniker i kommunen plockas därför i samma kommun som de levereras i.",
@@ -42,14 +42,18 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
         q: "Kan vi hämta själva i Tyresö?",
         a: "Nej, vi har ingen butik eller utlämning – alla beställningar levereras till en bemannad företagsadress på områdets leveransdag.",
       },
+      {
+        q: "Finns det företagsfika med leverans i Tyresö?",
+        a: "Ja. Vi levererar kakor till kontoret per kilo till företagsadresser i hela Tyresö kommun – Bollmora, Trollbäcken, Tyresö strand och Lindalen. Betalning mot faktura. Vill ni ha samma fika varje vecka: starta en fikaprenumeration.",
+      },
     ],
   },
   nacka: {
     slug: "nacka",
     name: "Nacka",
-    title: "Kakor till företag i Nacka",
+    title: "Företagsfika i Nacka",
     metaDescription:
-      "Företagsfika i Nacka: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
+      "Företagsfika i Nacka: kakor till kontoret på riktigt smör. Leverans till Sickla, Orminge, Saltsjöbaden och Älta. Faktura, fasta leveransdagar.",
     heroHeading: "Kakor till företag i Nacka",
     heroText:
       "Kontor i Sickla, kliniker i Nacka strand, verkstäder i Orminge: hela Nacka kommun har en fast leveransdag i veckan, med kakorna plockade i fryslagret i grannkommunen Tyresö.",
@@ -69,14 +73,18 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
         q: "Levererar ni till Saltsjöbaden och Älta?",
         a: "Ja, till företagsadresser i hela Nacka kommun. Kassan kontrollerar postnumret innan ni beställer.",
       },
+      {
+        q: "Finns det företagsfika med leverans i Nacka?",
+        a: "Ja. Kakor till kontoret levereras per kilo till företagsadresser i hela Nacka – Sickla, Nacka strand, Orminge, Saltsjöbaden och Älta. Faktura, fasta leveransdagar. Fikaprenumerationen tar samma beställning varje eller varannan vecka.",
+      },
     ],
   },
   haninge: {
     slug: "haninge",
     name: "Haninge",
-    title: "Kakor till företag i Haninge",
+    title: "Företagsfika i Haninge",
     metaDescription:
-      "Företagsfika i Haninge: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
+      "Företagsfika i Haninge: kakor till kontoret på riktigt smör. Leverans till Handen, Vega, Jordbro och Västerhaninge. Faktura, fasta leveransdagar.",
     heroHeading: "Kakor till företag i Haninge",
     heroText:
       "Från Handen och Vega till Jordbro och Västerhaninge: arbetsplatser i Haninge får kakorna på kommunens leveransdag, direkt från fryslagret i grannkommunen Tyresö.",
@@ -96,14 +104,18 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
         q: "Hur mycket brukar en verkstad eller ett lager i Haninge beställa?",
         a: "Räkna med 3–5 kakor per person och fika. Kassan visar hur många personer en vald mängd räcker till, och guiden om fika till jobbet räknar på större sällskap.",
       },
+      {
+        q: "Finns det företagsfika med leverans i Haninge?",
+        a: "Ja. Vi kör kakor till kontoret per kilo till företagsadresser i Handen, Vega, Brandbergen, Jordbro och Västerhaninge. Betalning mot faktura. Prova-på-paketet är ett enkelt första köp för verkstad eller lager.",
+      },
     ],
   },
   huddinge: {
     slug: "huddinge",
     name: "Huddinge",
-    title: "Kakor till företag i Huddinge",
+    title: "Företagsfika i Huddinge",
     metaDescription:
-      "Företagsfika i Huddinge: gammaldags småkakor på riktigt smör till kontor, verkstäder och butiker i hela kommunen. Faktura och fasta leveransdagar.",
+      "Företagsfika i Huddinge: kakor till kontoret på riktigt smör. Leverans till Kungens kurva, Flemingsberg och Skogås. Faktura, fasta leveransdagar.",
     heroHeading: "Kakor till företag i Huddinge",
     heroText:
       "Huddinge sträcker sig från handelsområdet i Kungens kurva till sjukhus- och campusområdet i Flemingsberg. Arbetsplatser i hela kommunen får kakorna från fryslagret i Tyresö på kommunens leveransdag.",
@@ -122,6 +134,10 @@ export const AREA_CONTENT: Record<string, AreaContent> = {
       {
         q: "Levererar ni till Kungens kurva och Flemingsberg?",
         a: "Ja, till företagsadresser i hela Huddinge kommun. Kassan kontrollerar postnumret innan ni beställer.",
+      },
+      {
+        q: "Finns det företagsfika med leverans i Huddinge?",
+        a: "Ja. Kakor till kontoret levereras per kilo till företagsadresser i Huddinge centrum, Kungens kurva, Flemingsberg, Skogås och Trångsund. Faktura, fasta leveransdagar. Flera avdelningar kan beställa var för sig mot samma organisationsnummer.",
       },
     ],
   },

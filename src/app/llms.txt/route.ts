@@ -12,8 +12,11 @@ export function GET() {
 > Sockerbagaren säljer gammaldags svenska småkakor på riktigt smör till företag i södra Stockholm (Tyresö, Nacka, Haninge, Huddinge). Kakorna säljs per kilo och per paket, levereras på fasta leveransdagar till bemannade företagsadresser och betalas mot faktura. Verksamheten drivs av Landvex AB.
 
 ## Vad vi säljer
-- Kolasnittar, mandelkubb och chokladsnittar per kilo samt ett prova-på-paket om 1,5 kg: ${base}/kakor
-- Fikaprenumeration – samma beställning återkommer varje, varannan eller var fjärde vecka, ingen bindningstid: ${base}/prenumeration
+- Kakor till kontoret: kolasnittar, mandelkubb och chokladsnittar per kilo samt ett prova-på-paket om 1,5 kg: ${base}/kakor
+- Köpa kolasnittar (även kallade kolakakor) per kilo till företaget: ${base}/kakor/kolasnittar
+- Köpa mandelkubb per kilo till företaget: ${base}/kakor/mandelkubb
+- Köpa chokladsnittar per kilo till företaget: ${base}/kakor/chokladsnittar
+- Fikaprenumeration / veckoleverans av fika – samma beställning varje, varannan eller var fjärde vecka, ingen bindningstid: ${base}/prenumeration
 - Beställning och priser: ${base}/bestall
 
 ## Vem det är för
@@ -31,8 +34,11 @@ export function GET() {
 - Bakas och förpackas hos ett litet konditori i Šiauliai, Litauen, fryses direkt efter bakningen och lagras i fryslager i Tyresö.
 - Om företaget och grundaren: ${base}/om
 
+## Vanliga frågor
+- Vad vi säljer, var vi levererar, hur fakturan och prenumerationen fungerar: ${base}/vanliga-fragor
+
 ## Guider
-- Fika till jobbet, kontorsfika och kakor till kontoret, mängd per person: ${base}/fika-till-jobbet
+- Fika till jobbet, kontorsfika, kakor till kontoret, fika till personalen, fredagsfika, mängd per person: ${base}/fika-till-jobbet
 - Julfika på jobbet: ${base}/julfika
 - Folkets nästa småkaka – kunderna röstar fram nästa recept: ${base}/folkets-kaka
 

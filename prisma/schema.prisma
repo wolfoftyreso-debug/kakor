@@ -204,6 +204,9 @@ model OrderItem {
   productName      String
   weightKg         Int // antal enheter (kilo för unit "kg", paket för unit "paket")
   unit             String @default("kg")
+  // Paketvikt vid ordertillfället. Utan den här snapshoten räknas plock/lager
+  // om när admin ändrar produktens paketvikt – historiska ordrar måste väga lika.
+  packageWeightGrams Int @default(0)
   unitPricePerKgOre Int
   vatRateBp        Int
   lineTotalOre     Int // weightKg * unitPricePerKgOre

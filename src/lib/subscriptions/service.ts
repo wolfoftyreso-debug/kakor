@@ -17,7 +17,10 @@ import type { SubscriptionInput } from "@/lib/validation";
 import type { SubscriptionFrequency } from "@/lib/status";
 import { safeBlockedDates, safeWeekdays } from "@/lib/products";
 import { assertInvoicingConfigured, assertNotAbusive, createOrder, OrderError } from "@/lib/orders/create-order";
+import { bookedKgByDate, totalKg } from "@/lib/orders/capacity";
 import { isDeliveryDateClosed, cutoffClosedMessage } from "@/lib/warehouse/closed";
+import { leadTimeAllowingNextDelivery } from "@/lib/warehouse/cutoff";
+import { getOpsSettings } from "@/lib/warehouse/settings";
 import { describeError } from "@/lib/log";
 import { notifyAdminSkippedSubscription, notifyCustomerSkippedDelivery } from "@/lib/subscriptions/emails";
 import { newManageToken } from "@/lib/subscriptions/manage";
@@ -27,7 +30,7 @@ import { newManageToken } from "@/lib/subscriptions/manage";
 
 /** Samma nyckel måste bära samma prenumeration – annars är det inte en retry. */
 function sameSubscriptionPayload(
-  existing: { items: { productId: string; weightKg: number }[]; frequency: string; companyName: string; orgNumber: string; email: string; invoiceEmail: string; deliveryAddress: string; deliveryPostalCode: string; deliveryCity: string; deliveryInstruction: string; contactName: string; phone: string; reference: string; nextDeliveryDate: Date; deliveryArea: { slug: string } | null },
+  existing: { items: { productId: string; weightKg: number }[]; frequency: string; companyName: string; orgNumber: string; email: string; invoiceEmail: string; deliveryAddress: string; deliveryPostalCode: string; deliveryCity: string; deliveryInstruction: string; contactName: string; phone: string; reference: string; billingAddress: string; nextDeliveryDate: Date; deliveryArea: { slug: string } | null },
   input: SubscriptionInput
 ): boolean {
   const key = (items: { productId: string; weightKg: number }[]) =>
@@ -48,8 +51,8 @@ function sameSubscriptionPayload(
     existing.contactName === input.contactName &&
     existing.phone === input.phone &&
     existing.reference === input.reference &&
-    existing.deliveryArea?.slug === input.areaSlug &&
-    toISODate(existing.nextDeliveryDate) === input.firstDeliveryDate
+    existing.billingAddress === (input.billingAddress ?? "") &&
+    existing.deliveryArea?.slug === input.areaSlug
   );
 }
 
@@ -75,8 +78,12 @@ export async function createSubscription(input: SubscriptionInput) {
       include: { items: true, deliveryArea: { select: { slug: true } } },
     });
     if (existing) {
-      if (!sameSubscriptionPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
-      return { subscription: existing, duplicate: true as const };
+      if (existing.status === "CANCELLED") {
+        await prisma.subscription.update({ where: { id: existing.id }, data: { idempotencyKey: null } }).catch(() => {});
+      } else {
+        if (!sameSubscriptionPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
+        return { subscription: existing, duplicate: true as const };
+      }
     }
   }
 
@@ -106,6 +113,8 @@ export async function createSubscription(input: SubscriptionInput) {
   const area = await prisma.deliveryArea.findUnique({ where: { slug: input.areaSlug } });
   if (!area || !area.active) throw new OrderError("Okänt leveransområde", "areaSlug");
   const areaId = area.id;
+  const areaName = area.name;
+  const areaMaxKg = area.maxKgPerDay;
 
   // Samma postnummerspärr som checkouten – annars startas prenumerationer
   // som ordergenereringen sedan inte kan leverera.
@@ -121,9 +130,11 @@ export async function createSubscription(input: SubscriptionInput) {
   }
 
   const firstDate = fromISODate(input.firstDeliveryDate);
+  const ops = await getOpsSettings();
+  const weekdays = safeWeekdays(area.weekdaysJson);
   const areaConfig = {
-    weekdays: safeWeekdays(area.weekdaysJson),
-    leadTimeDays: area.leadTimeDays,
+    weekdays,
+    leadTimeDays: leadTimeAllowingNextDelivery(area.leadTimeDays, weekdays, ops, new Date(), safeBlockedDates(area.blockedDatesJson)),
     blockedDates: safeBlockedDates(area.blockedDatesJson),
   };
   if (!isValidDeliveryDate(firstDate, areaConfig)) {
@@ -152,6 +163,26 @@ export async function createSubscription(input: SubscriptionInput) {
     throw new OrderError("En sort i prenumerationen finns inte längre", "items");
   }
 
+  if (area.maxKgPerDay > 0) {
+    const productById = new Map(products.map((p) => [p.id, p]));
+    const thisKg = totalKg(
+      input.items.map((i) => ({
+        weightKg: i.weightKg,
+        unit: productById.get(i.productId)?.unit ?? "kg",
+        packageWeightGrams: productById.get(i.productId)?.packageWeightGrams,
+      }))
+    );
+    const iso = toISODate(firstDate);
+    const booked = (await bookedKgByDate(area.id, [iso])).get(iso) ?? 0;
+    if (booked + thisKg > area.maxKgPerDay) {
+      throw new OrderError(
+        `${iso} är fullbokad i ${area.name} – välj en annan första leveransdag`,
+        "firstDeliveryDate",
+        "DAY_FULL"
+      );
+    }
+  }
+
   try {
     return { subscription: await runCreate(), duplicate: false as const };
   } catch (e) {
@@ -166,7 +197,7 @@ export async function createSubscription(input: SubscriptionInput) {
         where: { idempotencyKey: input.idempotencyKey },
         include: { items: true, deliveryArea: { select: { slug: true } } },
       });
-      if (existing) {
+      if (existing && existing.status !== "CANCELLED") {
         if (!sameSubscriptionPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
         return { subscription: existing, duplicate: true as const };
       }
@@ -176,6 +207,26 @@ export async function createSubscription(input: SubscriptionInput) {
 
   function runCreate() {
     return prisma.$transaction(async (tx) => {
+      if (areaMaxKg > 0) {
+        const productById = new Map(products.map((p) => [p.id, p]));
+        const thisKg = totalKg(
+          input.items.map((i) => ({
+            weightKg: i.weightKg,
+            unit: productById.get(i.productId)?.unit ?? "kg",
+            packageWeightGrams: productById.get(i.productId)?.packageWeightGrams,
+          }))
+        );
+        await tx.deliveryArea.updateMany({ where: { id: areaId }, data: { maxKgPerDay: areaMaxKg } });
+        const iso = toISODate(firstDate);
+        const booked = (await bookedKgByDate(areaId, [iso], tx)).get(iso) ?? 0;
+        if (booked + thisKg > areaMaxKg) {
+          throw new OrderError(
+            `${iso} är fullbokad i ${areaName} – välj en annan första leveransdag`,
+            "firstDeliveryDate",
+            "DAY_FULL"
+          );
+        }
+      }
       const number = await nextNumber(tx, "subscription");
       return tx.subscription.create({
         data: {

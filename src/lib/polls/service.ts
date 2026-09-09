@@ -128,7 +128,7 @@ export function newVisitorId(): string {
 }
 
 export function hashIp(ip: string): string {
-  const salt = process.env.CRON_SECRET || process.env.ADMIN_PASSWORD || "sockerbagaren";
+  const salt = process.env.CRON_SECRET || "sockerbagaren-poll-salt";
   return createHash("sha256").update(`${salt}:${ip}`).digest("hex").slice(0, 32);
 }
 

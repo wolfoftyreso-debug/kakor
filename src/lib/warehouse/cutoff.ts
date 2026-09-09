@@ -2,7 +2,10 @@ import {
   addDays,
   formatDeliveryDate,
   isoWeekday,
+  isSwedishHoliday,
   stockholmTime,
+  todayInStockholm,
+  toISODate,
   weekdayGenitive,
   weekdayName,
 } from "@/lib/dates";
@@ -32,6 +35,35 @@ export function isPastCutoff(deliveryDate: Date, settings: OpsSettings, now = ne
 export function cutoffClosedMessage(closedDate: Date, nextOpenDate: Date): string {
   const gen = weekdayGenitive(isoWeekday(closedDate)) || `${weekdayName(isoWeekday(closedDate))}ens`;
   return `Beställningar för ${gen} leverans är nu stängda. Din nästa möjliga leverans är ${formatDeliveryDate(nextOpenDate)}.`;
+}
+
+/**
+ * Framförhållningen får inte stänga nästa leveransdag före cutoff.
+ * Onsdag förmiddag + torsdagsleverans + 2 dagars framförhållning skulle
+ * annars dölja torsdagen – då når onsdagscutoffen aldrig kunden.
+ */
+export function leadTimeAllowingNextDelivery(
+  configuredLeadTimeDays: number,
+  weekdays: number[],
+  settings: OpsSettings,
+  now = new Date(),
+  blockedDates: string[] = []
+): number {
+  const configured = Number.isInteger(configuredLeadTimeDays) && configuredLeadTimeDays >= 0 ? configuredLeadTimeDays : 0;
+  const today = todayInStockholm(now);
+  const allowed = new Set(weekdays.filter((w) => w >= 1 && w <= 7));
+  if (allowed.size === 0) return configured;
+  const blocked = new Set(blockedDates);
+  for (let i = 1; i <= 14; i++) {
+    const d = addDays(today, i);
+    if (!allowed.has(isoWeekday(d))) continue;
+    if (isSwedishHoliday(d)) continue;
+    if (blocked.has(toISODate(d))) continue;
+    if (isPastCutoff(d, settings, now)) continue;
+    // earliest = today + lead + 1 ska vara ≤ d  ⇒  lead ≤ i − 1
+    return Math.min(configured, Math.max(0, i - 1));
+  }
+  return configured;
 }
 
 export function clampWeekday(n: number): number {

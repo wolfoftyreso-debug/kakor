@@ -62,6 +62,10 @@ const INGREDIENTS: { name: string; src?: string }[] = [
 
 const FAQS = [
   {
+    q: "Vad är Sockerbagaren?",
+    a: "Sockerbagaren säljer gammaldags svenska småkakor på riktigt smör till företag i Tyresö, Nacka, Haninge och Huddinge. Kakorna säljs per kilo eller som prova-på-paket, levereras på fasta dagar till bemannade företagsadresser och betalas mot faktura.",
+  },
+  {
     q: "Hur betalar vi?",
     a: `All betalning sker mot faktura. Fakturan skapas när ni skickar beställningen och mejlas direkt till er faktura-e-post. Förfallodag ${invoiceConfig.paymentTermsDays} dagar efter leveransen – ni betalar aldrig före leverans.`,
   },
@@ -192,7 +196,7 @@ export default async function HomePage() {
         <div className="section-head">
           <div>
             <h2 className="h-section">Hjälp oss välja nästa småkaka</h2>
-            <p>Vi väcker recepten ur Svenskt konditorlexikon till liv igen – ett i taget. Ni röstar, vi bakar vinnaren.</p>
+            <p>Vi väcker recepten ur Svenskt konditorlexikon till liv igen – ett i taget. Ni röstar, vinnaren bakas på riktigt smör.</p>
           </div>
           <Link href="/folkets-kaka" className="section-link">
             Hela berättelsen →
@@ -232,7 +236,7 @@ export default async function HomePage() {
             <h2 className="h-section">Smör ska smaka smör.</h2>
             <p style={{ fontSize: "16.5px", lineHeight: 1.65, margin: 0, maxWidth: "48ch", color: "var(--brown-2)" }}>
               Våra kakor bakas på riktigt smör, vanligt strösocker och traditionella råvaror av hög kvalitet. Inga onödiga tillsatser, inga genvägar för att få industrikakor att likna
-              hembakat.
+              gammaldags småkakor.
             </p>
             <Link href="/ingredienser" className="section-link" style={{ alignSelf: "flex-start", borderColor: "var(--text)" }}>
               Vad finns egentligen i våra kakor? →
@@ -387,6 +391,12 @@ export default async function HomePage() {
             </details>
           ))}
         </div>
+        <p style={{ marginTop: 16, fontSize: 14.5 }}>
+          Fler svar om leverans, allergener och prenumeration:{" "}
+          <Link href="/vanliga-fragor" style={{ fontWeight: 600 }}>
+            Vanliga frågor
+          </Link>
+        </p>
       </section>
 
       {/* CTA */}

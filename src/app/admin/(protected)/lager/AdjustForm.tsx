@@ -18,6 +18,7 @@ export function AdjustForm({
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
   const [result, setResult] = useState<ActionResult | null>(null);
+  const router = useRouter();
 
   if (!open) {
     return (
@@ -37,7 +38,10 @@ export function AdjustForm({
         start(async () => {
           const r = await adjustStockAction(fd);
           setResult(r);
-          if (r.ok) setOpen(false);
+          if (r.ok) {
+            setOpen(false);
+            router.refresh();
+          }
         });
       }}
     >

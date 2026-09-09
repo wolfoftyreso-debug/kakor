@@ -19,7 +19,7 @@ async function runCron(req: NextRequest): Promise<NextResponse> {
     console.log(
       `[cron] leveranslåsning: ${result.generated} prenumerationsordrar, ${locked} nya lås, ${result.locks.length - locked} redan låsta/överhoppade`
     );
-    return NextResponse.json({ ok: errors.length === 0, ...result });
+    return NextResponse.json({ ok: errors.length === 0 && !result.generateError, ...result });
   } catch (e) {
     console.error("[cron] leveranslåsning misslyckades:", describeError(e));
     Sentry.captureException(e, { tags: { flow: "cron-lock-weeks" } });

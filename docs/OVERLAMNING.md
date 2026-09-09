@@ -23,7 +23,7 @@ Verksamheten drivs av **Landvex AB** (Antennvägen 2, Tyresö). Grundare **Tiffa
 
 | Gren | Roll |
 |---|---|
-| `claude/sockerbagaren-full-build-e2ebkd` | Utvecklingsgren. Allt arbete sker här. HEAD: `bf9810d`. |
+| `claude/sockerbagaren-full-build-e2ebkd` | Utvecklingsgren. Allt arbete sker här. |
 | `demo-testdeploy` | Demo-gren = feature-grenen + `vercel.json` med `"buildCommand": "npm run build:demo"` (SQLite-databas byggs vid deploy, `scripts/build-demo-db.ts` kör `prisma/seed.ts`). Behåll den raden vid merge. HEAD: `292b445`. |
 | `main` | Orörd sedan tidigare. |
 
@@ -96,11 +96,15 @@ Senaste omgångarna, alla live på demon:
 6. SEO-revision fem: crawl, sökordsuniversum, intent-karta; områdessidorna omskrivna (68 % → 30 % delad text), leveranssidan utbyggd, H1/brödsmulor på /prenumeration, kortare beskrivningar, bildstorlekar, `foundingDate`, `/llms.txt`, `npm run seo:crawl` i CI.
 7. SEO-revision sex: fraktmål i Product-schema = fyra kommuner (inte hela Sverige), Twitter-kort på startsidan, internlänk till /folkets-kaka, kontorsfika på /fika-till-jobbet, FAQPage på /om och /folkets-kaka, square/OG för prova-på-paketet. Rapport: `docs/SEO-REVISION-6.md`.
 8. SEO-revision sju: MerchantReturnPolicy (ingen ångerrätt), ursprung Litauen i Product-schema, fraktmål som postnummerprefix ur admin, kakor till kontoret på /fika-till-jobbet och /kakor, Plex Mono-webbtypsnitt bort. Rapport: `docs/SEO-REVISION-7.md`.
-9. Lager- och leveransmodul: fysiskt/reserverat/disponibelt per sort, produktionsbehov, leveransvecka per ISO-vecka, onsdagslåsning (konfigurerbar) med immutable snapshot, plocklista, leveranssedlar, driftmejl, historik. Lagerprincip: fysiskt saldo minskas vid plock. Cron `/api/cron/lock-delivery-weeks` varje timme; materialiserar prenumerationer före låsning.
+9. SEO-revision åtta: admin-yta Sök (GREEN/WARNING/CRITICAL/UNKNOWN), FAQ-nav `/vanliga-fragor`, Service-schema för företagsfika, Bing-verifiering, alias-301, crawlerpolicy, organisk källklass på konverteringar. Rapport: `docs/SEO-REVISION-8.md`.
+10. Lager- och leveransmodul: fysiskt/reserverat/disponibelt per sort, produktionsbehov, leveransvecka per ISO-vecka, onsdagslåsning (konfigurerbar) med immutable snapshot, plocklista, leveranssedlar, driftmejl, historik. Lagerprincip: fysiskt saldo minskas vid plock. Cron `/api/cron/lock-delivery-weeks` varje timme; materialiserar prenumerationer före låsning.
+11. SERP- och konkurrentintelligens (9 sep): live-sök mot företagsfika, kakor till kontoret, fikaprenumeration och produktköp. Tom kommersiell SERP för företagsfika+kommun; “kakor till kontoret” ägs av grossister (Gille/Nyåkers); prenumerationsqueryn i praktiken tom. Implementation: titlar mot de queriesna, köp-FAQ på PDP, 301-alias, ingen ny doorway. Rapport: `docs/SEO-SERP-INTELLIGENCE.md`.
+12. Revision 9 (9 sep): onsdagscutoff vs framförhållning, prenumeration materialiseras vid start, lagerläckage vid PROBLEM/plock, immutable låsning. Rapport: `docs/REVISION-9.md`.
+13. Revision 10 (9 sep, ifrågasatte 9): kassan frös sänkt lead i öppna flikar; prenumerationsretry skapade dubblettavtal; paketvikt snapshotas på orderrad; efterhandsändring CAS; cutoff inuti order-tx; delkredit styr plockmängd; “vi bakar” och villkor-vs-kod; `postalCodePrefix`. A/B/C 21/21, SEO-crawl 0 fel, kassan visar torsdag 10 sep före noon. Rapport: `docs/REVISION-10.md`.
 
 ## 7. Öppna ägarbeslut (blockerar, kan inte lösas i kod)
 
-- Koppla domänen (sist), sätt `SITE_URL`; verifiera Search Console (`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`), skicka in sitemap.
+- Koppla domänen (sist), sätt `SITE_URL`; verifiera Search Console (`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`) och Bing (`NEXT_PUBLIC_BING_SITE_VERIFICATION`), skicka in sitemap. Admin → Sök visar vad som fortfarande är UNKNOWN.
 - Bankgiro, momsnummer, telefon, fakturamejl – verifierade värden i env.
 - Google Business Profile (leveransverksamhet utan besöksadress, kategori Bagerigrossist, fyra kommuner); profil-URL i `NEXT_PUBLIC_SAME_AS`. Bekräfta Antennvägen 2 som enda publika adress (NAP).
 - Årtalet 1957 i hero-texten och sigillet.
@@ -125,3 +129,7 @@ Senaste omgångarna, alla live på demon:
 - SEO-revision fem: https://claude.ai/code/artifact/c1c97d75-03f5-40e0-b413-6bf97e819e80
 - SEO-revision sex: `docs/SEO-REVISION-6.md`
 - SEO-revision sju: `docs/SEO-REVISION-7.md`
+- SEO-revision åtta: `docs/SEO-REVISION-8.md`
+- SERP- och konkurrentintelligens: `docs/SEO-SERP-INTELLIGENCE.md`
+- Revision 9 (lager/cutoff): `docs/REVISION-9.md`
+- Revision 10 (ifrågasatte 9): `docs/REVISION-10.md`

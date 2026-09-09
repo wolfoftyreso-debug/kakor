@@ -22,7 +22,7 @@ import { formatOre, calculateTotals } from "@/lib/money";
 import { effectiveVatRateBp } from "@/lib/vat";
 import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/units";
 import { capitalizeFirst, formatDeliveryDate, fromISODate, toISODate, upcomingDeliveryDates, changeDeadline, formatDeadline, isoWeekday, weekdayName } from "@/lib/dates";
-import { isPastCutoff } from "@/lib/warehouse/cutoff";
+import { isPastCutoff, leadTimeAllowingNextDelivery } from "@/lib/warehouse/cutoff";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 import { newIdempotencyKey } from "@/lib/idempotency";
 import { isValidOrgNumber } from "@/lib/orgnumber";
@@ -374,26 +374,38 @@ export function CheckoutFlow({
 
   const selectedArea = areas.find((a) => a.slug === areaSlug) ?? null;
 
+  const areaCutoffSettings = selectedArea
+    ? { cutoffWeekday: selectedArea.cutoffWeekday ?? 3, cutoffHour: selectedArea.cutoffHour ?? 12, opsEmail: "" }
+    : { cutoffWeekday: 3, cutoffHour: 12, opsEmail: "" };
+  const effectiveLead = selectedArea
+    ? leadTimeAllowingNextDelivery(
+        selectedArea.leadTimeDays,
+        selectedArea.weekdays,
+        areaCutoffSettings,
+        new Date(),
+        selectedArea.blockedDates
+      )
+    : 0;
+
   // Leveransdagarna räknas om på klienten (från områdets veckodagar +
-  // framförhållning) i stället för att lita på listan från sidladdningen –
-  // annars visar steg 2 samma passerade datum som servern just avvisade.
+  // cutoff-medveten framförhållning) i stället för att lita på listan från
+  // sidladdningen – en öppen flik över midnatt ska inte frysa in gårdagens lead.
   const upcomingDates = useMemo(
     () => {
       if (!selectedArea) return [];
-      const settings = { cutoffWeekday: selectedArea.cutoffWeekday ?? 3, cutoffHour: selectedArea.cutoffHour ?? 12, opsEmail: "" };
       return upcomingDeliveryDates(
         {
           weekdays: selectedArea.weekdays,
-          leadTimeDays: selectedArea.leadTimeDays,
+          leadTimeDays: effectiveLead,
           blockedDates: [...selectedArea.blockedDates, ...selectedArea.fullDates],
         },
         Math.max(4, selectedArea.upcomingDates.length)
       )
-        .filter((d) => !isPastCutoff(d, settings))
+        .filter((d) => !isPastCutoff(d, areaCutoffSettings))
         .map(toISODate);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedArea, clockTick]
+    [selectedArea, clockTick, effectiveLead]
   );
 
   useEffect(() => {
@@ -641,9 +653,9 @@ export function CheckoutFlow({
           idempotencyFingerprint.current = fingerprint;
           saveFlow();
         }
-        if (data.code === "PRICE_CHANGED" || data.fields?.items) {
-          // Priser/sortiment har ändrats sedan sidladdningen – hämta färska
-          // produkter så att summan och stale-rensningen speglar servern.
+        if (data.code === "PRICE_CHANGED" || data.code === "DAY_FULL" || data.code === "CUTOFF" || data.fields?.items) {
+          // Priser, sortiment eller leveransdagar har ändrats – hämta färska
+          // produkter/datum så att kunden inte klickar på samma stängda dag igen.
           router.refresh();
         }
         if (data.code === "CAPTCHA_FAILED" || data.fields?.turnstileToken) {
@@ -1054,10 +1066,16 @@ export function CheckoutFlow({
               Välj område först så visar vi tillgängliga leveransdagar.
             </p>
           )}
+          {selectedArea && upcomingDates.length === 0 && (
+            <p role="status" className="info-box" style={{ marginBottom: 16, fontSize: 14 }}>
+              Just nu finns inga öppna leveransdagar i {selectedArea.name}
+              {selectedArea.cutoffNotice ? ` – ${selectedArea.cutoffNotice}` : ". Prova ett annat område eller kom tillbaka efter nästa cutoff."}
+            </p>
+          )}
           {selectedArea && upcomingDates.length > 0 && (
             <p style={{ fontSize: 14, color: "var(--text-2)", margin: "0 0 12px" }}>
-              {selectedArea.leadTimeDays > 0
-                ? `Vi packar i förväg och behöver ${selectedArea.leadTimeDays === 1 ? "en dag" : `${selectedArea.leadTimeDays} dagar`} på oss – ${formatDeliveryDate(fromISODate(upcomingDates[0]))} är den tidigaste dagen vi kan lova.`
+              {effectiveLead > 0
+                ? `Vi packar i förväg och behöver ${effectiveLead === 1 ? "en dag" : `${effectiveLead} dagar`} på oss – ${formatDeliveryDate(fromISODate(upcomingDates[0]))} är den tidigaste dagen vi kan lova.`
                 : `Tidigaste leverans: ${formatDeliveryDate(fromISODate(upcomingDates[0]))}.`}
               {mode === "RECURRING" ? " Infaller en leverans på en helgdag hör vi av oss – den flyttas eller utgår." : ""}
             </p>

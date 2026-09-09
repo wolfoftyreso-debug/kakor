@@ -2,8 +2,9 @@ import { CartProvider } from "@/lib/cart";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { JsonLd } from "@/components/JsonLd";
-import { graph, merchantReturnPolicyNode, organizationNode, websiteNode } from "@/lib/seo/schema";
+import { graph, merchantReturnPolicyNode, organizationNode, serviceNode, websiteNode } from "@/lib/seo/schema";
 import { AnalyticsScript } from "@/components/AnalyticsScript";
+import { AcquisitionCapture } from "@/components/AcquisitionCapture";
 
 // Footern hämtar leveransdagar (cachade 300 s via unstable_cache, tagg
 // delivery-days). Layouten förblir force-dynamic: demo-bygget har SQLite
@@ -15,7 +16,8 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
     <CartProvider>
       {/* Kanoniska entiteter (Organization + WebSite + returpolicy) – EN gång,
           på alla publika sidor. Sidorna refererar dem via @id, aldrig egna kopior. */}
-      <JsonLd data={graph(organizationNode(), websiteNode(), merchantReturnPolicyNode())} />
+      <JsonLd data={graph(organizationNode(), websiteNode(), merchantReturnPolicyNode(), serviceNode())} />
+      <AcquisitionCapture />
       <AnalyticsScript />
       <SiteHeader />
       <main id="innehall">{children}</main>

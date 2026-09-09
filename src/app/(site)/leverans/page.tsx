@@ -9,6 +9,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumbNode, faqNode, graph, webPageNode } from "@/lib/seo/schema";
 import { PageHeader } from "@/components/PageHeader";
 import { FaqList } from "@/components/FaqList";
+import { CONTENT_DATES } from "@/lib/seo/content-dates";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,7 @@ export default async function LeveransPage() {
           title: "Fikaleverans till företag i södra Stockholm",
           description: metadata.description ?? undefined,
           breadcrumbs: CRUMBS,
+          dateModified: CONTENT_DATES["/leverans"].updated,
         }),
         breadcrumbNode("/leverans", CRUMBS),
         faqNode("/leverans", LEVERANS_FAQS)
@@ -160,6 +162,10 @@ export default async function LeveransPage() {
       </p>
 
       <FaqList heading="Vanliga frågor om leveransen" items={LEVERANS_FAQS} />
+      <p>
+        Fler svar om faktura, allergener och prenumeration:{" "}
+        <Link href="/vanliga-fragor">vanliga frågor</Link>.
+      </p>
 
       <div className="actions">
         <Link href="/bestall" className="btn btn-primary btn-lg">

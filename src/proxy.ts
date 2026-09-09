@@ -63,6 +63,19 @@ export function proxy(req: NextRequest) {
     url.pathname = pathname.toLowerCase();
     return NextResponse.redirect(url, 308);
   }
+  let decodedPath = pathname;
+  try {
+    decodedPath = decodeURIComponent(pathname);
+  } catch {
+    decodedPath = pathname;
+  }
+  const folded = decodedPath.toLowerCase().normalize("NFC");
+  const AREA_ASCII: Record<string, string> = { "/tyresö": "/tyreso", "/tyresoe": "/tyreso" };
+  if (AREA_ASCII[folded]) {
+    const url = req.nextUrl.clone();
+    url.pathname = AREA_ASCII[folded];
+    return NextResponse.redirect(url, 308);
+  }
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = buildCsp(nonce);
 

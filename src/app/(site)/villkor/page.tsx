@@ -67,7 +67,7 @@ export default function VillkorPage() {
             Tyresö, Nacka, Haninge och Huddinge. Leveransen sker under dagen – vi anger inte
             exakt klockslag, så någon behöver finnas på plats för att ta emot leveransen. Vald
             leveransdag framgår av orderbekräftelsen. Risken för varan övergår till er när den
-            överlämnats på den angivna adressen. Vi bakar i begränsade mängder: kassan visar bara
+            överlämnats på den angivna adressen. Kakorna bakas i begränsade mängder: kassan visar bara
             leveransdagar med plats, och vi tar emot beställningar så långt kapacitet och råvaror
             räcker. Skulle en bekräftad leverans ändå inte kunna genomföras meddelar vi er och
             erbjuder ny leveransdag eller kreditering.
@@ -83,9 +83,9 @@ export default function VillkorPage() {
             leverans. Förfallodatum står på fakturan. Vid försenad betalning
             utgår dröjsmålsränta enligt räntelagen samt förseningsersättning enligt lagen om
             ersättning för inkassokostnader. Avbryts en fakturerad beställning krediteras fakturan
-            med en kreditfaktura. Är en faktura obetald efter förfallodagen levererar vi inga nya
-            beställningar till er förrän den är reglerad; en fikaprenumeration pausas då tills
-            betalningen kommit in.
+            med en kreditfaktura. Är en faktura obetald efter förfallodagen flaggas det i admin; vi
+            kan neka nya beställningar och pausa en fikaprenumeration tills den är reglerad, men det
+            sker inte automatiskt.
           </p>
         </section>
         <section>

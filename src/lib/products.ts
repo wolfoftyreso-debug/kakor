@@ -2,6 +2,11 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { ProductCardData } from "@/components/ProductCard";
+import { toISODate, upcomingDeliveryDates, weekdayName, fromISODate } from "@/lib/dates";
+import { bookedKgByDate } from "@/lib/orders/capacity";
+import { cutoffClosedMessage, leadTimeAllowingNextDelivery } from "@/lib/warehouse/cutoff";
+import { getWarehouseClosedDates } from "@/lib/warehouse/closed";
+import { getOpsSettings } from "@/lib/warehouse/settings";
 
 export const getActiveProducts = cache(async function getActiveProducts(): Promise<ProductCardData[]> {
   const products = await prisma.product.findMany({
@@ -56,12 +61,6 @@ export interface AreaWithDates {
   cutoffHour: number;
 }
 
-import { toISODate, upcomingDeliveryDates, weekdayName, fromISODate } from "@/lib/dates";
-import { bookedKgByDate } from "@/lib/orders/capacity";
-import { cutoffClosedMessage } from "@/lib/warehouse/cutoff";
-import { getWarehouseClosedDates } from "@/lib/warehouse/closed";
-import { getOpsSettings } from "@/lib/warehouse/settings";
-
 export const getAreasWithDates = cache(async function getAreasWithDates(dateCount = 4): Promise<AreaWithDates[]> {
   const areas = await prisma.deliveryArea.findMany({
     where: { active: true },
@@ -70,9 +69,10 @@ export const getAreasWithDates = cache(async function getAreasWithDates(dateCoun
   let warehouseClosed = new Set<string>();
   let cutoffWeekday = 3;
   let cutoffHour = 12;
+  let ops = { cutoffWeekday: 3, cutoffHour: 12, opsEmail: "" };
   try {
     warehouseClosed = await getWarehouseClosedDates();
-    const ops = await getOpsSettings();
+    ops = await getOpsSettings();
     cutoffWeekday = ops.cutoffWeekday;
     cutoffHour = ops.cutoffHour;
   } catch {
@@ -82,19 +82,23 @@ export const getAreasWithDates = cache(async function getAreasWithDates(dateCoun
     areas.map(async (a) => {
       const weekdays = safeWeekdays(a.weekdaysJson);
       const blockedDates = safeBlockedDates(a.blockedDatesJson);
-      // Fulla dagar: hämta fler kandidater än vi visar, så listan inte krymper
-      // när en dag faller bort.
+      const effectiveLead = leadTimeAllowingNextDelivery(a.leadTimeDays, weekdays, ops, new Date(), blockedDates);
       let fullDates: string[] = [];
       if (a.maxKgPerDay > 0) {
-        const candidates = upcomingDeliveryDates({ weekdays, leadTimeDays: a.leadTimeDays, blockedDates }, dateCount + 4).map(toISODate);
+        const candidates = upcomingDeliveryDates({ weekdays, leadTimeDays: effectiveLead, blockedDates }, dateCount + 4).map(toISODate);
         const booked = await bookedKgByDate(a.id, candidates);
         fullDates = candidates.filter((d) => (booked.get(d) ?? 0) >= a.maxKgPerDay);
       }
       const warehouseClosedList = [...warehouseClosed];
-      const config = { weekdays, leadTimeDays: a.leadTimeDays, blockedDates: [...blockedDates, ...fullDates, ...warehouseClosedList] };
+      const config = { weekdays, leadTimeDays: effectiveLead, blockedDates: [...blockedDates, ...fullDates, ...warehouseClosedList] };
       const upcoming = upcomingDeliveryDates(config, dateCount).map(toISODate);
-      const natural = upcomingDeliveryDates({ weekdays, leadTimeDays: a.leadTimeDays, blockedDates: [...blockedDates, ...fullDates] }, dateCount + 4);
-      const firstNatural = natural[0];
+      // Cutoff-text: första leveransdagen utan framförhållning, annars döljs
+      // torsdagen av leadTimeDays=2 och kunden får aldrig veta att cutoff inföll.
+      const unconstrained = upcomingDeliveryDates(
+        { weekdays, leadTimeDays: 0, blockedDates: [...blockedDates, ...fullDates] },
+        dateCount + 4
+      );
+      const firstNatural = unconstrained[0];
       let cutoffNotice: string | null = null;
       if (firstNatural && warehouseClosed.has(toISODate(firstNatural)) && upcoming[0]) {
         cutoffNotice = cutoffClosedMessage(firstNatural, fromISODate(upcoming[0]));

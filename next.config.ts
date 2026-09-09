@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { SEO_ALIASES } from "./src/lib/seo/aliases";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit"],
@@ -20,6 +21,11 @@ const nextConfig: NextConfig = {
         destination: "https://sockerbagaren.se/:path*",
         permanent: true,
       },
+      ...SEO_ALIASES.map((a) => ({
+        source: a.source,
+        destination: a.destination,
+        permanent: true,
+      })),
     ];
   },
   async headers() {
@@ -43,6 +49,18 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/admin/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/api/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/faktura/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/prenumeration/hantera/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
     ];

@@ -55,11 +55,17 @@ export const metadata: Metadata = {
   // iOS auto-länkar annars nummerlika strängar – org.nr 556677-8899 skulle
   // bli en falsk telefonlänk. Riktiga telefonlänkar sätts explicit med tel:.
   formatDetection: { telephone: false },
-  // Search Console-verifiering via meta-tagg, utan kodändring: sätt
-  // NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION i Vercel så renderas taggen.
-  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
-    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
-    : undefined,
+  // Search Console- och Bing-verifiering via meta-tagg, utan kodändring:
+  // NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION och NEXT_PUBLIC_BING_SITE_VERIFICATION.
+  verification: (() => {
+    const google = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+    const bing = process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION;
+    if (!google && !bing) return undefined;
+    return {
+      ...(google ? { google } : {}),
+      ...(bing ? { other: { "msvalidate.01": bing } } : {}),
+    };
+  })(),
 };
 
 // Adressfältets färg följer sajtens gräddvita bakgrund.

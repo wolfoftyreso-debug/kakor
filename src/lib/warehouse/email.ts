@@ -14,7 +14,7 @@ export async function sendLockEmail(snapshot: DeliverySnapshot): Promise<boolean
   const recipients = resolveOpsRecipients(settings);
   if (recipients.length === 0) {
     console.warn("[lager] inget driftmejl konfigurerat – hoppar över utskick");
-    return true; // inget att skicka = inte ett fel som ska retrys:as i evighet
+    return false;
   }
   const dateLabel = capitalizeFirst(formatDeliveryDateWithYear(fromISODate(snapshot.deliveryDate)));
   const warnings = snapshot.byProduct.filter((p) => p.productionNeedGrams > 0);

@@ -156,7 +156,7 @@ export async function updateByToken(
 export async function cancelByToken(token: string): Promise<ManageResult> {
   const sub = await load(token);
   if (isResult(sub)) return sub;
-  await prisma.subscription.update({ where: { id: sub.id }, data: { status: "CANCELLED" } });
+  await prisma.subscription.update({ where: { id: sub.id }, data: { status: "CANCELLED", idempotencyKey: null } });
   await sendSubscriptionChangeEmail(sub.id, "CANCELLED").catch(() => false);
   const pending = sub.orders.filter((o) => o.deliveryDate.getTime() >= todayInStockholm().getTime());
   return {

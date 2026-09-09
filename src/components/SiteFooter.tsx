@@ -71,7 +71,7 @@ export async function SiteFooter() {
             links={[
               { href: "/bestall", label: "Beställ kakor" },
               { href: "/prenumeration", label: "Fikaprenumeration" },
-              { href: "/kakor", label: "Våra kakor" },
+              { href: "/kakor", label: "Kakor till kontoret" },
             ]}
           />
           <FooterCol
@@ -82,6 +82,7 @@ export async function SiteFooter() {
             title="INFORMATION"
             links={[
               { href: "/fika-till-jobbet", label: "Guide: fika till jobbet" },
+              { href: "/vanliga-fragor", label: "Vanliga frågor" },
               { href: "/julfika", label: "Julfika på jobbet" },
               { href: "/folkets-kaka", label: "Folkets nästa småkaka" },
               { href: "/ingredienser", label: "Ingredienser och allergener" },

@@ -16,9 +16,9 @@ export const dynamic = "force-dynamic";
 // "småkakor" 8 100 sök/mån, "fikabröd" 1 600, "kaffebröd" 590.
 // Semrush (se): "gammaldags småkakor" 1 600 (KD 19), "smörkakor" 1 900 (KD 18),
 // "småkakor" 8 100, "fikabröd" 1 600, "kaffebröd" 590, "kakor" 14 800.
-const PAGE_TITLE = "Gammaldags småkakor på riktigt smör";
+const PAGE_TITLE = "Kakor till kontoret på riktigt smör";
 const PAGE_DESCRIPTION =
-  "Gammaldags småkakor på recept från 1957: kolasnittar, mandelkubb och chokladsnittar på riktigt smör. Per kilo till företag i södra Stockholm, mot faktura.";
+  "Kakor till kontoret: kolasnittar, mandelkubb och chokladsnittar på riktigt smör. Per kilo till företag i Tyresö, Nacka, Haninge och Huddinge, mot faktura.";
 
 export const metadata: Metadata = {
   title: PAGE_TITLE,
@@ -33,6 +33,10 @@ const KAKOR_FAQS = [
   {
     q: "Säljer ni kakor till kontoret per kilo?",
     a: "Ja. Småkakorna säljs per kilo (eller som prova-på-paket 1,5 kg) till företag. Ni blandar sorter i samma beställning, får leverans till kontoret på områdets leveransdag och betalar mot faktura.",
+  },
+  {
+    q: "Var kan man köpa kolasnittar, mandelkubb och chokladsnittar till företaget?",
+    a: "Här. Varje sort har en egen sida med pris per kilo, ingredienser och allergener. Ni lägger kakorna i korgen, väljer leveransdag för Tyresö, Nacka, Haninge eller Huddinge och betalar mot faktura. Recept publicerar vi inte – vi säljer kakorna färdiga.",
   },
   {
     q: "Varför inte kakor från kontorsgrossisten?",
@@ -107,7 +111,7 @@ export default async function KakorPage() {
             gap: 8,
           }}
         >
-          <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)" }}>Gammaldags småkakor på riktigt smör</h1>
+          <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)" }}>Kakor till kontoret på riktigt smör</h1>
           <div style={{ fontSize: 14, color: "var(--text-2)" }}>
             Säljs per kilo eller paket · blanda fritt i samma beställning
           </div>
@@ -129,13 +133,15 @@ export default async function KakorPage() {
           ))}
         </div>
         <h2 className="h-sub" style={{ marginTop: 40, marginBottom: 10 }}>
-          Småkakor per kilo till företaget
+          Småkakor per kilo till företaget – inte burken från grossisten
         </h2>
         <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch", margin: "0 0 8px" }}>
-          Vi säljer kakorna per kilo, inte i små konsumentburkar. Ett kilo räcker till ett
-          mindre gäng; blanda sorter i samma beställning. Kakor till kontoret levereras på
-          områdets leveransdag och betalas mot faktura. Osäkra på mängden? Prova-på-paketet
-          är 1,5&nbsp;kg – 0,5&nbsp;kg av varje sort.
+          Kontorsgrossisten säljer fabrikskakor i plastburk, ofta bakade på margarin. Vi säljer
+          kakorna per kilo, bakade på riktigt smör: kolasnittar, mandelkubb och chokladsnittar.
+          Ett kilo räcker till ett mindre gäng; blanda sorter i samma beställning. Kakor till
+          kontoret levereras på områdets leveransdag i Tyresö, Nacka, Haninge och Huddinge och
+          betalas mot faktura. Osäkra på mängden? Prova-på-paketet är 1,5&nbsp;kg – 0,5&nbsp;kg av
+          varje sort.
         </p>
         <div style={{ marginTop: 32, display: "flex", gap: 14, flexWrap: "wrap" }}>
           <Link href="/bestall" className="btn btn-primary btn-lg">
@@ -157,6 +163,12 @@ export default async function KakorPage() {
         {/* FAQ före sidans avslutande CTA-band – sidan ska sluta i handling. */}
         <PollNudge />
         <FaqList heading="Vanliga frågor om småkakor" items={KAKOR_FAQS} />
+        <p style={{ marginTop: 16, fontSize: 14.5 }}>
+          Frågor om leverans, faktura och prenumeration:{" "}
+          <Link href="/vanliga-fragor" style={{ fontWeight: 600 }}>
+            Vanliga frågor
+          </Link>
+        </p>
       </div>
 
       <section className="cta-band">

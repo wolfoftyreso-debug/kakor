@@ -3,7 +3,7 @@ import Link from "next/link";
 import { requireAdminPage } from "@/lib/auth/guard";
 import { formatTimestamp } from "@/lib/dates";
 import { prisma } from "@/lib/db";
-import { formatStockQty, loadStock } from "@/lib/warehouse/inventory";
+import { formatStockQty, formatSignedGrams, loadStock } from "@/lib/warehouse/inventory";
 import { AdjustForm, MinLevelForm } from "./AdjustForm";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +36,7 @@ export default async function LagerPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {stock.map((s) => {
           const deficit = s.availableGrams < 0;
+          const negativePhysical = s.physicalGrams < 0;
           const low = s.minGrams > 0 && s.physicalGrams < s.minGrams;
           return (
             <article key={s.productId} className="card" style={{ padding: "16px 18px" }}>
@@ -43,11 +44,12 @@ export default async function LagerPage() {
                 <div>
                   <h2 style={{ fontSize: 20, margin: 0, fontFamily: "var(--font-serif)" }}>{s.name}</h2>
                   <div className="mono" style={{ fontSize: 12, color: "var(--text-2)" }}>
-                    {s.slug}
+                    SKU {s.slug}
+                    {!s.active ? " · utgången sort" : ""}
                   </div>
                 </div>
-                {(deficit || low) && (
-                  <span className="pill pill-warn">{deficit ? "Underskott" : "Under miniminivå"}</span>
+                {(deficit || low || negativePhysical) && (
+                  <span className="pill pill-warn">{negativePhysical ? "Negativt fysiskt saldo" : deficit ? "Underskott" : "Under miniminivå"}</span>
                 )}
               </div>
               <div
@@ -58,7 +60,7 @@ export default async function LagerPage() {
                   marginTop: 14,
                 }}
               >
-                <Stat label="Fysiskt" value={formatStockQty(s.physicalGrams, s.unit, s.packageWeightGrams)} />
+                <Stat label="Fysiskt" value={formatStockQty(s.physicalGrams, s.unit, s.packageWeightGrams)} warn={negativePhysical} />
                 <Stat label="Reserverat" value={formatStockQty(s.reservedGrams, s.unit, s.packageWeightGrams)} />
                 <Stat
                   label="Disponibelt"
@@ -73,7 +75,8 @@ export default async function LagerPage() {
               {s.lastAdjustment && (
                 <p style={{ fontSize: 12.5, color: "var(--text-2)", margin: "12px 0 0" }}>
                   Senaste justering: {s.lastAdjustment.reason} · {s.lastAdjustment.actor} ·{" "}
-                  {formatTimestamp(s.lastAdjustment.at)} · {(s.lastAdjustment.gramsDelta / 1000).toLocaleString("sv-SE")} kg
+                  {formatTimestamp(s.lastAdjustment.at)} ·{" "}
+                  {formatSignedGrams(s.lastAdjustment.gramsDelta, s.unit, s.packageWeightGrams)}
                 </p>
               )}
               <AdjustForm productId={s.productId} productName={s.name} unit={s.unit} />
@@ -102,8 +105,7 @@ export default async function LagerPage() {
                 </div>
               </div>
               <div style={{ fontWeight: 700, color: m.gramsDelta < 0 ? "var(--red)" : undefined }}>
-                {m.gramsDelta > 0 ? "+" : ""}
-                {(m.gramsDelta / 1000).toLocaleString("sv-SE")} kg
+                {formatSignedGrams(m.gramsDelta, m.product.unit, m.product.packageWeightGrams)}
               </div>
             </div>
           ))}

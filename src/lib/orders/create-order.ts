@@ -13,6 +13,9 @@ import type { CheckoutInput } from "@/lib/validation";
 import { sendOrderEmails } from "@/lib/orders/order-emails";
 import { cutoffClosedMessage, isDeliveryDateClosed } from "@/lib/warehouse/closed";
 import { recordLateChange } from "@/lib/warehouse/snapshot";
+import { leadTimeAllowingNextDelivery, isPastCutoff } from "@/lib/warehouse/cutoff";
+import { getOpsSettings } from "@/lib/warehouse/settings";
+import { isWeekSealedStatus } from "@/lib/status";
 
 export class OrderError extends Error {
   constructor(
@@ -141,8 +144,12 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
       include: { items: true, invoice: true },
     });
     if (existing && existing.invoice) {
-      if (!sameOrderPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
-      return { order: existing, invoice: existing.invoice, duplicate: true as const };
+      if (existing.status === "CANCELLED") {
+        await prisma.order.update({ where: { id: existing.id }, data: { idempotencyKey: null } }).catch(() => {});
+      } else {
+        if (!sameOrderPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
+        return { order: existing, invoice: existing.invoice, duplicate: true as const };
+      }
     }
   }
 
@@ -167,9 +174,10 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
   }
 
   const deliveryDate = fromISODate(input.deliveryDate);
+  const ops = await getOpsSettings();
   const areaConfig = {
     weekdays: safeWeekdays(area.weekdaysJson),
-    leadTimeDays: area.leadTimeDays,
+    leadTimeDays: leadTimeAllowingNextDelivery(area.leadTimeDays, safeWeekdays(area.weekdaysJson), ops, new Date(), safeBlockedDates(area.blockedDatesJson)),
     blockedDates: safeBlockedDates(area.blockedDatesJson),
   };
   // Prenumerationsordrar genereras i förväg av motorn och kan ligga närmare i
@@ -234,6 +242,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
       productName: product.name,
       weightKg: item.weightKg,
       unit: product.unit,
+      packageWeightGrams: product.packageWeightGrams,
       unitPricePerKgOre: product.pricePerKgOre,
       vatRateBp: effectiveVatRateBp(product.vatRateBp, input.deliveryDate),
       lineTotalOre: item.weightKg * product.pricePerKgOre,
@@ -274,7 +283,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
         where: { idempotencyKey: input.idempotencyKey },
         include: { items: true, invoice: true },
       });
-      if (existing && existing.invoice) {
+      if (existing && existing.invoice && existing.status !== "CANCELLED") {
         if (!sameOrderPayload(existing, input)) throw IDEMPOTENCY_MISMATCH();
         return { order: existing, invoice: existing.invoice, duplicate: true as const };
       }
@@ -284,6 +293,12 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
 
   async function runCreateTransaction() {
     return prisma.$transaction(async (tx) => {
+    if (!options.subscription) {
+      const week = await tx.deliveryWeek.findUnique({ where: { deliveryDate } });
+      if ((week && isWeekSealedStatus(week.status)) || isPastCutoff(deliveryDate, ops)) {
+        throw new OrderError("Leveransdagen är stängd – välj en ny dag", "deliveryDate", "CUTOFF");
+      }
+    }
     if (capacityCheck) {
       // Radlås på området (en UPDATE låser raden i Postgres tills commit):
       // parallella beställningar till samma område köar här.
@@ -348,7 +363,7 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
       deliveryDate: toISODate(deliveryDate),
       deliveryAddress: `${input.deliveryAddress}, ${input.deliveryPostalCode} ${input.deliveryCity}`,
       subscriptionNumber: options.subscription?.number,
-      lines: lines.map(({ productId: _productId, ...rest }) => rest),
+      lines: lines.map(({ productId: _productId, packageWeightGrams: _pkg, ...rest }) => rest),
       subtotalOre: totals.subtotalOre,
       vatOre: totals.vatOre,
       totalOre: totals.totalOre,

@@ -130,14 +130,17 @@ async function main() {
     update: {},
   });
 
-  // Startsaldo för lager: exempelvärden så att produktionsbehov syns när
-  // det kommer in ordrar. Befintligt saldo rörs aldrig vid om-seed.
-  const startStock: Record<string, { physicalGrams: number; minGrams: number }> = {
-    mandelkubb: { physicalGrams: 6000, minGrams: 4000 },
-    kolasnittar: { physicalGrams: 10000, minGrams: 5000 },
-    chokladsnittar: { physicalGrams: 4000, minGrams: 4000 },
-    "prova-pa-paket": { physicalGrams: 9000, minGrams: 3000 },
-  };
+  // Startsaldo för lager: exempelvärden BARA i SQLite-demo. Produktion
+  // (Neon) ska inte få påhittat fryssaldo.
+  const sqliteDemo = (process.env.DATABASE_URL ?? "").startsWith("file:");
+  const startStock: Record<string, { physicalGrams: number; minGrams: number }> = sqliteDemo
+    ? {
+        mandelkubb: { physicalGrams: 6000, minGrams: 4000 },
+        kolasnittar: { physicalGrams: 10000, minGrams: 5000 },
+        chokladsnittar: { physicalGrams: 4000, minGrams: 4000 },
+        "prova-pa-paket": { physicalGrams: 9000, minGrams: 3000 },
+      }
+    : {};
   const seededProducts = await prisma.product.findMany({ select: { id: true, slug: true } });
   for (const p of seededProducts) {
     const stock = startStock[p.slug] ?? { physicalGrams: 0, minGrams: 0 };

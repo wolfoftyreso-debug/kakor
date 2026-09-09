@@ -30,7 +30,7 @@ export const MOVEMENT_KIND = ["INCOMING", "OUTGOING", "ADJUSTMENT", "PICK", "UNP
 export type MovementKind = (typeof MOVEMENT_KIND)[number];
 
 export const ADJUST_REASONS = [
-  { id: "produktion", label: "Nybakad produktion", kind: "INCOMING" },
+  { id: "produktion", label: "Inkommen produktion", kind: "INCOMING" },
   { id: "svinn", label: "Svinn", kind: "OUTGOING" },
   { id: "kassation", label: "Kassation", kind: "OUTGOING" },
   { id: "inventering", label: "Inventeringskorrigering", kind: "ADJUSTMENT" },
@@ -89,6 +89,11 @@ export const DELIVERY_WEEK_STATUS_LABELS: Record<DeliveryWeekStatus, string> = {
 /** Låst eller längre – checkout och snapshot får inte mutera den ursprungliga listan. */
 export function isWeekLockedStatus(status: string): boolean {
   return status === "LOCKED" || status === "PICKING" || status === "OUT_FOR_DELIVERY" || status === "COMPLETED";
+}
+
+/** Under låsning eller låst – efterhandsändringar och kassan ska behandla dagen som stängd. */
+export function isWeekSealedStatus(status: string): boolean {
+  return status === "LOCKING" || isWeekLockedStatus(status);
 }
 
 /** Ordern reserverar fortfarande fysiskt lager (inte plockad ur frysen, inte avbruten/levererad). */

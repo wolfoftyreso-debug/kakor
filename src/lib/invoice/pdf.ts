@@ -217,7 +217,7 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
 
     // --- Betalningsinformation ---
     y += 16;
-    const payBoxH = credit ? 94 : 66;
+    const payBoxH = credit ? 108 : 86;
     doc.rect(M, y, CONTENT_W, payBoxH).fill(LIGHT_BG);
     doc.font("Helvetica-Bold").fontSize(8.5).fillColor(MUTED).text(credit ? "KREDITERING" : "BETALNINGSINFORMATION", M + 12, y + 10);
     doc.font("Helvetica").fontSize(9.5).fillColor(BROWN);
@@ -231,22 +231,21 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
         y + 24
       );
       const remaining = snapshot.remainingToPayOre;
-      // En mening per rad – rutan har fast höjd och ingen rad får klippas tyst.
       doc.text(
         partial
           ? remaining !== undefined
-            ? `Återstår att betala på faktura ${snapshot.creditsInvoiceNumber}: ${pdfMoney(remaining)} inkl. moms, enligt fakturans förfallodatum.`
+            ? `Återstår att betala på faktura ${snapshot.creditsInvoiceNumber}: ${pdfMoney(remaining)} inkl. moms.`
             : "Fakturans återstående belopp betalas enligt fakturans förfallodatum."
           : "Fakturan ska inte betalas.",
         M + 12,
         y + 38,
-        { width: CONTENT_W - 24, lineBreak: false }
+        { width: CONTENT_W - 24 }
       );
       doc.text(
-        partial ? "Är fakturan redan betald återbetalas det krediterade beloppet." : "Är fakturan redan betald återbetalas beloppet.",
+        partial ? "Enligt fakturans förfallodatum. Är fakturan redan betald återbetalas det krediterade beloppet." : "Är fakturan redan betald återbetalas beloppet.",
         M + 12,
         y + 52,
-        { width: CONTENT_W - 24, lineBreak: false }
+        { width: CONTENT_W - 24 }
       );
       const original = snapshot.creditedInvoiceTotalOre !== undefined
         ? ` Ursprungligt fakturabelopp: ${pdfMoney(snapshot.creditedInvoiceTotalOre)} inkl. moms.`
@@ -275,12 +274,20 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
       // Samma mening som i köpvillkoren – fakturan och villkoren får inte säga olika.
       doc.text(
         hasBankgiro
-          ? `Förfallodatum: ${(snapshot.dueDate)}. Vid försenad betalning utgår dröjsmålsränta enligt räntelagen och förseningsersättning enligt lag.`
-          : `Förfallodatum: ${(snapshot.dueDate)}.`,
+          ? `Förfallodatum: ${snapshot.dueDate}.`
+          : `Förfallodatum: ${snapshot.dueDate}.`,
         M + 12,
         y + 52,
-        { width: CONTENT_W - 24, lineBreak: false }
+        { width: CONTENT_W - 24 }
       );
+      if (hasBankgiro) {
+        doc.fontSize(8).fillColor(MUTED).text(
+          "Vid försenad betalning utgår dröjsmålsränta enligt räntelagen och förseningsersättning enligt lag.",
+          M + 12,
+          y + 66,
+          { width: CONTENT_W - 24 }
+        );
+      }
     }
 
     // --- Sidfot på varje sida ---

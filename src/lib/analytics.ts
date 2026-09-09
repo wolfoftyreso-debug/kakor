@@ -4,6 +4,8 @@
 // AnalyticsScript), annars no-op. Får aldrig kasta – analys får inte
 // påverka sajtens funktion. Ingen PII skickas i event-parametrar.
 
+import { readAcquisition } from "@/lib/seo/acquisition";
+
 type Params = Record<string, string | number | boolean>;
 
 declare global {
@@ -15,10 +17,11 @@ declare global {
 
 export function track(event: string, params: Params = {}): void {
   try {
+    const merged = { ...readAcquisition(), ...params };
     if (typeof window !== "undefined" && typeof window.gtag === "function") {
-      window.gtag("event", event, params);
+      window.gtag("event", event, merged);
     } else if (process.env.NODE_ENV === "development") {
-      console.debug("[analytics]", event, params);
+      console.debug("[analytics]", event, merged);
     }
   } catch {
     // medvetet tyst

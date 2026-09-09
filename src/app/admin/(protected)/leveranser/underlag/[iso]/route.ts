@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdmin } from "@/lib/auth/session";
 import { fromISODate } from "@/lib/dates";
+import { isWeekLockedStatus } from "@/lib/status";
 import { buildSnapshot, parseSnapshot } from "@/lib/warehouse/snapshot";
 import { prisma } from "@/lib/db";
 import { renderDeliveryListPdf, renderPackingSlipsPdf, renderPickListPdf } from "@/lib/warehouse/pdf";
@@ -15,7 +16,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ iso:
   const typ = req.nextUrl.searchParams.get("typ") ?? "lista";
   const date = fromISODate(iso);
   const week = await prisma.deliveryWeek.findUnique({ where: { deliveryDate: date } });
-  const snapshot = (week && parseSnapshot(week.snapshotJson)) || (await buildSnapshot(date, admin.email));
+  const locked = isWeekLockedStatus(week?.status ?? "");
+  const stored = week ? parseSnapshot(week.snapshotJson) : null;
+  if (locked && !stored) {
+    return new NextResponse("Låst vecka saknar snapshot – lås om eller öppna veckan i admin", { status: 409 });
+  }
+  const snapshot = stored ?? (await buildSnapshot(date, admin.email));
 
   let buf: Buffer;
   let filename: string;
