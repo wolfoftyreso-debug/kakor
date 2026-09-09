@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Libre_Caslon_Text, Public_Sans } from "next/font/google";
+import { Libre_Caslon_Text, Public_Sans } from "next/font/google";
 import { siteConfig } from "@/lib/config";
 import "./globals.css";
 
@@ -14,13 +14,6 @@ const publicSans = Public_Sans({
   weight: ["400", "600", "700"],
   subsets: ["latin"],
   variable: "--font-public-sans",
-  display: "swap",
-});
-
-const plexMono = IBM_Plex_Mono({
-  weight: ["400", "500"],
-  subsets: ["latin"],
-  variable: "--font-plex-mono",
   display: "swap",
 });
 
@@ -76,7 +69,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="sv" className={`${caslon.variable} ${publicSans.variable} ${plexMono.variable}`}>
+    <html lang="sv" className={`${caslon.variable} ${publicSans.variable}`}>
       <body>{children}</body>
     </html>
   );

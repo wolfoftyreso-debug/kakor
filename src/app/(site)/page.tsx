@@ -95,6 +95,7 @@ const FAQS = [
 
 export default async function HomePage() {
   const [products, areas] = await Promise.all([getActiveProducts(), getAreasWithDates(1)]);
+  const postalPrefixes = [...new Set(areas.flatMap((a) => a.postalPrefixes))];
   // Flytande kortet på hero-bilden visar produkten med etikett (t.ex. Bästsäljare)
   // – eller första produkten om ingen etikett satts i admin.
   const featured = products.find((p) => p.badge) ?? products[0];
@@ -109,7 +110,7 @@ export default async function HomePage() {
       mainEntityId: `${siteConfig.url.replace(/\/$/, "")}/#products`,
     }),
     productListNode("/", products),
-    ...products.map(productNode),
+    ...products.map((p) => productNode(p, postalPrefixes)),
     faqNode("/", FAQS)
   );
 

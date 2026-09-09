@@ -32,6 +32,7 @@ export const ids = {
   webpage: (path: string) => `${SITE()}${path}#webpage`,
   breadcrumbs: (path: string) => `${SITE()}${path}#breadcrumbs`,
   product: (slug: string) => `${SITE()}/#product-${slug}`,
+  returnPolicy: () => `${SITE()}/#return-policy`,
 };
 
 /**
@@ -54,7 +55,12 @@ export function organizationNode(): JsonLdNode {
     legalName: invoiceConfig.companyName,
     url: `${SITE()}/`,
     description: siteConfig.description,
-    logo: `${SITE()}/images/icon-512.png`,
+    logo: {
+      "@type": "ImageObject",
+      url: `${SITE()}/images/icon-512.png`,
+      width: 512,
+      height: 512,
+    },
     address: {
       "@type": "PostalAddress",
       streetAddress: invoiceConfig.address,
@@ -63,6 +69,20 @@ export function organizationNode(): JsonLdNode {
       addressCountry: "SE",
     },
     areaServed: DELIVERY_CITIES.map((name) => ({ "@type": "City", name })),
+    // Ämnen som faktiskt behandlas på sajten – till hjälp för AI-sök, inte som
+    // keyword-fält. Inga ämnen vi inte har sidor eller stycken om.
+    knowsAbout: [
+      "Småkakor",
+      "Kolasnittar",
+      "Mandelkubb",
+      "Chokladsnittar",
+      "Fikaprenumeration",
+      "Kontorsfika",
+      "Företagsfika",
+    ],
+    // Villkoren: B2B, ingen ångerrätt. Reklamation vid fel är en annan sak och
+    // beskrivs på /villkor – den här noden beskriver retur av felfria varor.
+    hasMerchantReturnPolicy: { "@id": ids.returnPolicy() },
     // Kopplingar till profiler (Google Business Profile, hitta.se, LinkedIn …)
     // sätts i NEXT_PUBLIC_SAME_AS som kommaseparerad lista när de finns.
     ...(SAME_AS.length > 0 ? { sameAs: SAME_AS } : {}),
@@ -85,6 +105,21 @@ export function websiteNode(): JsonLdNode {
     name: siteConfig.name,
     inLanguage: "sv-SE",
     publisher: { "@id": ids.organization() },
+  };
+}
+
+/**
+ * Returpolicy enligt /villkor: försäljning enbart till näringsidkare, ingen
+ * ångerrätt. Samma nod återanvänds på Organization och Offer (@id).
+ */
+export function merchantReturnPolicyNode(): JsonLdNode {
+  return {
+    "@type": "MerchantReturnPolicy",
+    "@id": ids.returnPolicy(),
+    applicableCountry: "SE",
+    returnPolicyCountry: "SE",
+    returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+    merchantReturnLink: `${SITE()}/villkor`,
   };
 }
 
@@ -157,7 +192,28 @@ function productImages(imageRef: string): string[] {
   return variants.map((v) => `${SITE()}${v}`);
 }
 
-export function productNode(product: ProductCardData): JsonLdNode {
+/**
+ * Fraktmål för Offer.shippingDetails. Google DefinedRegion för Sverige
+ * stöder postnummer (prefix räknas), inte kommunnamn som addressLocality.
+ * Prefixen kommer från admin (leveransområden) – tom lista faller tillbaka
+ * till kommunnamn så att schemat inte blir landsomfattande.
+ */
+function shippingDestinations(postalPrefixes: readonly string[]): JsonLdNode[] {
+  if (postalPrefixes.length > 0) {
+    return postalPrefixes.map((postalCode) => ({
+      "@type": "DefinedRegion",
+      addressCountry: "SE",
+      postalCode,
+    }));
+  }
+  return DELIVERY_CITIES.map((name) => ({
+    "@type": "DefinedRegion",
+    addressCountry: "SE",
+    addressLocality: name,
+  }));
+}
+
+export function productNode(product: ProductCardData, postalPrefixes: readonly string[] = []): JsonLdNode {
   return {
     "@type": "Product",
     "@id": ids.product(product.slug),
@@ -169,11 +225,21 @@ export function productNode(product: ProductCardData): JsonLdNode {
     ...(product.imageRef ? { image: productImages(product.imageRef) } : {}),
     category: "Småkakor",
     brand: { "@id": ids.organization() },
+    // Synligt på produktsidan under Ursprung – samma formulering.
+    countryOfOrigin: { "@type": "Country", name: "Litauen" },
+    additionalProperty: [
+      {
+        "@type": "PropertyValue",
+        name: "Ursprung",
+        value: "Bakad och förpackad i Šiauliai, Litauen · fryslager i Tyresö",
+      },
+    ],
     offers: {
       "@type": "Offer",
       priceCurrency: "SEK",
       price: (product.pricePerKgOre / 100).toFixed(2),
       url: `${SITE()}/kakor/${product.slug}`,
+      itemCondition: "https://schema.org/NewCondition",
       // Endast företagskunder, endast Sverige – så att sökmotorer inte visar
       // priset som ett konsumentpris.
       eligibleCustomerType: "https://schema.org/Business",
@@ -194,16 +260,12 @@ export function productNode(product: ProductCardData): JsonLdNode {
       },
       availability: "https://schema.org/InStock",
       seller: { "@id": ids.organization() },
+      hasMerchantReturnPolicy: { "@id": ids.returnPolicy() },
       // Leverans ingår i priset inom leveransområdet (samma uppgift som i villkoren).
       shippingDetails: {
         "@type": "OfferShippingDetails",
         shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "SEK" },
-        // Inte hela Sverige – bara de fyra kommunerna vi faktiskt kör till.
-        shippingDestination: DELIVERY_CITIES.map((name) => ({
-          "@type": "DefinedRegion",
-          addressCountry: "SE",
-          addressLocality: name,
-        })),
+        shippingDestination: shippingDestinations(postalPrefixes),
       },
     },
   };

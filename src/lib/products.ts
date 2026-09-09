@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { ProductCardData } from "@/components/ProductCard";
 
@@ -124,8 +125,7 @@ export function safeWeekdays(json: string): number[] {
  * inget område har dagar konfigurerade. Leveransdagar är data, aldrig
  * hårdkodad text.
  */
-// React.cache: samma request anropar detta från hero, footer och sida – en DB-fråga, inte tre.
-export const getDeliveryDaysLabel = cache(async function getDeliveryDaysLabel(): Promise<string> {
+async function loadDeliveryDaysLabel(): Promise<string> {
   // Footern ligger på varje sida – ett databasfel här får aldrig fälla sidan.
   let areas: { weekdaysJson: string }[] = [];
   try {
@@ -138,4 +138,28 @@ export const getDeliveryDaysLabel = cache(async function getDeliveryDaysLabel():
   if (plural.length === 0) return "";
   if (plural.length === 1) return plural[0];
   return `${plural.slice(0, -1).join(", ")} och ${plural[plural.length - 1]}`;
+}
+
+const cachedDeliveryDaysLabel = unstable_cache(loadDeliveryDaysLabel, ["delivery-days-label"], {
+  revalidate: 300,
+  tags: ["delivery-days"],
+});
+
+// React.cache: samma request anropar detta från hero, footer och sida – en DB-fråga, inte tre.
+export const getDeliveryDaysLabel = cache(async function getDeliveryDaysLabel(): Promise<string> {
+  return cachedDeliveryDaysLabel();
+});
+
+/** Postnummerprefix för aktiva leveransområden – används i Offer.shippingDestination. */
+export const getDeliveryPostalPrefixes = cache(async function getDeliveryPostalPrefixes(): Promise<string[]> {
+  try {
+    const areas = await prisma.deliveryArea.findMany({
+      where: { active: true },
+      select: { postalCodePrefixesJson: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    return [...new Set(areas.flatMap((a) => safeStringList(a.postalCodePrefixesJson)))];
+  } catch {
+    return [];
+  }
 });

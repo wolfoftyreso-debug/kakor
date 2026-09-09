@@ -3,7 +3,7 @@
 // Admin server actions. Varje åtgärd (utom login) verifierar sessionen
 // server-side – route-skyddet i layouten är bara första linjen.
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
@@ -511,6 +511,18 @@ const productSchema = z.object({
   }
 });
 
+function revalidatePublicCatalog() {
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/kakor");
+  revalidatePath("/bestall");
+  revalidatePath("/ingredienser");
+  revalidatePath("/fika-till-jobbet");
+  revalidatePath("/julfika");
+  revalidatePath("/prenumeration");
+  revalidatePath("/leverans");
+}
+
 export async function saveProduct(
   productId: string | null,
   _prev: { error: string } | null,
@@ -582,6 +594,7 @@ export async function saveProduct(
     notified = await notifyPriceChangeToSubscribers(productId, previousPriceOre, data.pricePerKgOre).catch(() => 0);
   }
   revalidatePath("/admin/produkter");
+  revalidatePublicCatalog();
   redirect(`/admin/produkter?sparad=${encodeURIComponent(d.name)}${notified > 0 ? `&prismejl=${notified}` : ""}`);
 }
 
@@ -592,7 +605,7 @@ export async function setProductActive(productId: string, active: boolean): Prom
   if (!parsedActive.success) return { ok: false, error: "Ogiltigt värde" };
   const product = await prisma.product.update({ where: { id: productId }, data: { active: parsedActive.data } });
   revalidatePath("/admin/produkter");
-  revalidatePath("/", "layout");
+  revalidatePublicCatalog();
   return { ok: true, message: `${product.name} är nu ${parsedActive.data ? "aktiv" : "inaktiv"}` };
 }
 
@@ -657,6 +670,8 @@ export async function saveArea(
   });
   revalidatePath("/admin/installningar");
   revalidatePath("/bestall");
+  revalidatePublicCatalog();
+  revalidateTag("delivery-days", "max");
   const days = [...new Set(d.weekdays.split(",").map((s) => parseInt(s.trim(), 10)))].map(weekdayName).join(", ");
   const blockedNote = `${blockedDates.length ? `, ${blockedDates.length} spärrade datum` : ""}${d.maxKgPerDay > 0 ? `, max ${d.maxKgPerDay} kg/dag` : ""}`;
   return { saved: `Sparat – leveransdagar: ${days}${blockedNote}${d.active ? "" : " (området är inaktivt)"}` };

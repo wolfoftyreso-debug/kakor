@@ -21,7 +21,7 @@
 
   --font-serif: var(--font-caslon), "Libre Caslon Text", Georgia, serif;
   --font-sans: var(--font-public-sans), "Public Sans", system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   --radius: 6px;
   --radius-lg: 8px;

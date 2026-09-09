@@ -5,6 +5,7 @@ import { allergenChips } from "@/lib/allergens";
 import { IngredientList } from "@/components/IngredientList";
 import Link from "next/link";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
+import { CONTENT_DATES } from "@/lib/seo/content-dates";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export default async function IngredienserPage() {
       name="Ingredienser och allergener"
       title="Ingredienser och allergener"
       description={String(metadata.description)}
+      dateModified={CONTENT_DATES["/ingredienser"].updated}
     />
     <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
       <h1 className="h-display page-title">

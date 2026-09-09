@@ -5,7 +5,7 @@ import { join } from "node:path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getActiveProducts, getDeliveryDaysLabel } from "@/lib/products";
+import { getActiveProducts, getDeliveryDaysLabel, getDeliveryPostalPrefixes } from "@/lib/products";
 import { ProductBuyBox } from "@/components/ProductBuyBox";
 import { ImageSlot } from "@/components/ImageSlot";
 import { IngredientList } from "@/components/IngredientList";
@@ -79,7 +79,11 @@ export default async function ProductPage({ params }: Props) {
   const product = await prisma.product.findUnique({ where: { slug } });
   if (!product || !product.active) notFound();
 
-  const [allProducts, deliveryDays] = await Promise.all([getActiveProducts(), getDeliveryDaysLabel()]);
+  const [allProducts, deliveryDays, postalPrefixes] = await Promise.all([
+    getActiveProducts(),
+    getDeliveryDaysLabel(),
+    getDeliveryPostalPrefixes(),
+  ]);
   const cardData = allProducts.find((p) => p.id === product.id);
   if (!cardData) notFound();
   const knowledge = knowledgeFor(product.slug);
@@ -110,7 +114,7 @@ export default async function ProductPage({ params }: Props) {
       dateModified: product.updatedAt.toISOString().slice(0, 10),
     }),
     breadcrumbNode(path, crumbs),
-    productNode(cardData),
+    productNode(cardData, postalPrefixes),
     knowledge?.faqs?.length ? faqNode(path, knowledge.faqs) : null
   );
 
