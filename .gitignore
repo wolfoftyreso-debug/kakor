@@ -25,3 +25,8 @@ next-env.d.ts
 
 # test
 /coverage
+
+# Lokala QA-/demoartefakter (fakturor, leveranslistor, skärmbilder) – aldrig i git.
+/public/demo-underlag/
+/attachments/
+/screenshots/

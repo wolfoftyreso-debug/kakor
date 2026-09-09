@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { resolve } from "node:path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -17,6 +17,7 @@ import { allergenChips } from "@/lib/allergens";
 import { formatOre } from "@/lib/money";
 import { priceSuffix, formatWeightKg } from "@/lib/units";
 import { FaqList } from "@/components/FaqList";
+import { isSafeImageRef } from "@/lib/media";
 
 // Object.hasOwn: en admin-skapad slug som "constructor" får aldrig nå prototypkedjan.
 const knowledgeFor = (slug: string) =>
@@ -62,14 +63,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // Delningsbild: 1200x630-beskärningen av produktfotot om den finns,
 // annars själva produktbilden, annars varumärkesbilden.
 function productOgImage(imageRef: string): string {
-  if (!imageRef) return "/og.jpg";
+  if (!isSafeImageRef(imageRef)) return "/og.jpg";
   const ogVariant = imageRef.replace(/\.(jpe?g|png|webp)$/i, "-og.jpg");
-  try {
-    if (ogVariant !== imageRef && existsSync(join(process.cwd(), "public", ogVariant))) {
-      return ogVariant;
-    }
-  } catch {
-    // fall igenom till produktbilden
+  if (ogVariant !== imageRef && isSafeImageRef(ogVariant)) {
+    const root = resolve(process.cwd(), "public");
+    const abs = resolve(root, ogVariant.slice(1));
+    if ((abs === root || abs.startsWith(root + "/")) && existsSync(abs)) return ogVariant;
   }
   return imageRef;
 }

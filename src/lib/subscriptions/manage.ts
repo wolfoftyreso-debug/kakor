@@ -133,7 +133,7 @@ export async function updateByToken(
   if (isResult(sub)) return sub;
   if (!(SUBSCRIPTION_FREQUENCY as readonly string[]).includes(frequency)) return { ok: false, error: "Välj ett intervall." };
   const clean = items
-    .filter((i) => typeof i.productId === "string" && Number.isInteger(i.weightKg))
+    .filter((i) => typeof i.productId === "string" && /^[a-z0-9]{20,32}$/i.test(i.productId) && Number.isInteger(i.weightKg))
     .map((i) => ({ productId: i.productId, weightKg: Math.min(100, Math.max(0, i.weightKg)) }))
     .filter((i) => i.weightKg > 0);
   if (clean.length === 0) return { ok: false, error: "Välj minst en sort med mängd över noll – eller avsluta prenumerationen." };

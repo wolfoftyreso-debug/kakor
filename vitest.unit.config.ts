@@ -16,6 +16,7 @@ export default defineConfig({
       "tests/route-sort.test.ts",
       "tests/allergens.test.ts",
       "tests/auth.test.ts",
+      "tests/security.test.ts",
     ],
     fileParallelism: true,
   },

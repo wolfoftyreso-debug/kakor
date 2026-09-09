@@ -10,8 +10,6 @@ export const SENTRY_DSN =
 
 export const SENTRY_ENABLED =
   SENTRY_DSN !== "" &&
-  // Endast i deployade miljöer – lokal utveckling och tester ska inte rapportera.
-  // VERCEL finns server-side; NEXT_PUBLIC_VERCEL_ENV exponeras av Vercel i klienten.
-  (!!process.env.VERCEL ||
-    !!process.env.NEXT_PUBLIC_VERCEL_ENV ||
-    process.env.SENTRY_FORCE === "true");
+  // Bara Vercel production (riktiga kunder) – preview/demo ska inte skicka
+  // orderdata till felövervakningen. SENTRY_FORCE tvingar på (t.ex. staging).
+  (process.env.SENTRY_FORCE === "true" || process.env.VERCEL_ENV === "production");

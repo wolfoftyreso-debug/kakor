@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { getAdmin } from "@/lib/auth/session";
 import { getResults, pollInclude } from "@/lib/polls/service";
 import { fromStockholmLocal } from "@/lib/polls/time";
+import { IMAGE_REF_RE } from "@/lib/media";
 
 // Admin för Folkets nästa småkaka. Bara inloggad admin; ingen publik API.
 
@@ -79,7 +80,12 @@ const candidateSchema = z.object({
   slug: slugSchema,
   description: z.string().trim().max(300).default(""),
   tradition: z.string().trim().max(200).default(""),
-  imageRef: z.string().trim().max(200).default(""),
+  imageRef: z
+    .string()
+    .trim()
+    .regex(IMAGE_REF_RE, "Bildreferens: /images/namn.jpg")
+    .or(z.literal(""))
+    .default(""),
   displayOrder: z.coerce.number().int().min(0).max(99).default(0),
   sourceReference: z.string().trim().max(120).default(""),
 });

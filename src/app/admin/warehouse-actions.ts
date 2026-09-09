@@ -164,7 +164,8 @@ export async function saveOpsSettingsAction(
   const opsEmail = String(formData.get("opsEmail") ?? "").trim();
   if (clampWeekday(weekday) !== weekday) return { error: "Veckodag ska vara 1–7 (1 = måndag)." };
   if (clampHour(hour) !== hour) return { error: "Klockslag ska vara 0–23." };
-  if (opsEmail && !opsEmail.split(/[,;]+/).every((s) => s.trim() === "" || s.includes("@"))) {
+  const emails = opsEmail.split(/[,;]+/).map((s) => s.trim()).filter(Boolean);
+  if (emails.some((s) => s.length > 200 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s))) {
     return { error: "Ange giltiga e-postadresser, kommaseparerade." };
   }
   await saveOpsSettings({ cutoffWeekday: weekday, cutoffHour: hour, opsEmail });

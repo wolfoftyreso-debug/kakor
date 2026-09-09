@@ -8,6 +8,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { isSafeImageRef } from "@/lib/media";
 
 export function ImageSlot({
   label,
@@ -30,7 +31,7 @@ export function ImageSlot({
   sizes?: string;
 }) {
   const [broken, setBroken] = useState(false);
-  const showImage = !!src && !broken;
+  const showImage = isSafeImageRef(src) && !broken;
 
   if (showImage) {
     return (

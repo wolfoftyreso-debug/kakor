@@ -128,7 +128,11 @@ export function newVisitorId(): string {
 }
 
 export function hashIp(ip: string): string {
-  const salt = process.env.CRON_SECRET || "sockerbagaren-poll-salt";
+  // Salt måste vara en serverhemlighet. Hårdkodad fallback gör hashen
+  // rainbow-tablebar (IPv4 är litet). Utan hemlighet lagras inget – samma
+  // som grundrösterna i seed.
+  const salt = process.env.POLL_IP_SALT || process.env.CRON_SECRET || "";
+  if (!salt) return "";
   return createHash("sha256").update(`${salt}:${ip}`).digest("hex").slice(0, 32);
 }
 

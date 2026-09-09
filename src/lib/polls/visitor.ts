@@ -6,6 +6,18 @@ import type { NextRequest } from "next/server";
 export const VISITOR_COOKIE = "sb_besok";
 export const VISITOR_COOKIE_MAX_AGE = 60 * 60 * 24 * 400; // 400 dagar – webbläsarnas tak
 
+const SERVES_HTTPS = !!process.env.VERCEL || (process.env.SITE_URL ?? "").startsWith("https://");
+
+export function visitorCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: SERVES_HTTPS,
+    path: "/",
+    maxAge: VISITOR_COOKIE_MAX_AGE,
+  };
+}
+
 export function readVisitorId(req: NextRequest): string | undefined {
   const v = req.cookies.get(VISITOR_COOKIE)?.value;
   return v && /^[a-f0-9]{32}$/.test(v) ? v : undefined;

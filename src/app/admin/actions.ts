@@ -29,6 +29,7 @@ import { canTransitionOrder, SUBSCRIPTION_FREQUENCY, FREQUENCY_LABELS as SUBSCRI
 import { applyOrderPick, applyOrderUnpick } from "@/lib/warehouse/inventory";
 import { syncWeekStatusForDate } from "@/lib/warehouse/pick";
 import { recordLateChange } from "@/lib/warehouse/snapshot";
+import { IMAGE_REF_RE } from "@/lib/media";
 
 async function requireAdmin() {
   const admin = await getAdmin();
@@ -530,7 +531,7 @@ const productSchema = z.object({
   imageRef: z
     .string()
     .trim()
-    .regex(/^\/images\/[a-z0-9-]+\.(jpe?g|png|webp)$/, "Bildreferens: /images/namn.jpg")
+    .regex(IMAGE_REF_RE, "Bildreferens: /images/namn.jpg")
     .or(z.literal(""))
     .default(""),
   badge: z.string().trim().max(30).default(""),
