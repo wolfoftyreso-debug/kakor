@@ -131,7 +131,9 @@ Deployment dupliceras inte i CI — det sköter Vercels Git-integration.
 | `RESEND_API_KEY` | riktig nyckel | (utelämna) | JA |
 | `EMAIL_FROM` | verifierad avsändare | — | nej |
 | `CRON_SECRET` | lång slumpsträng | (utelämna) | JA |
-| `INVOICE_*` | verifierade uppgifter | valfritt | nej |
+| `INVOICE_IBAN` / `INVOICE_BIC` | Revolut SEK (koddefault) | valfritt | nej |
+| `INVOICE_VAT_NUMBER` / `INVOICE_F_SKATT` | Bolagsverket (koddefault) | valfritt | nej |
+| `INVOICE_EMAIL` | bevakad fakturalåda | (utelämna) | nej |
 | `NEXT_PUBLIC_PREFERRED_SOURCES` | `true` | (utelämna) | nej |
 | `NEXT_PUBLIC_GA4_ID` | mät-ID om GA används | (utelämna) | nej |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | GSC:s HTML-taggvärde | (utelämna) | nej |
@@ -249,12 +251,14 @@ automatiskt — det beslutet är verksamhetens.)
    kontrollera priser i admin → Produkter. Momssatsen seedas till 6 %
    (tillfällig livsmedelsmoms t.o.m. 2027-12-31) — admin-översikten påminner
    när den ska tillbaka till 12 %.
-4. **Fakturauppgifter**: `INVOICE_BANKGIRO`, `INVOICE_VAT_NUMBER`, `INVOICE_EMAIL`,
-   `INVOICE_F_SKATT` med verifierade värden. Utan verifierat bankgiro/momsnr
-   stänger ordermotorn beställningar i produktion (503). `INVOICE_EMAIL` är
-   dessutom ett lagkrav: e-handelslagen (2002:562) 8 § kräver att namn, adress
-   och e-postadress syns för besökaren — sidfoten visar adressen först när
-   värdet är satt (placeholdern renderas aldrig publikt).
+4. **Fakturauppgifter**: `INVOICE_IBAN`/`INVOICE_BIC` (Revolut SEK, inget bankgiro),
+   `INVOICE_VAT_NUMBER`, `INVOICE_F_SKATT` har koddefault från Bolagsverket och
+   kontouppgifterna. `INVOICE_EMAIL` måste fortfarande sättas – utan den stänger
+   ordermotorn beställningar i produktion (503). E-handelslagen (2002:562) 8 §
+   kräver att namn, adress och e-postadress syns för besökaren — sidfoten visar
+   adressen först när värdet är satt (placeholdern renderas aldrig publikt).
+   Ta bort ev. gamla `[EJ VERIFIERAT]`-värden för moms/bankgiro i Vercel så att
+   koddefaulten gäller.
 5. **E-post**: Resend-domän verifierad (SPF/DKIM), `EMAIL_PROVIDER=resend`,
    `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` (bevakad låda — obligatorisk),
    `ADMIN_NOTIFY_EMAIL` (intern avisering vid ny order).

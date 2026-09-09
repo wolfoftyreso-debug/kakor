@@ -158,3 +158,66 @@ describe("proxy: demo-underlag i produktion", () => {
     expect(res.status).not.toBe(404);
   });
 });
+
+describe("faktura-betalning", () => {
+  it("godkänner Revolut-IBAN som betalningsuppgift", async () => {
+    const { hasPaymentDetails, invoiceConfig, isVerifiedValue } = await import("@/lib/config");
+    expect(isVerifiedValue(invoiceConfig.iban)).toBe(true);
+    expect(invoiceConfig.iban).toMatch(/^LT71/);
+    expect(invoiceConfig.bic).toBe("REVOLT21");
+    expect(hasPaymentDetails()).toBe(true);
+    expect(isVerifiedValue(invoiceConfig.vatNumber)).toBe(true);
+    expect(invoiceConfig.vatNumber).toBe("SE559141704201");
+    expect(isVerifiedValue(invoiceConfig.fSkatt)).toBe(true);
+    expect(isVerifiedValue(invoiceConfig.email)).toBe(false);
+    expect(isVerifiedValue(invoiceConfig.phone)).toBe(false);
+    expect(isVerifiedValue(invoiceConfig.bankgiro)).toBe(false);
+  });
+  it("läser äldre snapshots utan IBAN-fält", async () => {
+    const { parseSnapshot } = await import("@/lib/invoice/snapshot");
+    const snap = parseSnapshot(
+      JSON.stringify({
+        seller: {
+          companyName: "Landvex AB",
+          orgNumber: "559141-7042",
+          address: "Antennvägen 2",
+          postalCode: "135 48",
+          city: "Tyresö",
+          email: "",
+          phone: "",
+          bankgiro: "",
+          vatNumber: "SE559141704201",
+          fSkatt: "Godkänd för F-skatt",
+        },
+        buyer: {
+          companyName: "Kund AB",
+          orgNumber: "556000-0000",
+          contactName: "",
+          invoiceEmail: "a@b.se",
+          billingAddress: "Gatan 1, 135 48 Tyresö",
+          reference: "",
+        },
+        orderNumber: "S-1",
+        deliveryDate: "2026-09-10",
+        lines: [
+          {
+            productName: "Kolasnittar",
+            weightKg: 1,
+            unitPricePerKgOre: 29500,
+            vatRateBp: 600,
+            lineTotalOre: 29500,
+          },
+        ],
+        subtotalOre: 29500,
+        vatOre: 1770,
+        totalOre: 31270,
+        currency: "SEK",
+        invoiceDate: "2026-09-08",
+        dueDate: "2026-10-10",
+        paymentTermsDays: 30,
+      })
+    );
+    expect(snap.seller.iban).toBe("");
+    expect(snap.seller.vatNumber).toBe("SE559141704201");
+  });
+});

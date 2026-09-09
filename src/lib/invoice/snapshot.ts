@@ -15,6 +15,10 @@ export interface InvoiceSnapshot {
     bankgiro: string;
     vatNumber: string;
     fSkatt: string;
+    /** Revolut LT-IBAN. Tom i äldre snapshots. */
+    iban?: string;
+    bic?: string;
+    intermediaryBic?: string;
   };
   buyer: {
     companyName: string;
@@ -78,6 +82,9 @@ const snapshotSchema = z.object({
     bankgiro: opt,
     vatNumber: opt,
     fSkatt: opt,
+    iban: opt,
+    bic: opt,
+    intermediaryBic: opt,
   }),
   buyer: z.object({
     companyName: str,

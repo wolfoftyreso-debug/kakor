@@ -294,6 +294,9 @@ export async function seedMonth(): Promise<void> {
           bankgiro: invoiceConfig.bankgiro,
           vatNumber: invoiceConfig.vatNumber,
           fSkatt: invoiceConfig.fSkatt,
+          iban: invoiceConfig.iban,
+          bic: invoiceConfig.bic,
+          intermediaryBic: invoiceConfig.intermediaryBic,
         },
         buyer: {
           companyName: opts.c.company,

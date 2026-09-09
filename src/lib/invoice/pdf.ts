@@ -217,7 +217,23 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
 
     // --- Betalningsinformation ---
     y += 16;
-    const payBoxH = credit ? 108 : 86;
+    const sellerPay = snapshot.seller;
+    const payDetailLines: string[] = [];
+    if (isVerifiedValue(sellerPay.bankgiro)) payDetailLines.push(`Bankgiro: ${sellerPay.bankgiro}`);
+    if (isVerifiedValue(sellerPay.iban ?? "")) payDetailLines.push(`IBAN: ${sellerPay.iban}`);
+    if (isVerifiedValue(sellerPay.bic ?? "")) payDetailLines.push(`BIC: ${sellerPay.bic}`);
+    if (isVerifiedValue(sellerPay.intermediaryBic ?? "")) {
+      payDetailLines.push(`Förmedlande BIC (SWIFT): ${sellerPay.intermediaryBic}`);
+    }
+    const hasPay = payDetailLines.length > 0;
+    if (!hasPay) {
+      payDetailLines.push(
+        "Betalningsuppgifter har inte kunnat anges på fakturan – de meddelas separat före förfallodagen."
+      );
+    }
+    payDetailLines.push(`Ange fakturanummer ${invoiceNumber} som referens vid betalning.`);
+    payDetailLines.push(`Förfallodatum: ${snapshot.dueDate}.`);
+    const payBoxH = credit ? 108 : 28 + payDetailLines.length * 14 + (hasPay ? 16 : 0);
     doc.rect(M, y, CONTENT_W, payBoxH).fill(LIGHT_BG);
     doc.font("Helvetica-Bold").fontSize(8.5).fillColor(MUTED).text(credit ? "KREDITERING" : "BETALNINGSINFORMATION", M + 12, y + 10);
     doc.font("Helvetica").fontSize(9.5).fillColor(BROWN);
@@ -255,36 +271,17 @@ export function renderInvoicePdf(snapshot: InvoiceSnapshot, invoiceNumber: strin
         doc.text(`Anledning: ${snapshot.creditReason}`, M + 12, y + 80, { width: CONTENT_W - 24, height: 12, ellipsis: true, lineBreak: false });
       }
     } else {
-      // Platshållare ("[EJ VERIFIERAT …]") får aldrig hamna på en kundfaktura –
-      // saknas verifierat bankgiro skrivs en neutral rad tills värdet är satt.
-      const hasBankgiro = isVerifiedValue(snapshot.seller.bankgiro);
-      doc.text(
-        hasBankgiro
-          ? `Bankgiro: ${snapshot.seller.bankgiro}`
-          : "Betalningsuppgifter har inte kunnat anges på fakturan – de meddelas separat före förfallodagen.",
-        M + 12,
-        y + 24,
-        { width: CONTENT_W - 24, lineBreak: false }
-      );
-      doc.text(
-        `Ange fakturanummer ${invoiceNumber} som referens vid betalning.`,
-        M + 12,
-        y + 38
-      );
-      // Samma mening som i köpvillkoren – fakturan och villkoren får inte säga olika.
-      doc.text(
-        hasBankgiro
-          ? `Förfallodatum: ${snapshot.dueDate}.`
-          : `Förfallodatum: ${snapshot.dueDate}.`,
-        M + 12,
-        y + 52,
-        { width: CONTENT_W - 24 }
-      );
-      if (hasBankgiro) {
+      // Platshållare ("[EJ VERIFIERAT …]") får aldrig hamna på en kundfaktura.
+      let lineY = y + 24;
+      for (const line of payDetailLines) {
+        doc.text(line, M + 12, lineY, { width: CONTENT_W - 24, lineBreak: false });
+        lineY += 14;
+      }
+      if (hasPay) {
         doc.fontSize(8).fillColor(MUTED).text(
           "Vid försenad betalning utgår dröjsmålsränta enligt räntelagen och förseningsersättning enligt lag.",
           M + 12,
-          y + 66,
+          lineY,
           { width: CONTENT_W - 24 }
         );
       }

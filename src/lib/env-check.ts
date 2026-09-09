@@ -1,3 +1,5 @@
+import { invoiceConfig, isVerifiedValue, hasPaymentDetails } from "@/lib/config";
+
 // Central environment-validering. Körs vid serverstart (instrumentation)
 // så att felkonfiguration upptäcks direkt istället för mitt i en checkout.
 // Skriver ALDRIG hemligheters värden – bara variabelnamn.
@@ -42,13 +44,14 @@ export function checkEnv(): EnvReport {
     } else if (!turnstileSite) {
       warnings.push("Turnstile saknas – kassan har inget robotskydd utöver rate limiting.");
     }
-    for (const name of ["INVOICE_BANKGIRO", "INVOICE_EMAIL", "INVOICE_VAT_NUMBER"]) {
-      const v = process.env[name] ?? "";
-      if (!v || v.includes("EJ VERIFIERAT")) {
-        // Blockerande i produktion: fakturor utan bankgiro/momsnr/faktura-e-post
-        // är inte giltiga kunddokument.
-        missing.push(`${name} (inte satt/verifierad – fakturor saknar uppgiften)`);
-      }
+    if (!hasPaymentDetails()) {
+      missing.push("INVOICE_IBAN eller INVOICE_BANKGIRO (fakturan saknar betalningsuppgifter)");
+    }
+    if (!isVerifiedValue(invoiceConfig.email)) {
+      missing.push("INVOICE_EMAIL (inte satt/verifierad – fakturor saknar uppgiften)");
+    }
+    if (!isVerifiedValue(invoiceConfig.vatNumber)) {
+      missing.push("INVOICE_VAT_NUMBER (inte satt/verifierad – fakturor saknar uppgiften)");
     }
   }
 

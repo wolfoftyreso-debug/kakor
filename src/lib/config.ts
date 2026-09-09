@@ -3,7 +3,8 @@
 
 function env(name: string, fallback: string): string {
   const v = process.env[name];
-  return v !== undefined && v !== "" ? v : fallback;
+  if (v === undefined || v === "" || v.startsWith("[EJ VERIFIERAT")) return fallback;
+  return v;
 }
 
 // Publik bas-URL: SITE_URL styr alltid; på Vercel utan SITE_URL (testdeploy)
@@ -42,15 +43,26 @@ export const invoiceConfig = {
   city: env("INVOICE_CITY", "Tyresö"),
   email: env("INVOICE_EMAIL", "[EJ VERIFIERAT: faktura-e-post]"),
   phone: env("INVOICE_PHONE", "[EJ VERIFIERAT: telefonnummer]"),
-  bankgiro: env("INVOICE_BANKGIRO", "[EJ VERIFIERAT: bankgironummer]"),
-  vatNumber: env("INVOICE_VAT_NUMBER", "[EJ VERIFIERAT: momsreg.nr]"),
-  fSkatt: env("INVOICE_F_SKATT", "[EJ VERIFIERAT: F-skatt]"),
+  // Inget bankgiro – Landvex tar emot betalning till Revolut (LT-IBAN).
+  bankgiro: env("INVOICE_BANKGIRO", ""),
+  iban: env("INVOICE_IBAN", "LT71 3250 0093 1434 0371"),
+  bic: env("INVOICE_BIC", "REVOLT21"),
+  intermediaryBic: env("INVOICE_INTERMEDIARY_BIC", "BARCGB22"),
+  // Momsreg.nr = SE + org.nr utan bindestreck + 01. Landvex AB är
+  // momsregistrerat (Bolagsverket/allabolag). F-skatt: godkänd.
+  vatNumber: env("INVOICE_VAT_NUMBER", "SE559141704201"),
+  fSkatt: env("INVOICE_F_SKATT", "Godkänd för F-skatt"),
   paymentTermsDays: parseInt(env("INVOICE_PAYMENT_TERMS_DAYS", "30"), 10),
 };
 
 /** Platshållare ("[EJ VERIFIERAT: …]") får aldrig visas publikt på sajten. */
 export function isVerifiedValue(value: string): boolean {
   return value !== "" && !value.startsWith("[EJ VERIFIERAT");
+}
+
+/** Fakturan kan bära bankgiro och/eller IBAN – minst ett krävs för att sälja. */
+export function hasPaymentDetails(): boolean {
+  return isVerifiedValue(invoiceConfig.bankgiro) || isVerifiedValue(invoiceConfig.iban);
 }
 
 export const emailConfig = {
