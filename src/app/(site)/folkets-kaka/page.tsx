@@ -9,10 +9,10 @@ import { getActiveProducts } from "@/lib/products";
 import { CONTENT_DATES } from "@/lib/seo/content-dates";
 
 const DESCRIPTION =
-  "Vilken klassisk svensk småkaka ska vi baka härnäst? Hallongrotta, dröm eller schackruta – ni röstar, vi bakar vinnaren efter recepten ur Svenskt konditorlexikon. Sortimentet växer ett klassiskt recept i taget.";
+  "Hallongrotta, dröm eller schackruta? Ni röstar, vi bakar vinnaren efter receptet i Svenskt konditorlexikon. Sortimentet växer ett klassiskt recept i taget.";
 
 export const metadata: Metadata = {
-  title: { absolute: "Folkets nästa småkaka – rösta på vilken klassiker vi bakar härnäst" },
+  title: { absolute: "Folkets nästa småkaka – rösta fram nästa klassiker" },
   description: DESCRIPTION,
   alternates: { canonical: "/folkets-kaka" },
   ...sharePreview({

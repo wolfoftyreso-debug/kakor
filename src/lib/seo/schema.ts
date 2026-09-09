@@ -70,6 +70,7 @@ export function organizationNode(): JsonLdNode {
     taxID: invoiceConfig.orgNumber,
     // Grundaren enligt berättelsen på /om (verksamhetens uppgift).
     founder: { "@type": "Person", name: "Tiffany Svensson" },
+    foundingDate: "2025",
   };
 }
 

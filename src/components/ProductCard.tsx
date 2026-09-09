@@ -46,7 +46,7 @@ export function ProductCard({
         aria-label={`${product.name} – läs mer`}
         tabIndex={-1}
       >
-        <ImageSlot label={`${product.name} – närbild`} src={product.imageRef || undefined} />
+        <ImageSlot label={`${product.name} – närbild`} src={product.imageRef || undefined} sizes="(max-width: 560px) 100vw, (max-width: 1100px) 50vw, 320px" />
         {product.badge && <span className="product-badge">{product.badge}</span>}
       </Link>
       <div className="product-body">

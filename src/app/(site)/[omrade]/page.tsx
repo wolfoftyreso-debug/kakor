@@ -123,54 +123,67 @@ export default async function AreaPage({ params }: Props) {
               ) : (
                 "Tillgängliga dagar visas i kassan."
               )}
+              {area && area.leadTimeDays > 0 && (
+                <>
+                  {" "}
+                  Beställ senast {area.leadTimeDays} {area.leadTimeDays === 1 ? "dag" : "dagar"} före leveransdagen.
+                </>
+              )}
             </div>
           </div>
-          <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: "inherit" }}>Så levererar vi</h2>
-            <div style={{ fontSize: "13.5px", color: "var(--brown-2)", lineHeight: 1.65 }}>
-              Under dagen, till bemannade företagsadresser. Se till att någon kan ta emot leveransen
-              – reception, personalrum eller lastkaj.
+          {/* Postnumren är områdets egna (admin) – det som faktiskt skiljer sidorna åt. */}
+          {area && area.postalPrefixes.length > 0 && (
+            <div className="card" style={{ padding: 24 }}>
+              <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: "inherit" }}>
+                Postnummer i {content.name}
+              </h2>
+              <div style={{ fontFamily: "var(--font-serif)", fontSize: 20, fontWeight: 700 }}>
+                {area.postalPrefixes.map((pfx) => `${pfx}xx`).join(", ")}
+              </div>
+              <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 8, lineHeight: 1.55 }}>
+                Företagsadresser med de här postnummerserierna. Kassan bekräftar postnumret innan ni beställer.
+              </div>
             </div>
-          </div>
+          )}
           <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: "inherit" }}>Betalning</h2>
+            <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, fontFamily: "inherit" }}>Faktura, inget annat</h2>
             <div style={{ fontSize: "13.5px", color: "var(--brown-2)", lineHeight: 1.65 }}>
-              Alltid mot faktura. Fakturan skapas när ni beställer och mejlas direkt – förfallodag{" "}
-              {invoiceConfig.paymentTermsDays} dagar efter leveransen. Inga kort, inga konton.
+              Fakturan mejlas när ni beställer, {invoiceConfig.paymentTermsDays} dagars betalningsvillkor från leveransen.{" "}
+              <Link href="/leverans">Så går leveransen till</Link> · <Link href="/villkor">villkor</Link>.
             </div>
           </div>
         </div>
       </section>
 
       <section className="container-medium" style={{ padding: "56px 24px" }}>
-        <h2 className="h-sub" style={{ marginBottom: 24 }}>
+        <h2 className="h-sub" style={{ marginBottom: 12 }}>
           Kakorna vi levererar i {content.name}
         </h2>
-        {/* minmax 205: alla fyra sorter på en rad i container-medium (932 px). */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(205px, 1fr))", gap: 20 }}>
+        <p style={{ margin: "0 0 18px", color: "var(--brown-2)", maxWidth: "60ch", lineHeight: 1.6 }}>
+          Samma sortiment till alla arbetsplatser i {content.name} – sorterna blandas fritt i en och samma beställning.
+          Hela beskrivningen, ingredienserna och priset finns på varje sorts egen sida.
+        </p>
+        <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(205px, 1fr))", gap: 12 }}>
           {products.map((p) => (
-            <Link
-              key={p.id}
-              href={`/kakor/${p.slug}`}
-              className="card card-hover"
-              style={{ overflow: "hidden", textDecoration: "none", color: "var(--text)" }}
-            >
-              <div className="card-media" style={{ height: 170 }}>
-                <ImageSlot label={`${p.name} – närbild`} src={p.imageRef || undefined} />
-                {p.badge && <span className="product-badge">{p.badge}</span>}
-              </div>
-              <div style={{ padding: "16px 18px" }}>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 700 }}>{p.name}</div>
-                <div style={{ fontSize: "13.5px", color: "var(--text-2)", marginTop: 4, lineHeight: 1.5 }}>
-                  {p.description}
-                </div>
-              </div>
-            </Link>
+            <li key={p.id} className="card" style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+              <span className="review-thumb" aria-hidden="true">
+                <ImageSlot label="" src={p.imageRef || undefined} decorative sizes="44px" />
+              </span>
+              <span>
+                <Link href={`/kakor/${p.slug}`} style={{ fontFamily: "var(--font-serif)", fontSize: 17, fontWeight: 700, color: "var(--text)" }}>
+                  {p.name}
+                </Link>
+                {p.badge && <span className="pill pill-new" style={{ marginLeft: 8 }}>{p.badge}</span>}
+              </span>
+            </li>
           ))}
-        </div>
-        <div style={{ marginTop: 20 }}>
+        </ul>
+        <div style={{ marginTop: 20, display: "flex", gap: 18, flexWrap: "wrap" }}>
+          <Link href="/kakor" className="section-link">
+            Alla kakor med priser →
+          </Link>
           <Link href="/bestall" className="section-link">
-            Se priser och beställ →
+            Beställ till {content.name} →
           </Link>
         </div>
       </section>

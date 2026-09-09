@@ -66,6 +66,8 @@ jobs:
           CHROMIUM_PATH="$(find ~/.cache/ms-playwright -type f -name chrome -path '*chromium*' | head -1)"
           echo "Chromium: $CHROMIUM_PATH"
           CHROMIUM_PATH="$CHROMIUM_PATH" npx tsx scripts/e2e/full-flow.mts
+      - name: SEO-crawl (sitemap, canonical, rubriker, schema, inlänkar)
+        run: npm run seo:crawl
       - name: Serverlogg vid fel
         if: failure()
         run: tail -100 server.log

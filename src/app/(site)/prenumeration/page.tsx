@@ -3,7 +3,8 @@ import { ImageSlot } from "@/components/ImageSlot";
 import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
 import { JsonLd } from "@/components/JsonLd";
-import { faqNode, graph, webPageNode } from "@/lib/seo/schema";
+import { breadcrumbNode, faqNode, graph, webPageNode } from "@/lib/seo/schema";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Steps } from "@/components/Steps";
 import { TrustStrip } from "@/components/TrustStrip";
 import { FaqList } from "@/components/FaqList";
@@ -62,6 +63,11 @@ const PREN_FAQS = [
   },
 ];
 
+const PREN_CRUMBS = [
+  { name: "Sockerbagaren", path: "/" },
+  { name: "Fikaprenumeration", path: "/prenumeration" },
+];
+
 export default async function PrenumerationPage() {
   return (
     <>
@@ -71,16 +77,20 @@ export default async function PrenumerationPage() {
             path: "/prenumeration",
             title: "Fikaprenumeration till jobbet, varje vecka",
             description: String(metadata.description),
+            breadcrumbs: PREN_CRUMBS,
           }),
+          breadcrumbNode("/prenumeration", PREN_CRUMBS),
           faqNode("/prenumeration", PREN_FAQS)
         )}
       />
+      <Breadcrumbs crumbs={PREN_CRUMBS} />
       <section className="section-y" style={{ background: "var(--section-tint)", padding: "var(--section-y) 24px", textAlign: "center" }}>
         <div className="eyebrow" style={{ marginBottom: 12 }}>
-          Fikaprenumeration
+          Återkommande leverans
         </div>
+        {/* H1 bär sidans sökintention (fikaprenumeration) – slogan som andra led. */}
         <h1 className="h-display" style={{ marginBottom: 14 }}>
-          Fika som bara dyker upp.
+          Fikaprenumeration till jobbet – fika som bara dyker upp.
         </h1>
         <p className="lede" style={{ margin: "0 auto", maxWidth: "52ch" }}>
           Välj kakor, mängd och hur ofta – så står fikat på plats utan att någon behöver komma ihåg
