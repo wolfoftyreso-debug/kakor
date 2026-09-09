@@ -3,10 +3,13 @@ import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatOre } from "@/lib/money";
-import { addDays, formatDeliveryDate, todayInStockholm, capitalizeFirst, startOfStockholmDay } from "@/lib/dates";
+import { addDays, formatDeliveryDate, todayInStockholm, capitalizeFirst, startOfStockholmDay, toISODate } from "@/lib/dates";
 import { OrderStatusPill, PaymentStatusPill } from "@/components/admin/StatusPills";
 import { foodVatNotice, FOOD_VAT_RATE_BP } from "@/lib/vat";
-import { toISODate } from "@/lib/dates";
+import { loadOpsDashboard } from "@/lib/warehouse/queries";
+import { formatStockQty } from "@/lib/warehouse/inventory";
+import { formatWeightKg } from "@/lib/units";
+import { DELIVERY_WEEK_STATUS_LABELS, isWeekLockedStatus, type DeliveryWeekStatus } from "@/lib/status";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +63,7 @@ export default async function AdminDashboard() {
       prisma.product.count({ where: { active: true, vatRateBp: FOOD_VAT_RATE_BP } }),
     ]);
   const vatNotice = foodVatNotice(toISODate(today), productsAtTempVat);
+  const ops = await loadOpsDashboard();
 
   const stats = [
     { label: "Nya beställningar", value: String(newOrderCount), href: "/admin/bestallningar?filter=nya" },
@@ -114,6 +118,82 @@ export default async function AdminDashboard() {
           </Link>
         ))}
       </div>
+
+      <section className="card" style={{ padding: "20px 22px", marginBottom: 32 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}>
+          <h2 style={{ fontSize: 19, margin: 0 }}>Denna veckas leveranser</h2>
+          <Link href={ops.nextDay ? `/admin/leveranser/vecka/${ops.nextDay.weekParam}` : "/admin/leveranser"} style={{ fontWeight: 700, fontSize: 14 }}>
+            Öppna veckan →
+          </Link>
+        </div>
+        {ops.nextDay ? (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14, marginTop: 16 }}>
+              <div>
+                <div className="section-label">Leveransdag</div>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: 20, fontWeight: 700 }}>
+                  {capitalizeFirst(formatDeliveryDate(ops.nextDay.deliveryDate))}
+                </div>
+              </div>
+              <div>
+                <div className="section-label">Leveranser</div>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: 20, fontWeight: 700 }}>
+                  {ops.nextDay.orderCount} · {formatWeightKg(ops.nextDay.totalGrams)}
+                </div>
+              </div>
+              <div>
+                <div className="section-label">Nästa cutoff</div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>{ops.cutoffLabel ?? "–"}</div>
+              </div>
+              <div>
+                <div className="section-label">Status</div>
+                <span className={`pill ${isWeekLockedStatus(ops.nextDay.status) ? "pill-ok" : "pill-new"}`}>
+                  {isWeekLockedStatus(ops.nextDay.status) ? "Låst" : DELIVERY_WEEK_STATUS_LABELS[ops.nextDay.status as DeliveryWeekStatus] ?? ops.nextDay.status}
+                </span>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18, marginTop: 20 }}>
+              <div>
+                <div className="section-label" style={{ marginBottom: 8 }}>Produktionsbehov</div>
+                {ops.needs.length === 0 ? (
+                  <p style={{ margin: 0, fontSize: 14, color: "var(--text-2)" }}>Inget beställt ännu.</p>
+                ) : (
+                  ops.needs.map((n) => (
+                    <div key={`${n.productId}|${n.name}`} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, padding: "3px 0" }}>
+                      <span>{n.name}</span>
+                      <strong style={{ color: n.needGrams > 0 ? "var(--red)" : undefined }}>
+                        {n.needGrams > 0 ? `+${formatWeightKg(n.needGrams)}` : "0 kg"}
+                      </strong>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div>
+                <div className="section-label" style={{ marginBottom: 8 }}>Lager</div>
+                {ops.stock.map((s) => (
+                  <div key={s.productId} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, padding: "3px 0", gap: 10 }}>
+                    <span>{s.name}</span>
+                    <span>
+                      {formatStockQty(s.physicalGrams, s.unit, s.packageWeightGrams)}
+                      <span style={{ color: "var(--text-2)" }}> / {formatStockQty(s.reservedGrams, s.unit, s.packageWeightGrams)} reserverat</span>
+                    </span>
+                  </div>
+                ))}
+                <div style={{ marginTop: 8 }}>
+                  <Link href="/admin/lager" style={{ fontWeight: 700, fontSize: 13 }}>
+                    Öppna lagret →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p style={{ margin: "12px 0 0", fontSize: 14, color: "var(--text-2)" }}>
+            Inga kommande leveranser inplanerade.{" "}
+            <Link href="/admin/lager">Se lagret</Link>
+          </p>
+        )}
+      </section>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
         <section>

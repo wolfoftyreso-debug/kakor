@@ -3,9 +3,28 @@ import { hashPassword } from "../src/lib/auth/password";
 
 const prisma = new PrismaClient();
 
+function demoOrgNumber(base9: string): string {
+  const digits = base9.replace(/\D/g, "").slice(0, 9).padStart(9, "5");
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    let d = Number(digits[i]);
+    if (i % 2 === 0) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    sum += d;
+  }
+  const check = (10 - (sum % 10)) % 10;
+  const full = digits + String(check);
+  return `${full.slice(0, 6)}-${full.slice(6)}`;
+}
+
 // OBS: priserna nedan är START-/PLATSHÅLLARPRISER som verksamheten ska
 // bekräfta eller ändra i admin (Produkter). Historiska ordrar påverkas inte.
 import { FOOD_VAT_RATE_BP } from "../src/lib/vat";
+import { toISODate, upcomingDeliveryDates } from "../src/lib/dates";
+import { createOrder } from "../src/lib/orders/create-order";
+import { createSubscription, generateDueSubscriptionOrders } from "../src/lib/subscriptions/service";
 
 const products = [
   {
@@ -105,6 +124,45 @@ async function main() {
     });
   }
 
+  await prisma.deliveryOpsSettings.upsert({
+    where: { id: "default" },
+    create: { id: "default", cutoffWeekday: 3, cutoffHour: 12, opsEmail: "" },
+    update: {},
+  });
+
+  // Startsaldo för lager: exempelvärden så att produktionsbehov syns när
+  // det kommer in ordrar. Befintligt saldo rörs aldrig vid om-seed.
+  const startStock: Record<string, { physicalGrams: number; minGrams: number }> = {
+    mandelkubb: { physicalGrams: 6000, minGrams: 4000 },
+    kolasnittar: { physicalGrams: 10000, minGrams: 5000 },
+    chokladsnittar: { physicalGrams: 4000, minGrams: 4000 },
+    "prova-pa-paket": { physicalGrams: 9000, minGrams: 3000 },
+  };
+  const seededProducts = await prisma.product.findMany({ select: { id: true, slug: true } });
+  for (const p of seededProducts) {
+    const stock = startStock[p.slug] ?? { physicalGrams: 0, minGrams: 0 };
+    const inv = await prisma.inventory.upsert({
+      where: { productId: p.id },
+      create: { productId: p.id, ...stock },
+      update: {},
+    });
+    const existingMovements = await prisma.inventoryMovement.count({ where: { inventoryId: inv.id } });
+    if (existingMovements === 0 && stock.physicalGrams > 0) {
+      await prisma.inventoryMovement.create({
+        data: {
+          inventoryId: inv.id,
+          productId: p.id,
+          kind: "ADJUSTMENT",
+          gramsDelta: stock.physicalGrams,
+          reason: "Ingående lagersaldo vid systemstart",
+          actor: "system",
+          beforeGrams: 0,
+          afterGrams: stock.physicalGrams,
+        },
+      });
+    }
+  }
+
   // Folkets nästa småkaka, omgång 1: Hallongrotta, Dröm, Schackruta.
   // Deadline Luciadagen 13 december 2026 kl. 23:59 svensk tid (CET = UTC+1).
   // Idempotent: befintlig omgång rörs inte (rösterna får aldrig nollställas).
@@ -159,6 +217,75 @@ async function main() {
       },
     });
     console.log(`Adminanvändare skapad: ${adminEmail}`);
+  }
+
+  // Demo/preview (SQLite): tre tydligt fingerade bolag så lager- och
+  // leveransvyn inte är tom. Aldrig i Neon-produktion.
+  const sqlite = (process.env.DATABASE_URL ?? "").startsWith("file:");
+  if (sqlite && (await prisma.order.count()) === 0) {
+    const kol = await prisma.product.findUniqueOrThrow({ where: { slug: "kolasnittar" } });
+    const man = await prisma.product.findUniqueOrThrow({ where: { slug: "mandelkubb" } });
+    const cho = await prisma.product.findUniqueOrThrow({ where: { slug: "chokladsnittar" } });
+    const area = await prisma.deliveryArea.findUniqueOrThrow({ where: { slug: "tyreso" } });
+    const first = upcomingDeliveryDates(
+      { weekdays: JSON.parse(area.weekdaysJson), leadTimeDays: area.leadTimeDays },
+      1
+    )[0];
+    if (first) {
+      const date = toISODate(first);
+      const base = {
+        areaSlug: "tyreso",
+        deliveryDate: date,
+        phone: "070-000 00 00",
+        deliveryAddress: "Radiovägen 1",
+        deliveryPostalCode: "135 48",
+        deliveryCity: "Tyresö",
+        deliveryInstruction: "Lämna i receptionen.",
+        reference: "",
+        billingAddress: "",
+      };
+      await createSubscription({
+        ...base,
+        firstDeliveryDate: date,
+        frequency: "WEEKLY",
+        items: [{ productId: kol.id, weightKg: 2 }],
+        companyName: "Kund A Fika AB",
+        orgNumber: demoOrgNumber("556001111"),
+        contactName: "Anna Andersson",
+        email: "anna@kunda-fika.test",
+        invoiceEmail: "faktura@kunda-fika.test",
+        idempotencyKey: "seed-sub-kund-a-01",
+      }).catch((e) => console.warn("Seed prenumeration Kund A:", e instanceof Error ? e.message : e));
+      await generateDueSubscriptionOrders({ horizonDays: 14, skipEmails: true, now: new Date() });
+      await createOrder(
+        {
+          ...base,
+          items: [{ productId: man.id, weightKg: 3 }],
+          companyName: "Kund B Kontor AB",
+          orgNumber: demoOrgNumber("556002222"),
+          contactName: "Bertil Berg",
+          email: "bertil@kundb-kontor.test",
+          invoiceEmail: "faktura@kundb-kontor.test",
+          idempotencyKey: "seed-order-kund-b-01",
+        },
+        { skipEmails: true }
+      ).catch((e) => console.warn("Seed order Kund B:", e instanceof Error ? e.message : e));
+      await createOrder(
+        {
+          ...base,
+          items: [{ productId: cho.id, weightKg: 1 }],
+          companyName: "Kund C Bygg AB",
+          orgNumber: demoOrgNumber("556003333"),
+          contactName: "Cecilia Carlsson",
+          email: "cecilia@kundc-bygg.test",
+          invoiceEmail: "faktura@kundc-bygg.test",
+          deliveryInstruction: "",
+          idempotencyKey: "seed-order-kund-c-01",
+        },
+        { skipEmails: true }
+      ).catch((e) => console.warn("Seed order Kund C:", e instanceof Error ? e.message : e));
+      console.log(`Demo-ordrar seedade till ${date}.`);
+    }
   }
 
   console.log("Seed klar.");

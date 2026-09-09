@@ -3,7 +3,9 @@ import { requireAdminPage } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { invoiceConfig, emailConfig, siteConfig } from "@/lib/config";
 import { AreaForm } from "./AreaForm";
+import { OpsSettingsForm } from "./OpsSettingsForm";
 import { safeBlockedDates } from "@/lib/products";
+import { getOpsSettings } from "@/lib/warehouse/settings";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin – inställningar", robots: { index: false } };
@@ -11,6 +13,7 @@ export const metadata: Metadata = { title: "Admin – inställningar", robots: {
 export default async function SettingsPage() {
   await requireAdminPage();
   const areas = await prisma.deliveryArea.findMany({ orderBy: { sortOrder: "asc" } });
+  const ops = await getOpsSettings();
 
   const companyRows: [string, string][] = [
     ["Juridiskt namn", invoiceConfig.companyName],
@@ -53,6 +56,16 @@ export default async function SettingsPage() {
             />
           ))}
         </div>
+      </section>
+
+      <section style={{ marginBottom: 36 }}>
+        <h2 style={{ fontSize: 19, marginBottom: 8 }}>Låsning av leveranslista</h2>
+        <p style={{ color: "var(--text-2)", fontSize: 13.5, margin: "0 0 16px", maxWidth: "70ch" }}>
+          Efter cutoff låses veckans leveranslista: snapshot, plocklista, leveranssedlar och
+          driftmejl. Beställningar efter cutoff flyttas till nästa öppna leveransdag. Standard är
+          onsdag klockan 12.
+        </p>
+        <OpsSettingsForm cutoffWeekday={ops.cutoffWeekday} cutoffHour={ops.cutoffHour} opsEmail={ops.opsEmail} />
       </section>
 
       <section>

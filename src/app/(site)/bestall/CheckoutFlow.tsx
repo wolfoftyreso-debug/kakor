@@ -22,6 +22,7 @@ import { formatOre, calculateTotals } from "@/lib/money";
 import { effectiveVatRateBp } from "@/lib/vat";
 import { formatWeightKg, lineWeightGrams, priceSuffix, qtyLabel } from "@/lib/units";
 import { capitalizeFirst, formatDeliveryDate, fromISODate, toISODate, upcomingDeliveryDates, changeDeadline, formatDeadline, isoWeekday, weekdayName } from "@/lib/dates";
+import { isPastCutoff } from "@/lib/warehouse/cutoff";
 import { PreferredSourceCTA } from "@/components/preferred-source/PreferredSourceCTA";
 import { newIdempotencyKey } from "@/lib/idempotency";
 import { isValidOrgNumber } from "@/lib/orgnumber";
@@ -377,17 +378,20 @@ export function CheckoutFlow({
   // framförhållning) i stället för att lita på listan från sidladdningen –
   // annars visar steg 2 samma passerade datum som servern just avvisade.
   const upcomingDates = useMemo(
-    () =>
-      selectedArea
-        ? upcomingDeliveryDates(
-            {
-              weekdays: selectedArea.weekdays,
-              leadTimeDays: selectedArea.leadTimeDays,
-              blockedDates: [...selectedArea.blockedDates, ...selectedArea.fullDates],
-            },
-            Math.max(4, selectedArea.upcomingDates.length)
-          ).map(toISODate)
-        : [],
+    () => {
+      if (!selectedArea) return [];
+      const settings = { cutoffWeekday: selectedArea.cutoffWeekday ?? 3, cutoffHour: selectedArea.cutoffHour ?? 12, opsEmail: "" };
+      return upcomingDeliveryDates(
+        {
+          weekdays: selectedArea.weekdays,
+          leadTimeDays: selectedArea.leadTimeDays,
+          blockedDates: [...selectedArea.blockedDates, ...selectedArea.fullDates],
+        },
+        Math.max(4, selectedArea.upcomingDates.length)
+      )
+        .filter((d) => !isPastCutoff(d, settings))
+        .map(toISODate);
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [selectedArea, clockTick]
   );
@@ -1057,6 +1061,11 @@ export function CheckoutFlow({
                 : `Tidigaste leverans: ${formatDeliveryDate(fromISODate(upcomingDates[0]))}.`}
               {mode === "RECURRING" ? " Infaller en leverans på en helgdag hör vi av oss – den flyttas eller utgår." : ""}
             </p>
+          )}
+          {selectedArea?.cutoffNotice && (
+            <div role="status" className="info-box" style={{ marginBottom: 12, fontSize: 14 }}>
+              {selectedArea.cutoffNotice}
+            </div>
           )}
           {selectedArea && (
             <div className="date-grid" role="radiogroup" aria-labelledby="grp-datum" style={{ marginBottom: 16 }}>

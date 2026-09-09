@@ -54,6 +54,8 @@ model Product {
   orderItems        OrderItem[]
   subscriptionItems SubscriptionItem[]
   pollCandidates    PollCandidate[]
+  inventory         Inventory?
+  inventoryMovements InventoryMovement[]
 }
 
 model DeliveryArea {
@@ -158,6 +160,9 @@ model Order {
   status         String @default("NEW")      // NEW | CONFIRMED | CANCELLED
   paymentStatus  String @default("UNPAID")   // UNPAID | PAID
   deliveryStatus String @default("PENDING")  // PENDING | DELIVERED
+  // Operativ plockstatus (lager/leveransvecka). Oberoende av deliveryStatus.
+  // UNPICKED | PICKED | LOADED | DELIVERED | PROBLEM
+  pickStatus     String @default("UNPICKED")
 
   deliveredAt  DateTime?
   deliveryNote String    @default("")
@@ -169,9 +174,10 @@ model Order {
   // subscriptionId + periodens leveransdatum (ISO-datumsträng) får bara finnas en gång.
   subscriptionPeriod String?
 
-  items   OrderItem[]
-  invoice Invoice?
-  events  OrderEvent[]
+  items               OrderItem[]
+  invoice             Invoice?
+  events              OrderEvent[]
+  inventoryMovements  InventoryMovement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -183,6 +189,7 @@ model Order {
   @@index([status])
   @@index([paymentStatus])
   @@index([deliveryStatus])
+  @@index([pickStatus])
   @@index([createdAt])
 }
 
@@ -419,3 +426,82 @@ model PollWinnerSignup {
 
   @@unique([pollId, email])
 }
+
+// ---------- Lager och leveransvecka ----------
+// Fysiskt saldo lagras på Inventory. Reserverat och disponibelt räknas från
+// öppna ordrar (ej avbrutna, ej plockade, ej levererade) – aldrig som eget
+// fält som kan driva ifrån sanningen. Varje saldoändring får en rad i
+// InventoryMovement (före/efter), så historiken kan reconcilieras.
+//
+// DeliveryWeek är ett operativt objekt per leveransDATUM (unikt), grupperat
+// i UI per ISO-vecka. Ordrar dupliceras inte: veckan pekar på Order via
+// deliveryDate. Efter cutoff lagras en immutable snapshotJson; ändringar
+// efter låsning hamnar i lateChangesJson.
+
+model Inventory {
+  id            String   @id @default(cuid())
+  productId     String   @unique
+  product       Product  @relation(fields: [productId], references: [id])
+  // Gram i frysen (Radiovägen 19). Paket räknas som antal × paketvikt.
+  physicalGrams Int      @default(0)
+  minGrams      Int      @default(0)
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  movements InventoryMovement[]
+}
+
+model InventoryMovement {
+  id          String    @id @default(cuid())
+  inventoryId String
+  inventory   Inventory @relation(fields: [inventoryId], references: [id])
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+  // INCOMING | OUTGOING | ADJUSTMENT | PICK | UNPICK
+  kind        String
+  gramsDelta  Int
+  reason      String
+  actor       String    @default("system")
+  orderId     String?
+  order       Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  beforeGrams Int
+  afterGrams  Int
+  createdAt   DateTime  @default(now())
+
+  @@index([productId, createdAt])
+  @@index([inventoryId, createdAt])
+  @@index([orderId])
+  @@index([kind])
+}
+
+/** Singleton: id är alltid "default". Cutoff och driftmejl styrs här, inte i env. */
+model DeliveryOpsSettings {
+  id            String   @id
+  // ISO-veckodag då leveranslistan låses (3 = onsdag).
+  cutoffWeekday Int      @default(3)
+  cutoffHour    Int      @default(12)
+  // Tom = ADMIN_NOTIFY_EMAIL. Kommaseparerat vid flera mottagare.
+  opsEmail      String   @default("")
+  updatedAt     DateTime @updatedAt
+}
+
+model DeliveryWeek {
+  id           String   @id @default(cuid())
+  deliveryDate DateTime @unique
+  isoYear      Int
+  isoWeek      Int
+  // OPEN | LOCKING | LOCKED | PICKING | OUT_FOR_DELIVERY | COMPLETED
+  status       String   @default("OPEN")
+  lockedAt     DateTime?
+  lockedBy     String   @default("")
+  snapshotJson String   @default("")
+  opsEmailSentAt DateTime?
+  lateChangesJson String @default("[]")
+  lastError    String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isoYear, isoWeek])
+  @@index([status])
+}
+

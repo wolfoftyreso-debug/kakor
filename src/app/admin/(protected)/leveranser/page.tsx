@@ -3,10 +3,14 @@ import { requireAdminPage } from "@/lib/auth/guard";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatDeliveryDate, toISODate, todayInStockholm, capitalizeFirst } from "@/lib/dates";
-import { qtyLabel } from "@/lib/units";
+import { qtyLabel, formatWeightKg } from "@/lib/units";
 import { MarkDeliveredInline } from "./MarkDeliveredInline";
+import { PickButtons } from "./PickButtons";
+import { RunLockButton } from "./RunLockButton";
 import { PrintButton } from "@/components/admin/PrintButton";
 import { totalKg as orderKg } from "@/lib/orders/capacity";
+import { listUpcomingDayOps } from "@/lib/warehouse/queries";
+import { DELIVERY_WEEK_STATUS_LABELS, isWeekLockedStatus, type DeliveryWeekStatus } from "@/lib/status";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin – leveranser", robots: { index: false } };
@@ -21,6 +25,7 @@ export default async function DeliveriesPage({
   await requireAdminPage();
   const { visa = "kommande", klar } = await searchParams;
   const today = todayInStockholm();
+  const upcomingWeeks = visa === "levererade" ? [] : await listUpcomingDayOps();
 
   const orders = await prisma.order.findMany({
     where:
@@ -51,8 +56,15 @@ export default async function DeliveriesPage({
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
         <h1 style={{ fontSize: 26 }}>Leveranser</h1>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {visa !== "levererade" && sortedKeys.length > 0 && <PrintButton label="Skriv ut körlista" />}
+          <RunLockButton />
+          <Link href="/admin/lager" className="btn btn-outline" style={{ padding: "8px 14px", fontSize: 13 }}>
+            Lager
+          </Link>
+          <Link href="/admin/leveranser/historik" className="btn btn-outline" style={{ padding: "8px 14px", fontSize: 13 }}>
+            Historik
+          </Link>
           <Link
             href="/admin/leveranser"
             className={visa !== "levererade" ? "btn btn-primary" : "btn btn-outline"}
@@ -69,6 +81,35 @@ export default async function DeliveriesPage({
           </Link>
         </div>
       </div>
+
+      {upcomingWeeks.length > 0 && (
+        <section className="no-print" style={{ marginBottom: 28 }}>
+          <h2 style={{ fontSize: 16, marginBottom: 10 }}>Leveransveckor</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+            {upcomingWeeks.map((d) => (
+              <Link
+                key={d.iso}
+                href={`/admin/leveranser/vecka/${d.weekParam}`}
+                className="card"
+                style={{ padding: "14px 16px", textDecoration: "none", color: "var(--text)" }}
+              >
+                <div className="section-label">{d.weekLabel}</div>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 700, margin: "4px 0" }}>
+                  {capitalizeFirst(formatDeliveryDate(d.deliveryDate))}
+                </div>
+                <div style={{ fontSize: 13.5 }}>
+                  {d.orderCount} leveranser · {formatWeightKg(d.totalGrams)}
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <span className={`pill ${isWeekLockedStatus(d.status) ? "pill-ok" : "pill-new"}`}>
+                    {isWeekLockedStatus(d.status) ? "Låst" : DELIVERY_WEEK_STATUS_LABELS[d.status as DeliveryWeekStatus] ?? d.status}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {klar && (
         <div role="status" className="info-box" style={{ marginBottom: 16, fontSize: 14 }}>
@@ -203,7 +244,10 @@ export default async function DeliveriesPage({
                       Följesedel
                     </Link>
                     {o.deliveryStatus === "PENDING" ? (
-                      <MarkDeliveredInline orderId={o.id} orderNumber={o.orderNumber} />
+                      <>
+                        <PickButtons orderId={o.id} pickStatus={o.pickStatus} />
+                        <MarkDeliveredInline orderId={o.id} orderNumber={o.orderNumber} />
+                      </>
                     ) : (
                       <span className="pill pill-ok">Levererad</span>
                     )}
