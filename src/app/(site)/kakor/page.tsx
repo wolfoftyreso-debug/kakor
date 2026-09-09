@@ -44,7 +44,7 @@ const KAKOR_FAQS = [
   },
   {
     q: "Var bakas kakorna?",
-    a: "Hos ett litet konditori i Šiauliai i Litauen, med några få personer och mycket handarbete, efter våra äldre svenska recept. Direkt efter bakningen kyls och fryses kakorna, precis som förr, och transporteras till vårt lager i Tyresö där vi kontrollerar och packar beställningarna. Kakorna tinar på vägen till er och är redo att ställas fram när de kommer.",
+    a: "Hos ett litet konditori i Šiauliai i Litauen, med några få personer och mycket handarbete, efter våra äldre svenska recept. Direkt efter bakningen packas och fryses kakorna, precis som förr, och transporteras frysta rakt in i vårt fryslager i Tyresö, där vi plockar beställningarna. Kakorna tinar på vägen till er och är redo att ställas fram när de kommer.",
   },
   {
     q: "Vad är sju sorters kakor?",

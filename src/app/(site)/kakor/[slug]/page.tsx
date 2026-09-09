@@ -175,7 +175,7 @@ export default async function ProductPage({ params }: Props) {
               </div>
               <div className="spec-row">
                 <dt>Ursprung</dt>
-                <dd>Bakad i Šiauliai, Litauen · packad i Tyresö</dd>
+                <dd>Bakad och förpackad i Šiauliai, Litauen · fryslager i Tyresö</dd>
               </div>
               <div className="spec-row">
                 <dt>Leverans</dt>

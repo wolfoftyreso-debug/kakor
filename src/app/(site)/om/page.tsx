@@ -37,7 +37,7 @@ export default function OmPage() {
         facts={[
           { label: "Recept", value: "Svenskt konditorlexikon 1957" },
           { label: "Bakas", value: "Litet konditori i Šiauliai, Litauen" },
-          { label: "Packas", value: "Radiovägen, Tyresö" },
+          { label: "Fryslager", value: "Radiovägen, Tyresö" },
           { label: "Betalning", value: "Alltid mot faktura" },
         ]}
       />
@@ -45,7 +45,7 @@ export default function OmPage() {
         <div className="media">
           <ImageSlot label="Chokladsnittar läggs upp på plåt" src="/images/bakning.jpg" />
         </div>
-        <figcaption>Chokladsnittar på plåt – kakorna bakas i omgångar och packas för leverans i Tyresö.</figcaption>
+        <figcaption>Chokladsnittar på plåt – kakorna bakas i omgångar, fryses direkt och plockas till leverans från fryslagret i Tyresö.</figcaption>
       </figure>
 
       <h2>Det började med ett vardagligt problem</h2>
@@ -104,10 +104,10 @@ export default function OmPage() {
 
       <h2>Från Litauen till Tyresö</h2>
       <p>
-        När kakorna är färdigbakade kyls och fryses de snabbt och transporteras till Sverige. De
-        kommer till vårt lager på Radiovägen i Tyresö, där vi gör den sista delen själva:
-        kontrollerar, packar om och färdigställer beställningarna. Sedan levererar vi dem antingen
-        själva eller genom ett anlitat bud.
+        När kakorna är färdigbakade packas de och fryses direkt, och transporteras frysta till
+        Sverige – rakt in i fryslagret på Radiovägen i Tyresö, hos Mewab och Engelholmsglass.
+        Därifrån plockar vi beställningarna själva och levererar dem antingen själva eller genom
+        ett anlitat bud.
       </p>
       <p>
         Just frysningen är faktiskt också en del av historien. Min gammelmormor frös alltid sina
@@ -139,7 +139,7 @@ export default function OmPage() {
         hela administrationen automatiskt – från beställning och kunduppgifter till fakturaunderlag
         och plockorder. För oss innebär det mindre tid på administration och mer tid på det som
         faktiskt spelar roll: att packa och leverera bra kakor. När en beställning kommer in får vi
-        vår plockorder, packar beställningen och levererar den. Enkelt.
+        vår plockorder, plockar beställningen ur fryslagret och levererar den. Enkelt.
       </p>
 
       <h2>Vi växer i den takt vi klarar av</h2>
@@ -233,7 +233,7 @@ export default function OmPage() {
         <br />
         Kontor: {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}
         <br />
-        Lager: Radiovägen 19, Tyresö (c/o Mewab)
+        Fryslager: Radiovägen 19, Tyresö (c/o Mewab och Engelholmsglass)
         {/* Kontaktvägar visas när verksamheten verifierat dem – platshållare
             renderas aldrig publikt. */}
         {isVerifiedValue(invoiceConfig.email) && (

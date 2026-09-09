@@ -93,8 +93,8 @@ export default async function LabelPage({
               <span>Sats: ________</span>
             </div>
             <div className="label-row">
-              <span>Tillverkad i Šiauliai, Litauen.</span>
-              <span>Packad i Tyresö, Sverige.</span>
+              <span>Tillverkad och förpackad i Šiauliai, Litauen.</span>
+              <span>Djupfryst direkt efter bakningen.</span>
             </div>
             <div className="label-foot">
               {invoiceConfig.companyName}, {invoiceConfig.address}, {invoiceConfig.postalCode} {invoiceConfig.city}
