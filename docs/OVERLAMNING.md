@@ -105,7 +105,7 @@ Senaste omgångarna, alla live på demon:
 ## 7. Öppna ägarbeslut (blockerar, kan inte lösas i kod)
 
 - Koppla domänen (sist), sätt `SITE_URL`; verifiera Search Console (`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`) och Bing (`NEXT_PUBLIC_BING_SITE_VERIFICATION`), skicka in sitemap. Admin → Sök visar vad som fortfarande är UNKNOWN.
-- Fakturamejl och telefon (finns inte på allabolag). Momsnr SE559141704201 och F-skatt från Bolagsverket. Betalning: Revolut IBAN LT71 3250 0093 1434 0371 / BIC REVOLT21 (inget bankgiro).
+- Telefon (finns inte på allabolag). Mejl: info@ / order@sockerbagaren.se. Momsnr SE559141704201 och F-skatt från Bolagsverket. Betalning: Revolut IBAN LT71 3250 0093 1434 0371 / BIC REVOLT21 (inget bankgiro).
 - Google Business Profile (leveransverksamhet utan besöksadress, kategori Bagerigrossist, fyra kommuner); profil-URL i `NEXT_PUBLIC_SAME_AS`. Bekräfta Antennvägen 2 som enda publika adress (NAP).
 - Årtalet 1957 i hero-texten och sigillet.
 - Automatiskt stopp vid förfallen faktura eller bara flagga (i dag: flagga).

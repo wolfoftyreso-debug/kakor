@@ -169,7 +169,8 @@ describe("faktura-betalning", () => {
     expect(isVerifiedValue(invoiceConfig.vatNumber)).toBe(true);
     expect(invoiceConfig.vatNumber).toBe("SE559141704201");
     expect(isVerifiedValue(invoiceConfig.fSkatt)).toBe(true);
-    expect(isVerifiedValue(invoiceConfig.email)).toBe(false);
+    expect(isVerifiedValue(invoiceConfig.email)).toBe(true);
+    expect(invoiceConfig.email).toBe("info@sockerbagaren.se");
     expect(isVerifiedValue(invoiceConfig.phone)).toBe(false);
     expect(isVerifiedValue(invoiceConfig.bankgiro)).toBe(false);
   });
