@@ -28,8 +28,12 @@ export const metadata: Metadata = {
 };
 
 // Renderas synligt längst ner på sidan + som FAQPage-schema (samma text).
-// Svaren är generell bakkunskap – inga verksamhetslöften.
+// Svaren är generell bakkunskap eller verifierade verksamhetsfakta – inga löften.
 const KAKOR_FAQS = [
+  {
+    q: "Varför inte kakor från kontorsgrossisten?",
+    a: "För att det är förvånansvärt svårt att hitta riktiga småkakor till företagsfikat där – det som finns är ofta fabrikskakor med margarin och långa innehållsförteckningar. Våra bakas i satser på riktigt smör efter recept ur Svenskt konditorlexikon, packas och fryses direkt och plockas från fryslagret i Tyresö till er på områdets leveransdag. Ni handlar per kilo och betalar mot faktura.",
+  },
   {
     q: "Hur förvarar man småkakor bäst?",
     a: "I en tät burk i rumstemperatur, gärna med bakplåtspapper mellan lagren. Undvik kylskåp – kakor tar lätt smak och mister sin konsistens i kyla.",
