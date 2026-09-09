@@ -364,10 +364,16 @@ a.btn-primary:focus {
   cursor: not-allowed;
 }
 .stepper .stepper-value {
-  width: 64px;
+  /* Symmetri: värdet centreras exakt mellan − och +, bredden rymmer "100 paket". */
+  width: 84px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 16px;
+  padding: 0 4px;
 }
 .stepper-sm button {
   width: 32px;
@@ -375,7 +381,8 @@ a.btn-primary:focus {
   font-size: 16px;
 }
 .stepper-sm .stepper-value {
-  width: 44px;
+  width: 56px;
+  height: 32px;
   font-size: 13px;
 }
 
@@ -976,7 +983,7 @@ a.btn-primary:focus {
 }
 /* Bildens wrapper ska täcka hela ytan oavsett hur föräldern fått sin höjd
    (procenthöjd inuti flex-kolumn är opålitlig i Safari). */
-.card-media > span {
+.card-media > span:not(.product-badge) {
   position: absolute !important;
   inset: 0;
 }
@@ -1318,6 +1325,39 @@ header.site-header {
   gap: 16px;
   flex-wrap: wrap;
 }
+.checkout-total-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.checkout-total-label {
+  font-size: 13px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.checkout-total-bar .total-amount {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.checkout-total-bar .btn {
+  flex: 0 0 auto;
+}
+.checkout-total-cta-short {
+  display: none;
+}
+@media (max-width: 480px) {
+  .checkout-total-cta-long {
+    display: none;
+  }
+  .checkout-total-cta-short {
+    display: inline;
+  }
+}
 @media (max-width: 720px) {
   .checkout-total-bar {
     position: sticky;
@@ -1337,7 +1377,21 @@ header.site-header {
     white-space: nowrap;
   }
   .checkout-total-bar .total-amount {
-    font-size: 19px !important;
+    font-size: 20px;
+  }
+}
+@media (max-width: 360px) {
+  .checkout-total-bar {
+    padding-left: 12px;
+    padding-right: 12px;
+    gap: 10px;
+  }
+  .checkout-total-bar .btn {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+  .checkout-total-bar .total-amount {
+    font-size: 18px;
   }
 }
 
@@ -1485,6 +1539,23 @@ header.site-header {
 }
 
 /* Leveransdagar: kompakta kort i två kolumner på mobil (HelloFresh/Walmart-dagchips). */
+/* Områdesval: två kolumner på mobil, en kolumn när postnumren inte får plats. */
+.area-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 28px;
+}
+@media (max-width: 480px) {
+  .area-grid .choice-btn {
+    padding: 12px 8px;
+  }
+}
+@media (max-width: 360px) {
+  .area-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .date-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -2049,20 +2120,32 @@ html.js .reveal.in {
 /* Redigerbart antal i steppern: skriv 15 i stället för 15 tryck. */
 .stepper-input {
   display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   cursor: text;
 }
+/* Fältet är exakt så brett som siffrorna (width sätts per värde i JSX) – då
+   ligger "0 kg" som en enhet mitt i rutan, utan tomrum till vänster. 16 px så
+   att iOS inte zoomar in när fältet fokuseras. */
 .stepper-input input {
-  width: 3.2em;
+  width: 1.4em;
+  min-width: 1ch;
   border: none;
   background: transparent;
   font: inherit;
+  font-size: 16px;
   font-weight: 700;
-  text-align: right;
+  text-align: center;
   padding: 0;
+  margin: 0;
+  color: inherit;
   -moz-appearance: textfield;
   appearance: textfield;
+}
+.stepper-input span {
+  font-size: 15px;
+  line-height: 1;
 }
 .stepper-input input::-webkit-outer-spin-button,
 .stepper-input input::-webkit-inner-spin-button {
@@ -2070,9 +2153,11 @@ html.js .reveal.in {
   margin: 0;
 }
 .stepper-input input:focus-visible {
-  outline: 2px solid var(--text);
-  outline-offset: 2px;
-  border-radius: 3px;
+  outline: none;
+}
+/* Fokusram runt hela värderutan – inte runt siffran, som då tränger ihop sig med enheten. */
+.stepper .stepper-value:focus-within {
+  box-shadow: inset 0 0 0 2px var(--text);
 }
 .stepper-remove {
   background: none;
@@ -2149,3 +2234,18 @@ html.js .reveal.in {
 .poll-mission dd { margin: 0; }
 @media (max-width: 520px) { .poll-mission div { grid-template-columns: 1fr; gap: 2px; } }
 .poll-home { }
+
+/* iOS Safari zoomar in sidan när ett fält med mindre än 16 px text fokuseras. */
+@media (max-width: 768px) {
+  .field input,
+  .field select,
+  .field textarea,
+  .poll-signup-row input,
+  .stepper-input input,
+  input[type="number"],
+  input[type="email"],
+  input[type="text"],
+  input[type="tel"] {
+    font-size: 16px;
+  }
+}

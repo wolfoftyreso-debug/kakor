@@ -867,6 +867,7 @@ export function CheckoutFlow({
                       max={MAX_UNITS}
                       value={qtyFor(p.id)}
                       aria-label={`Antal ${unitLabel(p.unit)} ${p.name}`}
+                      style={{ width: `${Math.max(1, String(qtyFor(p.id)).length)}ch` }}
                       onChange={(e) => {
                         const n = parseInt(e.target.value, 10);
                         setQty(p, Number.isFinite(n) ? Math.min(MAX_UNITS, Math.max(0, n)) : 0);
@@ -901,22 +902,34 @@ export function CheckoutFlow({
           {errors.items && <p className="error-text" style={{ marginTop: 12 }}>{errors.items}</p>}
           {/* Sticky i botten på mobil – nästa steg är alltid ett tumtryck bort. */}
           <div className="checkout-total-bar">
-            <div>
-              <div style={{ fontSize: 13, color: "var(--text-2)" }}>{totalKg === 0 ? "Korgen är tom – välj kakor ovan" : "Totalt inkl. moms"}</div>
-              <div className="total-amount" aria-live="polite" style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 700 }}>
-                {formatWeightKg(totalWeightGrams)} · {formatOre(totals.totalOre)}
-              </div>
+            <div className="checkout-total-text" aria-live="polite" aria-atomic="true">
+              {totalKg === 0 ? (
+                <>
+                  <div className="checkout-total-label" style={{ fontWeight: 700, color: "var(--text)" }}>Korgen är tom</div>
+                  <div className="checkout-total-label">Välj kakor ovan</div>
+                </>
+              ) : (
+                <>
+                  <div className="checkout-total-label">
+                    {formatWeightKg(totalWeightGrams)} · inkl. moms
+                  </div>
+                  <div className="total-amount">{formatOre(totals.totalOre)}</div>
+                </>
+              )}
             </div>
             <button
               type="button"
               className="btn btn-primary btn-lg"
               disabled={totalKg === 0}
+              aria-label="Fortsätt till leverans"
               onClick={() => {
                 track("checkout_started", { items: activeLines.length, total_ore: totals.totalOre });
                 goTo(2);
               }}
             >
-              Fortsätt till leverans
+              {/* Kort etikett på smala skärmar så att summan aldrig kapas; tillgängligt namn är alltid det fulla. */}
+              <span className="checkout-total-cta-long">Fortsätt till leverans</span>
+              <span className="checkout-total-cta-short">Fortsätt</span>
             </button>
           </div>
         </>
@@ -1004,14 +1017,7 @@ export function CheckoutFlow({
           )}
 
           <div id="grp-omrade" style={{ fontWeight: 700, fontSize: 15, margin: "18px 0 12px" }}>Vilket område?</div>
-          <div role="radiogroup" aria-labelledby="grp-omrade"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-              gap: 10,
-              marginBottom: 28,
-            }}
-          >
+          <div role="radiogroup" aria-labelledby="grp-omrade" className="area-grid">
             {areas.map((a) => (
               <button
                 key={a.slug}
@@ -1024,12 +1030,11 @@ export function CheckoutFlow({
                 <div style={{ fontWeight: 700 }}>{a.name}</div>
                 {(a.weekdays.length > 0 || a.postalPrefixes.length > 0) && (
                   <div className="choice-sub" style={{ marginTop: 2 }}>
-                    {[
-                      a.weekdays.length > 0 ? a.weekdays.map((w) => `${capitalizeFirst(weekdayName(w))}ar`).join(", ") : "",
-                      a.postalPrefixes.length > 0 ? `postnr ${a.postalPrefixes.slice(0, 3).map((p) => `${p}…`).join(", ")}` : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
+                    {/* Veckodag och postnummer på var sin rad – samma form på alla fyra kort, ingen slumpmässig radbrytning. */}
+                    {a.weekdays.length > 0 && <span style={{ display: "block" }}>{a.weekdays.map((w) => `${capitalizeFirst(weekdayName(w))}ar`).join(", ")}</span>}
+                    {a.postalPrefixes.length > 0 && (
+                      <span style={{ display: "block" }}>postnr {a.postalPrefixes.slice(0, 3).map((p) => `${p}…`).join(", ")}</span>
+                    )}
                   </div>
                 )}
               </button>
