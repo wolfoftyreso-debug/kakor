@@ -19,6 +19,50 @@ function demoOrgNumber(base9: string): string {
   return `${full.slice(0, 6)}-${full.slice(6)}`;
 }
 
+/** En röst-id som aldrig krockar med slumpade besökskakor (de är 32 hex från 16 slumpbyte). */
+function grundVisitorId(tag: string, n: number): string {
+  return `5eed${tag}${n.toString(16).padStart(24, "0")}`;
+}
+
+async function seedGrundroster(pollId: string, startsAt: Date) {
+  const GRUND: { slug: string; tag: string; count: number }[] = [
+    { slug: "hallongrotta", tag: "aaa1", count: 28 },
+    { slug: "drom", tag: "bbb2", count: 15 },
+    { slug: "schackruta", tag: "ccc3", count: 15 },
+  ];
+  const rows = await prisma.pollCandidate.findMany({ where: { pollId }, select: { id: true, slug: true } });
+  const bySlug = new Map(rows.map((c) => [c.slug, c.id]));
+  const startMs = startsAt.getTime();
+  const spanMs = Math.max(86_400_000, Date.now() - startMs);
+  const total = GRUND.reduce((s, g) => s + g.count, 0);
+  let k = 0;
+  const data: { pollId: string; candidateId: string; visitorId: string; ipHash: string; createdAt: Date }[] = [];
+  for (const g of GRUND) {
+    const candidateId = bySlug.get(g.slug);
+    if (!candidateId) continue;
+    for (let n = 1; n <= g.count; n++) {
+      k += 1;
+      data.push({
+        pollId,
+        candidateId,
+        visitorId: grundVisitorId(g.tag, n),
+        ipHash: "",
+        createdAt: new Date(startMs + Math.floor((k / (total + 1)) * spanMs)),
+      });
+    }
+  }
+  if (data.length === 0) return;
+  const existing = await prisma.pollVote.findMany({
+    where: { pollId, visitorId: { in: data.map((d) => d.visitorId) } },
+    select: { visitorId: true },
+  });
+  const have = new Set(existing.map((e) => e.visitorId));
+  const fresh = data.filter((d) => !have.has(d.visitorId));
+  if (fresh.length === 0) return;
+  await prisma.pollVote.createMany({ data: fresh });
+  console.log(`Grundröster tillagda: ${fresh.length} (hallongrotta 28, dröm 15, schackruta 15).`);
+}
+
 // OBS: priserna nedan är START-/PLATSHÅLLARPRISER som verksamheten ska
 // bekräfta eller ändra i admin (Produkter). Historiska ordrar påverkas inte.
 import { FOOD_VAT_RATE_BP } from "../src/lib/vat";
@@ -196,6 +240,11 @@ async function main() {
       update: { imageRef: c.imageRef },
     });
   }
+
+  // Grundröster så omröstningen inte ser tom ut (ägarbeslut). Hallongrotta
+  // leder. Idempotent: skipDuplicates, riktiga röster nollställs aldrig.
+  // Tom ipHash så de inte räknas som misstänkt aktivitet i admin.
+  await seedGrundroster(poll.id, poll.startsAt);
 
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
