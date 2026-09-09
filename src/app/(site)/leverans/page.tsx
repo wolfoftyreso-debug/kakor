@@ -46,7 +46,7 @@ const LEVERANS_FAQS = [
   },
   {
     q: "Vem levererar?",
-    a: "Vi packar beställningarna på vårt lager i Tyresö och levererar dem antingen själva eller genom ett anlitat bud. Leveransen sker under dagen på områdets leveransdag.",
+    a: "Vi plockar beställningarna ur vårt fryslager i Tyresö och levererar dem antingen själva eller genom ett anlitat bud. Leveransen sker under dagen på områdets leveransdag.",
   },
   {
     q: "Vad kostar leveransen?",
