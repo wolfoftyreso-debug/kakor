@@ -103,7 +103,7 @@ Senaste omgångarna, alla live på demon:
 - Årtalet 1957 i hero-texten och sigillet.
 - Automatiskt stopp vid förfallen faktura eller bara flagga (i dag: flagga).
 - Vad händer om ingen kan ta emot leveransen (FAQ saknas tills regeln finns).
-- Foton: miljöbilder enligt shot list, kandidatfoton till omröstningen.
+- Foton: miljöbilder enligt shot list. Kandidatfoton till omröstningen är på plats (hallongrotta, dröm, schackruta).
 - Antal kakor per kilo per sort (admin-fält, styr mängdhjälpen; bara ifyllt lokalt i testdata).
 - Stavningen "Engelholmsglass" på /om.
 - Recept publiceras inte (rekommendation); engelsk sida (egen omgång); Peppol/PDF-faktura erbjuds inte (står i villkor).
