@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/PageHeader";
 export const metadata: Metadata = {
   title: { absolute: "Om Sockerbagaren – det började med en gammal bok" },
   description:
-    "Ett litet företag byggt på en enkel idé: riktiga kakor till företagsfikat. Verkstaden, den ärvda boken, konditoriet som bakar för hand, fakturan som enda betalsätt och kunderna som väljer nästa recept. Tiffany Svensson berättar.",
+    "Riktiga kakor till företagsfikat: verkstaden, den ärvda boken, konditoriet som bakar för hand och fakturan som enda betalsätt. Tiffany Svensson berättar.",
   alternates: { canonical: "/om" },
   ...sharePreview({
     title: "Om Sockerbagaren – det började med en gammal bok",
