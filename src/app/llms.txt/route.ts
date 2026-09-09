@@ -32,7 +32,7 @@ export function GET() {
 - Om företaget och grundaren: ${base}/om
 
 ## Guider
-- Fika till jobbet, mängd per person: ${base}/fika-till-jobbet
+- Fika till jobbet och kontorsfika, mängd per person: ${base}/fika-till-jobbet
 - Julfika på jobbet: ${base}/julfika
 - Folkets nästa småkaka – kunderna röstar fram nästa recept: ${base}/folkets-kaka
 

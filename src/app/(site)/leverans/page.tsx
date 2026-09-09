@@ -62,7 +62,7 @@ export default async function LeveransPage() {
       data={graph(
         webPageNode({
           path: "/leverans",
-          title: "Fikaleverans i södra Stockholm",
+          title: "Fikaleverans till företag i södra Stockholm",
           description: metadata.description ?? undefined,
           breadcrumbs: CRUMBS,
         }),
@@ -74,7 +74,7 @@ export default async function LeveransPage() {
     <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
       <PageHeader
         eyebrow="Leverans"
-        title="Fikaleverans i södra Stockholm"
+        title="Fikaleverans till företag i södra Stockholm"
         lede="Fasta leveransdagar per område. Leveransen kommer under dagen – vi kan inte lova exakt klockslag, så någon behöver finnas på plats för att ta emot den: reception, personalrum eller lastkaj."
         facts={[
           { label: "Områden", value: "Tyresö, Nacka, Haninge, Huddinge" },
@@ -85,7 +85,7 @@ export default async function LeveransPage() {
       />
       <figure>
         <div className="media" style={{ minHeight: 320 }}>
-          <ImageSlot label="Kartong med kakor lastas för leverans" src="/images/leverans.jpg" />
+          <ImageSlot label="Kartong med kakor lastas för leverans" src="/images/leverans.jpg" priority />
         </div>
       </figure>
 

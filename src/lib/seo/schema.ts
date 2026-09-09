@@ -23,6 +23,9 @@ type JsonLdNode = Record<string, unknown>;
 
 const SITE = () => siteConfig.url.replace(/\/$/, "");
 
+/** Publika leveranskommuner – samma lista som Organization.areaServed och Offer.shippingDestination. */
+export const DELIVERY_CITIES = ["Tyresö", "Nacka", "Haninge", "Huddinge"] as const;
+
 export const ids = {
   organization: () => `${SITE()}/#organization`,
   website: () => `${SITE()}/#website`,
@@ -59,7 +62,7 @@ export function organizationNode(): JsonLdNode {
       addressLocality: invoiceConfig.city,
       addressCountry: "SE",
     },
-    areaServed: ["Tyresö", "Nacka", "Haninge", "Huddinge"].map((name) => ({ "@type": "City", name })),
+    areaServed: DELIVERY_CITIES.map((name) => ({ "@type": "City", name })),
     // Kopplingar till profiler (Google Business Profile, hitta.se, LinkedIn …)
     // sätts i NEXT_PUBLIC_SAME_AS som kommaseparerad lista när de finns.
     ...(SAME_AS.length > 0 ? { sameAs: SAME_AS } : {}),
@@ -147,6 +150,7 @@ const PRODUCT_IMAGE_VARIANTS: Record<string, string[]> = {
   "/images/kolasnittar.jpg": ["/images/kolasnittar-square.jpg", "/images/kolasnittar.jpg", "/images/kolasnittar-og.jpg"],
   "/images/mandelkubb.jpg": ["/images/mandelkubb-square.jpg", "/images/mandelkubb.jpg", "/images/mandelkubb-og.jpg"],
   "/images/chokladsnittar.jpg": ["/images/chokladsnittar-square.jpg", "/images/chokladsnittar.jpg", "/images/chokladsnittar-og.jpg"],
+  "/images/prova-pa-paket.jpg": ["/images/prova-pa-paket-square.jpg", "/images/prova-pa-paket.jpg", "/images/prova-pa-paket-og.jpg"],
 };
 function productImages(imageRef: string): string[] {
   const variants = PRODUCT_IMAGE_VARIANTS[imageRef] ?? [imageRef];
@@ -194,7 +198,12 @@ export function productNode(product: ProductCardData): JsonLdNode {
       shippingDetails: {
         "@type": "OfferShippingDetails",
         shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "SEK" },
-        shippingDestination: { "@type": "DefinedRegion", addressCountry: "SE" },
+        // Inte hela Sverige – bara de fyra kommunerna vi faktiskt kör till.
+        shippingDestination: DELIVERY_CITIES.map((name) => ({
+          "@type": "DefinedRegion",
+          addressCountry: "SE",
+          addressLocality: name,
+        })),
       },
     },
   };

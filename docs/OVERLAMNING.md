@@ -93,7 +93,8 @@ Senaste omgångarna, alla live på demon:
 3. Folkets nästa småkaka, hela funktionen.
 4. Berättelsen på /om i Tiffanys röst (två texter sammanvävda), ursprung Šiauliai på etikett, produktsida, FAQ; leveranskedjan korrekt överallt.
 5. Mobil symmetri: stepper centrerad, kassabar utan kapning, etikett som täckte produktbilden lagad, köpruta, områdeskort.
-6. SEO-revision fem: crawl, sökordsuniversum, intent-karta; områdessidorna omskrivna (68 % → 30 % delad text), leveranssidan utbyggd, H1/brödsmulor på /prenumeration, kortare beskrivningar, bildstorlekar, `foundingDate`, `/llms.txt`, `npm run seo:crawl` i CI. Rapport med backlog och 30/60/90-plan finns som artefakt (länk i chatten).
+6. SEO-revision fem: crawl, sökordsuniversum, intent-karta; områdessidorna omskrivna (68 % → 30 % delad text), leveranssidan utbyggd, H1/brödsmulor på /prenumeration, kortare beskrivningar, bildstorlekar, `foundingDate`, `/llms.txt`, `npm run seo:crawl` i CI.
+7. SEO-revision sex: fraktmål i Product-schema = fyra kommuner (inte hela Sverige), Twitter-kort på startsidan, internlänk till /folkets-kaka, kontorsfika på /fika-till-jobbet, FAQPage på /om och /folkets-kaka, square/OG för prova-på-paketet. Rapport: `docs/SEO-REVISION-6.md`.
 
 ## 7. Öppna ägarbeslut (blockerar, kan inte lösas i kod)
 
@@ -111,7 +112,7 @@ Senaste omgångarna, alla live på demon:
 ## 8. Backlog i kod
 
 - P2: ISR (`revalidate` 300 s) på innehållssidor när produktionsbygget når databasen – allt renderas i dag per request (`force-dynamic` i `src/app/(site)/layout.tsx`).
-- P2: FAQ "Varför inte kakor från kontorsgrossisten?" på /kakor; FAQ om ej mottagen leverans på /leverans när regeln är beslutad.
+- P2: FAQ om ej mottagen leverans på /leverans när regeln är beslutad.
 - P2: uppdatera /julfika i oktober med årets beställningsstopp (data ur admin).
 - P3: byt Plex Mono-etiketter mot Public Sans (–25 kB); engelsk landningssida med hreflang.
 - Semrush API-enheter är slut; positionsspårning när domänen är live.
@@ -120,3 +121,4 @@ Senaste omgångarna, alla live på demon:
 
 - Kundgranskning (alla omgångar, verifiering): https://claude.ai/code/artifact/98f9b16d-2f5c-4426-85ae-eb055cbfbf50
 - SEO-revision fem: https://claude.ai/code/artifact/c1c97d75-03f5-40e0-b413-6bf97e819e80
+- SEO-revision sex: `docs/SEO-REVISION-6.md`
