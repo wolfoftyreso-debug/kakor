@@ -62,6 +62,10 @@ const INGREDIENTS: { name: string; src?: string }[] = [
 
 const FAQS = [
   {
+    q: "Vad är Sockerbagaren?",
+    a: "Sockerbagaren säljer gammaldags svenska småkakor på riktigt smör till företag i Tyresö, Nacka, Haninge och Huddinge. Kakorna säljs per kilo eller som prova-på-paket, levereras på fasta dagar till bemannade företagsadresser och betalas mot faktura.",
+  },
+  {
     q: "Hur betalar vi?",
     a: `All betalning sker mot faktura. Fakturan skapas när ni skickar beställningen och mejlas direkt till er faktura-e-post. Förfallodag ${invoiceConfig.paymentTermsDays} dagar efter leveransen – ni betalar aldrig före leverans.`,
   },
@@ -387,6 +391,12 @@ export default async function HomePage() {
             </details>
           ))}
         </div>
+        <p style={{ marginTop: 16, fontSize: 14.5 }}>
+          Fler svar om leverans, allergener och prenumeration:{" "}
+          <Link href="/vanliga-fragor" style={{ fontWeight: 600 }}>
+            Vanliga frågor
+          </Link>
+        </p>
       </section>
 
       {/* CTA */}

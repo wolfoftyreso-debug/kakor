@@ -21,8 +21,9 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
   kolasnittar: {
     aka: "kallas även kolakakor",
     titleAka: "kolakakor",
-    heading: "Om kolasnittar",
+    heading: "Köpa kolasnittar till företaget",
     paragraphs: [
+      "Kolasnittar säljs per kilo till företag i Tyresö, Nacka, Haninge och Huddinge – inte i små konsumentburkar. Ni beställer mot faktura, får leverans på områdets fasta dag och kan blanda med mandelkubb och chokladsnittar i samma order. Butikens kolasnittar bakas ofta på margarin; våra bakas på riktigt smör efter recept ur Svenskt konditorlexikon.",
       "Kolasnittar kallas ofta även kolakakor eller kolakex – en av de mest älskade klassikerna i svenska kakburkar. Den karaktäristiska sega kolasmaken kommer från sirap och smör som karamelliseras i ugnen, och snittarna skärs traditionellt diagonalt medan kakan fortfarande är varm.",
       "Sega kolasnittar får sin konsistens av just sirapen: ju mer sirap i förhållande till mjöl, desto segare kärna, medan kanterna blir spröda. En liten mängd salt lyfter kolasmaken – därför bakas våra kolasnittar med keltiskt salt i degen.",
       "Kolasnittar hör till familjen snittkakor: degen rullas till längder, plattas till, gräddas och skärs i sneda bitar. Samma teknik används för chokladsnittar, vilket gör de två sorterna till ett naturligt par på fikabordet.",
@@ -54,13 +55,22 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
         q: "Kan vi beställa kolasnittar till företaget?",
         a: "Ja – kolasnittar säljs per kilo till företag i Tyresö, Nacka, Haninge och Huddinge, med leverans på områdets leveransdag och betalning mot faktura. Blanda gärna med mandelkubb och chokladsnittar i samma beställning.",
       },
+      {
+        q: "Var kan man köpa kolasnittar till jobbet?",
+        a: "Här. Ni köper kolasnittar per kilo till arbetsplatsen – inte i livsmedelsbutikens 300-gramsburk. Leveransen går till en bemannad företagsadress i Tyresö, Nacka, Haninge eller Huddinge. Behöver ni samma mängd varje vecka: starta en fikaprenumeration.",
+      },
+      {
+        q: "Bakas kolasnittarna på smör eller margarin?",
+        a: "På smör. Vi använder aldrig margarin. Kolasnittar i dagligvaruhandeln bakas ofta på margarin med palmolja; skillnaden syns i ingrediensförteckningen på produktsidan.",
+      },
     ],
   },
   mandelkubb: {
     aka: "även mandelkubbar",
     titleAka: "mandelkubbar",
-    heading: "Om mandelkubb",
+    heading: "Köpa mandelkubb till företaget",
     paragraphs: [
+      "Mandelkubb säljs per kilo till företag i Tyresö, Nacka, Haninge och Huddinge. Ni beställer mot faktura och får leverans till en bemannad företagsadress på områdets leveransdag. Butikens mandelkubb bakas ofta på vegetabilisk olja; våra bakas på riktigt smör och mandel.",
       "Mandelkubb – eller mandelkubbar i plural – är en rejäl svensk klassiker: en mör, kompakt kaka smaksatt med mandel och ofta en ton av bittermandel. Den har en naturlig plats bredvid en kopp svart kaffe och är en av de kaksorter som oftast förknippas med klassiskt svenskt kondis.",
       "Till skillnad från de tunna snittkakorna är mandelkubben en formad kaka med ordentlig tuggmotstånd – mer kaka per bit och mer mättande. Det gör den till ett bra val när fikat ska räcka länge, till exempel i personalrummet eller på ett längre möte.",
       "Mandelkubb och mandelkakor förväxlas ibland. Mandelkakor är ett samlingsnamn för alla småkakor med mandel, medan mandelkubben är just den höga, kubbformade kakan med ägg och mandel i degen.",
@@ -79,12 +89,21 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
         q: "Hur länge håller mandelkubb?",
         a: "Flera veckor i tät burk i rumstemperatur och flera månader i frysen. Tina i rumstemperatur före serveringen.",
       },
+      {
+        q: "Var kan man köpa mandelkubb till jobbet?",
+        a: "Här, per kilo till företaget. Leveransen går till Tyresö, Nacka, Haninge eller Huddinge mot faktura. Mandelkubb är den tyngre kakan i sortimentet – bra när fikat ska räcka länge i personalrummet.",
+      },
+      {
+        q: "Bakas mandelkubben på smör?",
+        a: "Ja, på riktigt smör och mandel. Mandelkubb i dagligvaruhandeln bakas ofta på vegetabilisk olja; fullständig ingrediensförteckning står på den här sidan.",
+      },
     ],
   },
   chokladsnittar: {
     aka: "chokladiga snittkakor",
-    heading: "Om chokladsnittar",
+    heading: "Köpa chokladsnittar till företaget",
     paragraphs: [
+      "Chokladsnittar säljs per kilo till företag i Tyresö, Nacka, Haninge och Huddinge, mot faktura. Ni blandar fritt med kolasnittar och mandelkubb i samma beställning. Butikens chokladsnittar bakas ofta på margarin; våra bakas på smör, kakao och choklad.",
       "Chokladsnittar är kolasnittarnas chokladiga syskon – en skuren småkaka på mördeg med kakao, ofta toppad med pärlsocker. Snittkakor är en egen familj i det svenska kakbaket: degen kavlas i längder, grädds och skärs i diagonala bitar.",
       "Våra chokladsnittar bakas med både mörk choklad och kakao, vilket ger en djupare chokladkaraktär än snittar med enbart kakao. Ljus sirap ger den runda sötman och en seg kärna – samma princip som i kolasnittarna, men med chokladen i fokus.",
       "Chokladsnittar med sirap är den klassiska varianten: den ljusa sirapen ger seg kärna och rund sötma, precis som i kolasnittarna. Det är så våra bakas – snittkakor på mördeg med choklad, kakao och ljus sirap.",
@@ -103,6 +122,10 @@ export const PRODUCT_KNOWLEDGE: Record<string, ProductKnowledge> = {
       {
         q: "Kan vi beställa chokladsnittar till kontoret?",
         a: "Ja – chokladsnittar säljs per kilo till företag i Tyresö, Nacka, Haninge och Huddinge, med leverans på områdets leveransdag och betalning mot faktura.",
+      },
+      {
+        q: "Var kan man köpa chokladsnittar till jobbet?",
+        a: "Här, per kilo till företaget. Leveransen går till en bemannad adress i Tyresö, Nacka, Haninge eller Huddinge. Butikens chokladsnittar bakas ofta på margarin; våra bakas på smör.",
       },
     ],
   },

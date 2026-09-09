@@ -141,6 +141,12 @@ export default async function ProductPage({ params }: Props) {
               <p className="lede" style={{ margin: "12px 0 0" }}>
                 {product.description}
               </p>
+              {product.unit === "kg" && (
+                <p style={{ margin: "10px 0 0", fontSize: 15, color: "var(--brown-2)", lineHeight: 1.55 }}>
+                  Beställ {product.name.toLowerCase()} per kilo till företaget i Tyresö, Nacka, Haninge
+                  och Huddinge – mot faktura, på områdets leveransdag.
+                </p>
+              )}
             </div>
             <ProductBuyBox product={cardData} deliveryDays={deliveryDays} />
             <dl className="spec" aria-label="Snabbfakta">

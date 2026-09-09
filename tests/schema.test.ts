@@ -9,6 +9,7 @@ import {
   organizationNode,
   productListNode,
   productNode,
+  serviceNode,
   webPageNode,
   websiteNode,
 } from "@/lib/seo/schema";
@@ -56,6 +57,7 @@ describe("schema-motorn", () => {
     // Grundat 2025 är verksamhetens egen uppgift (berättelsen på /om) – inget mer precist än året.
     expect(org.foundingDate).toBe("2025");
     expect(org).not.toHaveProperty("servesCuisine");
+    expect(org.makesOffer).toEqual({ "@id": ids.service() });
     const logo = org.logo as Record<string, unknown>;
     expect(logo["@type"]).toBe("ImageObject");
     expect(logo.width).toBe(512);
@@ -151,5 +153,17 @@ describe("schema-motorn", () => {
     const g = graph(organizationNode(), null, websiteNode(), undefined);
     expect(g["@context"]).toBe("https://schema.org");
     expect((g["@graph"] as unknown[]).length).toBe(2);
+  });
+
+  it("företagsfika är en Service kopplad till organisationen – inte LocalBusiness", () => {
+    const service = serviceNode();
+    expect(service["@type"]).toBe("Service");
+    expect(service["@id"]).toBe(ids.service());
+    expect(service.provider).toEqual({ "@id": ids.organization() });
+    expect(service).not.toHaveProperty("aggregateRating");
+    expect(service).not.toHaveProperty("review");
+    const cities = (service.areaServed as { name: string }[]).map((c) => c.name);
+    expect(cities).toEqual([...DELIVERY_CITIES]);
+    expect(webPageNode({ path: "/om", title: "Om", pageType: "AboutPage" })["@type"]).toBe("AboutPage");
   });
 });

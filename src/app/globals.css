@@ -628,6 +628,7 @@ a.btn-primary:focus {
 .pill-ok { background: #3f6b3a; color: #fff; }
 .pill-neutral { background: var(--stepper-bg); color: var(--text-2); }
 .pill-warn { background: var(--red); color: #fff; }
+.pill-unknown { background: var(--stepper-bg); color: var(--text-2); border: 1px solid var(--input-border); }
 .pill-outline { border: 1px solid var(--input-border); color: var(--text-2); background: transparent; }
 
 /* ---------- Stepper-indikator (checkout): se Mobbin-blocket längst ner ---------- */

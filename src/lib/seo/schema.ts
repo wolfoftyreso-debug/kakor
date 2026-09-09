@@ -33,6 +33,7 @@ export const ids = {
   breadcrumbs: (path: string) => `${SITE()}${path}#breadcrumbs`,
   product: (slug: string) => `${SITE()}/#product-${slug}`,
   returnPolicy: () => `${SITE()}/#return-policy`,
+  service: () => `${SITE()}/#foretagsfika`,
 };
 
 /**
@@ -94,6 +95,7 @@ export function organizationNode(): JsonLdNode {
     // Grundaren enligt berättelsen på /om (verksamhetens uppgift).
     founder: { "@type": "Person", name: "Tiffany Svensson" },
     foundingDate: "2025",
+    makesOffer: { "@id": ids.service() },
   };
 }
 
@@ -120,6 +122,26 @@ export function merchantReturnPolicyNode(): JsonLdNode {
     returnPolicyCountry: "SE",
     returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
     merchantReturnLink: `${SITE()}/villkor`,
+  };
+}
+
+/**
+ * Företagsfika som tjänst – synlig på startsidan, guiden och områdessidorna.
+ * Inte LocalBusiness: ingen butik eller besökslokal att deklarera.
+ */
+export function serviceNode(): JsonLdNode {
+  return {
+    "@type": "Service",
+    "@id": ids.service(),
+    name: "Företagsfika",
+    alternateName: ["Kontorsfika", "Fika till jobbet", "Kakleverans till företag"],
+    serviceType: "Företagsfika",
+    description:
+      "Gammaldags svenska småkakor på riktigt smör, levererade till företag i Tyresö, Nacka, Haninge och Huddinge. Per kilo eller paket, fasta leveransdagar, betalning mot faktura.",
+    url: `${SITE()}/fika-till-jobbet`,
+    provider: { "@id": ids.organization() },
+    areaServed: DELIVERY_CITIES.map((name) => ({ "@type": "City", name })),
+    audience: { "@type": "BusinessAudience", audienceType: "Företag" },
   };
 }
 
@@ -150,7 +172,7 @@ export interface WebPageOptions {
   /** @id till sidans huvudentitet, om en sådan finns. */
   mainEntityId?: string;
   /** T.ex. "CollectionPage" – annars WebPage. */
-  pageType?: "WebPage" | "CollectionPage";
+  pageType?: "WebPage" | "CollectionPage" | "AboutPage";
   dateModified?: string; // ISO-datum, endast vid verklig innehållsändring
 }
 

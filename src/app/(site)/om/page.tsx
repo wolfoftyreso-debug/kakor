@@ -47,6 +47,7 @@ export default function OmPage() {
       description={String(metadata.description)}
       dateModified={CONTENT_DATES["/om"].updated}
       faqs={OM_FAQS}
+      pageType="AboutPage"
     />
     <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
       <PageHeader

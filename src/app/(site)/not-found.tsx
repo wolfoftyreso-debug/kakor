@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { LogoSigill } from "@/components/Logo";
+
+export const metadata: Metadata = { robots: { index: false, follow: true } };
 
 export default function NotFound() {
   return (

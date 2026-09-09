@@ -6,7 +6,7 @@ import { sharePreview } from "@/lib/seo/meta";
 import { getActiveProducts, getDeliveryDaysLabel } from "@/lib/products";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { articleNode, breadcrumbNode, faqNode, graph, webPageNode } from "@/lib/seo/schema";
+import { articleNode, breadcrumbNode, faqNode, graph, ids, webPageNode } from "@/lib/seo/schema";
 import { formatOre } from "@/lib/money";
 import { priceSuffix } from "@/lib/units";
 import { PageHeader } from "@/components/PageHeader";
@@ -67,6 +67,10 @@ const FAQS = [
     a: "Leveransen kommer på ert områdes fasta leveransdag. Kassan visar nästa tillgängliga leveransdag för Tyresö, Nacka, Haninge och Huddinge direkt när ni väljer datum.",
   },
   {
+    q: "Kan vi beställa fika till personalen?",
+    a: "Ja. Det är precis vad tjänsten är till för: småkakor per kilo till arbetsplatsen, levererade till en bemannad företagsadress och betalda mot faktura. Räkna 3–5 kakor per person, eller starta en fikaprenumeration om fikat ska komma av sig självt.",
+  },
+  {
     q: "Är fika på jobbet en skattefri förmån?",
     a: "Ja, enklare förtäring som kaffe, te och kakor räknas enligt Skatteverket som en skattefri personalvårdsförmån när den erbjuds hela personalen och intas på arbetsplatsen. För arbetsgivaren är kostnaden avdragsgill. Kontrollera alltid aktuella regler hos Skatteverket eller er redovisningskonsult.",
   },
@@ -92,7 +96,7 @@ export default async function FikaTillJobbetPage() {
     <>
       <JsonLd
         data={graph(
-          webPageNode({ path: "/fika-till-jobbet", title: TITLE, description: DESCRIPTION, breadcrumbs: CRUMBS, dateModified: UPDATED }),
+          webPageNode({ path: "/fika-till-jobbet", title: TITLE, description: DESCRIPTION, breadcrumbs: CRUMBS, dateModified: UPDATED, mainEntityId: ids.service() }),
           articleNode({ path: "/fika-till-jobbet", headline: "Fika till jobbet – så ordnar ni det utan krångel", description: DESCRIPTION, image: "/images/fika.jpg", datePublished: PUBLISHED, dateModified: UPDATED }),
           breadcrumbNode("/fika-till-jobbet", CRUMBS),
           faqNode("/fika-till-jobbet", FAQS)
@@ -190,6 +194,15 @@ export default async function FikaTillJobbetPage() {
           börjar sina.
         </p>
 
+        <h2>Fika till personalen</h2>
+        <p>
+          Fika till personalen är samma sak som kontorsfika, fast formulerat från arbetsgivarens
+          håll: kakor till dem som faktiskt fikar. Beställ per kilo till en bemannad adress, sätt
+          fram en burk vid kaffet och fyll på när den börjar sina. Vill ni slippa komma ihåg det
+          varje vecka gör <Link href="/prenumeration">fikaprenumerationen</Link> om samma
+          beställning automatiskt – till Tyresö, Nacka, Haninge eller Huddinge, mot faktura.
+        </p>
+
         <h2>Bjuda på fika på jobbet</h2>
         <p>
           Födelsedag, sista dagen på jobbet, avtackning eller bara ett tack till teamet: att bjuda
@@ -250,6 +263,10 @@ export default async function FikaTillJobbetPage() {
         </div>
 
         <FaqList heading="Vanliga frågor om fika på jobbet" items={FAQS} />
+        <p>
+          Fler korta svar om faktura, allergener och prenumeration finns under{" "}
+          <Link href="/vanliga-fragor">vanliga frågor</Link>.
+        </p>
       </article>
     </>
   );

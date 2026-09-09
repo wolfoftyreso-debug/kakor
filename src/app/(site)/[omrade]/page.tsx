@@ -157,11 +157,12 @@ export default async function AreaPage({ params }: Props) {
 
       <section className="container-medium" style={{ padding: "56px 24px" }}>
         <h2 className="h-sub" style={{ marginBottom: 12 }}>
-          Kakorna vi levererar i {content.name}
+          Kakor till kontoret i {content.name}
         </h2>
         <p style={{ margin: "0 0 18px", color: "var(--brown-2)", maxWidth: "60ch", lineHeight: 1.6 }}>
-          Samma sortiment till alla arbetsplatser i {content.name} – sorterna blandas fritt i en och samma beställning.
-          Hela beskrivningen, ingredienserna och priset finns på varje sorts egen sida.
+          Företagsfika i {content.name} är samma sortiment som i övriga kommuner – kolasnittar, mandelkubb och
+          chokladsnittar per kilo. Sorterna blandas fritt i en och samma beställning. Pris, ingredienser och
+          allergener står på varje sorts sida.
         </p>
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(205px, 1fr))", gap: 12 }}>
           {products.map((p) => (
@@ -171,7 +172,7 @@ export default async function AreaPage({ params }: Props) {
               </span>
               <span>
                 <Link href={`/kakor/${p.slug}`} style={{ fontFamily: "var(--font-serif)", fontSize: 17, fontWeight: 700, color: "var(--text)" }}>
-                  {p.name}
+                  {p.name} till {content.name}
                 </Link>
                 {p.badge && <span className="pill pill-new" style={{ marginLeft: 8 }}>{p.badge}</span>}
               </span>

@@ -18,12 +18,12 @@ import { CONTENT_DATES } from "@/lib/seo/content-dates";
 export const metadata: Metadata = {
   title: "Fikaprenumeration till jobbet, varje vecka",
   description:
-    "Fikaprenumeration för företag: kolasnittar, mandelkubb och chokladsnittar varje, varannan eller var fjärde vecka. Faktura per leverans, ingen bindningstid.",
+    "Fikaprenumeration för företag: veckoleverans av kolasnittar, mandelkubb och chokladsnittar. Varje, varannan eller var fjärde vecka. Faktura, ingen bindning.",
   alternates: { canonical: "/prenumeration" },
   ...sharePreview({
     title: "Fikaprenumeration till jobbet, varje vecka",
     description:
-      "Fikaprenumeration för företag: kolasnittar, mandelkubb och chokladsnittar varje, varannan eller var fjärde vecka. Faktura per leverans, ingen bindningstid.",
+      "Fikaprenumeration för företag: veckoleverans av kolasnittar, mandelkubb och chokladsnittar. Varje, varannan eller var fjärde vecka. Faktura, ingen bindning.",
     path: "/prenumeration",
     image: { url: "/images/prenumeration.jpg", alt: "Fat med chokladsnittar till fikaprenumerationen" },
   }),
@@ -47,20 +47,40 @@ const STEPS = [
 // Semrush (se): "fredagsfika" 320, "fredagsfika på jobbet" 110, "fika på jobbet" 210.
 const PREN_FAQS = [
   {
+    q: "Vad är en fikaprenumeration för företag?",
+    a: "En återkommande beställning av småkakor till arbetsplatsen. Ni väljer sorter, mängd och intervall – varje, varannan eller var fjärde vecka – och kakorna kommer på områdets leveransdag utan att någon behöver lägga en ny order. Ingen bindningstid.",
+  },
+  {
     q: "Hur ofta kan vi få leverans?",
     a: "Varje vecka, varannan vecka eller var fjärde vecka, på ert områdes leveransdag. Ni väljer första leveransdag i kassan.",
   },
   {
     q: "Finns det bindningstid?",
-    a: "Nej. Prenumerationen löper tills vidare och ni pausar, ändrar eller avslutar när ni vill genom att svara på bekräftelsemejlet. En ändring som meddelas efter att nästa order redan skapats gäller från leveransen därpå.",
+    a: "Nej. Prenumerationen löper tills vidare och ni pausar, ändrar eller avslutar när ni vill. Ingen minimitid.",
+  },
+  {
+    q: "Kan vi pausa en prenumeration?",
+    a: "Ja. Använd den personliga länken i bekräftelsemejlet, eller svara på mejlet. En ändring efter att nästa order redan skapats gäller från leveransen därpå.",
   },
   {
     q: "Hur faktureras en fikaprenumeration?",
     a: "Inför varje leverans skapas en vanlig order med faktura som mejlas till er faktura-e-post. Förfallodagen räknas från leveransdagen. Inga kort, inga konton.",
   },
   {
+    q: "Vilken dag kommer leveransen?",
+    a: "På ert områdes fasta leveransdag, under dagen till en bemannad företagsadress. Kassan visar nästa lediga dag för Tyresö, Nacka, Haninge och Huddinge.",
+  },
+  {
+    q: "Hur långt i förväg behöver vi beställa?",
+    a: "Så snart datumet visas i kassan går det att boka som första leverans. Därefter sköter prenumerationen sig själv.",
+  },
+  {
     q: "Passar prenumerationen för fredagsfika?",
     a: "Ja – det är ett vanligt upplägg: en fast mängd varje eller varannan vecka så att fredagsfikat alltid finns på plats. Beställ gärna prova-på-paketet först för att se hur mycket som går åt hos er.",
+  },
+  {
+    q: "Vad är skillnaden mot att beställa fika från en catering?",
+    a: "Catering är oftast ett tillfälle: bullar, bakelser och leverans samma dag i innerstan. En fikaprenumeration hos oss är veckoleverans av samma småkakor per kilo, till Tyresö, Nacka, Haninge och Huddinge, mot faktura. Ingen ny meny att välja, ingen bindningstid.",
   },
 ];
 
@@ -123,9 +143,26 @@ export default async function PrenumerationPage() {
           <strong>Betalning mot faktura, precis som vanligt.</strong> Ingen kortdebitering och inget
           konto – varje leverans faktureras för sig, till den faktura-e-post ni anger.
         </div>
+        <h2 className="h-section" style={{ marginTop: 48, marginBottom: 16 }}>
+          Veckoleverans av fika – inte catering varje gång
+        </h2>
+        <p style={{ fontSize: "15px", lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch" }}>
+          En fikaprenumeration för företag är återkommande kakor till kontoret: samma mängd kolasnittar,
+          mandelkubb eller chokladsnittar varje, varannan eller var fjärde vecka. Det är inte en
+          cateringplattform med ny meny varje gång och inte ett kontorsabonnemang på kaffeautomater.
+          Ni väljer kakorna en gång, vi levererar på områdets fasta dag i Tyresö, Nacka, Haninge eller
+          Huddinge, och fakturan kommer per leverans. Ingen bindningstid.
+        </p>
         <FaqList heading="Vanliga frågor om fikaprenumerationen" items={PREN_FAQS} />
         <p style={{ marginTop: 20, fontSize: 14.5 }}>
-          Hur mycket ska ni beställa? <Link href="/fika-till-jobbet" style={{ fontWeight: 600 }}>Guide: fika till jobbet</Link>
+          Hur mycket ska ni beställa?{" "}
+          <Link href="/fika-till-jobbet" style={{ fontWeight: 600 }}>
+            Guide: fika till jobbet
+          </Link>
+          {" · "}
+          <Link href="/vanliga-fragor" style={{ fontWeight: 600 }}>
+            Alla vanliga frågor
+          </Link>
         </p>
         <div style={{ marginTop: 32, textAlign: "center" }}>
           <Link href="/bestall?typ=aterkommande" className="btn btn-primary btn-lg">
