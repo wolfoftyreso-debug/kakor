@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { LogoSigill } from "@/components/Logo";
+
+export const metadata: Metadata = { robots: { index: false, follow: true } };
 
 // Rot-404: fångar okända sökvägar utanför (site)-gruppen (t.ex. under
 // /admin). (site) har sin egen variant med sajtens header/footer.

@@ -10,7 +10,7 @@ import { getActiveProducts } from "@/lib/products";
 import { CONTENT_DATES } from "@/lib/seo/content-dates";
 
 const DESCRIPTION =
-  "Hallongrotta, dröm eller schackruta? Ni röstar, vi bakar vinnaren efter receptet i Svenskt konditorlexikon. Sortimentet växer ett klassiskt recept i taget.";
+  "Hallongrotta, dröm eller schackruta? Ni röstar, vinnaren bakas efter receptet i Svenskt konditorlexikon. Sortimentet växer ett klassiskt recept i taget.";
 
 export const metadata: Metadata = {
   title: { absolute: "Folkets nästa småkaka – rösta fram nästa klassiker" },
@@ -28,7 +28,7 @@ export const dynamic = "force-dynamic";
 const FAQS = [
   {
     q: "Vad är Folkets nästa småkaka?",
-    a: "En omröstning där kunderna väljer vilken klassisk småkaka ur Svenskt konditorlexikon som blir nästa i Sockerbagarens sortiment. Ni röstar, vi bakar vinnaren på riktigt smör.",
+    a: "En omröstning där kunderna väljer vilken klassisk småkaka ur Svenskt konditorlexikon som blir nästa i Sockerbagarens sortiment. Ni röstar, vinnaren bakas på riktigt smör.",
   },
   {
     q: "Hur röstar man?",
@@ -36,7 +36,7 @@ const FAQS = [
   },
   {
     q: "Vad händer med vinnaren?",
-    a: "Vi bakar fram vår version efter recepttraditionen i boken. När den finns att beställa märks den Folkets val i sortimentet, med året den röstades fram. Därefter öppnar nästa omgång.",
+    a: "Vinnaren bakas efter recepttraditionen i boken. När den finns att beställa märks den Folkets val i sortimentet, med året den röstades fram. Därefter öppnar nästa omgång.",
   },
 ];
 
@@ -53,7 +53,7 @@ export default async function FolketsKakaPage() {
       <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>
         <PageHeader
           eyebrow="Folkets nästa småkaka"
-          title="Vilken klassiker ska vi baka härnäst?"
+          title="Vilken klassiker ska bli nästa?"
           lede="Vi vill väcka recepten ur Svenskt konditorlexikon till liv igen – ett i taget. Nu får ni bestämma vilken småkaka som blir nästa i Sockerbagarens sortiment."
         />
 
@@ -68,7 +68,7 @@ export default async function FolketsKakaPage() {
           Vår utgångspunkt är Svenskt konditorlexikon – boken som gått i arv i familjen och som blev
           början på hela idén bakom Sockerbagaren. Ur den vill vi successivt välja ut och återskapa
           fler av de klassiska recepten. Och ni får hjälpa oss att välja ordningen. Kunderna röstar.
-          Vi bakar vinnaren, på riktigt smör och utan genvägar, precis som{" "}
+          Vinnaren bakas på riktigt smör och utan genvägar, precis som{" "}
           <Link href="/kakor">de tre sorter vi började med</Link>.{" "}
           <Link href="/om">Läs hela berättelsen om boken och Sockerbagaren.</Link>
         </p>
@@ -116,7 +116,7 @@ export default async function FolketsKakaPage() {
         </dl>
         <FaqList heading="Vanliga frågor om omröstningen" items={FAQS} />
         <div className="actions">
-          <Link href="/kakor" className="btn btn-outline">Se kakorna vi bakar i dag</Link>
+          <Link href="/kakor" className="btn btn-outline">Se kakorna i sortimentet</Link>
           <Link href="/bestall" className="btn btn-primary">Beställ till jobbet</Link>
         </div>
       </div>

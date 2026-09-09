@@ -222,10 +222,10 @@ function productImages(imageRef: string): string[] {
  */
 function shippingDestinations(postalPrefixes: readonly string[]): JsonLdNode[] {
   if (postalPrefixes.length > 0) {
-    return postalPrefixes.map((postalCode) => ({
+    return postalPrefixes.map((prefix) => ({
       "@type": "DefinedRegion",
       addressCountry: "SE",
-      postalCode,
+      postalCodePrefix: prefix,
     }));
   }
   return DELIVERY_CITIES.map((name) => ({

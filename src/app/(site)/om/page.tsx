@@ -147,9 +147,9 @@ export default function OmPage() {
       <p>
         I grunden driver vi Sockerbagaren väldigt traditionellt. Vi tror på förtroende mellan
         företag och kunder. Våra företagskunder beställer sina kakor och får en faktura. Betalas
-        fakturan fortsätter vi leverera precis som vanligt. Skulle en faktura inte betalas gör vi
-        helt enkelt inga ytterligare leveranser förrän den är reglerad. Det är en enkel princip som
-        företag har arbetat efter i generationer och som fortfarande fungerar alldeles utmärkt. Vi
+        fakturan fortsätter vi leverera precis som vanligt. Skulle en faktura inte betalas syns det
+        i admin – vi kan neka nya leveranser tills den är reglerad, men det sker inte automatiskt.
+        Det är en enkel princip som företag har arbetat efter i generationer. Vi
         vill inte bygga upp onödig administration runt något som egentligen är väldigt enkelt.
       </p>
       <p>
@@ -165,8 +165,8 @@ export default function OmPage() {
       <h2>Vi växer i den takt vi klarar av</h2>
       <p>
         Sockerbagaren är ett sidoprojekt som drivs parallellt med studier och arbete. Det innebär
-        också att vi inte försöker låtsas vara någonting större än vi är. Vi bakar i begränsade
-        mängder och tar emot så många kunder som vi på ett bra sätt kan leverera till. Därför kan
+        också att vi inte försöker låtsas vara någonting större än vi är. Kakorna bakas i begränsade
+        mängder och vi tar emot så många kunder som vi på ett bra sätt kan leverera till. Därför kan
         vi inte alltid garantera att alla beställningar kan levereras direkt: kassan visar de
         leveransdagar som har plats, och vi tar emot order så långt vår kapacitet och våra råvaror
         räcker. När efterfrågan växer anpassar vi verksamheten successivt. Vi tycker faktiskt att

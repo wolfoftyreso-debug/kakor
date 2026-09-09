@@ -23,6 +23,8 @@ export const SEO_ALIASES: SeoAlias[] = [
   { source: "/fikaabonnemang", destination: "/prenumeration" },
   { source: "/leveransomrade", destination: "/leverans" },
   { source: "/om-oss", destination: "/om" },
+  { source: "/tyresö", destination: "/tyreso" },
+  { source: "/tyresoe", destination: "/tyreso" },
   { source: "/foretagsfika-tyreso", destination: "/tyreso" },
   { source: "/foretagsfika-nacka", destination: "/nacka" },
   { source: "/foretagsfika-haninge", destination: "/haninge" },

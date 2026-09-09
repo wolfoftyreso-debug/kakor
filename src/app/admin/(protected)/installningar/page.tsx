@@ -63,7 +63,8 @@ export default async function SettingsPage() {
         <p style={{ color: "var(--text-2)", fontSize: 13.5, margin: "0 0 16px", maxWidth: "70ch" }}>
           Efter cutoff låses veckans leveranslista: snapshot, plocklista, leveranssedlar och
           driftmejl. Beställningar efter cutoff flyttas till nästa öppna leveransdag. Standard är
-          onsdag klockan 12.
+          onsdag klockan 12. Kassan håller nästa leveransdag öppen fram till cutoff även om
+          framförhållningen annars skulle ha stängt den dagen tidigare.
         </p>
         <OpsSettingsForm cutoffWeekday={ops.cutoffWeekday} cutoffHour={ops.cutoffHour} opsEmail={ops.opsEmail} />
       </section>

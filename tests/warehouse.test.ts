@@ -8,9 +8,9 @@ import {
   parseIsoWeekParam,
   toISODate,
 } from "@/lib/dates";
-import { canTransitionPick, isWeekLockedStatus, orderReservesStock } from "@/lib/status";
-import { cutoffClosedMessage, cutoffForDelivery, isPastCutoff } from "@/lib/warehouse/cutoff";
-import { productionNeedGrams } from "@/lib/warehouse/inventory";
+import { canTransitionPick, isWeekLockedStatus, isWeekSealedStatus, orderReservesStock } from "@/lib/status";
+import { cutoffClosedMessage, cutoffForDelivery, isPastCutoff, leadTimeAllowingNextDelivery } from "@/lib/warehouse/cutoff";
+import { productionNeedGrams, hasActivePick, gramsForLine } from "@/lib/warehouse/inventory";
 import { appendLateChange, parseLateChanges, parseSnapshot } from "@/lib/warehouse/snapshot";
 import type { DeliverySnapshot } from "@/lib/warehouse/types";
 
@@ -113,5 +113,55 @@ describe("låst vecka och snapshot", () => {
     expect(parseLateChanges(first)).toHaveLength(1);
     expect(parseLateChanges(second)).toHaveLength(2);
     expect(parseLateChanges(second)[0].detail).toBe("Kund X");
+  });
+});
+
+describe("framförhållning vs onsdagscutoff", () => {
+  const settings = { cutoffWeekday: 3, cutoffHour: 12, opsEmail: "" };
+
+  it("onsdag förmiddag håller torsdagen öppen trots 2 dagars framförhållning", () => {
+    const wedMorning = new Date("2026-09-09T08:00:00.000Z"); // 10:00 svensk sommartid
+    expect(leadTimeAllowingNextDelivery(2, [4], settings, wedMorning)).toBe(0);
+  });
+
+  it("onsdag efter cutoff lämnar framförhållningen orörd", () => {
+    const wedAfternoon = new Date("2026-09-09T11:00:00.000Z"); // 13:00 svensk sommartid
+    expect(leadTimeAllowingNextDelivery(2, [4], settings, wedAfternoon)).toBe(2);
+  });
+
+  it("tisdag sänker framförhållningen så torsdagen syns", () => {
+    const tue = new Date("2026-09-08T08:00:00.000Z");
+    expect(leadTimeAllowingNextDelivery(2, [4], settings, tue)).toBe(1);
+  });
+
+  it("hoppar över spärrad nästa dag så framförhållningen inte kollapsar fel", () => {
+    const wedMorning = new Date("2026-09-09T08:00:00.000Z");
+    expect(leadTimeAllowingNextDelivery(2, [4], settings, wedMorning, ["2026-09-10"])).toBe(2);
+  });
+});
+
+describe("orderradens paketvikt vinner över live-produkten", () => {
+  it("använder snapshotad paketvikt", () => {
+    expect(gramsForLine({ weightKg: 2, unit: "paket", packageWeightGrams: 1500, product: { packageWeightGrams: 2000 } })).toBe(3000);
+    expect(gramsForLine({ weightKg: 2, unit: "paket", packageWeightGrams: 0, product: { packageWeightGrams: 1500 } })).toBe(3000);
+  });
+});
+
+describe("låst inkluderar LOCKING för kassa och efterhandsändring", () => {
+  it("LOCKING är förseglad men inte historiskt låst", () => {
+    expect(isWeekSealedStatus("LOCKING")).toBe(true);
+    expect(isWeekLockedStatus("LOCKING")).toBe(false);
+    expect(isWeekSealedStatus("LOCKED")).toBe(true);
+  });
+});
+
+describe("PROBLEM efter plock reserverar inte igen", () => {
+  it("aktiv PICK utan UNPICK räknas som redan dragen", () => {
+    const pick = { kind: "PICK", createdAt: new Date("2026-09-09T10:00:00Z") };
+    const unpick = { kind: "UNPICK", createdAt: new Date("2026-09-09T09:00:00Z") };
+    expect(hasActivePick([pick])).toBe(true);
+    expect(hasActivePick([pick, unpick])).toBe(true);
+    expect(hasActivePick([{ kind: "UNPICK", createdAt: new Date("2026-09-09T11:00:00Z") }, pick])).toBe(false);
+    expect(hasActivePick([])).toBe(false);
   });
 });

@@ -120,8 +120,8 @@ describe("schema-motorn", () => {
     expect(shipping.shippingDestination.map((d) => d.addressLocality)).toEqual([...DELIVERY_CITIES]);
     expect(shipping.shippingDestination.every((d) => d.addressCountry === "SE")).toBe(true);
     const withPost = productNode(product, ["135", "131"]);
-    const postShipping = (withPost.offers as { shippingDetails: { shippingDestination: { postalCode: string }[] } }).shippingDetails;
-    expect(postShipping.shippingDestination.map((d) => d.postalCode)).toEqual(["135", "131"]);
+    const postShipping = (withPost.offers as { shippingDetails: { shippingDestination: { postalCodePrefix: string }[] } }).shippingDetails;
+    expect(postShipping.shippingDestination.map((d) => d.postalCodePrefix)).toEqual(["135", "131"]);
     expect(node).not.toHaveProperty("aggregateRating");
     expect(node).not.toHaveProperty("review");
   });

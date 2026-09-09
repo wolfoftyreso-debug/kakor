@@ -6,11 +6,12 @@ import { z } from "zod";
 import { getAdmin } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { fromISODate } from "@/lib/dates";
-import { ADJUST_REASONS, PICK_STATUS, type MovementKind } from "@/lib/status";
+import { ADJUST_REASONS, PICK_STATUS, isWeekLockedStatus, type MovementKind } from "@/lib/status";
 import { lineWeightGrams } from "@/lib/units";
 import type { ActionResult } from "@/app/admin/actions";
 import { adjustInventory, setMinLevel } from "@/lib/warehouse/inventory";
 import { lockDeliveryDate, lockDueDeliveryWeeks, resendLockEmail } from "@/lib/warehouse/lock";
+import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 import { PickError, setPickStatus } from "@/lib/warehouse/pick";
 import { recordLateChange } from "@/lib/warehouse/snapshot";
 import { saveOpsSettings } from "@/lib/warehouse/settings";
@@ -75,9 +76,21 @@ export async function setMinLevelAction(productId: string, minKg: number): Promi
 export async function lockWeekAction(iso: string): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!isoSchema.safeParse(iso).success) return { ok: false, error: "Ogiltigt datum" };
+  await generateDueSubscriptionOrders({ horizonDays: 4 }).catch((e) =>
+    console.error("[lager] prenumerationsgenerering före manuell låsning:", e instanceof Error ? e.message : e)
+  );
   const result = await lockDeliveryDate(fromISODate(iso), admin.email);
   revalidatePath("/admin", "layout");
   if (result.error) return { ok: false, error: result.error };
+  if (!isWeekLockedStatus(result.status)) {
+    return {
+      ok: false,
+      error:
+        result.status === "LOCKING"
+          ? "Låsningen pågår fortfarande – ladda om sidan om en stund."
+          : "Leveransdagen kunde inte låsas. Försök igen.",
+    };
+  }
   if (result.alreadyLocked) {
     return { ok: true, message: result.emailed ? "Redan låst – driftmejlet skickades (det saknades)." : "Leveransdagen är redan låst." };
   }

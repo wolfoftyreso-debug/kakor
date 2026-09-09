@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { subscriptionSchema, fieldErrors } from "@/lib/validation";
-import { createSubscription } from "@/lib/subscriptions/service";
+import { createSubscription, generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 import { prisma } from "@/lib/db";
 import { calculateTotals } from "@/lib/money";
 import { OrderError } from "@/lib/orders/create-order";
@@ -89,6 +89,14 @@ export async function POST(req: NextRequest) {
     // Idempotent replay (retry/dubbelklick) returnerar en redan skapad
     // prenumeration – då ska bekräftelsen inte mejlas en gång till.
     const { subscription, duplicate: isReplay } = await createSubscription(parsed.data);
+
+    // Alltid: generatorn är idempotent. Hoppa inte över vid retry – första
+    // körningen kan ha sparat avtalet men misslyckats med ordern, och
+    // nextDeliveryDate har då redan flyttats så payload-jämförelsen skulle
+    // annars ha räknat det som mismatch.
+    await generateDueSubscriptionOrders({ horizonDays: 4 }).catch((e) =>
+      console.error("[prenumeration] första order efter start misslyckades:", describeError(e))
+    );
 
     // Bekräftelse – prenumerationen är sparad även om mejlet fallerar.
     if (!isReplay) {

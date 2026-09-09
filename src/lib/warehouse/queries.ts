@@ -116,7 +116,8 @@ export async function loadDayOps(deliveryDate: Date): Promise<DayOps> {
     prisma.deliveryWeek.findUnique({ where: { deliveryDate } }),
     loadLiveOrders(deliveryDate),
   ]);
-  const snapshot = weekRow ? parseSnapshot(weekRow.snapshotJson) : null;
+  const locked = isWeekLockedStatus(weekRow?.status ?? "");
+  const snapshot = weekRow && locked ? parseSnapshot(weekRow.snapshotJson) : null;
   const liveStops = liveToStops(live);
   const snapIds = snapshot ? snapshotOrderIds(snapshot) : new Set<string>();
   const postCutoffStops = snapshot ? liveStops.filter((s) => !snapIds.has(s.orderId)) : [];

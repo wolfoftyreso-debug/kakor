@@ -15,7 +15,20 @@ export async function overdueInvoicesFor(orgNumber: string, excludeOrderId?: str
       dueDate: { lt: today },
       order: { orgNumber, status: { not: "CANCELLED" }, ...(excludeOrderId ? { id: { not: excludeOrderId } } : {}) },
     },
-    select: { invoiceNumber: true, dueDate: true, totalOre: true, order: { select: { orderNumber: true } } },
+    select: {
+      invoiceNumber: true,
+      dueDate: true,
+      totalOre: true,
+      creditNotes: { select: { totalOre: true } },
+      order: { select: { orderNumber: true } },
+    },
     orderBy: { dueDate: "asc" },
-  });
+  }).then((rows) =>
+    rows.map((r) => ({
+      invoiceNumber: r.invoiceNumber,
+      dueDate: r.dueDate,
+      totalOre: Math.max(0, r.totalOre + r.creditNotes.reduce((s, c) => s + c.totalOre, 0)),
+      order: r.order,
+    }))
+  );
 }

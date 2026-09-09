@@ -23,7 +23,7 @@ Verksamheten drivs av **Landvex AB** (Antennvägen 2, Tyresö). Grundare **Tiffa
 
 | Gren | Roll |
 |---|---|
-| `claude/sockerbagaren-full-build-e2ebkd` | Utvecklingsgren. Allt arbete sker här. HEAD: `bf9810d`. |
+| `claude/sockerbagaren-full-build-e2ebkd` | Utvecklingsgren. Allt arbete sker här. |
 | `demo-testdeploy` | Demo-gren = feature-grenen + `vercel.json` med `"buildCommand": "npm run build:demo"` (SQLite-databas byggs vid deploy, `scripts/build-demo-db.ts` kör `prisma/seed.ts`). Behåll den raden vid merge. HEAD: `292b445`. |
 | `main` | Orörd sedan tidigare. |
 
@@ -99,6 +99,8 @@ Senaste omgångarna, alla live på demon:
 9. SEO-revision åtta: admin-yta Sök (GREEN/WARNING/CRITICAL/UNKNOWN), FAQ-nav `/vanliga-fragor`, Service-schema för företagsfika, Bing-verifiering, alias-301, crawlerpolicy, organisk källklass på konverteringar. Rapport: `docs/SEO-REVISION-8.md`.
 10. Lager- och leveransmodul: fysiskt/reserverat/disponibelt per sort, produktionsbehov, leveransvecka per ISO-vecka, onsdagslåsning (konfigurerbar) med immutable snapshot, plocklista, leveranssedlar, driftmejl, historik. Lagerprincip: fysiskt saldo minskas vid plock. Cron `/api/cron/lock-delivery-weeks` varje timme; materialiserar prenumerationer före låsning.
 11. SERP- och konkurrentintelligens (9 sep): live-sök mot företagsfika, kakor till kontoret, fikaprenumeration och produktköp. Tom kommersiell SERP för företagsfika+kommun; “kakor till kontoret” ägs av grossister (Gille/Nyåkers); prenumerationsqueryn i praktiken tom. Implementation: titlar mot de queriesna, köp-FAQ på PDP, 301-alias, ingen ny doorway. Rapport: `docs/SEO-SERP-INTELLIGENCE.md`.
+12. Revision 9 (9 sep): onsdagscutoff vs framförhållning, prenumeration materialiseras vid start, lagerläckage vid PROBLEM/plock, immutable låsning. Rapport: `docs/REVISION-9.md`.
+13. Revision 10 (9 sep, ifrågasatte 9): kassan frös sänkt lead i öppna flikar; prenumerationsretry skapade dubblettavtal; paketvikt snapshotas på orderrad; efterhandsändring CAS; cutoff inuti order-tx; delkredit styr plockmängd; “vi bakar” och villkor-vs-kod; `postalCodePrefix`. A/B/C 21/21, SEO-crawl 0 fel, kassan visar torsdag 10 sep före noon. Rapport: `docs/REVISION-10.md`.
 
 ## 7. Öppna ägarbeslut (blockerar, kan inte lösas i kod)
 
@@ -129,3 +131,5 @@ Senaste omgångarna, alla live på demon:
 - SEO-revision sju: `docs/SEO-REVISION-7.md`
 - SEO-revision åtta: `docs/SEO-REVISION-8.md`
 - SERP- och konkurrentintelligens: `docs/SEO-SERP-INTELLIGENCE.md`
+- Revision 9 (lager/cutoff): `docs/REVISION-9.md`
+- Revision 10 (ifrågasatte 9): `docs/REVISION-10.md`

@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { isoWeekParts, toISODate } from "@/lib/dates";
-import { isWeekLockedStatus } from "@/lib/status";
+import { isWeekSealedStatus } from "@/lib/status";
 import { gramsForLine, productionNeedGrams } from "./inventory";
 import type { DeliverySnapshot, LateChange, SnapshotStop } from "./types";
 
@@ -136,11 +136,21 @@ export async function recordLateChange(
   deliveryDate: Date,
   change: { actor: string; reason: string; type: "ORDER_ADDED" | "ORDER_REMOVED" | "ORDER_CHANGED" | "NOTE"; orderId?: string; orderNumber?: string; detail: string }
 ) {
-  const week = await prisma.deliveryWeek.findUnique({ where: { deliveryDate } });
-  if (!week || !isWeekLockedStatus(week.status)) return;
-  await prisma.deliveryWeek.update({
-    where: { id: week.id },
-    data: { lateChangesJson: appendLateChange(week.lateChangesJson, change) },
+  await prisma.$transaction(async (tx) => {
+    const week = await tx.deliveryWeek.findUnique({ where: { deliveryDate } });
+    if (!week || !isWeekSealedStatus(week.status)) return;
+    const next = appendLateChange(week.lateChangesJson, change);
+    const wrote = await tx.deliveryWeek.updateMany({
+      where: { id: week.id, lateChangesJson: week.lateChangesJson },
+      data: { lateChangesJson: next },
+    });
+    if (wrote.count === 1) return;
+    const again = await tx.deliveryWeek.findUnique({ where: { id: week.id } });
+    if (!again || !isWeekSealedStatus(again.status)) return;
+    await tx.deliveryWeek.update({
+      where: { id: again.id },
+      data: { lateChangesJson: appendLateChange(again.lateChangesJson, change) },
+    });
   });
 }
 

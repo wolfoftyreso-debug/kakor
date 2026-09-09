@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/config";
 import { AI_RETRIEVAL_USER_AGENTS, PRIVATE_PATHS, SEARCH_USER_AGENTS } from "@/lib/seo/crawlers";
 
+export const dynamic = "force-dynamic";
+
 function rule(userAgent: string) {
   return {
     userAgent,

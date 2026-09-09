@@ -139,22 +139,29 @@ export async function markOrderDelivered(orderId: string, note: string): Promise
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return { ok: false, error: "Ordern finns inte" };
   if (!canTransitionOrder(order, "deliver")) return { ok: false, error: "Ordern kan inte markeras som levererad i nuvarande status" };
-  const res = await prisma.order.updateMany({
-    where: { id: orderId, status: { not: "CANCELLED" }, deliveryStatus: "PENDING" },
-    data: {
-      deliveryStatus: "DELIVERED",
-      deliveredAt: new Date(),
-      deliveryNote: note || order.deliveryNote,
-      status: order.status === "NEW" ? "CONFIRMED" : order.status,
-      pickStatus: "DELIVERED",
-    },
-  });
-  if (res.count !== 1) return { ok: false, error: "Ordern ändrades samtidigt av någon annan – ladda om sidan" };
-  // Lagerprincip: om ordern inte redan plockats dras lagret nu (en gång).
-  if (order.pickStatus === "UNPICKED" || order.pickStatus === "PROBLEM") {
-    await applyOrderPick(orderId, admin.email).catch((e) =>
-      console.error("Lagerdragning vid leverans misslyckades:", e instanceof Error ? e.message : e)
-    );
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (order.pickStatus === "UNPICKED" || order.pickStatus === "PROBLEM") {
+        await applyOrderPick(orderId, admin.email, tx);
+      }
+      const res = await tx.order.updateMany({
+        where: { id: orderId, status: { not: "CANCELLED" }, deliveryStatus: "PENDING" },
+        data: {
+          deliveryStatus: "DELIVERED",
+          deliveredAt: new Date(),
+          deliveryNote: note || order.deliveryNote,
+          status: order.status === "NEW" ? "CONFIRMED" : order.status,
+          pickStatus: "DELIVERED",
+        },
+      });
+      if (res.count !== 1) throw new Error("CONCURRENT");
+    });
+  } catch (e) {
+    if (e instanceof Error && e.message === "CONCURRENT") {
+      return { ok: false, error: "Ordern ändrades samtidigt av någon annan – ladda om sidan" };
+    }
+    console.error("Leveransmarkering misslyckades:", e instanceof Error ? e.message.slice(0, 300) : e);
+    return { ok: false, error: "Ordern kunde inte markeras som levererad – ingenting har ändrats. Försök igen." };
   }
   await logEvent(orderId, "DELIVERED", `Markerad som levererad${note ? ` – ${note}` : ""}`, admin.email);
   await syncWeekStatusForDate(order.deliveryDate).catch(() => {});
@@ -221,15 +228,13 @@ export async function cancelOrder(orderId: string, note: string): Promise<Action
       async (tx) => {
         const res = await tx.order.updateMany({
           where: { id: orderId, status: { not: "CANCELLED" }, paymentStatus: "UNPAID", deliveryStatus: "PENDING" },
-          data: { status: "CANCELLED" },
+          data: { status: "CANCELLED", idempotencyKey: null },
         });
         if (res.count !== 1) throw new Error("CONCURRENT");
         await tx.orderEvent.create({
           data: { orderId, type: "CANCELLED", message: `Order avbruten${note ? ` – ${note}` : ""}`, actor: admin.email },
         });
-        if (order.pickStatus === "PICKED" || order.pickStatus === "LOADED" || order.pickStatus === "DELIVERED") {
-          await applyOrderUnpick(orderId, admin.email, tx);
-        }
+        await applyOrderUnpick(orderId, admin.email, tx);
         if (order.invoice) {
           const credit = await issueCreditNoteInTx(tx, order.invoice.id, admin.email);
           if (credit) {
@@ -348,10 +353,15 @@ export async function addOrderNote(orderId: string, note: string): Promise<Actio
 export async function resendInvoiceEmail(orderId: string): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!idSchema.safeParse(orderId).success) return { ok: false, error: "Ogiltigt order-id" };
-  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { invoice: true } });
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { invoice: { include: { creditNotes: true } } },
+  });
   if (!order?.invoice) return { ok: false, error: "Ordern saknar faktura" };
   if (order.invoice.status === "CREDITED") return { ok: false, error: "Fakturan är krediterad – skicka inte om den" };
   if (order.invoice.status === "PAID") return { ok: false, error: "Fakturan är registrerad som betald – inget att kräva" };
+  const credited = order.invoice.creditNotes.reduce((s, c) => s + c.totalOre, 0);
+  const toPay = Math.max(0, order.invoice.totalOre + credited);
 
   let attachments: { filename: string; content: Buffer; contentType: string }[] | undefined;
   try {
@@ -372,7 +382,7 @@ export async function resendInvoiceEmail(orderId: string): Promise<ActionResult>
     subject: `Faktura ${order.invoice.invoiceNumber} – Sockerbagaren`,
     text: `Faktura ${order.invoice.invoiceNumber} från Sockerbagaren (order ${order.orderNumber}).
 
-Belopp att betala: ${formatOre(order.totalOre)}
+Belopp att betala: ${formatOre(toPay)}
 Förfallodatum: ${formatLongDate(order.invoice.dueDate)}
 
 Vänliga hälsningar

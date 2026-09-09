@@ -94,7 +94,6 @@ function pickEventMessage(from: string, to: string): string {
 export async function syncWeekStatusForDate(deliveryDate: Date): Promise<void> {
   const week = await prisma.deliveryWeek.findUnique({ where: { deliveryDate } });
   if (!week || (!isWeekLockedStatus(week.status) && week.status !== "LOCKING")) return;
-  if (week.status === "COMPLETED") return;
 
   const orders = await prisma.order.findMany({
     where: { deliveryDate, status: { not: "CANCELLED" } },

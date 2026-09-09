@@ -4,7 +4,7 @@ import { isWeekLockedStatus } from "@/lib/status";
 import { generateDueSubscriptionOrders } from "@/lib/subscriptions/service";
 import { describeError } from "@/lib/log";
 import { isPastCutoff } from "./cutoff";
-import { getOpsSettings } from "./settings";
+import { getOpsSettings, resolveOpsRecipients } from "./settings";
 import { buildSnapshot, ensureDeliveryWeek, parseLateChanges, parseSnapshot } from "./snapshot";
 import { sendLockEmail } from "./email";
 import type { DeliverySnapshot } from "./types";
@@ -50,6 +50,7 @@ export async function lockDeliveryDate(
   });
   if (claimed.count !== 1) {
     const again = await prisma.deliveryWeek.findUniqueOrThrow({ where: { id: week.id } });
+    if (again.status === "LOCKING") return finalizeLock(again.id, deliveryDate, actor, send);
     return { deliveryDate: iso, status: again.status, alreadyLocked: isWeekLockedStatus(again.status), emailed: !!again.opsEmailSentAt };
   }
   return finalizeLock(week.id, deliveryDate, actor, send);
@@ -60,8 +61,8 @@ async function finalizeLock(weekId: string, deliveryDate: Date, actor: string, s
   try {
     const lockedAt = new Date();
     const snapshot = await buildSnapshot(deliveryDate, actor, lockedAt);
-    await prisma.deliveryWeek.update({
-      where: { id: weekId },
+    const claimed = await prisma.deliveryWeek.updateMany({
+      where: { id: weekId, status: "LOCKING" },
       data: {
         status: "LOCKED",
         lockedAt,
@@ -70,15 +71,30 @@ async function finalizeLock(weekId: string, deliveryDate: Date, actor: string, s
         lastError: "",
       },
     });
+    if (claimed.count !== 1) {
+      const again = await prisma.deliveryWeek.findUniqueOrThrow({ where: { id: weekId } });
+      let emailed = !!again.opsEmailSentAt;
+      if (send && isWeekLockedStatus(again.status) && !again.opsEmailSentAt) {
+        const existing = parseSnapshot(again.snapshotJson);
+        if (existing) emailed = await sendAndMark(again.id, existing);
+      }
+      return { deliveryDate: iso, status: again.status, alreadyLocked: isWeekLockedStatus(again.status), emailed };
+    }
     let emailed = false;
     if (send) emailed = await sendAndMark(weekId, snapshot);
     return { deliveryDate: iso, status: "LOCKED", alreadyLocked: false, emailed };
   } catch (e) {
     const message = e instanceof Error ? e.message.slice(0, 300) : String(e).slice(0, 300);
-    await prisma.deliveryWeek.update({
-      where: { id: weekId },
-      data: { lastError: message, status: "OPEN" },
+    // Bara OPEN-återställning om vi fortfarande är i LOCKING. En redan skriven
+    // snapshot får inte raderas för att PDF/mejl föll.
+    await prisma.deliveryWeek.updateMany({
+      where: { id: weekId, status: "LOCKING" },
+      data: { lastError: message, status: "OPEN", snapshotJson: "" },
     }).catch(() => {});
+    const again = await prisma.deliveryWeek.findUnique({ where: { id: weekId } }).catch(() => null);
+    if (again && isWeekLockedStatus(again.status)) {
+      return { deliveryDate: iso, status: again.status, alreadyLocked: true, emailed: !!again.opsEmailSentAt, error: message };
+    }
     return { deliveryDate: iso, status: "OPEN", alreadyLocked: false, emailed: false, error: message };
   }
 }
@@ -94,9 +110,17 @@ async function sendAndMark(weekId: string, snapshot: DeliverySnapshot): Promise<
     });
     return true;
   }
+  const settings = await getOpsSettings();
+  const noRecipient = resolveOpsRecipients(settings).length === 0;
   await prisma.deliveryWeek.update({
     where: { id: weekId },
-    data: { lastError: "Driftmejlet kunde inte skickas – se e-postloggen" },
+    data: {
+      lastError: noRecipient
+        ? "Ingen driftmejl-adress – fyll i under Inställningar. Listan är låst."
+        : "Driftmejlet kunde inte skickas – se e-postloggen",
+      // Tom mottagarlista: markera som hanterad så cronen inte retrys:ar i evighet.
+      ...(noRecipient ? { opsEmailSentAt: new Date() } : {}),
+    },
   }).catch(() => {});
   return false;
 }
@@ -121,8 +145,10 @@ export async function resendLockEmail(deliveryDate: Date): Promise<boolean> {
  * Cron: materialisera prenumerationer, lås alla leveransdagar vars cutoff passerat.
  * Idempotent.
  */
-export async function lockDueDeliveryWeeks(now = new Date(), actor = "system"): Promise<{ generated: number; locks: LockResult[] }> {
-  const gen = await generateDueSubscriptionOrders({ now, horizonDays: 10 }).catch((e) => {
+export async function lockDueDeliveryWeeks(now = new Date(), actor = "system"): Promise<{ generated: number; locks: LockResult[]; generateError?: string }> {
+  let generateError: string | undefined;
+  const gen = await generateDueSubscriptionOrders({ now, horizonDays: 4 }).catch((e) => {
+    generateError = e instanceof Error ? e.message.slice(0, 300) : String(e).slice(0, 300);
     console.error("[lager] prenumerationsgenerering före låsning misslyckades:", describeError(e));
     return { generated: [], skipped: [] };
   });
@@ -159,7 +185,7 @@ export async function lockDueDeliveryWeeks(now = new Date(), actor = "system"): 
     if (!due && !(week && isWeekLockedStatus(week.status) && !week.opsEmailSentAt)) continue;
     locks.push(await lockDeliveryDate(date, actor));
   }
-  return { generated: gen.generated.length, locks };
+  return { generated: gen.generated.length, locks, generateError };
 }
 
 export function lateChangesOf(json: string) {

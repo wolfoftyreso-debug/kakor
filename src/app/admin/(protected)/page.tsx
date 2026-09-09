@@ -121,7 +121,7 @@ export default async function AdminDashboard() {
 
       <section className="card" style={{ padding: "20px 22px", marginBottom: 32 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}>
-          <h2 style={{ fontSize: 19, margin: 0 }}>Denna veckas leveranser</h2>
+          <h2 style={{ fontSize: 19, margin: 0 }}>Nästa leverans</h2>
           <Link href={ops.nextDay ? `/admin/leveranser/vecka/${ops.nextDay.weekParam}` : "/admin/leveranser"} style={{ fontWeight: 700, fontSize: 14 }}>
             Öppna veckan →
           </Link>

@@ -1,7 +1,8 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { lineWeightGrams, formatWeightKg, qtyLabel } from "@/lib/units";
 import { orderReservesStock, type MovementKind } from "@/lib/status";
-import type { Prisma } from "@prisma/client";
+import { remainingByLine } from "@/lib/invoice/credit";
 
 type Tx = Prisma.TransactionClient;
 
@@ -15,6 +16,7 @@ export interface StockLine {
   reservedGrams: number;
   availableGrams: number;
   minGrams: number;
+  active: boolean;
   lastAdjustment: {
     at: Date;
     actor: string;
@@ -24,8 +26,17 @@ export interface StockLine {
   } | null;
 }
 
-export function gramsForLine(item: { weightKg: number; unit: string; product?: { packageWeightGrams: number } | null }): number {
-  return lineWeightGrams(item.weightKg, item.unit, item.product?.packageWeightGrams ?? 0);
+export function gramsForLine(item: {
+  weightKg: number;
+  unit: string;
+  packageWeightGrams?: number | null;
+  product?: { packageWeightGrams: number } | null;
+}): number {
+  const pkg =
+    item.packageWeightGrams != null && item.packageWeightGrams > 0
+      ? item.packageWeightGrams
+      : (item.product?.packageWeightGrams ?? 0);
+  return lineWeightGrams(item.weightKg, item.unit, pkg);
 }
 
 export function productionNeedGrams(orderedGrams: number, physicalGrams: number): number {
@@ -40,17 +51,43 @@ export function formatStockQty(grams: number, unit: string, packageWeightGrams: 
   return formatWeightKg(grams);
 }
 
+export function formatSignedGrams(grams: number, unit: string, packageWeightGrams: number): string {
+  const sign = grams > 0 ? "+" : grams < 0 ? "−" : "";
+  return `${sign}${formatStockQty(Math.abs(grams), unit, packageWeightGrams)}`;
+}
+
 export async function ensureInventory(productId: string, client: Tx | typeof prisma = prisma) {
   const existing = await client.inventory.findUnique({ where: { productId } });
   if (existing) return existing;
-  return client.inventory.create({
-    data: { productId, physicalGrams: 0, minGrams: 0 },
-  });
+  try {
+    return await client.inventory.create({
+      data: { productId, physicalGrams: 0, minGrams: 0 },
+    });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      const raced = await client.inventory.findUnique({ where: { productId } });
+      if (raced) return raced;
+    }
+    throw e;
+  }
+}
+
+/** Senaste PICK utan senare UNPICK = kakorna är redan ur frysen. */
+export function hasActivePick(movements: { kind: string; createdAt: Date }[]): boolean {
+  let lastPick: Date | null = null;
+  let lastUnpick: Date | null = null;
+  for (const m of movements) {
+    if (m.kind === "PICK" && (!lastPick || m.createdAt > lastPick)) lastPick = m.createdAt;
+    if (m.kind === "UNPICK" && (!lastUnpick || m.createdAt > lastUnpick)) lastUnpick = m.createdAt;
+  }
+  if (!lastPick) return false;
+  return !lastUnpick || lastUnpick <= lastPick;
 }
 
 /**
  * Reserverat = gram på ej avbrutna, ej plockade, ej levererade ordrar.
  * Plockade ordrar har redan lämnat frysen (fysiskt saldo minskat).
+ * PROBLEM efter plock reserverar inte igen – kakorna är redan dragna.
  */
 export async function reservedGramsByProduct(client: Tx | typeof prisma = prisma): Promise<Map<string, number>> {
   const orders = await client.order.findMany({
@@ -59,24 +96,34 @@ export async function reservedGramsByProduct(client: Tx | typeof prisma = prisma
       status: true,
       deliveryStatus: true,
       pickStatus: true,
-      items: { select: { productId: true, weightKg: true, unit: true, product: { select: { packageWeightGrams: true } } } },
+      items: { select: { productId: true, weightKg: true, unit: true, packageWeightGrams: true, productName: true, product: { select: { packageWeightGrams: true } } } },
+      invoice: { select: { snapshotJson: true, creditNotes: { select: { kind: true, snapshotJson: true } } } },
+      inventoryMovements: { where: { kind: { in: ["PICK", "UNPICK"] } }, select: { kind: true, createdAt: true } },
     },
   });
   const map = new Map<string, number>();
   for (const o of orders) {
     if (!orderReservesStock(o)) continue;
-    for (const i of o.items) {
-      if (!i.productId) continue;
-      map.set(i.productId, (map.get(i.productId) ?? 0) + gramsForLine(i));
+    if (o.pickStatus === "PROBLEM" && hasActivePick(o.inventoryMovements)) continue;
+    let remaining: { remaining: number }[] | null = null;
+    try {
+      remaining = o.invoice ? remainingByLine(o.invoice.snapshotJson, o.invoice.creditNotes) : null;
+    } catch {
+      remaining = null;
     }
+    o.items.forEach((i, idx) => {
+      if (!i.productId) return;
+      const qty = remaining?.[idx] ? remaining[idx].remaining : i.weightKg;
+      if (qty <= 0) return;
+      map.set(i.productId, (map.get(i.productId) ?? 0) + gramsForLine({ ...i, weightKg: qty }));
+    });
   }
   return map;
 }
 
 export async function loadStock(): Promise<StockLine[]> {
   const products = await prisma.product.findMany({
-    where: { active: true },
-    orderBy: { sortOrder: "asc" },
+    orderBy: [{ active: "desc" }, { sortOrder: "asc" }],
     include: {
       inventory: true,
       inventoryMovements: {
@@ -101,6 +148,7 @@ export async function loadStock(): Promise<StockLine[]> {
       reservedGrams,
       availableGrams: physical - reservedGrams,
       minGrams: p.inventory?.minGrams ?? 0,
+      active: p.active,
       lastAdjustment: last
         ? { at: last.createdAt, actor: last.actor, reason: last.reason, gramsDelta: last.gramsDelta, kind: last.kind }
         : null,
@@ -152,7 +200,10 @@ export async function applyOrderPick(orderId: string, actor: string, client?: Tx
   const run = async (tx: Tx) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
-      include: { items: { include: { product: { select: { packageWeightGrams: true } } } } },
+      include: {
+        items: { include: { product: { select: { packageWeightGrams: true } } } },
+        invoice: { include: { creditNotes: { select: { kind: true, snapshotJson: true } } } },
+      },
     });
     if (!order || order.status === "CANCELLED") return;
     const already = await tx.inventoryMovement.findFirst({
@@ -166,14 +217,26 @@ export async function applyOrderPick(orderId: string, actor: string, client?: Tx
     // Senaste PICK utan senare UNPICK = redan dragen.
     if (already && (!unpick || unpick.createdAt <= already.createdAt)) return;
 
-    for (const item of order.items) {
+    let remaining: { remaining: number }[] | null = null;
+    try {
+      remaining = order.invoice ? remainingByLine(order.invoice.snapshotJson, order.invoice.creditNotes) : null;
+    } catch {
+      remaining = null;
+    }
+
+    for (const [idx, item] of order.items.entries()) {
       if (!item.productId) continue;
-      const delta = -gramsForLine(item);
+      const qty = remaining?.[idx] ? remaining[idx].remaining : item.weightKg;
+      if (qty <= 0) continue;
+      const delta = -gramsForLine({ ...item, weightKg: qty });
       if (delta === 0) continue;
       const inv = await ensureInventory(item.productId, tx);
-      const before = inv.physicalGrams;
-      const after = before + delta;
-      await tx.inventory.update({ where: { id: inv.id }, data: { physicalGrams: after } });
+      const updated = await tx.inventory.update({
+        where: { id: inv.id },
+        data: { physicalGrams: { increment: delta } },
+      });
+      const after = updated.physicalGrams;
+      const before = after - delta;
       await tx.inventoryMovement.create({
         data: {
           inventoryId: inv.id,
@@ -196,11 +259,6 @@ export async function applyOrderPick(orderId: string, actor: string, client?: Tx
 /** Återställ fysiskt lager efter av-plock eller avbruten plockad order. */
 export async function applyOrderUnpick(orderId: string, actor: string, client?: Tx): Promise<void> {
   const run = async (tx: Tx) => {
-    const order = await tx.order.findUnique({
-      where: { id: orderId },
-      include: { items: { include: { product: { select: { packageWeightGrams: true } } } } },
-    });
-    if (!order) return;
     const lastPick = await tx.inventoryMovement.findFirst({
       where: { orderId, kind: "PICK" },
       orderBy: { createdAt: "desc" },
@@ -212,21 +270,32 @@ export async function applyOrderUnpick(orderId: string, actor: string, client?: 
     });
     if (lastUnpick && lastUnpick.createdAt >= lastPick.createdAt) return;
 
-    for (const item of order.items) {
-      if (!item.productId) continue;
-      const delta = gramsForLine(item);
-      if (delta === 0) continue;
-      const inv = await ensureInventory(item.productId, tx);
-      const before = inv.physicalGrams;
-      const after = before + delta;
-      await tx.inventory.update({ where: { id: inv.id }, data: { physicalGrams: after } });
+    // Återställ exakt det som drogs – inte omräknat från nuvarande rad/kredit/produktvikt.
+    const picks = await tx.inventoryMovement.findMany({
+      where: {
+        orderId,
+        kind: "PICK",
+        ...(lastUnpick ? { createdAt: { gt: lastUnpick.createdAt } } : {}),
+      },
+    });
+    const order = await tx.order.findUnique({ where: { id: orderId }, select: { orderNumber: true } });
+    for (const pick of picks) {
+      const delta = -pick.gramsDelta;
+      if (delta === 0 || !pick.productId) continue;
+      const inv = await ensureInventory(pick.productId, tx);
+      const updated = await tx.inventory.update({
+        where: { id: inv.id },
+        data: { physicalGrams: { increment: delta } },
+      });
+      const after = updated.physicalGrams;
+      const before = after - delta;
       await tx.inventoryMovement.create({
         data: {
           inventoryId: inv.id,
-          productId: item.productId,
+          productId: pick.productId,
           kind: "UNPICK",
           gramsDelta: delta,
-          reason: `Avplock ${order.orderNumber}`,
+          reason: `Avplock ${order?.orderNumber ?? orderId}`,
           actor,
           orderId,
           beforeGrams: before,
