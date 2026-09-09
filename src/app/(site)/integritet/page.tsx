@@ -6,12 +6,13 @@ import { InfoPageSeo } from "@/components/InfoPageSeo";
 
 export const metadata: Metadata = {
   title: "Integritetspolicy",
-  description: "Hur Sockerbagaren behandlar personuppgifter i samband med beställningar.",
+  description:
+    "Hur Sockerbagaren behandlar personuppgifter vid företagsbeställning: order, faktura, leverans och cookies.",
   alternates: { canonical: "/integritet" },
   ...sharePreview({
     title: "Integritetspolicy",
     description:
-      "Hur Sockerbagaren behandlar personuppgifter i samband med beställningar.",
+      "Hur Sockerbagaren behandlar personuppgifter vid företagsbeställning: order, faktura, leverans och cookies.",
     path: "/integritet",
   }),
 };

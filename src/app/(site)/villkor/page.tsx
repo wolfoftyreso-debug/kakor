@@ -5,12 +5,13 @@ import { InfoPageSeo } from "@/components/InfoPageSeo";
 
 export const metadata: Metadata = {
   title: "Leverans- och köpvillkor",
-  description: "Leverans-, köp- och fakturavillkor för beställningar hos Sockerbagaren.",
+  description:
+    "Leverans-, köp- och fakturavillkor för företag: fasta leveransdagar i södra Stockholm, betalning mot faktura och ingen ångerrätt.",
   alternates: { canonical: "/villkor" },
   ...sharePreview({
     title: "Leverans- och köpvillkor",
     description:
-      "Leverans-, köp- och fakturavillkor för beställningar hos Sockerbagaren.",
+      "Leverans-, köp- och fakturavillkor för företag: fasta leveransdagar i södra Stockholm, betalning mot faktura och ingen ångerrätt.",
     path: "/villkor",
   }),
 };

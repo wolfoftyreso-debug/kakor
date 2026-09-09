@@ -5,6 +5,7 @@ import {
   faqNode,
   graph,
   ids,
+  merchantReturnPolicyNode,
   organizationNode,
   productListNode,
   productNode,
@@ -55,6 +56,12 @@ describe("schema-motorn", () => {
     // Grundat 2025 är verksamhetens egen uppgift (berättelsen på /om) – inget mer precist än året.
     expect(org.foundingDate).toBe("2025");
     expect(org).not.toHaveProperty("servesCuisine");
+    const logo = org.logo as Record<string, unknown>;
+    expect(logo["@type"]).toBe("ImageObject");
+    expect(logo.width).toBe(512);
+    expect(org.knowsAbout).toEqual(expect.arrayContaining(["Småkakor", "Kontorsfika"]));
+    const retur = org.hasMerchantReturnPolicy as { "@id": string };
+    expect(retur["@id"]).toBe(ids.returnPolicy());
   });
 
   it("webbplatsen refererar organisationen via @id (graf, inte kopior)", () => {
@@ -98,15 +105,31 @@ describe("schema-motorn", () => {
     expect((node.image as string[]).some((u) => /kolasnittar-square\.jpg$/.test(u))).toBe(true);
     expect(node.category).toBe("Småkakor");
     expect(productNode({ ...product, imageRef: "" })).not.toHaveProperty("image");
+    const origin = node.countryOfOrigin as { name: string };
+    expect(origin.name).toBe("Litauen");
     const offer = node.offers as Record<string, unknown>;
     expect(offer.price).toBe("295.00");
     expect(offer.priceCurrency).toBe("SEK");
+    expect(offer.itemCondition).toBe("https://schema.org/NewCondition");
     expect(offer.seller).toEqual({ "@id": ids.organization() });
-    const shipping = offer.shippingDetails as { shippingDestination: { addressCountry: string; addressLocality: string }[] };
+    const retur = offer.hasMerchantReturnPolicy as { "@id": string };
+    expect(retur["@id"]).toBe(ids.returnPolicy());
+    const shipping = offer.shippingDetails as { shippingDestination: { addressCountry: string; addressLocality?: string; postalCode?: string }[] };
     expect(shipping.shippingDestination.map((d) => d.addressLocality)).toEqual([...DELIVERY_CITIES]);
     expect(shipping.shippingDestination.every((d) => d.addressCountry === "SE")).toBe(true);
+    const withPost = productNode(product, ["135", "131"]);
+    const postShipping = (withPost.offers as { shippingDetails: { shippingDestination: { postalCode: string }[] } }).shippingDetails;
+    expect(postShipping.shippingDestination.map((d) => d.postalCode)).toEqual(["135", "131"]);
     expect(node).not.toHaveProperty("aggregateRating");
     expect(node).not.toHaveProperty("review");
+  });
+
+  it("returpolicyn är ingen ångerrätt och pekar på villkoren", () => {
+    const node = merchantReturnPolicyNode();
+    expect(node["@type"]).toBe("MerchantReturnPolicy");
+    expect(node.returnPolicyCategory).toBe("https://schema.org/MerchantReturnNotPermitted");
+    expect(node.applicableCountry).toBe("SE");
+    expect(String(node.merchantReturnLink)).toMatch(/\/villkor$/);
   });
 
   it("FAQPage speglar exakt de synliga frågorna och är tom-säker", () => {

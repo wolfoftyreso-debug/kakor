@@ -8,6 +8,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Steps } from "@/components/Steps";
 import { TrustStrip } from "@/components/TrustStrip";
 import { FaqList } from "@/components/FaqList";
+import { CONTENT_DATES } from "@/lib/seo/content-dates";
 
 // Fikaprenumerationen är INTE en egen butik eller checkout – det är ett
 // köpläge i sajtens enda beställningsflöde (/bestall). Den här sidan
@@ -78,6 +79,7 @@ export default async function PrenumerationPage() {
             title: "Fikaprenumeration till jobbet, varje vecka",
             description: String(metadata.description),
             breadcrumbs: PREN_CRUMBS,
+            dateModified: CONTENT_DATES["/prenumeration"].updated,
           }),
           breadcrumbNode("/prenumeration", PREN_CRUMBS),
           faqNode("/prenumeration", PREN_FAQS)

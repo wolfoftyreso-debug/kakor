@@ -6,6 +6,7 @@ import { invoiceConfig, isVerifiedValue } from "@/lib/config";
 import { InfoPageSeo } from "@/components/InfoPageSeo";
 import { PageHeader } from "@/components/PageHeader";
 import { FaqList } from "@/components/FaqList";
+import { CONTENT_DATES } from "@/lib/seo/content-dates";
 
 export const metadata: Metadata = {
   title: { absolute: "Om Sockerbagaren – det började med en gammal bok" },
@@ -44,6 +45,7 @@ export default function OmPage() {
       name="Om Sockerbagaren"
       title="Om Sockerbagaren – det började med en gammal bok"
       description={String(metadata.description)}
+      dateModified={CONTENT_DATES["/om"].updated}
       faqs={OM_FAQS}
     />
     <div className="container-narrow prose" style={{ padding: "16px 24px 80px" }}>

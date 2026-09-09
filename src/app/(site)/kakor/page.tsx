@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { sharePreview } from "@/lib/seo/meta";
 import Link from "next/link";
-import { getActiveProducts } from "@/lib/products";
+import { getActiveProducts, getDeliveryPostalPrefixes } from "@/lib/products";
 import { FaqList } from "@/components/FaqList";
 import { PollNudge } from "@/components/poll/PollNudge";
 import { ProductCard } from "@/components/ProductCard";
@@ -30,6 +30,10 @@ export const metadata: Metadata = {
 // Renderas synligt längst ner på sidan + som FAQPage-schema (samma text).
 // Svaren är generell bakkunskap eller verifierade verksamhetsfakta – inga löften.
 const KAKOR_FAQS = [
+  {
+    q: "Säljer ni kakor till kontoret per kilo?",
+    a: "Ja. Småkakorna säljs per kilo (eller som prova-på-paket 1,5 kg) till företag. Ni blandar sorter i samma beställning, får leverans till kontoret på områdets leveransdag och betalar mot faktura.",
+  },
   {
     q: "Varför inte kakor från kontorsgrossisten?",
     a: "För att det är förvånansvärt svårt att hitta riktiga småkakor till företagsfikat där – det som finns är ofta fabrikskakor med margarin och långa innehållsförteckningar. Våra bakas i satser på riktigt smör efter recept ur Svenskt konditorlexikon, packas och fryses direkt och plockas från fryslagret i Tyresö till er på områdets leveransdag. Ni handlar per kilo och betalar mot faktura.",
@@ -70,7 +74,7 @@ const CRUMBS = [
 ];
 
 export default async function KakorPage() {
-  const products = await getActiveProducts();
+  const [products, postalPrefixes] = await Promise.all([getActiveProducts(), getDeliveryPostalPrefixes()]);
 
   const pageGraph = graph(
     webPageNode({
@@ -83,7 +87,7 @@ export default async function KakorPage() {
     }),
     breadcrumbNode("/kakor", CRUMBS),
     productListNode("/kakor", products),
-    ...products.map(productNode),
+    ...products.map((p) => productNode(p, postalPrefixes)),
     faqNode("/kakor", KAKOR_FAQS)
   );
 
@@ -124,6 +128,15 @@ export default async function KakorPage() {
             <ProductCard key={p.id} product={p} headingLevel="h2" />
           ))}
         </div>
+        <h2 className="h-sub" style={{ marginTop: 40, marginBottom: 10 }}>
+          Småkakor per kilo till företaget
+        </h2>
+        <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--brown-2)", maxWidth: "65ch", margin: "0 0 8px" }}>
+          Vi säljer kakorna per kilo, inte i små konsumentburkar. Ett kilo räcker till ett
+          mindre gäng; blanda sorter i samma beställning. Kakor till kontoret levereras på
+          områdets leveransdag och betalas mot faktura. Osäkra på mängden? Prova-på-paketet
+          är 1,5&nbsp;kg – 0,5&nbsp;kg av varje sort.
+        </p>
         <div style={{ marginTop: 32, display: "flex", gap: 14, flexWrap: "wrap" }}>
           <Link href="/bestall" className="btn btn-primary btn-lg">
             Beställ kakor
