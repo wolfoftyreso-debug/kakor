@@ -42,7 +42,9 @@ function buildCsp(nonce: string): string {
     "font-src 'self' data:",
     `connect-src 'self' ${connectExtra}`,
     `frame-src ${[TURNSTILE ? TURNSTILE_HOST : "", IS_VERCEL_PREVIEW ? "https://vercel.live" : ""].filter(Boolean).join(" ") || "'none'"}`,
-    "frame-ancestors 'none'",
+    // I next dev utelämnas frame-ancestors så lokal inbäddning (förhandsvisning)
+    // fungerar. Produktion och Vercel-byggen har 'none' + X-Frame-Options DENY.
+    IS_DEV ? "" : "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",

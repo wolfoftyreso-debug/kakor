@@ -25,6 +25,9 @@ async function main() {
     password: "postgres",
     port: PORT,
     persistent: true,
+    // Postgres vägrar köra som root (t.ex. i en container) — då skapas
+    // en os-användare "postgres" att köra under.
+    createPostgresUser: typeof process.getuid === "function" && process.getuid() === 0,
   });
   if (fresh) await pg.initialise();
   await pg.start();

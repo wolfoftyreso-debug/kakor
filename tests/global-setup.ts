@@ -23,6 +23,7 @@ export default async function setup() {
     password: "postgres",
     port: PG_PORT,
     persistent: false,
+    createPostgresUser: typeof process.getuid === "function" && process.getuid() === 0,
   });
   await pg.initialise();
   await pg.start();

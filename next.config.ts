@@ -28,7 +28,11 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           // Vercel sätter HSTS själv — explicit här så att self-hosting också får det.
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
-          { key: "X-Frame-Options", value: "DENY" },
+          // DENY i prod/preview-bygge. I `next dev` utelämnas den så att
+          // lokal inbäddning fungerar; CSP frame-ancestors är 'none' i production.
+          ...(process.env.NODE_ENV === "development"
+            ? []
+            : [{ key: "X-Frame-Options", value: "DENY" }]),
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
           // Isolerar fönsterkontexten från sidor som öppnar oss via window.open (Spectre-klass).
