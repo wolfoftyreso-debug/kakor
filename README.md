@@ -292,6 +292,7 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
   områdessidorna), BAKNING (bagaren vid plåten — /om)
   och ARBETSPLATSFIKA (kollegorna vid fikabordet — startsidans "Fika för
   arbetsplatser") samt PAKETFOTOT för prova-på-paketet (alla tre sorterna
-  på fat). Hela fotouppsättningen enligt designpaketet är därmed komplett.
+  på fat). Kandidatfoton till Folkets nästa småkaka: hallongrotta, dröm,
+  schackruta (samma fotoserie som sortimentet).
 - Google-recensioner: sektionen renderas inte förrän verifierade omdömen
   kopplas in (inga fejkade recensioner, även enligt designpaketet)

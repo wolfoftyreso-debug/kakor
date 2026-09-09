@@ -123,15 +123,16 @@ async function main() {
     update: {},
   });
   const candidates = [
-    { slug: "hallongrotta", name: "Hallongrotta", displayOrder: 1, description: "Smörig mördeg med en grop hallonsylt i mitten.", tradition: "En av det svenska kakfatets stora klassiker – självskriven på kafferepet." },
-    { slug: "drom", name: "Dröm", displayOrder: 2, description: "Spröd och luftig, bakad med hjorthornssalt, smälter i munnen.", tradition: "Drömmar hör till de sju sorterna sedan generationer." },
-    { slug: "schackruta", name: "Schackruta", displayOrder: 3, description: "Tvåfärgad mördeg med vanilj och kakao, rutad som ett schackbräde.", tradition: "Kafferepets ögonfröjd – lika mycket hantverk som kaka." },
+    { slug: "hallongrotta", name: "Hallongrotta", displayOrder: 1, description: "Smörig mördeg med en grop hallonsylt i mitten.", tradition: "En av det svenska kakfatets stora klassiker – självskriven på kafferepet.", imageRef: "/images/hallongrotta.jpg" },
+    { slug: "drom", name: "Dröm", displayOrder: 2, description: "Spröd och luftig, bakad med hjorthornssalt, smälter i munnen.", tradition: "Drömmar hör till de sju sorterna sedan generationer.", imageRef: "/images/drom.jpg" },
+    { slug: "schackruta", name: "Schackruta", displayOrder: 3, description: "Tvåfärgad mördeg med vanilj och kakao, rutad som ett schackbräde.", tradition: "Kafferepets ögonfröjd – lika mycket hantverk som kaka.", imageRef: "/images/schackruta.jpg" },
   ];
   for (const c of candidates) {
     await prisma.pollCandidate.upsert({
       where: { pollId_slug: { pollId: poll.id, slug: c.slug } },
       create: { pollId: poll.id, ...c },
-      update: {},
+      // Kandidatfotot sätts vid om-seed; röster och texter rörs inte.
+      update: { imageRef: c.imageRef },
     });
   }
 
