@@ -10,6 +10,7 @@ const orderInclude = {
   items: { include: { product: { select: { packageWeightGrams: true } } } },
   invoice: { select: { status: true, invoiceNumber: true } },
   subscription: { select: { number: true } },
+  deliveryArea: { select: { id: true, name: true, sortOrder: true, maxKgPerDay: true } },
 } as const;
 
 export async function loadLiveOrders(deliveryDate: Date) {
@@ -42,11 +43,17 @@ function stopFromOrder(o: Awaited<ReturnType<typeof loadLiveOrders>>[number]): S
     deliveryInstruction: o.deliveryInstruction,
     reference: o.reference,
     subscriptionNumber: o.subscription?.number ?? null,
+    areaName: o.deliveryArea?.name,
+    areaSortOrder: o.deliveryArea?.sortOrder,
     invoiceStatus: o.invoice?.status ?? null,
     invoiceNumber: o.invoice?.invoiceNumber ?? null,
     items,
     totalGrams: items.reduce((s, i) => s + i.grams, 0),
   };
+}
+
+export function toSnapshotStop(o: Awaited<ReturnType<typeof loadLiveOrders>>[number]): SnapshotStop {
+  return stopFromOrder(o);
 }
 
 export async function buildSnapshot(deliveryDate: Date, actor: string, lockedAt = new Date()): Promise<DeliverySnapshot> {

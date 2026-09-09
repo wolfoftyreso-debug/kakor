@@ -11,10 +11,12 @@ import {
 } from "@/lib/dates";
 import { DELIVERY_WEEK_STATUS_LABELS, type DeliveryWeekStatus } from "@/lib/status";
 import { formatWeightKg, qtyLabel } from "@/lib/units";
-import { isWeekLockedStatus, loadWeekOps } from "@/lib/warehouse/queries";
+import { isWeekLockedStatus, loadWeekOps, sortStopsByRoute } from "@/lib/warehouse/queries";
 import { PrintButton } from "@/components/admin/PrintButton";
 import { PickButtons } from "../../PickButtons";
 import { WeekActions } from "../../WeekActions";
+import { AreaBookingBars } from "@/components/admin/AreaBooking";
+import { overdueOrgNumbers } from "@/lib/orders/overdue";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -64,8 +66,9 @@ export default async function WeekPage({ params }: { params: Promise<{ yw: strin
 async function DaySection({ day }: { day: Awaited<ReturnType<typeof loadWeekOps>>[number] }) {
   const locked = isWeekLockedStatus(day.status);
   const dateLabel = capitalizeFirst(formatDeliveryDateWithYear(day.deliveryDate));
-  const stops = day.snapshot?.stops ?? day.liveStops;
+  const stops = sortStopsByRoute(day.snapshot?.stops ?? day.liveStops);
   const pickByOrder = await loadPickMap(stops.map((s) => s.orderId));
+  const overdueOrgs = await overdueOrgNumbers();
 
   return (
     <section style={{ marginBottom: 40 }}>
@@ -97,6 +100,13 @@ async function DaySection({ day }: { day: Awaited<ReturnType<typeof loadWeekOps>
         {day.orderCount} {day.orderCount === 1 ? "leverans" : "leveranser"} · {formatWeightKg(day.totalGrams)} totalt
         {day.subscriptionCount > 0 ? ` · ${day.subscriptionCount} prenumeration${day.subscriptionCount === 1 ? "" : "er"}` : ""}
       </div>
+
+      {day.byArea.length > 0 && (
+        <div className="card" style={{ padding: "14px 18px", marginBottom: 14 }}>
+          <div className="section-label" style={{ marginBottom: 8 }}>Bokat per område</div>
+          <AreaBookingBars areas={day.byArea} />
+        </div>
+      )}
 
       <div className="card" style={{ padding: "14px 18px", marginBottom: 14, background: "var(--butter-soft)" }}>
         <div className="section-label" style={{ marginBottom: 8 }}>Vad ska vi baka?</div>
@@ -142,8 +152,18 @@ async function DaySection({ day }: { day: Awaited<ReturnType<typeof loadWeekOps>
 
       <h3 style={{ fontSize: 18, margin: "24px 0 10px" }}>Vart ska det?</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {stops.map((stop, idx) => (
-          <article key={stop.orderId} className="card" style={{ padding: "16px 18px" }}>
+        {stops.map((stop, idx, arr) => {
+            const areaName = stop.areaName ?? stop.deliveryCity;
+            const prevArea = idx > 0 ? (arr[idx - 1].areaName ?? arr[idx - 1].deliveryCity) : null;
+            const showArea = areaName !== prevArea;
+            return (
+          <div key={stop.orderId}>
+            {showArea && (
+              <div className="section-label" style={{ margin: idx === 0 ? "0 0 8px" : "14px 0 8px" }}>
+                {areaName}
+              </div>
+            )}
+          <article className="card" style={{ padding: "16px 18px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <div>
                 <div className="section-label">Stopp {idx + 1}</div>
@@ -154,6 +174,11 @@ async function DaySection({ day }: { day: Awaited<ReturnType<typeof loadWeekOps>
                 {stop.subscriptionNumber && (
                   <span className="pill pill-outline" style={{ marginLeft: 8 }}>
                     Prenum. {stop.subscriptionNumber}
+                  </span>
+                )}
+                {overdueOrgs.has(stop.orgNumber) && (
+                  <span className="pill pill-warn" style={{ marginLeft: 8 }}>
+                    Förfallen fordran
                   </span>
                 )}
                 <div style={{ fontSize: 13.5, marginTop: 4 }}>
@@ -187,7 +212,9 @@ async function DaySection({ day }: { day: Awaited<ReturnType<typeof loadWeekOps>
               <PickButtons orderId={stop.orderId} pickStatus={pickByOrder.get(stop.orderId) ?? "UNPICKED"} />
             </div>
           </article>
-        ))}
+          </div>
+            );
+          })}
       </div>
 
       <h3 style={{ fontSize: 18, margin: "28px 0 10px" }}>Plocklista</h3>

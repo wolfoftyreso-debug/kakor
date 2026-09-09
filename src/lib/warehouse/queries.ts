@@ -12,9 +12,10 @@ import {
 import { isWeekLockedStatus } from "@/lib/status";
 import { cutoffForDelivery } from "./cutoff";
 import { getOpsSettings } from "./settings";
-import { formatStockQty, gramsForLine, loadStock, productionNeedGrams } from "./inventory";
-import { loadLiveOrders, parseLateChanges, parseSnapshot, snapshotOrderIds, ensureDeliveryWeek } from "./snapshot";
+import { formatStockQty, loadStock, productionNeedGrams } from "./inventory";
+import { loadLiveOrders, parseLateChanges, parseSnapshot, snapshotOrderIds, ensureDeliveryWeek, toSnapshotStop } from "./snapshot";
 import type { DeliverySnapshot, LateChange, SnapshotStop, OpsSettings } from "./types";
+import { sortStopsByRoute } from "./route";
 
 export interface ProductNeed {
   productId: string | null;
@@ -47,6 +48,35 @@ export interface DayOps {
   orderCount: number;
   totalGrams: number;
   subscriptionCount: number;
+  byArea: AreaBooked[];
+}
+
+export interface AreaBooked {
+  id: string;
+  name: string;
+  sortOrder: number;
+  grams: number;
+  maxKg: number;
+  orderCount: number;
+}
+
+export { sortStopsByRoute };
+
+async function bookedByArea(stops: SnapshotStop[]): Promise<AreaBooked[]> {
+  const areas = await prisma.deliveryArea.findMany({ orderBy: { sortOrder: "asc" } });
+  return areas
+    .map((a) => {
+      const mine = stops.filter((s) => s.areaName === a.name || (!s.areaName && s.deliveryCity === a.name));
+      return {
+        id: a.id,
+        name: a.name,
+        sortOrder: a.sortOrder,
+        grams: mine.reduce((sum, x) => sum + x.totalGrams, 0),
+        maxKg: a.maxKgPerDay,
+        orderCount: mine.length,
+      };
+    })
+    .filter((a) => a.orderCount > 0);
 }
 
 function productNeedsFromStops(
@@ -79,34 +109,7 @@ function productNeedsFromStops(
 }
 
 function liveToStops(orders: Awaited<ReturnType<typeof loadLiveOrders>>): SnapshotStop[] {
-  return orders.map((o) => {
-    const items = o.items.map((i) => ({
-      productId: i.productId,
-      productName: i.productName,
-      qty: i.weightKg,
-      unit: i.unit,
-      grams: gramsForLine(i),
-    }));
-    return {
-      orderId: o.id,
-      orderNumber: o.orderNumber,
-      companyName: o.companyName,
-      orgNumber: o.orgNumber,
-      contactName: o.contactName,
-      email: o.email,
-      phone: o.phone,
-      deliveryAddress: o.deliveryAddress,
-      deliveryPostalCode: o.deliveryPostalCode,
-      deliveryCity: o.deliveryCity,
-      deliveryInstruction: o.deliveryInstruction,
-      reference: o.reference,
-      subscriptionNumber: o.subscription?.number ?? null,
-      invoiceStatus: o.invoice?.status ?? null,
-      invoiceNumber: o.invoice?.invoiceNumber ?? null,
-      items,
-      totalGrams: items.reduce((s, i) => s + i.grams, 0),
-    };
-  });
+  return orders.map(toSnapshotStop);
 }
 
 export async function loadDayOps(deliveryDate: Date): Promise<DayOps> {
@@ -169,6 +172,7 @@ export async function loadDayOps(deliveryDate: Date): Promise<DayOps> {
     orderCount: displayStops.length,
     totalGrams: displayStops.reduce((s, o) => s + o.totalGrams, 0),
     subscriptionCount: displayStops.filter((s) => s.subscriptionNumber).length,
+    byArea: await bookedByArea(displayStops),
   };
 }
 
@@ -240,6 +244,7 @@ export async function listHistoricWeeks() {
 export interface OpsDashboard {
   settings: OpsSettings;
   nextDay: DayOps | null;
+  upcoming: DayOps[];
   cutoffLabel: string | null;
   stock: Awaited<ReturnType<typeof loadStock>>;
   needs: ProductNeed[];
@@ -251,7 +256,7 @@ export async function loadOpsDashboard(now = new Date()): Promise<OpsDashboard> 
   const cutoffLabel = nextDay
     ? formatDeadline(cutoffForDelivery(nextDay.deliveryDate, settings))
     : null;
-  return { settings, nextDay, cutoffLabel, stock, needs: nextDay?.byProduct ?? [] };
+  return { settings, nextDay, upcoming, cutoffLabel, stock, needs: nextDay?.byProduct ?? [] };
 }
 
 export { formatStockQty, isWeekLockedStatus };

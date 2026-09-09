@@ -2,7 +2,7 @@
 // Ändra inte träning till disallow utan ägarbeslut – standard är att * tillåter
 // både sök och träning, med samma spärrar för privata vägar.
 
-export const PRIVATE_PATHS = ["/admin", "/api", "/faktura", "/prenumeration/hantera"] as const;
+export const PRIVATE_PATHS = ["/admin", "/api", "/faktura", "/prenumeration/hantera", "/demo-underlag"] as const;
 
 export const SEARCH_USER_AGENTS = ["Googlebot", "Bingbot", "DuckDuckBot"] as const;
 

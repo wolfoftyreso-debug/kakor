@@ -24,6 +24,8 @@ export interface SnapshotStop {
   deliveryInstruction: string;
   reference: string;
   subscriptionNumber: string | null;
+  areaName?: string;
+  areaSortOrder?: number;
   invoiceStatus: string | null;
   invoiceNumber: string | null;
   items: SnapshotItem[];

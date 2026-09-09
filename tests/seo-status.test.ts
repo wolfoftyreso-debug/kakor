@@ -72,7 +72,7 @@ describe("SEO-alias", () => {
 
 describe("crawlerpolicy", () => {
   it("spärrar privata vägar och blandar inte ihop sök med träning", () => {
-    expect(PRIVATE_PATHS).toEqual(expect.arrayContaining(["/admin", "/api", "/faktura", "/prenumeration/hantera"]));
+    expect(PRIVATE_PATHS).toEqual(expect.arrayContaining(["/admin", "/api", "/faktura", "/prenumeration/hantera", "/demo-underlag"]));
     const training = CRAWLER_POLICY.filter((r) => r.group === "ai-training");
     expect(training.length).toBeGreaterThan(0);
     expect(training.every((r) => r.policy === "allow")).toBe(true);

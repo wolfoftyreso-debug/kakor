@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { lineWeightGrams, formatWeightKg, qtyLabel } from "@/lib/units";
 import { orderReservesStock, type MovementKind } from "@/lib/status";
 import { remainingByLine } from "@/lib/invoice/credit";
+import { toISODate, todayInStockholm } from "@/lib/dates";
 
 type Tx = Prisma.TransactionClient;
 
@@ -14,7 +15,11 @@ export interface StockLine {
   packageWeightGrams: number;
   physicalGrams: number;
   reservedGrams: number;
+  reservedNextGrams: number;
+  reservedLaterGrams: number;
+  nextDeliveryIso: string | null;
   availableGrams: number;
+  availableNextGrams: number;
   minGrams: number;
   active: boolean;
   lastAdjustment: {
@@ -84,24 +89,37 @@ export function hasActivePick(movements: { kind: string; createdAt: Date }[]): b
   return !lastUnpick || lastUnpick <= lastPick;
 }
 
-/**
- * Reserverat = gram på ej avbrutna, ej plockade, ej levererade ordrar.
- * Plockade ordrar har redan lämnat frysen (fysiskt saldo minskat).
- * PROBLEM efter plock reserverar inte igen – kakorna är redan dragna.
- */
-export async function reservedGramsByProduct(client: Tx | typeof prisma = prisma): Promise<Map<string, number>> {
+export async function reservedBreakdown(client: Tx | typeof prisma = prisma): Promise<{
+  total: Map<string, number>;
+  next: Map<string, number>;
+  later: Map<string, number>;
+  nextIso: string | null;
+}> {
   const orders = await client.order.findMany({
     where: { status: { not: "CANCELLED" }, deliveryStatus: "PENDING", pickStatus: { in: ["UNPICKED", "PROBLEM"] } },
     select: {
       status: true,
       deliveryStatus: true,
       pickStatus: true,
+      deliveryDate: true,
       items: { select: { productId: true, weightKg: true, unit: true, packageWeightGrams: true, productName: true, product: { select: { packageWeightGrams: true } } } },
       invoice: { select: { snapshotJson: true, creditNotes: { select: { kind: true, snapshotJson: true } } } },
       inventoryMovements: { where: { kind: { in: ["PICK", "UNPICK"] } }, select: { kind: true, createdAt: true } },
     },
   });
-  const map = new Map<string, number>();
+  const todayIso = toISODate(todayInStockholm());
+  const upcoming = [
+    ...new Set(
+      orders.filter((o) => orderReservesStock(o) && toISODate(o.deliveryDate) >= todayIso).map((o) => toISODate(o.deliveryDate))
+    ),
+  ].sort();
+  const nextIso = upcoming[0] ?? null;
+
+  const total = new Map<string, number>();
+  const next = new Map<string, number>();
+  const later = new Map<string, number>();
+  const add = (map: Map<string, number>, id: string, grams: number) => map.set(id, (map.get(id) ?? 0) + grams);
+
   for (const o of orders) {
     if (!orderReservesStock(o)) continue;
     if (o.pickStatus === "PROBLEM" && hasActivePick(o.inventoryMovements)) continue;
@@ -111,14 +129,27 @@ export async function reservedGramsByProduct(client: Tx | typeof prisma = prisma
     } catch {
       remaining = null;
     }
+    const iso = toISODate(o.deliveryDate);
     o.items.forEach((i, idx) => {
       if (!i.productId) return;
       const qty = remaining?.[idx] ? remaining[idx].remaining : i.weightKg;
       if (qty <= 0) return;
-      map.set(i.productId, (map.get(i.productId) ?? 0) + gramsForLine({ ...i, weightKg: qty }));
+      const grams = gramsForLine({ ...i, weightKg: qty });
+      add(total, i.productId, grams);
+      if (nextIso && iso === nextIso) add(next, i.productId, grams);
+      else if (nextIso && iso > nextIso) add(later, i.productId, grams);
+      else add(next, i.productId, grams);
     });
   }
-  return map;
+  return { total, next, later, nextIso };
+}
+
+/** Reserverat = gram på ej avbrutna, ej plockade, ej levererade ordrar.
+ * Plockade ordrar har redan lämnat frysen (fysiskt saldo minskat).
+ * PROBLEM efter plock reserverar inte igen – kakorna är redan dragna.
+ */
+export async function reservedGramsByProduct(client: Tx | typeof prisma = prisma): Promise<Map<string, number>> {
+  return (await reservedBreakdown(client)).total;
 }
 
 export async function loadStock(): Promise<StockLine[]> {
@@ -133,10 +164,12 @@ export async function loadStock(): Promise<StockLine[]> {
       },
     },
   });
-  const reserved = await reservedGramsByProduct();
+  const reserved = await reservedBreakdown();
   return products.map((p) => {
     const physical = p.inventory?.physicalGrams ?? 0;
-    const reservedGrams = reserved.get(p.id) ?? 0;
+    const reservedGrams = reserved.total.get(p.id) ?? 0;
+    const reservedNextGrams = reserved.next.get(p.id) ?? 0;
+    const reservedLaterGrams = reserved.later.get(p.id) ?? 0;
     const last = p.inventoryMovements[0] ?? null;
     return {
       productId: p.id,
@@ -146,7 +179,11 @@ export async function loadStock(): Promise<StockLine[]> {
       packageWeightGrams: p.packageWeightGrams,
       physicalGrams: physical,
       reservedGrams,
+      reservedNextGrams,
+      reservedLaterGrams,
+      nextDeliveryIso: reserved.nextIso,
       availableGrams: physical - reservedGrams,
+      availableNextGrams: physical - reservedNextGrams,
       minGrams: p.inventory?.minGrams ?? 0,
       active: p.active,
       lastAdjustment: last
