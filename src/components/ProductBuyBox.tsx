@@ -52,10 +52,11 @@ export function ProductBuyBox({ product, deliveryDays }: { product: ProductCardD
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
           <span className="section-label">BESTÄLL</span>
           {/* Priset följer valt antal – á-priset visas som hint när fler än en valts. */}
-          <span style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 700 }}>
+          <span style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 700, textAlign: "right", lineHeight: 1.2 }}>
             {total}
-            {kg === 1 ? priceSuffix(product.unit) : ""}{" "}
-            <span style={{ fontSize: 12, fontWeight: 400, fontFamily: "var(--font-sans)", color: "var(--text-2)" }}>
+            {kg === 1 ? priceSuffix(product.unit) : ""}
+            {/* Egen rad i stället för radbrytning mitt i "exkl. moms" på smala skärmar. */}
+            <span style={{ display: "block", fontSize: 12, fontWeight: 400, fontFamily: "var(--font-sans)", color: "var(--text-2)", whiteSpace: "nowrap" }}>
               {kg > 1
                 ? `(${formatOre(product.pricePerKgOre)}${priceSuffix(product.unit)}) exkl. moms`
                 : "exkl. moms"}
@@ -79,6 +80,7 @@ export function ProductBuyBox({ product, deliveryDays }: { product: ProductCardD
               max={MAX_UNITS}
               value={kg}
               aria-label={`Antal ${unitLabel(product.unit)}`}
+              style={{ width: `${Math.max(1, String(kg).length)}ch` }}
               onChange={(e) => {
                 const n = parseInt(e.target.value, 10);
                 setKg(Number.isFinite(n) ? Math.min(MAX_UNITS, Math.max(1, n)) : 1);
