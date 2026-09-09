@@ -58,6 +58,14 @@ export function proxy(req: NextRequest) {
   // /Kakor/Kolasnittar → /kakor/kolasnittar: en länk som skrivits av för hand
   // ska inte ge 404 (fakturatoken och API-vägar är redan gemener).
   const { pathname } = req.nextUrl;
+  // Demo-PDF:er med kunduppgifter får aldrig hamna på produktionssajten,
+  // även om någon råkar committa filerna under public/.
+  if (
+    process.env.VERCEL_ENV === "production" &&
+    (pathname === "/demo-underlag" || pathname.startsWith("/demo-underlag/"))
+  ) {
+    return new NextResponse("Not Found", { status: 404, headers: { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex" } });
+  }
   if (/[A-Z]/.test(pathname) && !pathname.startsWith("/_next") && !pathname.startsWith("/api")) {
     const url = req.nextUrl.clone();
     url.pathname = pathname.toLowerCase();

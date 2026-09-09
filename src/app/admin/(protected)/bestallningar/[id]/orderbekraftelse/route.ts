@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdmin } from "@/lib/auth/session";
+import { isFirstPartyNavigation } from "@/lib/auth/request-guard";
 import { prisma } from "@/lib/db";
 import { renderOrderConfirmationPdf } from "@/lib/orders/confirmation-pdf";
 
@@ -8,6 +9,9 @@ export const dynamic = "force-dynamic";
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await getAdmin();
   if (!admin) return new NextResponse("Obehörig", { status: 401 });
+  if (!isFirstPartyNavigation(_req.headers)) {
+    return new NextResponse("Ogiltig förfrågan", { status: 403, headers: { "Cache-Control": "private, no-store" } });
+  }
   const { id } = await params;
   if (!/^[a-z0-9]{20,40}$/i.test(id)) return new NextResponse("Ogiltig order", { status: 400 });
   const order = await prisma.order.findUnique({

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { castVote, hashIp, newVisitorId, PollError } from "@/lib/polls/service";
-import { readVisitorId, sameOrigin, VISITOR_COOKIE, VISITOR_COOKIE_MAX_AGE } from "@/lib/polls/visitor";
+import { readVisitorId, sameOrigin, visitorCookieOptions, VISITOR_COOKIE } from "@/lib/polls/visitor";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/turnstile";
 import { describeError } from "@/lib/log";
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
     const outcome = await castVote({ slug, candidateId: parsed.data.candidateId, visitorId, ipHash: hashIp(clientIp(req.headers) ?? "local") });
     const res = NextResponse.json({ ok: true, already: outcome.already, candidateId: outcome.candidateId, results: outcome.results });
     if (!existingVisitor) {
-      res.cookies.set(VISITOR_COOKIE, visitorId, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: VISITOR_COOKIE_MAX_AGE });
+      res.cookies.set(VISITOR_COOKIE, visitorId, visitorCookieOptions());
     }
     res.headers.set("Cache-Control", "private, no-store");
     return res;

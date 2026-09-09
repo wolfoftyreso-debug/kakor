@@ -4,6 +4,10 @@ import { SEO_ALIASES } from "./src/lib/seo/aliases";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit"],
   poweredByHeader: false,
+  productionBrowserSourceMaps: false,
+  images: {
+    localPatterns: [{ pathname: "/images/**" }, { pathname: "/og.jpg" }],
+  },
   // public/ finns inte i serverless-funktionens filsystem på Vercel —
   // produktsidans existsSync-val av OG-bildvariant kräver att filerna
   // spåras in i funktionen.
@@ -42,7 +46,7 @@ const nextConfig: NextConfig = {
             ? []
             : [{ key: "X-Frame-Options", value: "DENY" }]),
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()" },
           // Isolerar fönsterkontexten från sidor som öppnar oss via window.open (Spectre-klass).
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
         ],

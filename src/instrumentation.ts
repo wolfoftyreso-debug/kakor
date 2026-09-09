@@ -4,6 +4,7 @@
 //    direkt i loggarna vid boot – inte som slumpmässiga krascher i checkout.
 import * as Sentry from "@sentry/nextjs";
 import { SENTRY_DSN, SENTRY_ENABLED } from "@/lib/sentry-config";
+import { redactSentryEvent } from "@/lib/sentry-redact";
 
 // Fångar serverfel från App Router (server components, route handlers).
 export const onRequestError = Sentry.captureRequestError;
@@ -39,6 +40,10 @@ export async function register() {
       environment: process.env.VERCEL_ENV ?? "development",
       tracesSampleRate: 0, // endast fel, ingen performance-tracing
       sendDefaultPii: false,
+      beforeSend(event) {
+        redactSentryEvent(event as unknown as Record<string, unknown>);
+        return event;
+      },
     });
   }
 

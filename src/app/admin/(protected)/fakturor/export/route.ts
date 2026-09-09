@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdmin } from "@/lib/auth/session";
+import { isFirstPartyNavigation } from "@/lib/auth/request-guard";
 import { prisma } from "@/lib/db";
 import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { isoDateSchema } from "@/lib/validation";
 import { addDays, fromISODate, toISODate, todayInStockholm } from "@/lib/dates";
+import { csvCell } from "@/lib/csv";
 
 // Bokföringsexport: fakturor och kreditfakturor för en period som CSV
 // (semikolon, decimalkomma, UTF-8 med BOM – öppnas direkt i svensk Excel och
@@ -17,13 +19,6 @@ const RATES = [600, 1200, 2500] as const;
 
 function kr(ore: number): string {
   return (ore / 100).toFixed(2).replace(".", ",");
-}
-function csvCell(v: string): string {
-  // Formelinjektion: ett företagsnamn som "=HYPERLINK(...)" eller "-2+3|cmd"
-  // får inte köras när kalkylprogrammet öppnar filen – neutralisera med
-  // apostrof, som Excel/LibreOffice tolkar som text.
-  const safe = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
-  return /[;"\n\r']/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 function perRate(snapshotJson: string, sign: 1 | -1) {
   const net: Record<number, number> = { 600: 0, 1200: 0, 2500: 0 };
@@ -45,6 +40,9 @@ function perRate(snapshotJson: string, sign: 1 | -1) {
 
 export async function GET(req: NextRequest) {
   if (!(await getAdmin())) return new NextResponse("Ej inloggad", { status: 401 });
+  if (!isFirstPartyNavigation(req.headers)) {
+    return new NextResponse("Ogiltig förfrågan", { status: 403, headers: { "Cache-Control": "private, no-store" } });
+  }
   const params = req.nextUrl.searchParams;
   const today = todayInStockholm();
   // Svensk kalendermånad oavsett serverns tidszon.

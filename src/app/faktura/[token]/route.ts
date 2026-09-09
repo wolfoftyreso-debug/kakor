@@ -4,9 +4,17 @@ import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { formatOre } from "@/lib/money";
 import { toISODate } from "@/lib/dates";
+import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 // Säker fakturanedladdning: 48 tecken slumpad token, ingen inloggning krävs.
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: string }> }) {
+  const limit = await rateLimit(clientKey(_req.headers, "faktura"), { limit: 30, windowMs: 60_000 });
+  if (!limit.ok) {
+    return new NextResponse("För många försök – vänta en stund", {
+      status: 429,
+      headers: { "Retry-After": String(limit.retryAfterSeconds), "Cache-Control": "private, no-store" },
+    });
+  }
   const { token } = await ctx.params;
   if (!/^[a-f0-9]{48}$/.test(token)) {
     return NextResponse.redirect(new URL("/faktura-saknas", _req.url), 302);

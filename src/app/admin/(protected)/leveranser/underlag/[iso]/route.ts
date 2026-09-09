@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdmin } from "@/lib/auth/session";
+import { isFirstPartyNavigation } from "@/lib/auth/request-guard";
 import { fromISODate } from "@/lib/dates";
 import { isWeekLockedStatus } from "@/lib/status";
 import { buildSnapshot, parseSnapshot } from "@/lib/warehouse/snapshot";
@@ -11,6 +12,9 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest, { params }: { params: Promise<{ iso: string }> }) {
   const admin = await getAdmin();
   if (!admin) return new NextResponse("Obehörig", { status: 401 });
+  if (!isFirstPartyNavigation(req.headers)) {
+    return new NextResponse("Ogiltig förfrågan", { status: 403, headers: { "Cache-Control": "private, no-store" } });
+  }
   const { iso } = await params;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return new NextResponse("Ogiltigt datum", { status: 400 });
   const typ = req.nextUrl.searchParams.get("typ") ?? "lista";
@@ -40,7 +44,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ iso:
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${filename}"`,
-      "Cache-Control": "no-store",
+      "Cache-Control": "private, no-store",
+      "X-Robots-Tag": "noindex",
     },
   });
 }
