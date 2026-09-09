@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { calculateTotals } from "@/lib/money";
 import { nextNumber } from "@/lib/numbering";
-import { invoiceConfig, isVerifiedValue } from "@/lib/config";
+import { invoiceConfig, isVerifiedValue, hasPaymentDetails } from "@/lib/config";
 import { addDays, capitalizeFirst, formatDeliveryDate, fromISODate, isValidDeliveryDate, toISODate, todayInStockholm, upcomingDeliveryDates } from "@/lib/dates";
 import { bookedKgByDate, totalKg, type CapacityClient } from "@/lib/orders/capacity";
 import { effectiveVatRateBp } from "@/lib/vat";
@@ -79,10 +79,10 @@ export function assertInvoicingConfigured() {
   // riktiga domänen – aldrig i demo/preview/tester, som får använda platshållare.
   const liveDomain = /sockerbagaren\.se/i.test(process.env.SITE_URL ?? "");
   if (process.env.VERCEL_ENV !== "production" && !liveDomain) return;
-  // Bankgiro och momsnummer krävs på fakturan (ML 17 kap.), e-postadressen
-  // krävs synlig för kunden (e-handelslagen 8 §) – utan dem säljer vi inte.
-  if (!isVerifiedValue(invoiceConfig.bankgiro) || !isVerifiedValue(invoiceConfig.vatNumber) || !isVerifiedValue(invoiceConfig.email)) {
-    console.error("[faktura] beställning stoppad: INVOICE_BANKGIRO/INVOICE_VAT_NUMBER/INVOICE_EMAIL är inte verifierade i miljön");
+  // Betalningsuppgifter (IBAN eller bankgiro) och momsnummer krävs på fakturan
+  // (ML 17 kap.), e-postadressen krävs synlig för kunden (e-handelslagen 8 §).
+  if (!hasPaymentDetails() || !isVerifiedValue(invoiceConfig.vatNumber) || !isVerifiedValue(invoiceConfig.email)) {
+    console.error("[faktura] beställning stoppad: betalningsuppgifter/INVOICE_VAT_NUMBER/INVOICE_EMAIL är inte verifierade i miljön");
     throw new OrderError(
       "Beställningar är tillfälligt stängda medan vi slutför fakturainställningarna. Försök igen senare.",
       undefined,
@@ -348,6 +348,9 @@ export async function createOrder(input: CheckoutInput, options: CreateOrderOpti
         bankgiro: invoiceConfig.bankgiro,
         vatNumber: invoiceConfig.vatNumber,
         fSkatt: invoiceConfig.fSkatt,
+        iban: invoiceConfig.iban,
+        bic: invoiceConfig.bic,
+        intermediaryBic: invoiceConfig.intermediaryBic,
       },
       buyer: {
         companyName: input.companyName,

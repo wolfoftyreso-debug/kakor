@@ -1,7 +1,6 @@
-import { invoiceConfig, orderPolicy } from "@/lib/config";
+import { invoiceConfig, orderPolicy, emailConfig, siteConfig, isVerifiedValue } from "@/lib/config";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
-import { emailConfig, siteConfig } from "@/lib/config";
 import { formatOre } from "@/lib/money";
 import { priceSuffix, qtyLabel } from "@/lib/units";
 import { addDays, capitalizeFirst, changeDeadline, formatDeadline, formatDeliveryDate, formatDeliveryDateWithYear, formatLongDate, todayInStockholm } from "@/lib/dates";
@@ -9,7 +8,6 @@ import { parseSnapshot } from "@/lib/invoice/snapshot";
 import { renderInvoicePdf } from "@/lib/invoice/pdf";
 import { renderOrderConfirmationPdf } from "@/lib/orders/confirmation-pdf";
 import { looksLikePersonalNumber } from "@/lib/validation";
-import { isVerifiedValue } from "@/lib/config";
 import { FREQUENCY_LABELS } from "@/lib/status";
 import { manageUrlFor } from "@/lib/subscriptions/manage";
 import { overdueInvoicesFor } from "@/lib/orders/overdue";
@@ -151,6 +149,11 @@ Sockerbagaren`;
   // kunna betala även om bilagan saknas. Platshållare skrivs aldrig ut.
   const paymentLines = [
     isVerifiedValue(invoiceConfig.bankgiro) ? `Bankgiro: ${invoiceConfig.bankgiro}` : "",
+    isVerifiedValue(invoiceConfig.iban) ? `IBAN: ${invoiceConfig.iban}` : "",
+    isVerifiedValue(invoiceConfig.bic) ? `BIC: ${invoiceConfig.bic}` : "",
+    isVerifiedValue(invoiceConfig.intermediaryBic)
+      ? `Förmedlande BIC (SWIFT): ${invoiceConfig.intermediaryBic}`
+      : "",
     `Referens vid betalning: ${order.invoice.invoiceNumber}`,
     `Säljare: ${invoiceConfig.companyName}, org.nr ${invoiceConfig.orgNumber}`,
   ].filter(Boolean);

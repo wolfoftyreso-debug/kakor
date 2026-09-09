@@ -268,12 +268,12 @@ Allt detta är samlat i `.env` (via `src/lib/config.ts`) och tydligt markerat
 `[EJ VERIFIERAT]` tills verksamheten bekräftat — **inget av det är påhittat**:
 
 - Faktura-e-post, telefonnummer
-- Bankgironummer och momsregistreringsnummer (visas på fakturan).
-  **Skydd:** fakturans PDF skriver aldrig ut `[EJ VERIFIERAT]`-platshållare
-  (bankgiro-raden blir "Betalningsuppgifter meddelas separat", overifierad
-  e-post/telefon/momsnr utelämnas), och i produktion (`VERCEL_ENV=production`)
-  rapporterar `checkEnv()` saknade `INVOICE_BANKGIRO`/`INVOICE_VAT_NUMBER`/
-  `INVOICE_EMAIL` som KRITISKA vid uppstart — sätt dem innan första riktiga ordern.
+- Betalning: Revolut-IBAN (inget bankgiro). Momsnr SE559141704201 och F-skatt
+  från Bolagsverket. **Skydd:** fakturans PDF skriver aldrig ut
+  `[EJ VERIFIERAT]`-platshållare (saknas IBAN/bankgiro blir raden
+  "Betalningsuppgifter meddelas separat", overifierad e-post/telefon utelämnas).
+  I produktion rapporterar `checkEnv()` saknad e-post eller betalningsuppgift
+  som KRITISKT — `INVOICE_EMAIL` måste sättas innan första riktiga ordern.
 - **Slutliga priser** — seedade 295 kr/kg är ett startvärde som ska bekräftas
   eller ändras i admin → Produkter (historiska ordrar påverkas inte)
 - **Produktetikett** (`Product.badge`, t.ex. "Bästsäljare") visas på

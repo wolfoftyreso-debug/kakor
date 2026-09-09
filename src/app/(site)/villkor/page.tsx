@@ -78,7 +78,8 @@ export default function VillkorPage() {
           <p>
             Betalning sker mot faktura. Fakturan skapas när ni skickar beställningen, mejlas som
             PDF till angiven faktura-e-post och kan även laddas ner via länken i orderbekräftelsen.
-            E-faktura via Peppol erbjuds inte i dagsläget. Betalningsvillkor:{" "}
+            E-faktura via Peppol erbjuds inte i dagsläget. Betalning sker som banköverföring till
+            det IBAN som står på fakturan (ange fakturanumret som referens). Betalningsvillkor:{" "}
             {invoiceConfig.paymentTermsDays} dagar netto räknat från leveransdagen – ni betalar aldrig före
             leverans. Förfallodatum står på fakturan. Vid försenad betalning
             utgår dröjsmålsränta enligt räntelagen samt förseningsersättning enligt lagen om
