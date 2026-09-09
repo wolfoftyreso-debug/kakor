@@ -31,7 +31,7 @@ Merge-rutin: `git checkout demo-testdeploy && git reset --hard origin/demo-testd
 
 Vercel: team `hypbit` (`team_GP2MTfBKmxj8ajYLvQtV7clA`), projekt `sockerbagaren` (`prj_1R3vBDCRSTFfkVrRrd9MFpdxVBRX`). Demo: <https://sockerbagaren-git-demo-testdeploy-hypbit.vercel.app>. Varje demodeploy roterar admin-lösenordet – det står i bygglogen på raden `DEMO-ADMIN LÖSENORD:` (admin: `/admin`, `demo-admin@sockerbagaren.se`). Senaste: `demo-RMT_b5Fk5dEP` (deploy `dpl_HUREdGVAPyPg1GzGFtdZKxJVZ4hv`). Demodatabasen är flyktig.
 
-Produktion (när det blir aktuellt): Neon PostgreSQL, `scripts/vercel-build.mjs` kör `prisma migrate deploy` när `DIRECT_DATABASE_URL` finns i byggmiljön. Se `DEPLOYMENT.md`.
+Produktion (när det blir aktuellt): Postgres via Vercel Storage (skapas i projektet, ingen separat Neon-inloggning). `scripts/vercel-build.mjs` kör `prisma migrate deploy` när `DIRECT_DATABASE_URL` finns i byggmiljön. Se `DEPLOYMENT.md`.
 
 ## 4. Stack och struktur
 
@@ -109,16 +109,13 @@ Senaste omgångarna, alla live på demon:
 - Google Business Profile (leveransverksamhet utan besöksadress, kategori Bagerigrossist, fyra kommuner); profil-URL i `NEXT_PUBLIC_SAME_AS`. Bekräfta Antennvägen 2 som enda publika adress (NAP).
 - Årtalet 1957 i hero-texten och sigillet.
 - Automatiskt stopp vid förfallen faktura eller bara flagga (i dag: flagga).
-- Vad händer om ingen kan ta emot leveransen (FAQ saknas tills regeln finns).
 - Foton: miljöbilder enligt shot list. Kandidatfoton till omröstningen är på plats (hallongrotta, dröm, schackruta).
 - Antal kakor per kilo per sort (admin-fält, styr mängdhjälpen; bara ifyllt lokalt i testdata).
-- Stavningen "Engelholmsglass" på /om.
 - Recept publiceras inte (rekommendation); engelsk sida (egen omgång); Peppol/PDF-faktura erbjuds inte (står i villkor).
 
 ## 8. Backlog i kod
 
 - P1: ISR (`revalidate` 300 s) på katalogsidor när produktionsbygget når databasen – layouten är `force-dynamic` (demo-SQLite finns inte under `next build`). Leveransdagar i footern är redan cachade 300 s i runtime.
-- P2: FAQ om ej mottagen leverans på /leverans när regeln är beslutad.
 - P2: uppdatera /julfika i oktober med årets beställningsstopp (data ur admin).
 - P3: engelsk landningssida med hreflang.
 - Semrush API-enheter är slut; positionsspårning när domänen är live.

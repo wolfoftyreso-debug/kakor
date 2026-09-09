@@ -88,6 +88,10 @@ const FAQS = [
     a: "Kakorna plockas i fryslagret i Tyresö och körs till er, av oss eller med anlitat bud. Adressen behöver vara bemannad: reception, personalrum eller lastkaj.",
   },
   {
+    q: "Vad händer om ingen kan ta emot leveransen?",
+    a: "Adressen behöver vara bemannad. Om ingen tar emot kan vi inte lämna kakorna. Svara på orderbekräftelsen – vi meddelar er och erbjuder ny leveransdag eller kreditering.",
+  },
+  {
     q: "Vilka allergener finns?",
     a: "Sorterna innehåller vete och smör (mjölk). Mandelkubb innehåller mandel. Chokladsnittar kan innehålla spår av mandel och soja. Fullständig förteckning står på varje produkt och under Ingredienser och allergener.",
   },
