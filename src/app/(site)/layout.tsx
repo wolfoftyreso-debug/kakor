@@ -5,10 +5,10 @@ import { JsonLd } from "@/components/JsonLd";
 import { graph, merchantReturnPolicyNode, organizationNode, websiteNode } from "@/lib/seo/schema";
 import { AnalyticsScript } from "@/components/AnalyticsScript";
 
-// Footern hämtar leveransdagar (cachade 300 s, tagg delivery-days).
-// Innehållssidor utan egen force-dynamic kan ISR:as; kassan och sidor som
-// läser kapacitet eller röster behåller force-dynamic.
-export const revalidate = 300;
+// Footern hämtar leveransdagar (cachade 300 s via unstable_cache, tagg
+// delivery-days). Layouten förblir force-dynamic: demo-bygget har SQLite
+// bara under seed, inte under next build:s statiska generering.
+export const dynamic = "force-dynamic";
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (

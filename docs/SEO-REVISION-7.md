@@ -24,7 +24,7 @@ Inga 4xx/5xx, redirect loops, conflicting canonicals eller index-bloat (20 sitem
 ## 3. Technical SEO
 
 - **Crawl:** 20 indexerbara URL:er. `/admin`, `/api`, `/faktura`, `/prenumeration/hantera` i robots.txt. Preview `noindex`. www→apex 301.
-- **Rendering:** `(site)`-layouten har `revalidate = 300` i stället för `force-dynamic`. Footerns leveransdagar är `unstable_cache` 300 s. Kassan och sidor som läser kapacitet/röster är fortfarande `force-dynamic`. Full ISR på katalogsidor väntar tills produktionsbygget når databasen.
+- **Rendering:** `(site)`-layouten är `force-dynamic` (demo-byggets SQLite finns under seed, inte under `next build`:s statiska generering). Leveransdagar i footern är `unstable_cache` 300 s i runtime. Full ISR på katalogsidor väntar tills produktionsbygget når databasen.
 - **JS-SEO:** RSC/SSR – SEO-text finns i initial HTML.
 - **Hreflang:** ingen. En språkversion (sv-SE).
 - **Sitemap:** `lastModified` även för /kakor, /om, /leverans, /prenumeration, /ingredienser, /villkor, /integritet och de fyra områdessidorna (`CONTENT_DATES`).
@@ -94,7 +94,7 @@ Oförändrad: GBP Bagerigrossist, service areas fyra kommuner, Antennvägen 2 en
 
 - LCP: oförändrat från rev 6 (`priority` på hero, PDP, guide, jul, områden, leverans).
 - Typsnitt: ett webbtypsnitt mindre (Plex Mono). Etiketter i system-mono, samma versaler/letter-spacing.
-- TTFB: layout `revalidate` 300 s; leveransdagar cachade. Katalogsidor med `force-dynamic` väntar.
+- TTFB: leveransdagar cachade 300 s. Layouten förblir `force-dynamic` – ISR på katalog väntar på produktions-DB.
 - Bilder: next/image, WebP/AVIF. Inga nya tunga original.
 
 ## 12. International
@@ -112,7 +112,7 @@ Enbart sv-SE. Ingen hreflang.
 
 - `src/lib/seo/schema.ts` – returpolicy, logo ImageObject, knowsAbout, countryOfOrigin, itemCondition, fraktmål via postnummer
 - `src/lib/products.ts` – `unstable_cache` på leveransdagar, `getDeliveryPostalPrefixes`
-- `src/app/(site)/layout.tsx` – `revalidate = 300`
+- `src/app/(site)/layout.tsx` – returpolicy-noden i @graph (layouten förblir `force-dynamic`)
 - `src/app/(site)/page.tsx`, `kakor/page.tsx`, `kakor/[slug]/page.tsx` – postnummer till Product-schema
 - `src/app/(site)/kakor/page.tsx` – H2 småkakor per kilo, FAQ kakor till kontoret
 - `src/app/(site)/fika-till-jobbet/page.tsx` – kakor till kontoret (lede, H2, description)
