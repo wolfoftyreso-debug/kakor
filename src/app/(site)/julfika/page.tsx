@@ -71,7 +71,7 @@ export default async function JulfikaPage() {
       <JsonLd
         data={graph(
           webPageNode({ path: "/julfika", title: TITLE, description: DESCRIPTION, breadcrumbs: CRUMBS, dateModified: UPDATED }),
-          articleNode({ path: "/julfika", headline: "Julfika på jobbet", description: DESCRIPTION, image: "/images/hero.jpg", datePublished: PUBLISHED, dateModified: UPDATED }),
+          articleNode({ path: "/julfika", headline: TITLE, description: DESCRIPTION, image: "/images/hero.jpg", datePublished: PUBLISHED, dateModified: UPDATED }),
           breadcrumbNode("/julfika", CRUMBS),
           faqNode("/julfika", FAQS)
         )}
@@ -86,7 +86,7 @@ export default async function JulfikaPage() {
         </figure>
         <PageHeader
           eyebrow="Säsong"
-          title="Julfika på jobbet"
+          title="Julfika på jobbet – beställ kakor i tid"
           lede={
             <>
               Julfikat är årets viktigaste fika på många arbetsplatser, och det som oftast beställs för

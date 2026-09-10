@@ -137,6 +137,11 @@ export default async function ProductPage({ params }: Props) {
               <h1 className="h-display" style={{ fontSize: "clamp(32px, 4.5vw, 46px)" }}>
                 {product.name}
               </h1>
+              {knowledge?.titleAka && (
+                <p style={{ margin: "8px 0 0", fontSize: 15, color: "var(--brown-2)" }}>
+                  Kallas även {knowledge.titleAka}.
+                </p>
+              )}
               <p className="lede" style={{ margin: "12px 0 0" }}>
                 {product.description}
               </p>

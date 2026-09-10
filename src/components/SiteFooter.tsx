@@ -72,6 +72,9 @@ export async function SiteFooter() {
               { href: "/bestall", label: "Beställ kakor" },
               { href: "/prenumeration", label: "Fikaprenumeration" },
               { href: "/kakor", label: "Kakor till kontoret" },
+              { href: "/kakor/kolasnittar", label: "Kolasnittar" },
+              { href: "/kakor/mandelkubb", label: "Mandelkubb" },
+              { href: "/kakor/chokladsnittar", label: "Chokladsnittar" },
             ]}
           />
           <FooterCol

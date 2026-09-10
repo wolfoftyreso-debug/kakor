@@ -64,7 +64,9 @@ describe("SEO-alias", () => {
     expect(destinations).toContain("/prenumeration");
     expect(destinations).toContain("/kakor/kolasnittar");
     expect(destinations).toContain("/tyreso");
-    expect(SEO_ALIASES.some((a) => a.source === "/fikaprenumeration")).toBe(true);
+    expect(SEO_ALIASES.some((a) => a.source === "/kolakex")).toBe(true);
+    expect(SEO_ALIASES.some((a) => a.source === "/sirapssnittar")).toBe(true);
+    expect(SEO_ALIASES.some((a) => a.source === "/fika-till-kontoret")).toBe(true);
     expect(SEO_ALIASES.some((a) => a.source === "/kakor-till-kontoret")).toBe(true);
     expect(SEO_ALIASES.some((a) => a.source === a.destination)).toBe(false);
   });

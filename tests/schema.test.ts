@@ -76,8 +76,9 @@ describe("schema-motorn", () => {
 
   it("webbplatsen refererar organisationen via @id (graf, inte kopior)", () => {
     const site = websiteNode();
-    expect(site.publisher).toEqual({ "@id": ids.organization() });
     expect(site.inLanguage).toBe("sv-SE");
+    expect(site.description).toBeTruthy();
+    expect(site.publisher).toEqual({ "@id": ids.organization() });
   });
 
   it("sidnoder kopplas till webbplats, organisation och brödsmulor", () => {
@@ -88,6 +89,10 @@ describe("schema-motorn", () => {
     const page = webPageNode({ path: "/tyreso", title: "T", breadcrumbs: crumbs });
     expect(page.isPartOf).toEqual({ "@id": ids.website() });
     expect(page.breadcrumb).toEqual({ "@id": ids.breadcrumbs("/tyreso") });
+    expect(page.about).toEqual({ "@id": ids.organization() });
+    expect(
+      webPageNode({ path: "/kakor/kolasnittar", title: "K", mainEntityId: ids.product("kolasnittar") }).about
+    ).toEqual({ "@id": ids.product("kolasnittar") });
 
     const bc = breadcrumbNode("/tyreso", crumbs);
     const items = bc.itemListElement as { position: number; name: string; item: string }[];
@@ -114,6 +119,8 @@ describe("schema-motorn", () => {
     expect((node.image as string[]).some((u) => /\/images\/kolasnittar\.jpg$/.test(u))).toBe(true);
     expect((node.image as string[]).some((u) => /kolasnittar-square\.jpg$/.test(u))).toBe(true);
     expect(node.category).toBe("Småkakor");
+    expect(node.alternateName).toEqual(["Kolakakor"]);
+    expect(node.brand).toEqual({ "@type": "Brand", name: "Sockerbagaren" });
     expect(productNode({ ...product, imageRef: "" })).not.toHaveProperty("image");
     const origin = node.countryOfOrigin as { name: string };
     expect(origin.name).toBe("Litauen");

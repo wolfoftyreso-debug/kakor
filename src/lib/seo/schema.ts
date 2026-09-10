@@ -18,6 +18,7 @@
 
 import { siteConfig, invoiceConfig, isVerifiedValue } from "@/lib/config";
 import type { ProductCardData } from "@/components/ProductCard";
+import { PRODUCT_KNOWLEDGE } from "@/lib/product-content";
 
 type JsonLdNode = Record<string, unknown>;
 
@@ -80,6 +81,10 @@ export function organizationNode(): JsonLdNode {
       "Fikaprenumeration",
       "Kontorsfika",
       "Företagsfika",
+      "Kolakakor",
+      "Julfika",
+      "Gammaldags småkakor",
+      "Folkets kaka",
     ],
     // Villkoren: B2B, ingen ångerrätt. Reklamation vid fel är en annan sak och
     // beskrivs på /villkor – den här noden beskriver retur av felfria varor.
@@ -88,7 +93,15 @@ export function organizationNode(): JsonLdNode {
     // sätts i NEXT_PUBLIC_SAME_AS som kommaseparerad lista när de finns.
     ...(SAME_AS.length > 0 ? { sameAs: SAME_AS } : {}),
     ...(isVerifiedValue(invoiceConfig.email)
-      ? { contactPoint: { "@type": "ContactPoint", contactType: "customer service", email: invoiceConfig.email, availableLanguage: "sv" } }
+      ? {
+          email: invoiceConfig.email,
+          contactPoint: {
+            "@type": "ContactPoint",
+            contactType: "customer service",
+            email: invoiceConfig.email,
+            availableLanguage: "sv",
+          },
+        }
       : {}),
     ...(isVerifiedValue(invoiceConfig.vatNumber) ? { vatID: invoiceConfig.vatNumber } : {}),
     taxID: invoiceConfig.orgNumber,
@@ -106,6 +119,7 @@ export function websiteNode(): JsonLdNode {
     url: `${SITE()}/`,
     name: siteConfig.name,
     inLanguage: "sv-SE",
+    description: siteConfig.description,
     publisher: { "@id": ids.organization() },
   };
 }
@@ -188,7 +202,10 @@ export function webPageNode(opts: WebPageOptions): JsonLdNode {
   };
   if (opts.description) node.description = opts.description;
   if (opts.breadcrumbs) node.breadcrumb = { "@id": ids.breadcrumbs(opts.path) };
-  if (opts.mainEntityId) node.mainEntity = { "@id": opts.mainEntityId };
+  if (opts.mainEntityId) {
+    node.mainEntity = { "@id": opts.mainEntityId };
+    node.about = { "@id": opts.mainEntityId };
+  }
   if (opts.dateModified) node.dateModified = opts.dateModified;
   return node;
 }
@@ -235,18 +252,27 @@ function shippingDestinations(postalPrefixes: readonly string[]): JsonLdNode[] {
   }));
 }
 
+function productAlternateNames(slug: string): string[] | undefined {
+  const knowledge = Object.hasOwn(PRODUCT_KNOWLEDGE, slug) ? PRODUCT_KNOWLEDGE[slug] : undefined;
+  if (!knowledge?.titleAka) return undefined;
+  const aka = knowledge.titleAka;
+  return [aka.charAt(0).toUpperCase() + aka.slice(1)];
+}
+
 export function productNode(product: ProductCardData, postalPrefixes: readonly string[] = []): JsonLdNode {
+  const alternateName = productAlternateNames(product.slug);
   return {
     "@type": "Product",
     "@id": ids.product(product.slug),
     name: product.name,
+    ...(alternateName ? { alternateName } : {}),
     description: product.description,
     url: `${SITE()}/kakor/${product.slug}`,
     // Produktresultat i Google vill ha en identifierare; slugen är vår stabila artikelkod.
     sku: product.slug,
     ...(product.imageRef ? { image: productImages(product.imageRef) } : {}),
     category: "Småkakor",
-    brand: { "@id": ids.organization() },
+    brand: { "@type": "Brand", name: siteConfig.name },
     // Synligt på produktsidan under Ursprung – samma formulering.
     countryOfOrigin: { "@type": "Country", name: "Litauen" },
     additionalProperty: [

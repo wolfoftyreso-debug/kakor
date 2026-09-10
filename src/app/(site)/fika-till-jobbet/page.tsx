@@ -97,7 +97,7 @@ export default async function FikaTillJobbetPage() {
       <JsonLd
         data={graph(
           webPageNode({ path: "/fika-till-jobbet", title: TITLE, description: DESCRIPTION, breadcrumbs: CRUMBS, dateModified: UPDATED, mainEntityId: ids.service() }),
-          articleNode({ path: "/fika-till-jobbet", headline: "Fika till jobbet – så ordnar ni det utan krångel", description: DESCRIPTION, image: "/images/fika.jpg", datePublished: PUBLISHED, dateModified: UPDATED }),
+          articleNode({ path: "/fika-till-jobbet", headline: TITLE, description: DESCRIPTION, image: "/images/fika.jpg", datePublished: PUBLISHED, dateModified: UPDATED }),
           breadcrumbNode("/fika-till-jobbet", CRUMBS),
           faqNode("/fika-till-jobbet", FAQS)
         )}
@@ -112,7 +112,7 @@ export default async function FikaTillJobbetPage() {
         </figure>
         <PageHeader
           eyebrow="Guide"
-          title="Fika till jobbet – så ordnar ni det utan krångel"
+          title="Fika till jobbet – hur mycket per person?"
           lede={
             <>
               Fika på jobbet – kontorsfika, kakor till kontoret, fredagsfika, möten – är enkelt när någon annan har tänkt på mängder, sorter och leverans. Här

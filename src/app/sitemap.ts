@@ -15,7 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages = [
     { path: "", priority: 1.0 },
     { path: "/kakor", priority: 0.9 },
-    { path: "/bestall", priority: 0.9 },
+    { path: "/bestall", priority: 0.7 },
     { path: "/prenumeration", priority: 0.9 },
     { path: "/fika-till-jobbet", priority: 0.7 },
     { path: "/vanliga-fragor", priority: 0.6 },
