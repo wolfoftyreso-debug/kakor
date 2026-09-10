@@ -141,7 +141,7 @@ export function PollWidget({
         <div className="rule-label">Folkets val {poll.sequence}</div>
         <h3 className="poll-title">{winner.name}</h3>
         <p className="poll-lede">Framröstad av våra kunder {new Date(poll.endsAtIso).getFullYear()}. {results ? `${nf.format(results.total)} personer var med och röstade.` : ""}</p>
-        <Link href={`/kakor/${winner.product.slug}`} className="btn btn-primary btn-lg">Beställ {winner.name.toLowerCase()}</Link>
+        <Link href={`/kakor/${winner.product.slug}`} className="btn btn-primary btn-lg">Beställ {winner.name}</Link>
       </div>
     );
   }
@@ -157,7 +157,7 @@ export function PollWidget({
           Nu börjar arbetet med att baka fram vår version efter recepttraditionen i Svenskt konditorlexikon. Snart på kakfatet.
         </p>
         {results && <ResultBars results={results} candidates={poll.candidates} highlight={winner.id} />}
-        <SignupBox state={signup} email={email} setEmail={setEmail} error={signupError} onSend={sendSignup} label={`Vill du veta när ${winner.name.toLowerCase()} går att beställa?`} />
+        <SignupBox state={signup} email={email} setEmail={setEmail} error={signupError} onSend={sendSignup} label={`Vill du veta när ${winner.name} går att beställa?`} />
       </div>
     );
   }
@@ -192,8 +192,8 @@ export function PollWidget({
         <div ref={liveRef} tabIndex={-1} role="status" aria-live="polite" className="poll-thanks">
           <h3 className="poll-title">{justVoted ? "Tack! Din röst är räknad." : "Du har redan röstat."}</h3>
           <p className="poll-lede">
-            Du röstade på {votedCandidate.name.toLowerCase()}.{" "}
-            {leader ? `Just nu leder ${leader.name.toLowerCase()}.` : results && results.total > 0 ? "Just nu är det jämnt." : ""}{" "}
+            Du röstade på {votedCandidate.name}.{" "}
+            {leader ? `Just nu leder ${leader.name}.` : results && results.total > 0 ? "Just nu är det jämnt." : ""}{" "}
             Röstningen avslutas {poll.deadlineLabel ? `på ${poll.deadlineLabel}` : poll.endsAtText}.
           </p>
         </div>
@@ -243,7 +243,7 @@ export function PollWidget({
           )}
           <div className="poll-actions">
             <button type="button" className="btn btn-primary btn-lg" disabled={!selected || submitting} onClick={submit} aria-describedby="poll-hint">
-              {submitting ? "Registrerar…" : selectedCandidate ? `Jag röstar på ${selectedCandidate.name.toLowerCase()}` : "Rösta på min favorit"}
+              {submitting ? "Registrerar…" : selectedCandidate ? `Jag röstar på ${selectedCandidate.name}` : "Rösta på min favorit"}
             </button>
             <span id="poll-hint" className="poll-hint">{selected ? "En röst per person. Resultatet visas när du röstat." : "Välj en kaka ovan."}</span>
           </div>
