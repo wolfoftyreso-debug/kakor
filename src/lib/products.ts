@@ -9,25 +9,30 @@ import { getWarehouseClosedDates } from "@/lib/warehouse/closed";
 import { getOpsSettings } from "@/lib/warehouse/settings";
 
 export const getActiveProducts = cache(async function getActiveProducts(): Promise<ProductCardData[]> {
-  const products = await prisma.product.findMany({
-    where: { active: true },
-    orderBy: { sortOrder: "asc" },
-  });
-  return products.map((p) => ({
-    id: p.id,
-    slug: p.slug,
-    name: p.name,
-    description: p.description,
-    pricePerKgOre: p.pricePerKgOre,
-    unit: p.unit,
-    packageWeightGrams: p.packageWeightGrams,
-    weightOptions: safeWeights(p.weightOptionsJson),
-    allergens: p.allergens,
-    imageRef: p.imageRef,
-    badge: p.badge,
-    vatRateBp: p.vatRateBp,
-    piecesPerKgApprox: p.piecesPerKgApprox ?? null,
-  }));
+  try {
+    const products = await prisma.product.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    return products.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      description: p.description,
+      pricePerKgOre: p.pricePerKgOre,
+      unit: p.unit,
+      packageWeightGrams: p.packageWeightGrams,
+      weightOptions: safeWeights(p.weightOptionsJson),
+      allergens: p.allergens,
+      imageRef: p.imageRef,
+      badge: p.badge,
+      vatRateBp: p.vatRateBp,
+      piecesPerKgApprox: p.piecesPerKgApprox ?? null,
+    }));
+  } catch (e) {
+    console.error("[produkter] katalog kunde inte läsas:", e instanceof Error ? e.message : e);
+    return [];
+  }
 });
 
 function safeWeights(json: string): number[] {
@@ -62,10 +67,16 @@ export interface AreaWithDates {
 }
 
 export const getAreasWithDates = cache(async function getAreasWithDates(dateCount = 4): Promise<AreaWithDates[]> {
-  const areas = await prisma.deliveryArea.findMany({
-    where: { active: true },
-    orderBy: { sortOrder: "asc" },
-  });
+  let areas;
+  try {
+    areas = await prisma.deliveryArea.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+    });
+  } catch (e) {
+    console.error("[områden] kunde inte läsas:", e instanceof Error ? e.message : e);
+    return [];
+  }
   let warehouseClosed = new Set<string>();
   let cutoffWeekday = 3;
   let cutoffHour = 12;
