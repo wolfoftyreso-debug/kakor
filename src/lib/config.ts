@@ -24,7 +24,7 @@ export const siteConfig = {
   name: "Sockerbagaren",
   url: resolveSiteUrl(),
   description:
-    "Klassiska småkakor bakade på riktiga råvaror – levererade direkt till företag i Tyresö, Nacka, Haninge och Huddinge. Betalning mot faktura.",
+    "Fika till jobbet: kolasnittar, mandelkubb och chokladsnittar på riktigt smör, levererade till företag i Tyresö, Nacka, Haninge och Huddinge. Mot faktura.",
 };
 
 // Avbokning/ändring: senast kl. HH, N arbetsdagar före leveransdagen.

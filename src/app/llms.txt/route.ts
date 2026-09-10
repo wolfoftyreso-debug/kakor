@@ -9,11 +9,11 @@ export function GET() {
   const base = siteConfig.url.replace(/\/$/, "");
   const body = `# Sockerbagaren
 
-> Sockerbagaren säljer gammaldags svenska småkakor på riktigt smör till företag i södra Stockholm (Tyresö, Nacka, Haninge, Huddinge). Kakorna säljs per kilo och per paket, levereras på fasta leveransdagar till bemannade företagsadresser och betalas mot faktura. Verksamheten drivs av Landvex AB.
+> Sockerbagaren säljer gammaldags svenska småkakor på riktigt smör till företag i södra Stockholm (Tyresö, Nacka, Haninge, Huddinge). Kakorna säljs per kilo och per paket, levereras på fasta leveransdagar till bemannade företagsadresser och betalas mot faktura. Verksamheten drivs av Landvex AB. Kontakt: info@sockerbagaren.se.
 
 ## Vad vi säljer
 - Kakor till kontoret: kolasnittar, mandelkubb och chokladsnittar per kilo samt ett prova-på-paket om 1,5 kg: ${base}/kakor
-- Köpa kolasnittar (även kallade kolakakor) per kilo till företaget: ${base}/kakor/kolasnittar
+- Köpa kolasnittar (även kallade kolakakor och sirapssnittar) per kilo till företaget: ${base}/kakor/kolasnittar
 - Köpa mandelkubb per kilo till företaget: ${base}/kakor/mandelkubb
 - Köpa chokladsnittar per kilo till företaget: ${base}/kakor/chokladsnittar
 - Fikaprenumeration / veckoleverans av fika – samma beställning varje, varannan eller var fjärde vecka, ingen bindningstid: ${base}/prenumeration

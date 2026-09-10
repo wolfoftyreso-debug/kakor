@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   alternates: { canonical: "/folkets-kaka" },
   ...sharePreview({
-    title: "Folkets nästa småkaka",
+    title: "Folkets nästa småkaka – rösta fram nästa klassiker",
     description: DESCRIPTION,
     path: "/folkets-kaka",
     image: { url: "/images/bakning.jpg", alt: "Småkakor på plåt" },

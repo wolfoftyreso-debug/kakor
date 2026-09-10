@@ -13,7 +13,7 @@ export interface SeoCheck {
   action?: string;
 }
 
-export const LAST_SEO_AUDIT = "2026-09-09";
+export const LAST_SEO_AUDIT = "2026-09-10";
 
 export interface SeoStatusInput {
   siteUrl: string;

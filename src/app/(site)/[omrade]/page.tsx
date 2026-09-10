@@ -11,6 +11,7 @@ import { invoiceConfig } from "@/lib/config";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumbNode, faqNode, graph, webPageNode } from "@/lib/seo/schema";
+import { CONTENT_DATES } from "@/lib/seo/content-dates";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +58,7 @@ export default async function AreaPage({ params }: Props) {
     <>
       <JsonLd
         data={graph(
-          webPageNode({ path, title: content.title, description: content.metaDescription, breadcrumbs: crumbs }),
+          webPageNode({ path, title: content.title, description: content.metaDescription, breadcrumbs: crumbs, dateModified: CONTENT_DATES[`/${content.slug}` as keyof typeof CONTENT_DATES].updated }),
           breadcrumbNode(path, crumbs),
           // Exakt samma frågor/svar som renderas synligt längre ner på sidan.
           faqNode(path, content.faqs)

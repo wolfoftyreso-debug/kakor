@@ -15,6 +15,7 @@ import { fromISODate, weekdayName, isoWeekday, listSv } from "@/lib/dates";
 import { siteConfig } from "@/lib/config";
 import { JsonLd } from "@/components/JsonLd";
 import { faqNode, graph, productListNode, productNode, webPageNode } from "@/lib/seo/schema";
+import { CONTENT_DATES } from "@/lib/seo/content-dates";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
     siteName: "Sockerbagaren",
     locale: "sv_SE",
     type: "website",
-    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Sockerbagaren" }],
+    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Sockerbagaren – riktigt fika till jobbet" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -112,6 +113,7 @@ export default async function HomePage() {
       title: "Sockerbagaren – fika till jobbet i södra Stockholm",
       description: HOME_DESCRIPTION,
       mainEntityId: `${siteConfig.url.replace(/\/$/, "")}/#products`,
+      dateModified: CONTENT_DATES["/"].updated,
     }),
     productListNode("/", products),
     ...products.map((p) => productNode(p, postalPrefixes)),

@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumbNode, faqNode, graph, productListNode, productNode, webPageNode } from "@/lib/seo/schema";
 import { siteConfig } from "@/lib/config";
+import { CONTENT_DATES } from "@/lib/seo/content-dates";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,7 @@ export default async function KakorPage() {
       breadcrumbs: CRUMBS,
       pageType: "CollectionPage",
       mainEntityId: `${siteConfig.url.replace(/\/$/, "")}/kakor#products`,
+      dateModified: CONTENT_DATES["/kakor"].updated,
     }),
     breadcrumbNode("/kakor", CRUMBS),
     productListNode("/kakor", products),

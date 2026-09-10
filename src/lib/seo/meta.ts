@@ -32,7 +32,7 @@ export function sharePreview({
       card: "summary_large_image",
       title: fullTitle,
       description,
-      images: [img.url],
+      images: [{ url: img.url, alt: img.alt }],
     },
   };
 }
