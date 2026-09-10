@@ -1,16 +1,8 @@
-// Byggkommando på Vercel. I produktion körs databasmigrationerna FÖRE bygget
-// så att kod och schema aldrig går live i otakt (en ny kolumn som deployas
-// utan migration ger 500 på varje sida eftersom sajten renderas per request).
-// Preview-deployer migrerar inte — de får aldrig peka på produktionsdatabasen.
+// Byggkommando (Vercel + Grok-deploy). Migrationer körs FÖRE next build
+// när DATABASE_URL finns, så kod och schema inte går live i otakt.
 //
-// Tre fall i Production:
-//   DATABASE_URL + DIRECT_DATABASE_URL  → migrera, sedan bygg
-//   DATABASE_URL utan DIRECT_DATABASE_URL → avbryt (riktig databas men
-//                                           migrationer kan inte köras)
-//   ingen DATABASE_URL alls               → varna och bygg utan migrationer
-//                                           (projektet är inte kopplat till
-//                                           någon databas ännu; env-kontrollen
-//                                           i runtime flaggar detta)
+// DIRECT_DATABASE_URL (opoolad Neon) används för migrate. Saknas den
+// (Grok injicerar bara DATABASE_URL) återanvänds DATABASE_URL.
 import { execSync } from "node:child_process";
 
 const run = (cmd) => {
@@ -18,28 +10,25 @@ const run = (cmd) => {
   execSync(cmd, { stdio: "inherit" });
 };
 
-// Preview-deployer migrerar också — mot SIN databas (DEPLOYMENT.md kräver en
-// separat Neon-branch för preview). Utan det ger varje schemaändring 500 på
-// alla databassidor i preview och PR-granskningen blir meningslös.
-const isProduction = process.env.VERCEL_ENV === "production";
-const isPreview = process.env.VERCEL_ENV === "preview";
-if (isPreview && process.env.DIRECT_DATABASE_URL) {
-  run("npx prisma migrate deploy");
-} else if (isProduction) {
-  if (process.env.DIRECT_DATABASE_URL) {
-    run("npx prisma migrate deploy");
-  } else if (process.env.DATABASE_URL) {
-    console.error(
-      "[build] DATABASE_URL finns men DIRECT_DATABASE_URL saknas i Production — migrationer kan inte köras. Avbryter."
-    );
-    process.exit(1);
-  } else {
-    console.warn(
-      "[build] VARNING: ingen DATABASE_URL i Production — bygger utan migrationer. Sajten saknar databas tills Neon kopplas (se DEPLOYMENT.md)."
-    );
-  }
-} else {
-  console.log(`[build] VERCEL_ENV=${process.env.VERCEL_ENV ?? "(lokalt)"} — inga migrationer körs.`);
+if (process.env.DATABASE_URL && !process.env.DIRECT_DATABASE_URL) {
+  process.env.DIRECT_DATABASE_URL = process.env.DATABASE_URL;
+  console.log("[build] DIRECT_DATABASE_URL saknades – DATABASE_URL används för migrationer.");
 }
+
+if (process.env.DATABASE_URL) {
+  run("npx prisma migrate deploy");
+} else {
+  console.warn(
+    "[build] DATABASE_URL saknas – bygger utan migrationer. Databasberoende sidor kraschar tills databasen är kopplad."
+  );
+}
+
 run("npx prisma generate");
+
+if (process.env.DATABASE_URL) {
+  // Idempotent katalog (produkter, områden, omröstning). Demo-månaden seedas
+  // bara mot SQLite. Misslyckad seed ska inte tysta lämna tomma tabeller.
+  run("npx tsx prisma/seed.ts");
+}
+
 run("npx next build");

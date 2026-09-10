@@ -93,12 +93,17 @@ export async function getResults(poll: PollWithCandidates): Promise<PollResults>
  * avslutade (med eller utan utsedd vinnare). Utkast och kommande visas aldrig.
  */
 export async function getCurrentPoll(now = new Date()): Promise<PollWithCandidates | null> {
-  const polls = await prisma.poll.findMany({ where: { status: { not: "DRAFT" } }, include: pollInclude, orderBy: { sequence: "desc" } });
-  const open = polls.find((p) => pollState(p, now) === "OPEN");
-  if (open) return open;
-  const upcoming = polls.filter((p) => pollState(p, now) === "UPCOMING");
-  const finished = polls.filter((p) => ["CLOSED", "WINNER", "LAUNCHED"].includes(pollState(p, now)));
-  return finished[0] ?? upcoming[0] ?? null;
+  try {
+    const polls = await prisma.poll.findMany({ where: { status: { not: "DRAFT" } }, include: pollInclude, orderBy: { sequence: "desc" } });
+    const open = polls.find((p) => pollState(p, now) === "OPEN");
+    if (open) return open;
+    const upcoming = polls.filter((p) => pollState(p, now) === "UPCOMING");
+    const finished = polls.filter((p) => ["CLOSED", "WINNER", "LAUNCHED"].includes(pollState(p, now)));
+    return finished[0] ?? upcoming[0] ?? null;
+  } catch (e) {
+    console.error("[omröstning] kunde inte läsas:", e instanceof Error ? e.message : e);
+    return null;
+  }
 }
 
 export async function getPollBySlug(slug: string): Promise<PollWithCandidates | null> {

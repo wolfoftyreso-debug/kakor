@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:db": "tsx scripts/dev-db.ts",
-    "build": "prisma generate && next build",
+    "build": "node scripts/vercel-build.mjs",
     "check": "npm run typecheck && npm run lint && npm test",
     "start": "next start",
     "lint": "eslint .",
