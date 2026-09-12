@@ -2204,16 +2204,77 @@ html.js .reveal.in {
 .poll-thanks .poll-title { animation: poll-in 360ms ease-out; }
 @keyframes poll-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .poll-thanks .poll-title { animation: none; } .poll-card { transition: none; } }
-.poll-results { display: flex; flex-direction: column; gap: 10px; }
-.poll-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-.poll-bars li { display: flex; flex-direction: column; gap: 5px; }
-.poll-bar-label { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; }
-.poll-bars li.mine .poll-bar-label::after { content: "din röst"; font-size: 12px; font-weight: 600; color: var(--text-2); margin-left: 8px; order: 1; }
-.poll-bar-pct { font-variant-numeric: tabular-nums; }
-.poll-bar-track { display: block; height: 10px; border-radius: 6px; background: var(--section-tint); overflow: hidden; }
-.poll-bar-fill { display: block; height: 100%; background: var(--text); border-radius: 6px; transition: width 600ms ease; }
-.poll-bars li.mine .poll-bar-fill { background: var(--red); }
+.poll-results { display: flex; flex-direction: column; gap: 12px; }
+.poll-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.poll-bars li {
+  position: relative;
+  display: block;
+  border-radius: 10px;
+  background: var(--section-tint);
+  overflow: hidden;
+  min-height: 48px;
+}
+.poll-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--text);
+  opacity: 0.14;
+  border-radius: inherit;
+  transition: width 600ms ease;
+}
+.poll-bars li.mine .poll-bar-fill {
+  background: var(--red);
+  opacity: 0.2;
+}
+.poll-bar-copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  min-height: 48px;
+}
+.poll-bar-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 15.5px;
+  font-weight: 600;
+  min-width: 0;
+}
+.poll-bar-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--red);
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--red) 32%, var(--border));
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.poll-bar-pct {
+  flex: 0 0 auto;
+  min-width: 4.6ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+  font-feature-settings: "tnum";
+}
+.poll-bars li.mine .poll-bar-pct { color: var(--red); }
 .poll-total { margin: 0; font-size: 13.5px; color: var(--text-2); }
+#folkets-kaka,
+.poll-section,
+.poll-thanks {
+  scroll-margin-top: 112px;
+}
 .poll-signup { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: var(--section-tint); border-radius: var(--radius); }
 .poll-signup-label { font-size: 14px; font-weight: 600; }
 .poll-signup-row { display: flex; flex-wrap: wrap; gap: 8px; }

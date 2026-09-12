@@ -73,6 +73,14 @@ export function PollWidget({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!justVoted) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const target = document.getElementById("folkets-kaka") ?? liveRef.current;
+    target?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    liveRef.current?.focus({ preventScroll: true });
+  }, [justVoted]);
+
   const open = poll.state === "OPEN";
   const winner = poll.winnerId ? poll.candidates.find((c) => c.id === poll.winnerId) ?? null : null;
   const selectedCandidate = poll.candidates.find((c) => c.id === selected) ?? null;
@@ -99,7 +107,6 @@ export function PollWidget({
       setJustVoted(!data.already);
       track(data.already ? "poll_results_viewed" : "poll_vote_success", { poll: poll.slug, candidate: selectedCandidate?.slug ?? "", placement, reason: data.already ? "already_voted" : "vote" });
       if (!data.already) track("poll_results_viewed", { poll: poll.slug, placement, reason: "after_vote" });
-      requestAnimationFrame(() => liveRef.current?.focus({ preventScroll: false }));
     } catch {
       setError("Vi når inte servern just nu. Kontrollera uppkopplingen och försök igen – din röst är inte registrerad.");
     } finally {
@@ -266,16 +273,20 @@ function ResultBars({ results, candidates, highlight }: { results: PollResults; 
       <ol className="poll-bars" aria-label="Aktuell ställning">
         {results.candidates.map((r) => {
           const c = candidates.find((x) => x.id === r.id);
+          const mine = r.id === highlight;
           return (
-            <li key={r.id} className={r.id === highlight ? "mine" : undefined}>
-              <span className="poll-bar-label">
-                <span>{c?.name ?? r.name}</span>
-                <span className="poll-bar-pct">{r.percent}{" "}%</span>
+            <li key={r.id} className={mine ? "mine" : undefined}>
+              <span className="poll-bar-fill" style={{ width: `${Math.max(r.percent, 0)}%` }} aria-hidden="true" />
+              <span className="poll-bar-copy">
+                <span className="poll-bar-name">
+                  {c?.name ?? r.name}
+                  {mine && <span className="poll-bar-badge">Min röst</span>}
+                </span>
+                <span className="poll-bar-pct">{r.percent}%</span>
               </span>
-              <span className="poll-bar-track" aria-hidden="true">
-                <span className="poll-bar-fill" style={{ width: `${r.percent}%` }} />
+              <span className="visually-hidden">
+                {nf.format(r.votes)} röster{mine ? ", din röst" : ""}
               </span>
-              <span className="visually-hidden">{nf.format(r.votes)} röster</span>
             </li>
           );
         })}
