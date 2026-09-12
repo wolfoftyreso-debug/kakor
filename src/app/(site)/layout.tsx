@@ -13,15 +13,15 @@ export const dynamic = "force-dynamic";
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
-    <CartProvider>
-      {/* Kanoniska entiteter (Organization + WebSite + returpolicy) – EN gång,
-          på alla publika sidor. Sidorna refererar dem via @id, aldrig egna kopior. */}
+    <>
       <JsonLd data={graph(organizationNode(), websiteNode(), merchantReturnPolicyNode(), serviceNode())} />
       <AcquisitionCapture />
       <AnalyticsScript />
-      <SiteHeader />
-      <main id="innehall">{children}</main>
+      <CartProvider>
+        <SiteHeader />
+        <main id="innehall">{children}</main>
+      </CartProvider>
       <SiteFooter />
-    </CartProvider>
+    </>
   );
 }

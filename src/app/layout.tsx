@@ -52,9 +52,10 @@ export const metadata: Metadata = {
   },
   applicationName: "Sockerbagaren",
   appleWebApp: { title: "Sockerbagaren" },
-  // iOS auto-länkar annars nummerlika strängar – org.nr 556677-8899 skulle
-  // bli en falsk telefonlänk. Riktiga telefonlänkar sätts explicit med tel:.
-  formatDetection: { telephone: false },
+  // iOS Data Detectors skriver annars om HTML (tel/e-post/adress blir extra
+  // <a> och ibland <br>) – då mismatchar hydreringen mot serverns markup.
+  // Riktiga länkar sätts explicit med tel: och mailto:.
+  formatDetection: { telephone: false, email: false, address: false },
   // Search Console- och Bing-verifiering via meta-tagg, utan kodändring:
   // NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION och NEXT_PUBLIC_BING_SITE_VERIFICATION.
   verification: (() => {
