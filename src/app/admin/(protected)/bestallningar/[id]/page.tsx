@@ -173,8 +173,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               Faktura <span className="mono">{order.invoice.invoiceNumber}</span> ·{" "}
               {formatDate(order.invoice.invoiceDate)} · förfaller {formatDate(order.invoice.dueDate)} ·{" "}
               <a href={`/faktura/${order.invoice.downloadToken}`} target="_blank" rel="noopener">
-                Öppna PDF
+                Öppna
               </a>
+              {" · "}
+              <a href={`/faktura/${order.invoice.downloadToken}?download=1`}>Spara PDF</a>
               {order.invoice.status === "CREDITED" && (
                 <>
                   {" "}
@@ -189,8 +191,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                       <span className="mono">{c.creditNumber}</span> · {formatDate(c.issuedDate)} ·{" "}
                       {formatOre(-c.totalOre)} ·{" "}
                       <a href={`/faktura/${c.downloadToken}`} target="_blank" rel="noopener">
-                        Öppna PDF
+                        Öppna
                       </a>
+                      {" · "}
+                      <a href={`/faktura/${c.downloadToken}?download=1`}>Spara PDF</a>
                     </div>
                   ))}
                   {order.invoice.status !== "CREDITED" && (

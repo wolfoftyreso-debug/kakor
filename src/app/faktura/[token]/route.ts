@@ -43,13 +43,14 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: str
       : null;
   if (!doc) return NextResponse.redirect(new URL("/faktura-saknas", _req.url), 302);
 
+  const asDownload = _req.nextUrl.searchParams.get("download") === "1";
   const snapshot = parseSnapshot(doc.snapshotJson);
   const pdf = await renderInvoicePdf(snapshot, doc.number, { statusNote });
 
   return new NextResponse(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${doc.filename}"`,
+      "Content-Disposition": `${asDownload ? "attachment" : "inline"}; filename="${doc.filename}"`,
       "Cache-Control": "private, no-store",
       "X-Robots-Tag": "noindex",
     },

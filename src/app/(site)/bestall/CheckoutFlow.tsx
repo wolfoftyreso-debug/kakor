@@ -1427,10 +1427,14 @@ export function CheckoutFlow({
               <li>Något att ändra? Svara på orderbekräftelsen{result.deliveryDate ? ` senast ${deadlineText(result.deliveryDate)}` : ""}.</li>
             </ol>
           </div>
-          <div style={{ textAlign: "center", marginTop: 24 }}>
-            <a href={result.invoiceUrl} className="btn btn-outline" target="_blank" rel="noopener">
-              Ladda ner fakturan (PDF, öppnas i ny flik)
+          <div className="invoice-actions">
+            <a href={result.invoiceUrl} className="btn btn-primary" target="_blank" rel="noopener">
+              Öppna fakturan
             </a>
+            <a href={`${result.invoiceUrl}?download=1`} className="btn btn-outline">
+              Spara PDF
+            </a>
+            <p className="invoice-actions-hint">Öppna för att skriva ut från webbläsaren. Spara PDF lägger filen på datorn eller i Filer.</p>
           </div>
           <PreferredSourceCTA placement="result_success" />
           <div style={{ textAlign: "center", marginTop: 28 }}>
