@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  changeDeadline,
   fromISODate,
   isValidDeliveryDate,
   isoWeekday,
+  nextCadenceDate,
   nextSubscriptionDate,
+  snapToDeliveryWeekday,
   toISODate,
   upcomingDeliveryDates,
 } from "@/lib/dates";
@@ -134,6 +137,35 @@ describe("svenska helgdagar", () => {
     const now = new Date("2026-12-14T08:00:00.000Z");
     const dates = upcomingDeliveryDates({ weekdays: [4], leadTimeDays: 2 }, 3, now).map(toISODate);
     expect(dates).toEqual(["2026-12-17", "2027-01-07", "2027-01-14"]);
+  });
+
+  it("ett års veckokadens: unika torsdagar, jul och Kristi himmelsfärd hoppas, kadensen driver inte", () => {
+    const cfg = { weekdays: [4], leadTimeDays: 2 };
+    const seen: string[] = [];
+    let cadence = fromISODate("2026-09-17");
+    const end = fromISODate("2027-09-16");
+    while (cadence.getTime() <= end.getTime()) {
+      const d = snapToDeliveryWeekday(cadence, cfg);
+      const iso = toISODate(d);
+      if (d.getTime() <= end.getTime() && !seen.includes(iso)) seen.push(iso);
+      cadence = nextCadenceDate(cadence, "WEEKLY", [4]);
+    }
+    expect(seen).not.toContain("2026-12-24");
+    expect(seen).not.toContain("2026-12-31");
+    expect(seen).not.toContain("2027-05-06");
+    expect(seen).toContain("2026-12-17");
+    expect(seen).toContain("2027-01-07");
+    expect(seen).toContain("2027-01-14");
+    expect(seen).toContain("2027-05-13");
+    expect(seen.length).toBeGreaterThanOrEqual(48);
+    expect(seen.length).toBeLessThanOrEqual(53);
+    for (const iso of seen) {
+      expect(isoWeekday(fromISODate(iso)), iso).toBe(4);
+    }
+  });
+
+  it("ändringsdeadline för 7 jan 2027 hoppar över trettondagen", () => {
+    expect(toISODate(changeDeadline(fromISODate("2027-01-07"), 2, 12))).toBe("2027-01-04");
   });
 });
 

@@ -12,7 +12,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test:year": "tsx scripts/year-ops-sim.ts",
     "test:watch": "vitest",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
