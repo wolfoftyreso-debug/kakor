@@ -226,6 +226,9 @@ export default async function InvoicesPage({
                       >
                         {inv.invoiceNumber}
                       </a>
+                      <div style={{ fontSize: 12 }}>
+                        <a href={`/faktura/${inv.downloadToken}?download=1`}>Spara PDF</a>
+                      </div>
                     </td>
                     <td>
                       <Link href={`/admin/bestallningar/${inv.orderId}`} className="mono" style={{ fontSize: 13 }}>

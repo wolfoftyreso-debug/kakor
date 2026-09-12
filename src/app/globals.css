@@ -1607,6 +1607,20 @@ header.site-header {
   margin-bottom: 18px;
   box-shadow: 0 0 0 8px rgba(239, 190, 76, 0.35);
 }
+.invoice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px 12px;
+  margin-top: 24px;
+}
+.invoice-actions-hint {
+  flex: 1 0 100%;
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
 
 /* Samtyckesbanner (GA4) — visas bara när statistik är konfigurerad och inget val gjorts */
 .consent {
